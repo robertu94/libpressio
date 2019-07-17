@@ -18,7 +18,7 @@ class LossyDataTests: public ::testing::Test {
 };
 
 TEST_F(LossyDataTests, MakeLossyData) {
-  lossy_data* d = lossy_data_new(lossy_int32_dtype, data.data(), 2, dims);
+  lossy_data* d = lossy_data_new_nonowning(lossy_int32_dtype, data.data(), 2, dims);
   EXPECT_NE(d, nullptr);
   EXPECT_EQ(lossy_data_dtype(d), lossy_int32_dtype);
   EXPECT_EQ(lossy_data_num_dimentions(d), 2);
@@ -34,7 +34,7 @@ TEST_F(LossyDataTests, MakeLossyData) {
 
 
 TEST_F(LossyDataTests, MakeCopy) {
-  lossy_data* d = lossy_data_new(lossy_int32_dtype, data.data(), 2, dims);
+  lossy_data* d = lossy_data_new_nonowning(lossy_int32_dtype, data.data(), 2, dims);
   EXPECT_NE(d, nullptr);
   size_t size = 0;
   void* copy = lossy_data_copy(d, &size);

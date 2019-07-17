@@ -107,7 +107,7 @@ class sz_plugin: public liblossy_plugin {
         r3,
         r2,
         r1);
-    *output = lossy_data_new(lossy_byte_dtype, compressed_data, 1, &outsize);
+    *output = lossy_data_new_move(lossy_byte_dtype, compressed_data, 1, &outsize, lossy_data_libc_free_fn, nullptr);
     return 0;
   }
   int decompress(struct lossy_data* input, struct lossy_data** output) override {
@@ -133,7 +133,7 @@ class sz_plugin: public liblossy_plugin {
         r[0]
         );
     lossy_data_free(*output);
-    *output = lossy_data_new(type, decompressed_data, ndims, r);
+    *output = lossy_data_new_move(type, decompressed_data, ndims, r, lossy_data_libc_free_fn, nullptr);
     return 0;
   }
 

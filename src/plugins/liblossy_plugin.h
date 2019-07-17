@@ -64,13 +64,23 @@ class liblossy_plugin {
    * \returns an implementation specific integer error code for the last error, 0 is reserved for no error
    */
   int error_code() const;
+
+  /** checks for extra arguments set for the compressor.
+   * the default verison just checks for unknown options passed in.
+   * overriding implementations SHOULD call this version and return any errors it provides FIRST.
+   *
+   * \see lossy_compressor_check_options for semantics this function obeys
+   * */
+  virtual int check_options(struct lossy_options const*);
+
   protected:
   /**
    * Should be used by implementing plug-ins to provide error codes
    * \param[in] code a implementation specific code for the last error
    * \param[in] msg a implementation specific message for the last error
+   * \returns the value passed to code
    */
-  void set_error(int code, std::string const& msg);
+  int set_error(int code, std::string const& msg);
 
   private:
   struct {

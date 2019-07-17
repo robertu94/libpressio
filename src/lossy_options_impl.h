@@ -12,6 +12,7 @@ struct lossy_option {
 };
 
 struct lossy_options{
+
   lossy_options_key_status key_status(std::string const& key) const {
     auto it = options.find(key);
     if(it == options.end()) {
@@ -52,12 +53,27 @@ struct lossy_options{
   }
   
 
+  auto begin() const {
+    return std::begin(options);
+  }
+  auto end() const {
+    return std::end(options);
+  }
+
   auto begin() {
     return std::begin(options);
   }
   auto end() {
     return std::end(options);
   }
+
+  using iterator = std::map<std::string, option_type>::iterator;
+  using value_type = std::map<std::string, option_type>::value_type;
+
+  iterator insert(iterator it, value_type const& value) {
+    return options.insert(it, value);
+  }
+
 
   private:
   std::map<std::string, option_type> options;

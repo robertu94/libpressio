@@ -32,5 +32,8 @@ int lossy_compressor_error_code(struct lossy_compressor const* compressor) {
 const char* lossy_compressor_error_msg(struct lossy_compressor const* compressor) {
   return compressor->plugin->error_msg();
 }
+int lossy_compressor_check_options(struct lossy_compressor* compressor, struct lossy_options const * options) {
+  return compressor->plugin->check_options(options);
+}
 
 }

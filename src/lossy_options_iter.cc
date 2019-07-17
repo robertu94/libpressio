@@ -4,15 +4,15 @@
 
 struct lossy_options_iter {
   private:
-  using iterator_t =  std::map<std::string, option_type>::iterator;
+  using iterator_t =  std::map<std::string, option_type>::const_iterator;
   public:
   lossy_options_iter(iterator_t current, iterator_t end): current(current), end(end) {}
-  std::map<std::string, option_type>::iterator current;
-  std::map<std::string, option_type>::iterator end;
+  iterator_t current;
+  iterator_t end;
 };
 
 extern "C" {
-struct lossy_options_iter* lossy_options_get_iter(struct lossy_options* options) {
+struct lossy_options_iter* lossy_options_get_iter(struct lossy_options const* options) {
   return new struct lossy_options_iter(options->begin(), options->end());
 }
 bool lossy_options_iter_has_value(struct lossy_options_iter* iter) {

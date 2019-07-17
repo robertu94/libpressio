@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
-project(liblossy VERSION "0.1.0" LANGUAGES CXX C)
+project(liblossy VERSION "0.2.0" LANGUAGES CXX C)
 
 enable_testing()
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -10,7 +10,7 @@ find_package(PkgConfig)
 pkg_search_module(SZ IMPORTED_TARGET GLOBAL sz)
 
 
-set(LIBLOSSY_FEATURES "sz")
+set(LIBLOSSY_FEATURES "sz zfp")
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/include/lossy_version.h.in
   ${CMAKE_CURRENT_BINARY_DIR}/include/lossy_version.h
@@ -35,6 +35,7 @@ add_library(liblossy
   ./src/lossy_option.cc
   ./src/plugins/liblossy_plugin.cc
   ./src/plugins/sz_plugin.cc
+  ./src/plugins/zfp_plugin.cc
   ./src/lossy_data.cc
   ./src/lossy_dtype.cc
   ./src/lossy.cc

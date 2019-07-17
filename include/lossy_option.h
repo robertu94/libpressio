@@ -7,6 +7,7 @@ extern "C" {
 
 
 
+/** possible types contained in a lossy_option, more types may be added in the future */
 enum lossy_option_type {
   /** option is a 32 bit unsigned integer */lossy_option_uint32_type=0,
   /** option is a 32 bit signed integer */lossy_option_int32_type=1,

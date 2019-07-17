@@ -67,7 +67,7 @@ TEST_F(LossyOptionsTests, IterateKeys) {
   auto it = lossy_options_get_iter(o);
   while(lossy_options_iter_has_value(it)) {
     const char* key = lossy_options_iter_get_key(it);
-    struct lossy_option* value = lossy_options_iter_get_value(it);
+    struct lossy_option const* value = lossy_options_iter_get_value(it);
     switch(lossy_option_get_type(value)) {
       case lossy_option_charptr_type:
         EXPECT_THAT(key, ::testing::StrEq("string"));
@@ -77,9 +77,15 @@ TEST_F(LossyOptionsTests, IterateKeys) {
         EXPECT_THAT(key, ::testing::StrEq("double"));
         EXPECT_EQ(lossy_option_get_double(value), 1.2);
         break;
+      case lossy_option_float_type:
+        FAIL();
+        break;
       case lossy_option_int32_type:
         EXPECT_THAT(key, ::testing::StrEq("int"));
         EXPECT_EQ(lossy_option_get_integer(value), 1);
+        break;
+      case lossy_option_uint32_type:
+        FAIL();
         break;
       case lossy_option_userptr_type:
         EXPECT_THAT(key, ::testing::StrEq("data"));

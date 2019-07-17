@@ -39,9 +39,13 @@ add_gtest(test_lossy_options.cc)
 add_gtest(test_sz_plugin.cc)
 target_include_directories(test_sz_plugin PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/../include)
 
-add_executable(basic basic.c)
-target_link_libraries(basic liblossy)
-add_test(basic_test basic)
+add_executable(sz_basic sz_basic.c)
+target_link_libraries(sz_basic liblossy)
+add_test(sz_basic_test sz_basic)
+
+add_executable(zfp_basic zfp_basic.c)
+target_link_libraries(zfp_basic liblossy)
+add_test(zfp_basic_test zfp_basic)
 
 add_executable(full full.c)
 target_link_libraries(full liblossy)

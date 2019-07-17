@@ -1,47 +1,3 @@
-# Liblossy
-
-Liblossy is a library that abstracts differences between different lossless and lossy compressors.
-
-## Configuring Liblossy
-
-Liblossy uses cmake to configure build options.  See CMake documentation to see how to configure options
-
-+ `CMAKE_INSTALL_PREFIX` - install the library to a local directory prefix
-+ `BUILD_DOCS` - build the project documentation
-+ `BUILD_TESTS` - build the test cases
-
-## Building and Installing Liblossy
-
-To build and install the library only.
-
-```bash
-BUILD_DIR=build
-mkdir $BUILD_DIR
-cd $BUILD_DIR
-cmake ..
-make
-make install
-```
-
-To build the documentation:
-
-
-```bash
-BUILD_DIR=build
-mkdir $BUILD_DIR
-cd $BUILD_DIR
-cmake . -DBUILD_DOCS=ON
-make docs
-# the html docs can be found in $BUILD_DIR/html/index.html
-# the man pages can be found in $BUILD_DIR/man/
-```
-
-## Using Liblossy
-
-Here is a minimal example with error checking of how to use liblossy:
-
-
-~~~c
 #include <liblossy.h>
 #include <liblossy_ext/compressor_sz.h>
 
@@ -51,11 +7,10 @@ Here is a minimal example with error checking of how to use liblossy:
 int main(int argc, char *argv[])
 {
   struct lossy* library = lossy_instance();
-  struct lossy_compressor* compressor = lossy_get_compressor(library, "sz");
+  struct lossy_compressor* compressor = lossy_get_compressor(library, "zfp");
   struct lossy_options* sz_options = lossy_compressor_get_options(compressor);
 
-  lossy_options_set_integer(sz_options, "sz:mode", ABS);
-  lossy_options_set_double(sz_options, "sz:abs_error_bound", 0.5);
+  lossy_options_set_double(sz_options, "zfp:accuracy", 0.5);
   if(lossy_compressor_check_options(compressor, sz_options)) {
     printf("%s\n", lossy_compressor_error_msg(compressor));
     exit(lossy_compressor_error_code(compressor));
@@ -98,6 +53,3 @@ int main(int argc, char *argv[])
   lossy_release(&library);
   return 0;
 }
-~~~
-
-More examples can be found in `test/`

@@ -21,20 +21,48 @@ struct lossy_options;
  */
 struct lossy_options* lossy_compressor_get_options(struct lossy_compressor const* compressor);
 /*!
- * sets the options for the lossy_compressor
+ * sets the options for the lossy_compressor.  Compressors MAY choose to ignore
+ * some subset of options passed in if there valid but conflicting settings
+ * (i.e. two settings that adjust the same underlying configuration).
+ * Compressors SHOULD return an error value if configuration
+ * failed due to a missing required setting or an invalid one. Users MAY
+ * call lossy_compressor_error_msg() to get more information about the warnings or errors
+ * Compressors MUST ignore any and all options set that they do not support.
+ *
  * \param[in] compressor which compressor to get options for
  * \param[in] options the options to set
- * \returns 0 if successful, or non-zero code on error.
+ * \returns 0 if successful, positive values on errors, negative values on warnings
+ *
+ * \see lossy_compressor_error_msg
  */
 int lossy_compressor_set_options(struct lossy_compressor* compressor, struct lossy_options const * options);
+/*!
+ * Validates that only defined options have been set.  This can be useful for programmer errors.
+ * This function should NOT be used with any option structure which contains options for multiple compressors.
+ * Other checks MAY be preformed implementing compressors.
+ * 
+ * \param[in] compressor which compressor to validate the options struct against
+ * \param[in] options which options set to check against.  It should ONLY contain options returned by lossy_compressor_get_options
+ * \returns 0 if successful, 1 if there is an error.  On error, an error message is set in lossy_compressor_error_msg.
+ * \see lossy_compressor_error_msg to get the error message
+ */
+int lossy_compressor_check_options(struct lossy_compressor* compressor, struct lossy_options const * options);
+
 
 //compression/decompression functions
 /*!
  * compresses the data in data using the specified compressor
  * \param[in] compressor compressor to be used
  * \param[in] input data to be compressed and associated metadata
- * \param[in,out] output output data and metadata that may be used for how to output information provide this information if possible
- * \returns returns 0 if there is no error or a compressor specific code there is an error
+ * \param[in,out] output 
+ *    when passed in, \c output MAY contain metadata (type, dimentions) and additionally MAY contain a buffer.
+ *    lossy_data_free will be called on the pointer passed into this function if a new owning lossy_data structure is returned.
+ *    when passed out, \c output will contain either:
+ *      1. The same pointer passed in to \c output if the compressor supports
+ *         using a provided buffer for the results of the compression and contains has a buffer.  It is
+ *         recommended the user provide an owning lossy_data structure if passing a lossy_data structure with a buffer.
+ *      2. A new owning lossy_data structure with the results of the compression
+ * \returns 0 if successful, positive values on errors, negative values on warnings
  */
 int lossy_compressor_compress(struct lossy_compressor* compressor, struct lossy_data * input, struct lossy_data** output);
 /*!
@@ -44,10 +72,15 @@ int lossy_compressor_compress(struct lossy_compressor* compressor, struct lossy_
  *
  * \param[in] compressor compressor to be used
  * \param[in] input data to be decompressed and associated metadata
- * \param[in,out] output output data and metadata that may be used for how to output information provide this information if possible
- * \returns returns 0 if there is no error or a compressor specific code there is an error
+ * \param[in,out] output 
+ *    when passed in, \c output SHOULD contain the metadata (type, dimentions) for the output of the compression if available.
+ *    lossy_data_free will be called the pointer passed in during this function.
+ *    when passed out, it will contain an owning lossy_data structure with the result of the decompression.
+ * \returns 0 if successful, positive values on errors, negative values on warnings
+ * \see lossy_data_new_empty often used as the pointer passed into \c output
+ * \see lossy_data_new_move often used as the pointer passed out of \c output
  */
-int lossy_compressor_decompress(struct lossy_compressor* compressor, struct lossy_data * data, struct lossy_data** output);
+int lossy_compressor_decompress(struct lossy_compressor* compressor, struct lossy_data * input, struct lossy_data** output);
 
 /**
  * \param[in] compressor the compressor to query

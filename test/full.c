@@ -48,29 +48,8 @@ void print_all_options(struct lossy_options* options) {
   lossy_options_iter_free(iter);
 }
 
-int main(int argc, char *argv[])
-{
-  //get an instance to the library
-  struct lossy* library = lossy_instance();
-  assert(library != NULL);
-
-  //check if liblossy supports SZ
-  printf("liblossy version: %s\n", lossy_version());
-  assert(strstr(lossy_features(), "sz") != NULL);
-
-  //get an instance of a compressor
-  struct lossy_compressor* compressor = lossy_get_compressor(library, "sz");
-  printf("sz version: %s\n", lossy_compressor_version(compressor));
-  assert(compressor != NULL);
-
-  //get the list of configuration options
-  printf("getting options\n");
-  struct lossy_options* sz_options = lossy_compressor_get_options(compressor);
-  assert(sz_options != NULL);
-
-  //print all the configuration options
-  print_all_options(sz_options);
-
+void test_options(struct lossy_options const* options) {
+  struct lossy_options* sz_options = lossy_options_copy(options);
   //set a configuration option for a compressor
   lossy_options_set_integer(sz_options, "sz:mode", ABS);
 
@@ -87,15 +66,19 @@ int main(int argc, char *argv[])
   {
     assert(false && "the mode should be defined");
   }
+  lossy_option_free(mode_option);
+  lossy_options_free(sz_options);
+}
 
-  printf("setting options\n");
-  lossy_compressor_set_options(compressor, sz_options);
+void run_compressor(const char* compressor_name, struct lossy_compressor* compressor, struct lossy_options* options) {
+  printf("%s\n", compressor_name);
+  lossy_compressor_set_options(compressor, options);
 
 
   //load a 300x300x300 dataset
   double* rawinput_data = make_input_data();
   size_t dims[] = {300,300,300};
-  struct lossy_data* input_data = lossy_data_new(lossy_double_dtype, rawinput_data, 3, dims);
+  struct lossy_data* input_data = lossy_data_new_move(lossy_double_dtype, rawinput_data, 3, dims, lossy_data_libc_free_fn, NULL);
 
   //creates an output dataset pointer
   struct lossy_data* compressed_data = lossy_data_new_empty(lossy_byte_dtype, 0, NULL);
@@ -113,17 +96,59 @@ int main(int argc, char *argv[])
     exit(lossy_compressor_error_code(compressor));
   }
 
-  free(lossy_data_ptr(decompressed_data, NULL));
   lossy_data_free(decompressed_data);
-
-  free(lossy_data_ptr(compressed_data, NULL));
   lossy_data_free(compressed_data);
-
-  free(rawinput_data);
   lossy_data_free(input_data);
 
+
+}
+
+int main(int argc, char *argv[])
+{
+  //get an instance to the library
+  struct lossy* library = lossy_instance();
+  assert(library != NULL);
+
+  //check if liblossy supports SZ
+  printf("liblossy version: %s\n", lossy_version());
+  assert(strstr(lossy_features(), "sz") != NULL);
+
+  //get an instance of a compressor
+  struct lossy_compressor* zfp_compressor = lossy_get_compressor(library, "zfp");
+  struct lossy_compressor* sz_compressor = lossy_get_compressor(library, "sz");
+  printf("sz version: %s\n", lossy_compressor_version(sz_compressor));
+  printf("zfp version: %s\n", lossy_compressor_version(zfp_compressor));
+  assert(sz_compressor != NULL);
+
+  //get the list of configuration options
+  printf("getting options\n");
+  struct lossy_options* sz_options = lossy_compressor_get_options(sz_compressor);
+  lossy_options_set_double(sz_options, "sz:abs_err_bound", .5);
+  if(lossy_compressor_check_options(sz_compressor, sz_options)) {
+    printf("%s\n", lossy_compressor_error_msg(sz_compressor));
+    exit(lossy_compressor_error_code(sz_compressor));
+  }
+
+  struct lossy_options* zfp_options = lossy_compressor_get_options(zfp_compressor);
+  lossy_options_set_double(zfp_options, "zfp:accuracy", .5);
+  if(lossy_compressor_check_options(zfp_compressor, zfp_options)) {
+    printf("%s\n", lossy_compressor_error_msg(zfp_compressor));
+    exit(lossy_compressor_error_code(zfp_compressor));
+  }
+
+  struct lossy_options* options = lossy_options_merge(sz_options, zfp_options);
   lossy_options_free(sz_options);
-  lossy_option_free(mode_option);
+  lossy_options_free(zfp_options);
+  assert(options != NULL);
+
+  //print all the configuration options
+  print_all_options(options);
+  test_options(options);
+
+  run_compressor("sz", sz_compressor, options);
+  run_compressor("zfp", zfp_compressor, options);
+
+  lossy_options_free(options);
   lossy_release(&library);
 
   return 0;

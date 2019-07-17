@@ -14,16 +14,55 @@ extern "C" {
 
 struct lossy_data;
 
+/**
+ * signature for a custom deleter for lossy_data
+ *
+ * \param[in] data to be deallocated
+ * \param[in] metadata  metadata passed to lossy_data_new_move, if allocated, it too should be freed
+ *
+ * \see lossy_data_new_move
+ */
+typedef void (*lossy_data_delete_fn)(void* data, void* metadata);
+
+/**
+ * a custom deleter that uses libc's free and ignores the metadata
+ * \param[in] data to be deallocated with free()
+ * \param[in] metadata  ignored
+ */
+void lossy_data_libc_free_fn (void* data, void* metadata);
+
 /** 
  *  allocates a new lossy_data structure, it does NOT take ownership of data.
+ *
  *  \param[in] dtype type of the data stored by the pointer
  *  \param[in] data the actual data to be represented
  *  \param[in] num_dimentions the number of dimentions; must match the length of dimensions
  *  \param[in] dimensions an array corresponding to the dimentions of the data, a copy is made of this on construction
  */
-struct lossy_data* lossy_data_new(const enum lossy_dtype dtype, void* data, size_t const num_dimentions, size_t const dimensions[]);
+struct lossy_data* lossy_data_new_nonowning(const enum lossy_dtype dtype, void* data, size_t const num_dimentions, size_t const dimensions[]);
 /** 
- *  allocates a new lossy_data without data.  
+ *  allocates a new lossy_data structure and corresponding data and copies data in from the specified source
+ *  use this function when the underlying data pointer may be deleted
+ *
+ *  \param[in] dtype type of the data stored by the pointer
+ *  \param[in] src the data to be copied into the data structure
+ *  \param[in] num_dimentions the number of dimentions; must match the length of dimensions
+ *  \param[in] dimensions an array corresponding to the dimentions of the data, a copy is made of this on construction
+ */
+struct lossy_data* lossy_data_new_copy(const enum lossy_dtype dtype, void* src, size_t const num_dimentions, size_t const dimensions[]);
+/** 
+ *  allocates a new lossy_data structure and corresponding data. The corresponding data is uninitialized
+ *
+ *  \param[in] dtype type of the data stored by the pointer
+ *  \param[in] num_dimentions the number of dimentions; must match the length of dimensions
+ *  \param[in] dimensions an array corresponding to the dimentions of the data, a copy is made of this on construction
+ *
+ *  \see lossy_data_ptr to access the allocated data
+ */
+struct lossy_data* lossy_data_new_owning(const enum lossy_dtype dtype, size_t const num_dimentions, size_t const dimensions[]);
+/** 
+ *  allocates a new lossy_data without data.
+ *
  *  \param[in] dtype type of the data stored by the pointer
  *  \param[in] num_dimentions the number of dimentions; must match the length of dimensions
  *  \param[in] dimensions an array corresponding to the dimensions of the data, a copy is made of this on construction
@@ -31,6 +70,21 @@ struct lossy_data* lossy_data_new(const enum lossy_dtype dtype, void* data, size
  *  \see lossy_compressor_decompress to provide output buffer meta data.
  */
 struct lossy_data* lossy_data_new_empty(const enum lossy_dtype dtype, size_t const num_dimentions, size_t const dimensions[]);
+
+/**
+ * allocates a new lossy_data structure using data that was already allocated.
+ * data referenced by this structure will be deallocated using the function
+ * deleter when the lossy_data structure is freed.
+ *
+ * \param[in] dtype the type of the data to store
+ * \param[in] data the pointer to be "moved" into the lossy_data structure
+ * \param[in] num_dimentions the number of dimentions; must match the length of dimensions
+ * \param[in] dimensions an array corresponding to the dimentions of the data, a copy is made of this on construction
+ * \param[in] deleter the function to be called when lossy_data_free is called on this structure
+ * \param[in] metadata passed to the deleter function when lossy_data_free is called, it may be null if unneeded
+ */
+struct lossy_data* lossy_data_new_move(const enum lossy_dtype dtype, void* data, size_t const num_dimentions,
+    size_t const dimensions[], lossy_data_delete_fn deleter, void* metadata);
 
 /**
  * frees a lossy_data structure, but not the underlying data
@@ -74,7 +128,7 @@ size_t lossy_data_num_dimentions(struct lossy_data const* data);
  * \param[in] dimension zero indexed dimension
  * \returns the dimension or 0 If the dimension requested exceeds num_dimentions
  */
-size_t lossy_data_get_dimention(struct lossy_data const* data, size_t const dimention);
+size_t lossy_data_get_dimention(struct lossy_data const* data, size_t const dimension);
 
 #endif
 

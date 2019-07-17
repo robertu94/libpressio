@@ -49,6 +49,8 @@ struct lossy_compressor* lossy_get_compressor(struct lossy* library, const char*
     std::string compressor_id_s = compressor_id;
     if(compressor_id_s == "sz") {
       library->compressors.emplace("sz",lossy_compressor(make_sz())); 
+    } else if (compressor_id_s == "zfp") {
+      library->compressors.emplace("zfp",lossy_compressor(make_zfp())); 
     } else {
       return nullptr;
     }

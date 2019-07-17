@@ -16,6 +16,7 @@ struct lossy_options_iter;
 struct lossy_option;
 
 
+/** possible status of a particular key in the option structure*/
 enum  lossy_options_key_status{
   /** the requested key exists and is set*/
   lossy_options_key_set=0,
@@ -30,9 +31,9 @@ enum  lossy_options_key_status{
 /**
  * Frees the memory associated with a lossy option structure
  *
- * \param[in,out] frees the lossy option structure
+ * \param[in,out] options frees the lossy option structure
  */
-void lossy_options_free(struct lossy_options*);
+void lossy_options_free(struct lossy_options* options);
 
 /**
  * Copies the memory associated with this lossy option structure
@@ -59,6 +60,16 @@ struct lossy_options* lossy_options_new();
  * \param[in] key the key whose value to clear
  */
 void lossy_options_clear(struct lossy_options* options, const char* key);
+
+/**
+ * Merges two lossy options together into one.  Copies all keys and
+ * corresponding values from rhs not in lhs into a new structure.
+ * 
+ * \param[in] lhs the structure to insert keys into.
+ * \param[in] rhs the lossy_options structure to merge in.  It is deallocated when the function returns.
+ * \return a new lossy_options structure.
+ */
+struct lossy_options* lossy_options_merge(struct lossy_options const* lhs, struct lossy_options const* rhs);
 
 /** Sets an particular key in an options structure with the given key to a value 
  *  \param[in] options the options structure to modify 

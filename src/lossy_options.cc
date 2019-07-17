@@ -1,5 +1,7 @@
 #include <variant>
 #include <map>
+#include <algorithm>
+#include <iterator>
 #include <string>
 #include "lossy_options_impl.h"
 
@@ -66,6 +68,12 @@ lossy_option* lossy_options_get(struct lossy_options const* options, const char*
   return new lossy_option(options->get(key));
 }
 
+struct lossy_options* lossy_options_merge(struct lossy_options const* lhs, struct lossy_options const* rhs) {
+  struct lossy_options* merged = new lossy_options(*lhs);
+  std::copy(std::begin(*rhs), std::end(*rhs), std::inserter(*merged, merged->begin()));
+
+  return merged;
+}
 
 
 //special case for strings

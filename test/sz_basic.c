@@ -3,6 +3,7 @@
 
 #include "make_input_data.h"
 
+
 int main(int argc, char *argv[])
 {
   struct lossy* library = lossy_instance();
@@ -10,13 +11,20 @@ int main(int argc, char *argv[])
   struct lossy_options* sz_options = lossy_compressor_get_options(compressor);
 
   lossy_options_set_integer(sz_options, "sz:mode", ABS);
-  lossy_options_set_double(sz_options, "sz:abs_error_bound", 0.5);
-  lossy_compressor_set_options(compressor, sz_options);
+  lossy_options_set_double(sz_options, "sz:abs_err_bound", 0.5);
+  if(lossy_compressor_check_options(compressor, sz_options)) {
+    printf("%s\n", lossy_compressor_error_msg(compressor));
+    exit(lossy_compressor_error_code(compressor));
+  }
+  if(lossy_compressor_set_options(compressor, sz_options)) {
+    printf("%s\n", lossy_compressor_error_msg(compressor));
+    exit(lossy_compressor_error_code(compressor));
+  }
   
-  //load a 300x300x300 dataset
+  //load a 300x300x300 dataset into data created with malloc
   double* rawinput_data = make_input_data();
   size_t dims[] = {300,300,300};
-  struct lossy_data* input_data = lossy_data_new(lossy_double_dtype, rawinput_data, 3, dims);
+  struct lossy_data* input_data = lossy_data_new_move(lossy_double_dtype, rawinput_data, 3, dims, lossy_data_libc_free_fn, NULL);
 
   //creates an output dataset pointer
   struct lossy_data* compressed_data = lossy_data_new_empty(lossy_byte_dtype, 0, NULL);
@@ -36,16 +44,9 @@ int main(int argc, char *argv[])
     exit(lossy_compressor_error_code(compressor));
   }
 
-  //free the decompressed_data
-  free(lossy_data_ptr(decompressed_data, NULL));
+  //free the input, decompressed, and compressed data
   lossy_data_free(decompressed_data);
-
-  //free the compressed_data
-  free(lossy_data_ptr(compressed_data, NULL));
   lossy_data_free(compressed_data);
-
-  //free the raw input data
-  free(rawinput_data);
   lossy_data_free(input_data);
 
   //free options and the library

@@ -21,7 +21,7 @@ struct lossy_options_iter;
  *
  * \returns an iterator over all keys
  */
-struct lossy_options_iter* lossy_options_get_iter(struct lossy_options* options);
+struct lossy_options_iter* lossy_options_get_iter(struct lossy_options const* options);
 /**
  * Returns true if the current position has a value
  * \param[in] iter to check if it has a next value
@@ -42,9 +42,9 @@ char const* lossy_options_iter_get_key(struct lossy_options_iter* const iter);
 /**
  * get the value for the current position of the iterator
  * \param[in] iter the iterator to get the current value for
- * \returns a non-owning pointer to the value associated with the current position of the iterator
+ * \returns a owning pointer to the value associated with the current position of the iterator
  */
-struct lossy_option* lossy_options_iter_get_value(struct lossy_options_iter* const iter);
+struct lossy_option * lossy_options_iter_get_value(struct lossy_options_iter* const iter);
 /**
  * \param[in] iter the iterator to free
  * frees memory associated with the iterator

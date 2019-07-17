@@ -27,7 +27,9 @@ void lossy_release(struct lossy** library);
 
 /**
  * \param[in] library the pointer to the library
+ * \param[in] compressor_id the compressor to use
  * \returns non-owning pointer to the requested instantiated lossy compressor; it may return the same pointer on multiple calls
+ * \see lossy_features for a list of available compressors
  */
 struct lossy_compressor* lossy_get_compressor(struct lossy* library, const char* const compressor_id);
 
