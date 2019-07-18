@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
-project(liblossy VERSION "0.2.0" LANGUAGES CXX C)
+project(liblossy VERSION "0.3.0" LANGUAGES CXX C)
 
 enable_testing()
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -84,6 +84,7 @@ if(BUILD_DOCS)
   set(DOXYGEN_GENERATE_MAN YES)
   set(DOXYGEN_EXTRACT_LOCAL_METHODS YES)
   set(DOXYGEN_EXTRACT_STATIC YES)
+  set(DOXYGEN_MACRO_EXPANSION YES)
   set(DOXYGEN_USE_MDFILE_AS_MAINPAGE README.md)
   doxygen_add_docs(
     docs
