@@ -1,11 +1,11 @@
 #include <vector>
 #include <memory>
-#include "liblossy_plugin.h"
-#include "lossy_options.h"
-#include "lossy_data.h"
+#include "libpressio_plugin.h"
+#include "pressio_options.h"
+#include "pressio_data.h"
 #include "zfp.h"
 
-class zfp_plugin: public liblossy_plugin {
+class zfp_plugin: public libpressio_plugin {
   public:
     zfp_plugin() {
       zfp = zfp_stream_open(NULL);
@@ -17,69 +17,69 @@ class zfp_plugin: public liblossy_plugin {
       zfp_stream_close(zfp);
     }
 
-    virtual struct lossy_options* get_options() const override {
-      struct lossy_options* options = lossy_options_new();
-      lossy_options_set_uinteger(options, "zfp:minbits", zfp->minbits);
-      lossy_options_set_uinteger(options, "zfp:maxbits", zfp->maxbits);
-      lossy_options_set_uinteger(options, "zfp:maxprec", zfp->maxprec);
-      lossy_options_set_integer(options, "zfp:minexp", zfp->minexp);
-      lossy_options_set_integer(options, "zfp:execution", zfp_stream_execution(zfp));
-      lossy_options_set_uinteger(options, "zfp:omp_threads", zfp_stream_omp_threads(zfp));
-      lossy_options_set_uinteger(options, "zfp:omp_chunk_size", zfp_stream_omp_chunk_size(zfp));
-      lossy_options_clear(options, "zfp:precision");
-      lossy_options_clear(options, "zfp:accuracy");
-      lossy_options_clear(options, "zfp:rate");
-      lossy_options_clear(options, "zfp:type");
-      lossy_options_clear(options, "zfp:dims");
-      lossy_options_clear(options, "zfp:wra");
-      lossy_options_clear(options, "zfp:mode");
+    virtual struct pressio_options* get_options() const override {
+      struct pressio_options* options = pressio_options_new();
+      pressio_options_set_uinteger(options, "zfp:minbits", zfp->minbits);
+      pressio_options_set_uinteger(options, "zfp:maxbits", zfp->maxbits);
+      pressio_options_set_uinteger(options, "zfp:maxprec", zfp->maxprec);
+      pressio_options_set_integer(options, "zfp:minexp", zfp->minexp);
+      pressio_options_set_integer(options, "zfp:execution", zfp_stream_execution(zfp));
+      pressio_options_set_uinteger(options, "zfp:omp_threads", zfp_stream_omp_threads(zfp));
+      pressio_options_set_uinteger(options, "zfp:omp_chunk_size", zfp_stream_omp_chunk_size(zfp));
+      pressio_options_set_type(options, "zfp:precision", pressio_option_uint32_type);
+      pressio_options_set_type(options, "zfp:accuracy", pressio_option_double_type);
+      pressio_options_set_type(options, "zfp:rate", pressio_option_double_type);
+      pressio_options_set_type(options, "zfp:type", pressio_option_uint32_type);
+      pressio_options_set_type(options, "zfp:dims", pressio_option_int32_type);
+      pressio_options_set_type(options, "zfp:wra", pressio_option_int32_type);
+      pressio_options_set_type(options, "zfp:mode", pressio_option_uint32_type);
       return options;
     }
 
-    virtual int set_options(struct lossy_options const* options) override {
+    virtual int set_options(struct pressio_options const* options) override {
       
       //precision, accuracy, and expert mode settings
-      if(unsigned int mode; lossy_options_get_uinteger(options, "zfp:mode", &mode) == lossy_options_key_set) {
+      if(unsigned int mode; pressio_options_get_uinteger(options, "zfp:mode", &mode) == pressio_options_key_set) {
         zfp_stream_set_mode(zfp, mode);
-      } else if(unsigned int precision; lossy_options_get_uinteger(options, "zfp:precision", &precision) == lossy_options_key_set) {
+      } else if(unsigned int precision; pressio_options_get_uinteger(options, "zfp:precision", &precision) == pressio_options_key_set) {
         zfp_stream_set_precision(zfp, precision);
-      } else if (double tolerance; lossy_options_get_double(options, "zfp:accuracy", &tolerance) == lossy_options_key_set) {
+      } else if (double tolerance; pressio_options_get_double(options, "zfp:accuracy", &tolerance) == pressio_options_key_set) {
         zfp_stream_set_accuracy(zfp, tolerance);
-      } else if (double rate; lossy_options_get_double(options, "zfp:rate", &rate) == lossy_options_key_set) {
+      } else if (double rate; pressio_options_get_double(options, "zfp:rate", &rate) == pressio_options_key_set) {
         unsigned int type, dims, wra;
         if(
-            lossy_options_get_uinteger(options, "zfp:type", &type) == lossy_options_key_set &&
-            lossy_options_get_uinteger(options, "zfp:dims", &dims) == lossy_options_key_set &&
-            lossy_options_get_uinteger(options, "zfp:wra", &wra) == lossy_options_key_set) {
+            pressio_options_get_uinteger(options, "zfp:type", &type) == pressio_options_key_set &&
+            pressio_options_get_uinteger(options, "zfp:dims", &dims) == pressio_options_key_set &&
+            pressio_options_get_uinteger(options, "zfp:wra", &wra) == pressio_options_key_set) {
           zfp_stream_set_rate(zfp, rate, (zfp_type)type, dims, wra);
         } else {
           set_error(1, "if you set rate, you must set type, dims, and wra for the rate mode");
           return 1;
         }
       } else {
-        lossy_options_get_uinteger(options, "zfp:minbits", &zfp->minbits);
-        lossy_options_get_uinteger(options, "zfp:maxbits", &zfp->maxbits);
-        lossy_options_get_uinteger(options, "zfp:maxprec", &zfp->maxprec);
-        lossy_options_get_integer(options, "zfp:minexp", &zfp->minexp);
+        pressio_options_get_uinteger(options, "zfp:minbits", &zfp->minbits);
+        pressio_options_get_uinteger(options, "zfp:maxbits", &zfp->maxbits);
+        pressio_options_get_uinteger(options, "zfp:maxprec", &zfp->maxprec);
+        pressio_options_get_integer(options, "zfp:minexp", &zfp->minexp);
       }
 
-      if(unsigned int threads; lossy_options_get_uinteger(options, "zfp:omp_threads", &threads) == lossy_options_key_set) {
+      if(unsigned int threads; pressio_options_get_uinteger(options, "zfp:omp_threads", &threads) == pressio_options_key_set) {
         zfp_stream_set_omp_threads(zfp, threads);
       }
-      if(unsigned int chunk_size; lossy_options_get_uinteger(options, "zfp:omp_chunk_size", &chunk_size) == lossy_options_key_set) {
+      if(unsigned int chunk_size; pressio_options_get_uinteger(options, "zfp:omp_chunk_size", &chunk_size) == pressio_options_key_set) {
         zfp_stream_set_omp_chunk_size(zfp, chunk_size);
       }
-      if(unsigned int execution;lossy_options_get_uinteger(options, "zfp:execution", &execution) == lossy_options_key_set) { 
+      if(unsigned int execution;pressio_options_get_uinteger(options, "zfp:execution", &execution) == pressio_options_key_set) { 
         zfp_stream_set_execution(zfp, (zfp_exec_policy)execution);
       }
 
       return 0;
     }
 
-    int compress(struct lossy_data* input, struct lossy_data** output) override {
+    int compress(struct pressio_data* input, struct pressio_data** output) override {
 
       zfp_field* in_field;
-      if(int ret = convert_lossy_data_to_field(input, &in_field)) {
+      if(int ret = convert_pressio_data_to_field(input, &in_field)) {
         return ret;
       }
 
@@ -91,34 +91,34 @@ class zfp_plugin: public liblossy_plugin {
       zfp_stream_rewind(zfp);
 
       size_t outsize = zfp_compress(zfp, in_field);
-      lossy_data_free(*output);
-      *output = lossy_data_new_move(lossy_byte_dtype, stream_data(stream), 1, &outsize, lossy_data_libc_free_fn, nullptr);
+      pressio_data_free(*output);
+      *output = pressio_data_new_move(pressio_byte_dtype, stream_data(stream), 1, &outsize, pressio_data_libc_free_fn, nullptr);
 
       zfp_field_free(in_field);
       stream_close(stream);
       return 0;
     }
 
-    int decompress(struct lossy_data* input, struct lossy_data** output) override {
+    int decompress(struct pressio_data* input, struct pressio_data** output) override {
       size_t size;
-      void* ptr = lossy_data_ptr(input, &size);
+      void* ptr = pressio_data_ptr(input, &size);
       bitstream* stream = stream_open(ptr, size);
       zfp_stream_set_bit_stream(zfp, stream);
       zfp_stream_rewind(zfp);
 
-      enum lossy_dtype dtype = lossy_data_dtype(*output);
-      size_t dim = lossy_data_num_dimentions(*output);
+      enum pressio_dtype dtype = pressio_data_dtype(*output);
+      size_t dim = pressio_data_num_dimentions(*output);
       size_t dims[] = {
-        lossy_data_get_dimention(*output, 0),
-        lossy_data_get_dimention(*output, 1),
-        lossy_data_get_dimention(*output, 2),
-        lossy_data_get_dimention(*output, 3),
+        pressio_data_get_dimention(*output, 0),
+        pressio_data_get_dimention(*output, 1),
+        pressio_data_get_dimention(*output, 2),
+        pressio_data_get_dimention(*output, 3),
       };
-      lossy_data_free(*output);
-      *output = lossy_data_new_owning(dtype, dim, dims);
+      pressio_data_free(*output);
+      *output = pressio_data_new_owning(dtype, dim, dims);
       zfp_field* out_field;
 
-      if(int ret = convert_lossy_data_to_field(*output, &out_field)) {
+      if(int ret = convert_pressio_data_to_field(*output, &out_field)) {
         return ret;
       }
       zfp_decompress(zfp, out_field);
@@ -149,19 +149,19 @@ class zfp_plugin: public liblossy_plugin {
     int invalid_type() { return set_error(1, "invalid_type");}
     int invalid_dimentions() { return set_error(2, "invalid_dimentions");}
 
-    int liblossy_type(lossy_data* data, zfp_type* type) {
-      switch(lossy_data_dtype(data))
+    int libpressio_type(pressio_data* data, zfp_type* type) {
+      switch(pressio_data_dtype(data))
       {
-        case lossy_int32_dtype:
+        case pressio_int32_dtype:
           *type = zfp_type_int32;
           break;
-        case lossy_int64_dtype:
+        case pressio_int64_dtype:
           *type = zfp_type_int64;
           break;
-        case lossy_double_dtype:
+        case pressio_double_dtype:
           *type = zfp_type_double;
           break;
-        case lossy_float_dtype:
+        case pressio_float_dtype:
           *type = zfp_type_double;
           break;
         default:
@@ -169,17 +169,17 @@ class zfp_plugin: public liblossy_plugin {
       }
       return 0;
     }
-    int convert_lossy_data_to_field(struct lossy_data* data, zfp_field** field) {
+    int convert_pressio_data_to_field(struct pressio_data* data, zfp_field** field) {
       zfp_type type;
-      void* in_data = lossy_data_ptr(data, nullptr);
-      unsigned int r0 = lossy_data_get_dimention(data, 0);
-      unsigned int r1 = lossy_data_get_dimention(data, 1);
-      unsigned int r2 = lossy_data_get_dimention(data, 2);
-      unsigned int r3 = lossy_data_get_dimention(data, 3);
-      if(liblossy_type(data, &type)) {
+      void* in_data = pressio_data_ptr(data, nullptr);
+      unsigned int r0 = pressio_data_get_dimention(data, 0);
+      unsigned int r1 = pressio_data_get_dimention(data, 1);
+      unsigned int r2 = pressio_data_get_dimention(data, 2);
+      unsigned int r3 = pressio_data_get_dimention(data, 3);
+      if(libpressio_type(data, &type)) {
         return invalid_type();
       }
-      switch(lossy_data_num_dimentions(data))
+      switch(pressio_data_num_dimentions(data))
       {
         case 1:
           *field = zfp_field_1d(in_data, type, r0);
@@ -202,6 +202,6 @@ class zfp_plugin: public liblossy_plugin {
     zfp_stream* zfp;
 };
 
-std::unique_ptr<liblossy_plugin> make_zfp() {
+std::unique_ptr<libpressio_plugin> make_zfp() {
   return std::make_unique<zfp_plugin>();
 }

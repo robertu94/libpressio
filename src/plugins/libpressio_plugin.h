@@ -1,58 +1,58 @@
-#ifndef LIBLOSSY_COMPRESSOR_IMPL_H
-#define LIBLOSSY_COMPRESSOR_IMPL_H
+#ifndef LIBPRESSIO_COMPRESSOR_IMPL_H
+#define LIBPRESSIO_COMPRESSOR_IMPL_H
 #include <string>
 
 /*!\file 
- * \brief an implementation-only header for adding plugins to liblossy
+ * \brief an implementation-only header for adding plugins to libpressio
  */
 
-struct lossy_data;
-struct lossy_options;
+struct pressio_data;
+struct pressio_options;
 
-class liblossy_plugin {
+class libpressio_plugin {
   public:
   /** compressor should free their global memory in the destructor */
-  virtual ~liblossy_plugin();
+  virtual ~libpressio_plugin();
   /** get a set of options available for the compressor.
    *
    * The compressor should set a value if they have been set as default
    * The compressor should set a "reset" value if they are required to be set, but don't have a meaningful default
    *
-   * \see lossy_compressor_get_options for the semantics this function should obey
-   * \see lossy_options_clear to set a "reset" value
-   * \see lossy_options_set_integer to set an integer value
-   * \see lossy_options_set_double to set an double value
-   * \see lossy_options_set_userptr to set an data value, include an \c include/ext/\<my_plugin\>.h to define the structure used
-   * \see lossy_options_set_string to set a string value
+   * \see pressio_compressor_get_options for the semantics this function should obey
+   * \see pressio_options_clear to set a "reset" value
+   * \see pressio_options_set_integer to set an integer value
+   * \see pressio_options_set_double to set an double value
+   * \see pressio_options_set_userptr to set an data value, include an \c include/ext/\<my_plugin\>.h to define the structure used
+   * \see pressio_options_set_string to set a string value
    */
-  virtual struct lossy_options* get_options() const=0;
+  virtual struct pressio_options* get_options() const=0;
   /** sets a set of options for the compressor 
    * \param[in] options to set for configuration of the compressor
-   * \see lossy_compressor_set_options for the semantics this function should obey
+   * \see pressio_compressor_set_options for the semantics this function should obey
    */
-  virtual int set_options(struct lossy_options const* options)=0;
-  /** compresses a lossy_data buffer
-   * \see lossy_compressor_compress for the semantics this function should obey
+  virtual int set_options(struct pressio_options const* options)=0;
+  /** compresses a pressio_data buffer
+   * \see pressio_compressor_compress for the semantics this function should obey
    */
-  virtual int compress(struct lossy_data* input, struct lossy_data** output)=0;
-  /** decompress a lossy_data buffer
-   * \see lossy_compressor_decompress for the semantics this function should obey
+  virtual int compress(struct pressio_data* input, struct pressio_data** output)=0;
+  /** decompress a pressio_data buffer
+   * \see pressio_compressor_decompress for the semantics this function should obey
    */
-  virtual int decompress(struct lossy_data* input, struct lossy_data** output)=0;
+  virtual int decompress(struct pressio_data* input, struct pressio_data** output)=0;
   /** get a version string for the compressor
-   * \see lossy_compressor_version for the semantics this function should obey
+   * \see pressio_compressor_version for the semantics this function should obey
    */
   virtual const char* version() const=0;
   /** get the major version, default version returns 0
-   * \see lossy_compressor_major_version for the semantics this function should obey
+   * \see pressio_compressor_major_version for the semantics this function should obey
    */
   virtual int major_version() const;
   /** get the minor version, default version returns 0
-   * \see lossy_compressor_minor_version for the semantics this function should obey
+   * \see pressio_compressor_minor_version for the semantics this function should obey
    */
   virtual int minor_version() const;
   /** get the patch version, default version returns 0
-   * \see lossy_compressor_patch_version for the semantics this function should obey
+   * \see pressio_compressor_patch_version for the semantics this function should obey
    */
   virtual int patch_version() const;
 
@@ -69,9 +69,9 @@ class liblossy_plugin {
    * the default verison just checks for unknown options passed in.
    * overriding implementations SHOULD call this version and return any errors it provides FIRST.
    *
-   * \see lossy_compressor_check_options for semantics this function obeys
+   * \see pressio_compressor_check_options for semantics this function obeys
    * */
-  virtual int check_options(struct lossy_options const*);
+  virtual int check_options(struct pressio_options const*);
 
   protected:
   /**

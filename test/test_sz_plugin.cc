@@ -2,32 +2,32 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
-#include "lossy.h"
-#include "lossy_version.h"
-#include "lossy_compressor.h"
+#include "pressio.h"
+#include "pressio_version.h"
+#include "pressio_compressor.h"
 
-class LossyCompressor: public ::testing::Test {
+class PressioCompressor: public ::testing::Test {
   protected:
     void SetUp() {
-      library = lossy_instance();
-      compressor = lossy_get_compressor(library, "sz");
+      library = pressio_instance();
+      compressor = pressio_get_compressor(library, "sz");
     }
 
     void TearDown() {
-      lossy_release(&library);
+      pressio_release(&library);
     }
 
-    struct lossy* library;
-    struct lossy_compressor* compressor;
+    struct pressio* library;
+    struct pressio_compressor* compressor;
 };
 
-TEST_F(LossyCompressor, VersionTest) {
-  EXPECT_THAT(lossy_version(), ::testing::StrEq(LIBLOSSY_VERSION));
-  EXPECT_EQ(lossy_major_version(), LIBLOSSY_MAJOR_VERSION);
-  EXPECT_EQ(lossy_minor_version(), LIBLOSSY_MINOR_VERSION);
-  EXPECT_EQ(lossy_patch_version(), LIBLOSSY_PATCH_VERSION);
-  EXPECT_EQ(lossy_compressor_major_version(compressor), SZ_VER_MAJOR);
-  EXPECT_EQ(lossy_compressor_minor_version(compressor), SZ_VER_MINOR);
-  EXPECT_EQ(lossy_compressor_patch_version(compressor), SZ_VER_BUILD);
+TEST_F(PressioCompressor, VersionTest) {
+  EXPECT_THAT(pressio_version(), ::testing::StrEq(LIBPRESSIO_VERSION));
+  EXPECT_EQ(pressio_major_version(), LIBPRESSIO_MAJOR_VERSION);
+  EXPECT_EQ(pressio_minor_version(), LIBPRESSIO_MINOR_VERSION);
+  EXPECT_EQ(pressio_patch_version(), LIBPRESSIO_PATCH_VERSION);
+  EXPECT_EQ(pressio_compressor_major_version(compressor), SZ_VER_MAJOR);
+  EXPECT_EQ(pressio_compressor_minor_version(compressor), SZ_VER_MINOR);
+  EXPECT_EQ(pressio_compressor_patch_version(compressor), SZ_VER_BUILD);
 }
 
