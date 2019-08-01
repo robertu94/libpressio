@@ -3,16 +3,23 @@
 #include <string>
 
 /*!\file 
- * \brief an implementation-only header for adding plugins to libpressio
+ * \brief an extension header for adding compressor plugins to libpressio
  */
 
 struct pressio_data;
 struct pressio_options;
+class libpressio_metrics_plugin;
 
-class libpressio_plugin {
+/**
+ * plugin to provide a new compressor
+ */
+class libpressio_compressor_plugin {
   public:
+
+  libpressio_compressor_plugin() noexcept;
+
   /** compressor should free their global memory in the destructor */
-  virtual ~libpressio_plugin();
+  virtual ~libpressio_compressor_plugin();
   /** get a set of options available for the compressor.
    *
    * The compressor should set a value if they have been set as default
@@ -25,20 +32,20 @@ class libpressio_plugin {
    * \see pressio_options_set_userptr to set an data value, include an \c include/ext/\<my_plugin\>.h to define the structure used
    * \see pressio_options_set_string to set a string value
    */
-  virtual struct pressio_options* get_options() const=0;
+  struct pressio_options* get_options() const;
   /** sets a set of options for the compressor 
    * \param[in] options to set for configuration of the compressor
    * \see pressio_compressor_set_options for the semantics this function should obey
    */
-  virtual int set_options(struct pressio_options const* options)=0;
+  int set_options(struct pressio_options const* options);
   /** compresses a pressio_data buffer
    * \see pressio_compressor_compress for the semantics this function should obey
    */
-  virtual int compress(struct pressio_data* input, struct pressio_data** output)=0;
+  int compress(struct pressio_data* input, struct pressio_data** output);
   /** decompress a pressio_data buffer
    * \see pressio_compressor_decompress for the semantics this function should obey
    */
-  virtual int decompress(struct pressio_data* input, struct pressio_data** output)=0;
+  int decompress(struct pressio_data* input, struct pressio_data** output);
   /** get a version string for the compressor
    * \see pressio_compressor_version for the semantics this function should obey
    */
@@ -56,6 +63,20 @@ class libpressio_plugin {
    */
   virtual int patch_version() const;
 
+  /**
+   * \returns a pressio_options structure containing the metrics returned by the provided metrics plugin
+   * \see libpressio_metricsplugin for how to compute results
+   */
+  struct pressio_options* get_metrics_results() const;
+  /**
+   * \returns the configured libpressio_metricsplugin plugin
+   */
+  struct pressio_metrics* get_metrics() const;
+  /**
+   * \param[in] plugin the configured libpressio_metricsplugin plugin to use
+   */
+  void set_metrics(struct pressio_metrics* plugin);
+
   /** get the error message for the last error
    * \returns an implementation specific c-style error message for the last error
    */
@@ -67,11 +88,10 @@ class libpressio_plugin {
 
   /** checks for extra arguments set for the compressor.
    * the default verison just checks for unknown options passed in.
-   * overriding implementations SHOULD call this version and return any errors it provides FIRST.
    *
    * \see pressio_compressor_check_options for semantics this function obeys
    * */
-  virtual int check_options(struct pressio_options const*);
+  int check_options(struct pressio_options const*);
 
   protected:
   /**
@@ -82,11 +102,46 @@ class libpressio_plugin {
    */
   int set_error(int code, std::string const& msg);
 
+  /** get a set of options available for the compressor.
+   *
+   * The compressor should set a value if they have been set as default
+   * The compressor should set a "reset" value if they are required to be set, but don't have a meaningful default
+   *
+   * \see pressio_compressor_get_options for the semantics this function should obey
+   * \see pressio_options_clear to set a "reset" value
+   * \see pressio_options_set_integer to set an integer value
+   * \see pressio_options_set_double to set an double value
+   * \see pressio_options_set_userptr to set an data value, include an \c include/ext/\<my_plugin\>.h to define the structure used
+   * \see pressio_options_set_string to set a string value
+   */
+  virtual struct pressio_options* get_options_impl() const=0;
+  /** sets a set of options for the compressor 
+   * \param[in] options to set for configuration of the compressor
+   * \see pressio_compressor_set_options for the semantics this function should obey
+   */
+  virtual int set_options_impl(struct pressio_options const* options)=0;
+  /** compresses a pressio_data buffer
+   * \see pressio_compressor_compress for the semantics this function should obey
+   */
+  virtual int compress_impl(struct pressio_data* input, struct pressio_data** output)=0;
+  /** decompress a pressio_data buffer
+   * \see pressio_compressor_decompress for the semantics this function should obey
+   */
+  virtual int decompress_impl(struct pressio_data* input, struct pressio_data** output)=0;
+
+  /** checks for extra arguments set for the compressor.
+   * Unlike other functions, this option is NOT required
+   *
+   * \see pressio_compressor_check_options for semantics this function obeys
+   * */
+  virtual int check_options_impl(struct pressio_options const*);
+
   private:
   struct {
     int code;
     std::string msg;
   } error;
+  struct pressio_metrics* metrics_plugin;
 };
 
 #endif

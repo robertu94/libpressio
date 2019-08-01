@@ -169,4 +169,8 @@ size_t pressio_data_get_dimention(struct pressio_data const* data, size_t dimens
   return data->get_dimention(dimension);
 }
 
+size_t pressio_data_get_bytes(struct pressio_data const* data) {
+  return data->size_in_bytes();
+}
+
 }

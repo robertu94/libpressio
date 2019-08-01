@@ -1,12 +1,4 @@
-#include <assert.h>
-#include <stdio.h>
-
-#include <pressio.h>
-#include <pressio_compressor.h>
-#include <pressio_options.h>
-#include <pressio_options_iter.h>
-#include <pressio_option.h>
-#include <pressio_data.h>
+#include <libpressio.h>
 #include <libpressio_ext/compressors/sz.h>
 
 #include "make_input_data.h"
@@ -73,40 +65,36 @@ void print_all_options(struct pressio_options* options) {
   pressio_options_iter_free(iter);
 }
 
-void test_options(struct pressio_options const* options) {
-  struct pressio_options* sz_options = pressio_options_copy(options);
-  //set a configuration option for a compressor
+int main(int argc, char *argv[])
+{
+  struct pressio* library = pressio_instance();
+  struct pressio_compressor* compressor = pressio_get_compressor(library, "sz");
+  struct pressio_options* sz_options = pressio_compressor_get_options(compressor);
+
   pressio_options_set_integer(sz_options, "sz:mode", ABS);
-
-  //get the same configuration option back out
-  struct pressio_option* mode_option = pressio_options_get(sz_options, "sz:mode");
-  enum pressio_option_type type = pressio_option_get_type(mode_option);
-  int mode = pressio_option_get_integer(mode_option);
-  assert(mode == ABS);
-  assert(type == pressio_option_int32_type);
-
-  //a simpler way to get options back out
-  int mode2;
-  if(pressio_options_get_integer(sz_options, "sz:mode", &mode2))
-  {
-    assert(false && "the mode should be defined");
+  pressio_options_set_double(sz_options, "sz:abs_err_bound", 0.5);
+  if(pressio_compressor_check_options(compressor, sz_options)) {
+    printf("%s\n", pressio_compressor_error_msg(compressor));
+    exit(pressio_compressor_error_code(compressor));
   }
-  pressio_option_free(mode_option);
-  pressio_options_free(sz_options);
-}
+  if(pressio_compressor_set_options(compressor, sz_options)) {
+    printf("%s\n", pressio_compressor_error_msg(compressor));
+    exit(pressio_compressor_error_code(compressor));
+  }
 
-void run_compressor(const char* compressor_name, struct pressio_compressor* compressor, struct pressio_options* options) {
-  printf("%s\n", compressor_name);
-  pressio_compressor_set_options(compressor, options);
-
-
-  //load a 300x300x300 dataset
+  const char* metrics[] = {"time", "size"};
+  struct pressio_metrics* metrics_plugin = pressio_new_metrics(library, metrics, 2);
+  pressio_compressor_set_metrics(compressor, metrics_plugin);
+  
+  //load a 300x300x300 dataset into data created with malloc
   double* rawinput_data = make_input_data();
   size_t dims[] = {300,300,300};
   struct pressio_data* input_data = pressio_data_new_move(pressio_double_dtype, rawinput_data, 3, dims, pressio_data_libc_free_fn, NULL);
 
   //creates an output dataset pointer
   struct pressio_data* compressed_data = pressio_data_new_empty(pressio_byte_dtype, 0, NULL);
+
+  //configure the decompressed output area
   struct pressio_data* decompressed_data = pressio_data_new_empty(pressio_double_dtype, 3, dims);
 
   //compress the data
@@ -120,61 +108,20 @@ void run_compressor(const char* compressor_name, struct pressio_compressor* comp
     printf("%s\n", pressio_compressor_error_msg(compressor));
     exit(pressio_compressor_error_code(compressor));
   }
+  
+  struct pressio_options* metrics_result = pressio_compressor_get_metrics_results(compressor);
+  print_all_options(metrics_result);
 
+
+  //free the input, decompressed, and compressed data
   pressio_data_free(decompressed_data);
   pressio_data_free(compressed_data);
   pressio_data_free(input_data);
 
-
-}
-
-int main(int argc, char *argv[])
-{
-  //get an instance to the library
-  struct pressio* library = pressio_instance();
-  assert(library != NULL);
-
-  //check if libpressio supports SZ
-  printf("libpressio version: %s\n", pressio_version());
-  assert(strstr(pressio_features(), "sz") != NULL);
-
-  //get an instance of a compressor
-  struct pressio_compressor* zfp_compressor = pressio_get_compressor(library, "zfp");
-  struct pressio_compressor* sz_compressor = pressio_get_compressor(library, "sz");
-  printf("sz version: %s\n", pressio_compressor_version(sz_compressor));
-  printf("zfp version: %s\n", pressio_compressor_version(zfp_compressor));
-  assert(sz_compressor != NULL);
-
-  //get the list of configuration options
-  printf("getting options\n");
-  struct pressio_options* sz_options = pressio_compressor_get_options(sz_compressor);
-  pressio_options_set_double(sz_options, "sz:abs_err_bound", .5);
-  if(pressio_compressor_check_options(sz_compressor, sz_options)) {
-    printf("%s\n", pressio_compressor_error_msg(sz_compressor));
-    exit(pressio_compressor_error_code(sz_compressor));
-  }
-
-  struct pressio_options* zfp_options = pressio_compressor_get_options(zfp_compressor);
-  pressio_options_set_double(zfp_options, "zfp:accuracy", .5);
-  if(pressio_compressor_check_options(zfp_compressor, zfp_options)) {
-    printf("%s\n", pressio_compressor_error_msg(zfp_compressor));
-    exit(pressio_compressor_error_code(zfp_compressor));
-  }
-
-  struct pressio_options* options = pressio_options_merge(sz_options, zfp_options);
+  //free options and the library
+  pressio_metrics_free(metrics_plugin);
+  pressio_options_free(metrics_result);
   pressio_options_free(sz_options);
-  pressio_options_free(zfp_options);
-  assert(options != NULL);
-
-  //print all the configuration options
-  print_all_options(options);
-  test_options(options);
-
-  run_compressor("sz", sz_compressor, options);
-  run_compressor("zfp", zfp_compressor, options);
-
-  pressio_options_free(options);
   pressio_release(&library);
-
   return 0;
 }

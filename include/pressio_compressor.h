@@ -83,6 +83,26 @@ int pressio_compressor_compress(struct pressio_compressor* compressor, struct pr
 int pressio_compressor_decompress(struct pressio_compressor* compressor, struct pressio_data * input, struct pressio_data** output);
 
 /**
+ * \param[in] compressor the compressor to get results from
+ * \returns a pressio_options structure containing the metrics returned by the provided metrics plugin
+ * \see libpressio_metricsplugin for how to compute results
+ */
+struct pressio_options* pressio_compressor_get_metrics_results(struct pressio_compressor const* compressor);
+
+/**
+ * \param[in] compressor the compressor to get the metrics plugin for
+ * \returns the current pressio_metrics* structure
+ */
+struct pressio_metrics* pressio_compressor_get_metrics(struct pressio_compressor const* compressor);
+
+/**
+ * \param[in] compressor the compressor to set metrics plugin for
+ * \param[in] plugin the configured libpressio_metricsplugin plugin to use
+ */
+void pressio_compressor_set_metrics(struct pressio_compressor* compressor, struct pressio_metrics* plugin);
+
+
+/**
  * \param[in] compressor the compressor to query
  * \returns last error code for the compressor
  */

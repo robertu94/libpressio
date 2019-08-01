@@ -36,4 +36,16 @@ int pressio_compressor_check_options(struct pressio_compressor* compressor, stru
   return compressor->plugin->check_options(options);
 }
 
+struct pressio_options* pressio_compressor_get_metrics_results(struct pressio_compressor const* compressor) {
+  return compressor->plugin->get_metrics_results();
+}
+
+struct pressio_metrics* pressio_compressor_get_metrics(struct pressio_compressor const* compressor) {
+  return compressor->plugin->get_metrics();
+}
+
+void pressio_compressor_set_metrics(struct pressio_compressor* compressor, struct pressio_metrics* plugin) {
+  return compressor->plugin->set_metrics(plugin);
+}
+
 }

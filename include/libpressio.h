@@ -7,3 +7,4 @@
 #include <pressio_options_iter.h>
 #include <pressio_option.h>
 #include <pressio_data.h>
+#include <pressio_metrics.h>

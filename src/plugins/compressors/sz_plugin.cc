@@ -3,13 +3,13 @@
 
 #include <sz.h>
 
-#include "libpressio_plugin.h"
+#include "libpressio_ext/cpp/compressor.h"
 #include "pressio_data.h"
 #include "pressio_options.h"
 #include "pressio_option.h"
 
 
-class sz_plugin: public libpressio_plugin {
+class sz_plugin: public libpressio_compressor_plugin {
   public:
   sz_plugin() {
     std::stringstream ss;
@@ -21,7 +21,7 @@ class sz_plugin: public libpressio_plugin {
     SZ_Finalize();
   }
 
-  virtual struct pressio_options* get_options() const override {
+  struct pressio_options* get_options_impl() const override {
     struct pressio_options* options = pressio_options_new();
     pressio_options_set_type(options, "sz:config_file", pressio_option_charptr_type);
     pressio_options_set_type(options, "sz:config_struct", pressio_option_userptr_type);
@@ -51,7 +51,7 @@ class sz_plugin: public libpressio_plugin {
     return options;
   }
 
-  virtual int set_options(struct pressio_options const* options) override {
+  int set_options_impl(struct pressio_options const* options) override {
 
     struct sz_params* sz_param;
     const char* config_file;
@@ -90,7 +90,7 @@ class sz_plugin: public libpressio_plugin {
     return 0;
   }
 
-  int compress(struct pressio_data* input, struct pressio_data** output) override {
+  int compress_impl(struct pressio_data* input, struct pressio_data** output) override {
     size_t r1 = pressio_data_get_dimention(input, 0);
     size_t r2 = pressio_data_get_dimention(input, 1);
     size_t r3 = pressio_data_get_dimention(input, 2);
@@ -110,7 +110,7 @@ class sz_plugin: public libpressio_plugin {
     *output = pressio_data_new_move(pressio_byte_dtype, compressed_data, 1, &outsize, pressio_data_libc_free_fn, nullptr);
     return 0;
   }
-  int decompress(struct pressio_data* input, struct pressio_data** output) override {
+  int decompress_impl(struct pressio_data* input, struct pressio_data** output) override {
 
     size_t r[] = {
      pressio_data_get_dimention(*output, 0),
@@ -175,6 +175,6 @@ class sz_plugin: public libpressio_plugin {
   std::string sz_version;
 };
 
-std::unique_ptr<libpressio_plugin> make_sz() {
+std::unique_ptr<libpressio_compressor_plugin> make_c_sz() {
   return std::make_unique<sz_plugin>();
 }

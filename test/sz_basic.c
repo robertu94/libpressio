@@ -1,5 +1,5 @@
 #include <libpressio.h>
-#include <libpressio_ext/compressor_sz.h>
+#include <libpressio_ext/compressors/sz.h>
 
 #include "make_input_data.h"
 

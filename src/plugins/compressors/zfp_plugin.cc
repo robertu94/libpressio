@@ -1,11 +1,11 @@
 #include <vector>
 #include <memory>
-#include "libpressio_plugin.h"
+#include "libpressio_ext/cpp/compressor.h"
 #include "pressio_options.h"
 #include "pressio_data.h"
 #include "zfp.h"
 
-class zfp_plugin: public libpressio_plugin {
+class zfp_plugin: public libpressio_compressor_plugin {
   public:
     zfp_plugin() {
       zfp = zfp_stream_open(NULL);
@@ -17,7 +17,7 @@ class zfp_plugin: public libpressio_plugin {
       zfp_stream_close(zfp);
     }
 
-    virtual struct pressio_options* get_options() const override {
+    struct pressio_options* get_options_impl() const override {
       struct pressio_options* options = pressio_options_new();
       pressio_options_set_uinteger(options, "zfp:minbits", zfp->minbits);
       pressio_options_set_uinteger(options, "zfp:maxbits", zfp->maxbits);
@@ -36,7 +36,7 @@ class zfp_plugin: public libpressio_plugin {
       return options;
     }
 
-    virtual int set_options(struct pressio_options const* options) override {
+    int set_options_impl(struct pressio_options const* options) override {
       
       //precision, accuracy, and expert mode settings
       if(unsigned int mode; pressio_options_get_uinteger(options, "zfp:mode", &mode) == pressio_options_key_set) {
@@ -76,7 +76,7 @@ class zfp_plugin: public libpressio_plugin {
       return 0;
     }
 
-    int compress(struct pressio_data* input, struct pressio_data** output) override {
+    int compress_impl(struct pressio_data* input, struct pressio_data** output) override {
 
       zfp_field* in_field;
       if(int ret = convert_pressio_data_to_field(input, &in_field)) {
@@ -99,7 +99,7 @@ class zfp_plugin: public libpressio_plugin {
       return 0;
     }
 
-    int decompress(struct pressio_data* input, struct pressio_data** output) override {
+    int decompress_impl(struct pressio_data* input, struct pressio_data** output) override {
       size_t size;
       void* ptr = pressio_data_ptr(input, &size);
       bitstream* stream = stream_open(ptr, size);
@@ -202,6 +202,6 @@ class zfp_plugin: public libpressio_plugin {
     zfp_stream* zfp;
 };
 
-std::unique_ptr<libpressio_plugin> make_zfp() {
+std::unique_ptr<libpressio_compressor_plugin> make_c_zfp() {
   return std::make_unique<zfp_plugin>();
 }

@@ -39,14 +39,18 @@ add_gtest(test_pressio_options.cc)
 add_gtest(test_sz_plugin.cc)
 target_include_directories(test_sz_plugin PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/../include)
 
-add_executable(sz_basic sz_basic.c)
+add_executable(sz_basic sz_basic.c make_input_data.cc)
 target_link_libraries(sz_basic libpressio)
 add_test(sz_basic_test sz_basic)
 
-add_executable(zfp_basic zfp_basic.c)
+add_executable(zfp_basic zfp_basic.c make_input_data.cc)
 target_link_libraries(zfp_basic libpressio)
 add_test(zfp_basic_test zfp_basic)
 
-add_executable(full full.c)
+add_executable(full full.c make_input_data.cc)
 target_link_libraries(full libpressio)
 add_test(full_test full)
+
+add_executable(metrics metrics.c make_input_data.cc)
+target_link_libraries(metrics libpressio)
+add_test(metrics_test metrics)

@@ -11,6 +11,7 @@ extern "C" {
 
 struct pressio;
 struct pressio_compressor;
+struct pressio_metrics;
 
 /**
  * gets a reference to a possibly shared instance of libpressio; initializes the library if necessary
@@ -32,6 +33,16 @@ void pressio_release(struct pressio** library);
  * \see pressio_features for a list of available compressors
  */
 struct pressio_compressor* pressio_get_compressor(struct pressio* library, const char* const compressor_id);
+
+/**
+ * creates a possibly composite metrics structure
+ *
+ * \param[in] library the pointer to the library
+ * \param[in] metrics a list of c-strings containing the list of metrics requested
+ * \param[in] num_metrics the number of metrics requested
+ * \returns a new pressio_metrics structure
+ */
+struct pressio_metrics* pressio_new_metrics(struct pressio* library, const char* metrics[], int num_metrics);
 
 /**
  * \param[in] library the pointer to the library

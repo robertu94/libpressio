@@ -77,8 +77,8 @@ struct pressio_options* pressio_options_copy(struct pressio_options const* optio
  * Merges two pressio options together into one.  Copies all keys and
  * corresponding values from rhs not in lhs into a new structure.
  * 
- * \param[in] lhs the structure to insert keys into.
- * \param[in] rhs the pressio_options structure to merge in.
+ * \param[in] lhs the first structure to merge
+ * \param[in] rhs the second structure to merge; if lhs and rhs both have the same key the value from lhs is preserved
  * \return a newly allocated pressio_options structure.
  */
 struct pressio_options* pressio_options_merge(struct pressio_options const* lhs, struct pressio_options const* rhs);

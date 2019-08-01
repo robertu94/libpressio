@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
-project(libpressio VERSION "0.4.0" LANGUAGES CXX C)
+project(libpressio VERSION "0.5.0" LANGUAGES CXX C)
 
 enable_testing()
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -29,13 +29,19 @@ add_library(libpressio
   ./include/pressio_options.h
   ./include/pressio_dtype.h
   ./include/pressio_option.h
+  ./include/libpressio_ext/cpp/compressor.h
 
   #implementations
+  ./src/pressio_metrics.cc
   ./src/pressio_options.cc
   ./src/pressio_option.cc
-  ./src/plugins/libpressio_plugin.cc
-  ./src/plugins/sz_plugin.cc
-  ./src/plugins/zfp_plugin.cc
+  ./src/plugins/compressors/compressor_base.cc
+  ./src/plugins/compressors/sz_plugin.cc
+  ./src/plugins/compressors/zfp_plugin.cc
+  ./src/plugins/metrics/metrics_base.cc
+  ./src/plugins/metrics/time.cc
+  ./src/plugins/metrics/size.cc
+  ./src/plugins/metrics/composite.cc
   ./src/pressio_data.cc
   ./src/pressio_dtype.cc
   ./src/pressio.cc
@@ -45,7 +51,6 @@ add_library(libpressio
 
   #private headers
   ./src/plugins.h
-  ./src/plugins/libpressio_plugin.h
   ./src/pressio_compressor_impl.h
   ./src/pressio_options_impl.h
   )
@@ -90,7 +95,7 @@ if(BUILD_DOCS)
     docs
     ${PROJECT_SOURCE_DIR}/README.md
     ${PROJECT_SOURCE_DIR}/include
-    ${PROJECT_SOURCE_DIR}/src/plugins/libpressio_plugin.h
     COMMENT "Generate Documenation"
   )
+  
 endif()

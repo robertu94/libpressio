@@ -44,7 +44,7 @@ Here is a minimal example with error checking of how to use libpressio:
 
 ~~~c
 #include <libpressio.h>
-#include <libpressio_ext/compressor_sz.h>
+#include <libpressio_ext/compressors/sz.h>
 
 #include "make_input_data.h"
 
