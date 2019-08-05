@@ -137,6 +137,13 @@ size_t pressio_data_get_dimention(struct pressio_data const* data, size_t const 
  */
 size_t pressio_data_get_bytes(struct pressio_data const* data);
 
+/**
+ * returns the total number of elements to represent the data
+ * \param[in] data the pressio data to query
+ * \returns the total number of elements to represent the data
+ */
+size_t pressio_data_num_elements(struct pressio_data const* data);
+
 #endif
 
 #ifdef __cplusplus

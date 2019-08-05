@@ -37,6 +37,7 @@ endfunction()
 add_gtest(test_pressio_data.cc)
 add_gtest(test_pressio_options.cc)
 add_gtest(test_sz_plugin.cc)
+add_gtest(test_io.cc)
 target_include_directories(test_sz_plugin PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/../include)
 
 add_executable(sz_basic sz_basic.c make_input_data.cc)

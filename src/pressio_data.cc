@@ -11,12 +11,16 @@ void pressio_data_libc_free_fn(void* data, void*) {
 
 namespace {
   template <class T>
-  size_t data_size_in_bytes(pressio_dtype type, size_t dimentions, T const dims[]) {
+  size_t data_size_in_elements(size_t dimentions, T const dims[]) {
     size_t totalsize = 1;
     for (size_t i = 0; i < dimentions; ++i) {
       totalsize *= dims[i];
     }
-    return totalsize * pressio_dtype_size(type);
+    return totalsize;
+  }
+  template <class T>
+  size_t data_size_in_bytes(pressio_dtype type, size_t dimentions, T const dims[]) {
+    return data_size_in_elements(dimentions, dims) * pressio_dtype_size(type);
   }
 }
 
@@ -89,6 +93,10 @@ struct pressio_data {
     return data_size_in_bytes(data_dtype, dimentions(), dims.data());
   }
 
+  size_t num_elements() const {
+    return data_size_in_elements(dimentions(), dims.data());
+  }
+
   private:
   pressio_data(const pressio_dtype dtype,
       void* data,
@@ -158,7 +166,7 @@ pressio_dtype pressio_data_dtype(struct pressio_data const* data) {
 }
 
 bool pressio_data_has_data(struct pressio_data const* data) {
-  return data->data() == nullptr;
+  return data->data() != nullptr;
 }
 
 size_t pressio_data_num_dimentions(struct pressio_data const* data) {
@@ -172,5 +180,10 @@ size_t pressio_data_get_dimention(struct pressio_data const* data, size_t dimens
 size_t pressio_data_get_bytes(struct pressio_data const* data) {
   return data->size_in_bytes();
 }
+
+size_t pressio_data_num_elements(struct pressio_data const* data) {
+  return data->num_elements();
+}
+
 
 }

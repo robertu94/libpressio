@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
-project(libpressio VERSION "0.5.0" LANGUAGES CXX C)
+project(libpressio VERSION "0.6.0" LANGUAGES CXX C)
 
 enable_testing()
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -22,37 +22,46 @@ configure_file(
   )
 
 add_library(libpressio
-  #public headers
-  ./include/pressio_data.h
-  ./include/pressio_compressor.h
-  ./include/pressio.h
-  ./include/pressio_options.h
-  ./include/pressio_dtype.h
-  ./include/pressio_option.h
-  ./include/libpressio_ext/cpp/compressor.h
-
-  #implementations
+  #core implementation
+  ./src/pressio.cc
+  ./src/pressio_compressor.cc
+  ./src/pressio_data.cc
+  ./src/pressio_dtype.cc
   ./src/pressio_metrics.cc
-  ./src/pressio_options.cc
   ./src/pressio_option.cc
+  ./src/pressio_options.cc
+  ./src/pressio_options_iter.cc
+
+  #plugins
   ./src/plugins/compressors/compressor_base.cc
   ./src/plugins/compressors/sz_plugin.cc
   ./src/plugins/compressors/zfp_plugin.cc
-  ./src/plugins/metrics/metrics_base.cc
-  ./src/plugins/metrics/time.cc
-  ./src/plugins/metrics/size.cc
   ./src/plugins/metrics/composite.cc
-  ./src/pressio_data.cc
-  ./src/pressio_dtype.cc
-  ./src/pressio.cc
-  ./src/pressio_compressor.cc
-  ./src/pressio_options_iter.cc
+  ./src/plugins/metrics/metrics_base.cc
+  ./src/plugins/metrics/size.cc
+  ./src/plugins/metrics/time.cc
+  ./src/plugins/io/posix.cc
 
+  #public headers
+  include/libpressio.h
+  include/libpressio_ext/compressors/sz.h
+  include/libpressio_ext/compressors/zfp.h
+  include/libpressio_ext/cpp/compressor.h
+  include/libpressio_ext/cpp/metrics.h
+  include/libpressio_ext/cpp/plugins.h
+  include/libpressio_ext/io/posix.h
+  include/pressio.h
+  include/pressio_compressor.h
+  include/pressio_data.h
+  include/pressio_dtype.h
+  include/pressio_metrics.h
+  include/pressio_option.h
+  include/pressio_options.h
+  include/pressio_options_iter.h
 
   #private headers
-  ./src/plugins.h
-  ./src/pressio_compressor_impl.h
-  ./src/pressio_options_impl.h
+  src/pressio_compressor_impl.h
+  src/pressio_options_impl.h
   )
 
 target_include_directories(libpressio
