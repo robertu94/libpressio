@@ -6,14 +6,14 @@
 class size_plugin : public libpressio_metrics_plugin {
   public:
 
-    void begin_compress(struct pressio_data const* input, pressio_data *const*) override {
+    void end_compress(struct pressio_data const* input, pressio_data *const* output, int) override {
       uncompressed_size = pressio_data_get_bytes(input);
+      compressed_size = pressio_data_get_bytes(*output);
+      compression_ratio =  static_cast<double>(*uncompressed_size)/ *compressed_size;
     }
 
-    void end_decompress(struct pressio_data const* input, pressio_data *const* output, int) override {
-      compressed_size = pressio_data_get_bytes(input);
+    void end_decompress(struct pressio_data const* , pressio_data *const* output, int) override {
       decompressed_size = pressio_data_get_bytes(*output);
-      compression_ratio =  static_cast<double>(*decompressed_size)/ *compressed_size;
     }
 
   struct pressio_options* get_metrics_results() const override {

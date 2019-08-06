@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
-project(libpressio VERSION "0.6.2" LANGUAGES CXX C)
+project(libpressio VERSION "0.6.3" LANGUAGES CXX C)
 
 enable_testing()
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+option(BUILD_SHARED_LIBS "build libpressio as a shared library" ON)
 
 include(GNUInstallDirs)
 find_package(ZFP REQUIRED)
