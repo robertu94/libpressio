@@ -1,4 +1,4 @@
-#include <sz.h>
+#include <sz/sz.h>
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 

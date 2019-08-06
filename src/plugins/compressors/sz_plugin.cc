@@ -1,7 +1,7 @@
 #include <memory>
 #include <sstream>
 
-#include <sz.h>
+#include <sz/sz.h>
 
 #include "libpressio_ext/cpp/compressor.h"
 #include "pressio_data.h"

@@ -1,13 +1,15 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
-project(libpressio VERSION "0.6.0" LANGUAGES CXX C)
+project(libpressio VERSION "0.6.1" LANGUAGES CXX C)
 
 enable_testing()
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include(GNUInstallDirs)
-find_package(ZFP)
-find_package(PkgConfig)
-pkg_search_module(SZ IMPORTED_TARGET GLOBAL sz)
+find_package(ZFP REQUIRED)
+find_package(SZ REQUIRED)
+find_package(ZLIB REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_search_module(ZSTD IMPORTED_TARGET GLOBAL libzstd)
 
 
 set(LIBPRESSIO_FEATURES "sz zfp")
@@ -71,7 +73,7 @@ target_include_directories(libpressio
   PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/include
   )
 target_compile_options(libpressio PRIVATE $<$<CONFIG:Debug>: -Wall -Werror -Wextra -Wpedantic>)
-target_link_libraries(libpressio PUBLIC zfp::zfp PkgConfig::SZ)
+target_link_libraries(libpressio PUBLIC zfp::zfp SZ)
 set_target_properties(libpressio PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON) 
 
 install(TARGETS libpressio EXPORT LibPressioConfig
