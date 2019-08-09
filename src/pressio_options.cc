@@ -32,11 +32,11 @@ void pressio_options_set_type(struct pressio_options* options, const char* key, 
 }
 
 enum pressio_options_key_status pressio_options_cast_set(struct pressio_options* options, const char* key, struct pressio_option* option, enum pressio_conversion_safety safety) {
-  return options->cast_set(key, option, safety);
+  return options->cast_set(key, *option, safety);
 }
 
 enum pressio_options_key_status pressio_options_as_set(struct pressio_options* options, const char* key, struct pressio_option* option) {
-  return options->cast_set(key, option);
+  return options->cast_set(key, *option);
 }
 
 

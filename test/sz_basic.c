@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
   struct pressio_compressor* compressor = pressio_get_compressor(library, "sz");
   struct pressio_options* sz_options = pressio_compressor_get_options(compressor);
 
-  pressio_options_set_integer(sz_options, "sz:mode", ABS);
+  pressio_options_set_integer(sz_options, "sz:error_bound_mode", ABS);
   pressio_options_set_double(sz_options, "sz:abs_err_bound", 0.5);
   if(pressio_compressor_check_options(compressor, sz_options)) {
     printf("%s\n", pressio_compressor_error_msg(compressor));

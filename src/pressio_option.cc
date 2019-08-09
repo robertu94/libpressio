@@ -80,7 +80,7 @@ pressio_option pressio_option::as(const enum pressio_option_type to_type, const 
       double d = get_value<double>();
       switch (to_type) {
         case pressio_option_double_type:
-          return new pressio_option(d);
+          return pressio_option(d);
         case pressio_option_float_type:
             //narrowing
             if (allow_explicit(safety)) return pressio_option(static_cast<float>(d));

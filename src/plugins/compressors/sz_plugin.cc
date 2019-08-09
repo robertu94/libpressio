@@ -25,7 +25,6 @@ class sz_plugin: public libpressio_compressor_plugin {
     struct pressio_options* options = pressio_options_new();
     pressio_options_set_type(options, "sz:config_file", pressio_option_charptr_type);
     pressio_options_set_type(options, "sz:config_struct", pressio_option_userptr_type);
-    pressio_options_set_integer(options, "sz:mode", confparams_cpr->szMode);
     pressio_options_set_uinteger(options, "sz:max_quant_intervals", confparams_cpr->max_quant_intervals);
     pressio_options_set_uinteger(options, "sz:quantization_intervals ", confparams_cpr->quantization_intervals);
     pressio_options_set_uinteger(options, "sz:max_range_radius", confparams_cpr->maxRangeRadius);
@@ -39,7 +38,7 @@ class sz_plugin: public libpressio_compressor_plugin {
 	  pressio_options_set_double(options, "sz:abs_err_bound", confparams_cpr->absErrBound);
 	  pressio_options_set_double(options, "sz:rel_err_bound", confparams_cpr->relBoundRatio);
 	  pressio_options_set_double(options, "sz:psnr_err_bound", confparams_cpr->psnr);
-	  pressio_options_set_double(options, "sz:rel_err_bound", confparams_cpr->pw_relBoundRatio);
+	  pressio_options_set_double(options, "sz:pw_rel_err_bound", confparams_cpr->pw_relBoundRatio);
 	  pressio_options_set_integer(options, "sz:segment_size", confparams_cpr->segment_size);
 	  pressio_options_set_integer(options, "sz:pwr_type", confparams_cpr->pwr_type);
 	  pressio_options_set_integer(options, "sz:snapshot_cmpr_step", confparams_cpr->snapshotCmprStep);
@@ -63,7 +62,6 @@ class sz_plugin: public libpressio_compressor_plugin {
       SZ_Init_Params(sz_param);
     }
 
-    pressio_options_get_integer(options, "sz:mode", &confparams_cpr->szMode);
     pressio_options_get_uinteger(options, "sz:max_quant_intervals", &confparams_cpr->max_quant_intervals);
     pressio_options_get_uinteger(options, "sz:quantization_intervals ", &confparams_cpr->quantization_intervals);
     pressio_options_get_uinteger(options, "sz:max_range_radius", &confparams_cpr->maxRangeRadius);
