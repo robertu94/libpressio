@@ -2,12 +2,17 @@
 #include <variant>
 #include <string>
 #include <map>
-#include "pressio_options.h"
-#include "pressio_option.h"
+#include <libpressio/pressio_options.h>
+#include <libpressio/pressio_option.h>
 
+/**
+ * \file
+ * \brief C++ pressio_options and pressio_option interfaces
+ */
 
 namespace {
 
+  /** defines constants to convert between types and pressio_option_*_type */
   template <class T>
   enum pressio_option_type pressio_type_to_enum;
   template <>
@@ -24,7 +29,6 @@ namespace {
   constexpr enum pressio_option_type pressio_type_to_enum<const char*> = pressio_option_charptr_type;
   template <>
   constexpr enum pressio_option_type pressio_type_to_enum<void*> = pressio_option_userptr_type;
-}
 
 using option_type = std::variant<std::monostate,
       std::optional<int>,
@@ -34,37 +38,73 @@ using option_type = std::variant<std::monostate,
       std::optional<std::string>,
       std::optional<void*>
       >;
+}
 
-struct pressio_option {
+/**
+ * represents a dynamically typed object
+ */
+struct pressio_option final {
+  /** constructs an option without type or value */
   pressio_option()=default;
 
+  /** constructs an option that holds the specified value
+   * \param[in] value the value the option is to hold
+   * */
   template<class T>
-  pressio_option(T option): option(std::optional<T>(option)) {}
+  pressio_option(T value): option(std::optional<T>(value)) {}
 
+  /** specialization for option to reset the type to hold no type or value
+   * \param[in] value the monostate singleton
+   * */
   template<>
-  pressio_option(std::monostate option): option(option) {}
+  pressio_option(std::monostate value): option(value) {}
 
+  /** returns a pressio option that has the appropriate type if the conversion is allowed for the specified safety
+   * \param[in] type the type to convert to
+   * \param[in] safety the level of conversion safety to use \see pressio_conversion_safety
+   * \returns a empty option if no conversion is possible or the converted value as an option
+   */
   pressio_option as(const enum pressio_option_type type, const enum pressio_conversion_safety safety = pressio_conversion_implicit) const;
+
+  /** 
+   * \returns the type currently held by the option
+   */
   enum pressio_option_type type() const;
 
+  /** 
+   * \returns returns true if the option holds the current type
+   */
   template <class T>
   constexpr bool holds_alternative() const {
     return std::holds_alternative<std::optional<T>>(option);
   }
 
+  /** Specialization for the std::monostate singleton
+   * \returns true if the option has no specified type or value
+   */
   template <>
   constexpr bool holds_alternative<std::monostate>() const;
 
+  /** 
+   * \returns a std::optional which holds a value if the option has one or an empty optional otherwise
+   */
   template <class T>
   constexpr std::optional<T> const& get() const{
     return std::get<std::optional<T>>(option);
   }
 
+  /** 
+   * This function has unspecified effects if the option contains no value \see has_value
+   * \returns the value contained by the option
+   */
   template <class T>
   constexpr T const& get_value() const{
     return get<T>().value();
   }
 
+  /**
+   * \returns true if the option holds a value or false otherwise
+   */
   bool has_value() const {
     if (holds_alternative<std::monostate>()) return false;
     else {
@@ -88,11 +128,19 @@ struct pressio_option {
     }
   }
 
+  /**
+   * set the option to a new value
+   * \param[in] v the value to set the option to
+   */
   template <class T>
   void set(T v) {
     option = std::optional(v);
   }
 
+  /**
+   * set only the type of the option
+   * \param[in] type the type to set the option to
+   */
   void set_type(pressio_option_type type) {
     switch(type)
     {
@@ -119,6 +167,12 @@ struct pressio_option {
         break;
     }
   }
+
+  /**
+   * converts rhs according the conversion safety specified to the type of the option and stores the result if the cast succeeds
+   * \param[in] rhs the option to assign to this option
+   * \param[in] safety the specified safety to use \see pressio_conversion_safety
+   */
   enum pressio_options_key_status cast_set(struct pressio_option const& rhs, enum pressio_conversion_safety safety = pressio_conversion_implicit) { 
     auto casted = rhs.as(type(), safety);
     if (casted.has_value()) {
@@ -133,13 +187,25 @@ struct pressio_option {
   option_type option;
 };
 
+/** Specialization for the std::monostate singleton
+ * \returns true if the option has no specified type or value
+ */
 template <>
 constexpr bool pressio_option::holds_alternative<std::monostate>() const {
   return std::holds_alternative<std::monostate>(option);
 }
 
-struct pressio_options{
+/**
+ * represents a map of dynamically typed objects
+ */
+struct pressio_options final {
 
+  /**
+   * checks the status of a key in a option set
+   * \returns pressio_options_key_does_not_exist if the key does not exist
+   *          pressio_options_key_exists if the key exists but has no value
+   *          pressio_options_key_set if the key exists and is set
+   */
   pressio_options_key_status key_status(std::string const& key) const {
     auto it = options.find(key);
     if(it == options.end()) {
@@ -151,10 +217,21 @@ struct pressio_options{
     }
   }
 
+  /**
+   * sets a key to the specified value
+   * \param[in] key the key to use
+   * \param[in] value the value to use
+   */
   void set(std::string const& key,  pressio_option const& value) {
     options[key] = value;
   }
 
+  /**
+   * converts value according the conversion safety to the type of the option at the stored key specified and stores the result if the cast succeeds
+   * \param[in] key the option key
+   * \param[in] value the option to assign to this option
+   * \param[in] safety the specified safety to use \see pressio_conversion_safety
+   */
   enum pressio_options_key_status cast_set(std::string const& key,  pressio_option const& value, enum pressio_conversion_safety safety= pressio_conversion_implicit) {
     switch(key_status(key))
     {
@@ -167,14 +244,31 @@ struct pressio_options{
 
   }
 
+  /**
+   * set only the type of the option
+   * \param[in] key which option to set
+   * \param[in] type the type to set the option to
+   */
   void set_type(std::string const& key, pressio_option_type type) {
     options[key].set_type(type);
   }
 
+  /**
+   * \param[in] key which option to get
+   * \returns the option at the specified key
+   */
   pressio_option const& get(std::string const& key) const {
     return options.at(key);
   }
 
+  /**
+   * gets a key if it is set and stores it into the pointer value
+   * \param[in] key the option to retrieve
+   * \param[out] value the value that is in the option
+   * \returns pressio_options_key_does_not_exist if the key does not exist
+   *          pressio_options_key_exists if the key exists but has no value
+   *          pressio_options_key_set if the key exists and is set
+   */
   template <class PointerType>
   enum pressio_options_key_status get(std::string const& key, PointerType value) const {
     using ValueType = std::remove_pointer_t<PointerType>;
@@ -196,6 +290,15 @@ struct pressio_options{
     }
   }
 
+  /**
+   * gets a key if it is set, attepts to cast it the specified type and stores it into the pointer value
+   * \param[in] key the option to retrieve
+   * \param[out] value the value that is in the option
+   * \param[in] safety the level of conversions to allow \see pressio_conversion_safety
+   * \returns pressio_options_key_does_not_exist if the key does not exist
+   *          pressio_options_key_exists if the key exists but has no value
+   *          pressio_options_key_set if the key exists and is set
+   */
   template <class PointerType>
   enum pressio_options_key_status cast(std::string const& key, PointerType value, enum pressio_conversion_safety safety) const {
     using ValueType = std::remove_pointer_t<PointerType>;
@@ -218,23 +321,45 @@ struct pressio_options{
     }
   }
 
+  /**
+   * \returns an begin iterator over the keys
+   */
   auto begin() const {
     return std::begin(options);
   }
+  /**
+   * \returns an end iterator over the keys
+   */
   auto end() const {
     return std::end(options);
   }
 
+  /**
+   * \returns an begin iterator over the keys
+   */
   auto begin() {
     return std::begin(options);
   }
+  /**
+   * \returns an end iterator over the keys
+   */
   auto end() {
     return std::end(options);
   }
 
+  /**
+   * type of the returned iterator
+   */
   using iterator = std::map<std::string, pressio_option>::iterator;
+
+  /**
+   * type of the values in the map
+   */
   using value_type = std::map<std::string, pressio_option>::value_type;
 
+  /**
+   * function to insert new values into the map
+   */
   iterator insert(iterator it, value_type const& value) {
     return options.insert(it, value);
   }
@@ -245,8 +370,14 @@ struct pressio_options{
 };
 
 //special case for strings
+/**
+ * special case for strings for memory management reasons \see pressio_options::get
+ */
 template <>
 enum pressio_options_key_status pressio_options::get(std::string const& key, const char** value) const;
 
+/**
+ * special case for strings for memory management reasons \see pressio_options::cast
+ */
 template <>
 enum pressio_options_key_status pressio_options::cast(std::string const& key, char** value, enum pressio_conversion_safety safety) const;

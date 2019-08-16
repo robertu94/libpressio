@@ -4,7 +4,7 @@
 #include <iterator>
 #include <string>
 #include <cstring>
-#include "pressio_options_impl.h"
+#include "libpressio_ext/cpp/options.h"
 
 
 void pressio_options_free(struct pressio_options* options) {

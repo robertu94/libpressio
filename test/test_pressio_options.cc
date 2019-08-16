@@ -1,4 +1,6 @@
 #include <cstdlib>
+#include <sstream>
+#include "libpressio_ext/cpp/printers.h"
 #include "pressio_option.h"
 #include "pressio_options.h"
 #include "pressio_options_iter.h"
@@ -285,4 +287,23 @@ TEST_F(PressioOptionsTests, OptionsAssign) {
       FAIL() << "failed to set integer";
     }
   } 
+}
+
+TEST_F(PressioOptionsTests, Printers) {
+  auto opts = pressio_options_new();
+  pressio_options_set_integer(opts, "int", 3);
+  pressio_options_set_uinteger(opts, "uint", 3);
+  pressio_options_set_double(opts, "double", 3.0);
+  pressio_options_set_float(opts, "float", 3);
+  auto expecteds = {
+    "double <double> = 3",
+    "float <float> = 3",
+    "int <int32> = 3",
+    "uint <uint32> = 3"
+  };
+  std::ostringstream ss;
+  ss << *opts;
+  for (auto expected : expecteds) {
+    EXPECT_THAT(ss.str(), ::testing::HasSubstr(expected));
+  }
 }

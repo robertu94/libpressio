@@ -1,6 +1,6 @@
 #include <map>
 #include <string>
-#include "pressio_options_impl.h"
+#include "libpressio_ext/cpp/options.h"
 
 struct pressio_options_iter {
   private:

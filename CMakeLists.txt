@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
-project(libpressio VERSION "0.6.4" LANGUAGES CXX C)
+project(libpressio VERSION "0.7.0" LANGUAGES CXX C)
 
 enable_testing()
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -64,7 +64,6 @@ add_library(libpressio
 
   #private headers
   src/pressio_compressor_impl.h
-  src/pressio_options_impl.h
   )
 
 target_include_directories(libpressio
@@ -75,7 +74,7 @@ target_include_directories(libpressio
   )
 target_compile_options(libpressio PRIVATE $<$<CONFIG:Debug>: -Wall -Werror -Wextra -Wpedantic>)
 target_link_libraries(libpressio PUBLIC zfp::zfp SZ)
-set_target_properties(libpressio PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON) 
+target_compile_features(libpressio PUBLIC cxx_std_17)
 
 install(TARGETS libpressio EXPORT LibPressioConfig
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}

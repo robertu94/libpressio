@@ -1,7 +1,7 @@
 #include <string>
 #include <variant>
 #include "pressio_option.h"
-#include "pressio_options_impl.h"
+#include "libpressio_ext/cpp/options.h"
 
 
 extern "C" {

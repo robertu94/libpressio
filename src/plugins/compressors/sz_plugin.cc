@@ -46,7 +46,7 @@ class sz_plugin: public libpressio_compressor_plugin {
 	  pressio_options_set_type(options, "sz:prediction_mode", pressio_option_int32_type);
 	  pressio_options_set_type(options, "sz:plus_bits", pressio_option_int32_type);
 	  pressio_options_set_type(options, "sz:random_access", pressio_option_int32_type);
-    pressio_options_set_type(options, "sz:data_type", pressio_option_int32_type);
+    pressio_options_set_type(options, "sz:data_type", pressio_option_double_type);
     return options;
   }
 
@@ -75,7 +75,7 @@ class sz_plugin: public libpressio_compressor_plugin {
     pressio_options_get_double(options, "sz:abs_err_bound", &confparams_cpr->absErrBound);
     pressio_options_get_double(options, "sz:rel_err_bound", &confparams_cpr->relBoundRatio);
     pressio_options_get_double(options, "sz:psnr_err_bound", &confparams_cpr->psnr);
-    pressio_options_get_double(options, "sz:rel_err_bound", &confparams_cpr->pw_relBoundRatio);
+    pressio_options_get_double(options, "sz:pw_rel_err_bound", &confparams_cpr->pw_relBoundRatio);
     pressio_options_get_integer(options, "sz:segment_size", &confparams_cpr->segment_size);
     pressio_options_get_integer(options, "sz:pwr_type", &confparams_cpr->pwr_type);
     pressio_options_get_integer(options, "sz:snapshot_cmpr_step", &confparams_cpr->snapshotCmprStep);
