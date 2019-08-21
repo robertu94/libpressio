@@ -65,7 +65,7 @@ const char* pressio_error_msg(struct pressio* library) {
   return library->error.msg.c_str();
 }
 
-struct pressio_compressor* pressio_get_compressor(struct pressio* library, const char* const compressor_id) {
+struct pressio_compressor* pressio_get_compressor(struct pressio* library, const char* compressor_id) {
   if(auto compressor = library->compressors.find(compressor_id); compressor != library->compressors.end())
   {
     return &compressor->second;

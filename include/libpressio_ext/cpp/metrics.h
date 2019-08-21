@@ -56,27 +56,27 @@ class libpressio_metrics_plugin {
    * \param [in] input the value passed in to compress
    * \param [in] output the value passed in to compress
    */
-  virtual void begin_compress(const struct pressio_data * input, struct pressio_data * const * output);
+  virtual void begin_compress(const struct pressio_data * input, struct pressio_data const * output);
   /**
    * called at the end of compress 
    * \param [in] input the value passed in to compress
    * \param [in] output the value passed in to compress
    * \param [in] rc the return value from the underlying compressor compress command
    */
-  virtual void end_compress(struct pressio_data const* input, pressio_data * const * output, int rc);
+  virtual void end_compress(struct pressio_data const* input, pressio_data const * output, int rc);
   /**
    * called at the beginning of decompress 
    * \param [in] input the value passed in to decompress
    * \param [in] output the value passed in to decompress
    */
-  virtual void begin_decompress(struct pressio_data const* input, pressio_data *const* output);
+  virtual void begin_decompress(struct pressio_data const* input, pressio_data const* output);
   /**
    * called at the end of decompress 
    * \param [in] input the value passed in to decompress
    * \param [in] output the value passed in to decompress
    * \param [in] rc the return value from the underlying compressor decompress command
    */
-  virtual void end_decompress(struct pressio_data const* input, pressio_data *const* output, int rc);
+  virtual void end_decompress(struct pressio_data const* input, pressio_data const* output, int rc);
 
   /**
    * \returns a pressio_options structure containing the metrics returned by the provided metrics plugin

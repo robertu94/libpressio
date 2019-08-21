@@ -1,5 +1,6 @@
 #include <vector>
 #include <memory>
+#include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/compressor.h"
 #include "pressio_options.h"
 #include "pressio_data.h"
@@ -76,7 +77,7 @@ class zfp_plugin: public libpressio_compressor_plugin {
       return 0;
     }
 
-    int compress_impl(struct pressio_data* input, struct pressio_data** output) override {
+    int compress_impl(struct pressio_data* input, struct pressio_data* output) override {
 
       zfp_field* in_field;
       if(int ret = convert_pressio_data_to_field(input, &in_field)) {
@@ -91,34 +92,32 @@ class zfp_plugin: public libpressio_compressor_plugin {
       zfp_stream_rewind(zfp);
 
       size_t outsize = zfp_compress(zfp, in_field);
-      pressio_data_free(*output);
-      *output = pressio_data_new_move(pressio_byte_dtype, stream_data(stream), 1, &outsize, pressio_data_libc_free_fn, nullptr);
+      *output = pressio_data::move(pressio_byte_dtype, stream_data(stream), 1, &outsize, pressio_data_libc_free_fn, nullptr);
 
       zfp_field_free(in_field);
       stream_close(stream);
       return 0;
     }
 
-    int decompress_impl(struct pressio_data* input, struct pressio_data** output) override {
+    int decompress_impl(struct pressio_data* input, struct pressio_data* output) override {
       size_t size;
       void* ptr = pressio_data_ptr(input, &size);
       bitstream* stream = stream_open(ptr, size);
       zfp_stream_set_bit_stream(zfp, stream);
       zfp_stream_rewind(zfp);
 
-      enum pressio_dtype dtype = pressio_data_dtype(*output);
-      size_t dim = pressio_data_num_dimentions(*output);
+      enum pressio_dtype dtype = pressio_data_dtype(output);
+      size_t dim = pressio_data_num_dimensions(output);
       size_t dims[] = {
-        pressio_data_get_dimention(*output, 0),
-        pressio_data_get_dimention(*output, 1),
-        pressio_data_get_dimention(*output, 2),
-        pressio_data_get_dimention(*output, 3),
+        pressio_data_get_dimension(output, 0),
+        pressio_data_get_dimension(output, 1),
+        pressio_data_get_dimension(output, 2),
+        pressio_data_get_dimension(output, 3),
       };
-      pressio_data_free(*output);
-      *output = pressio_data_new_owning(dtype, dim, dims);
+      *output = pressio_data::owning(dtype, dim, dims);
       zfp_field* out_field;
 
-      if(int ret = convert_pressio_data_to_field(*output, &out_field)) {
+      if(int ret = convert_pressio_data_to_field(output, &out_field)) {
         return ret;
       }
       zfp_decompress(zfp, out_field);
@@ -147,7 +146,7 @@ class zfp_plugin: public libpressio_compressor_plugin {
 
   private:
     int invalid_type() { return set_error(1, "invalid_type");}
-    int invalid_dimentions() { return set_error(2, "invalid_dimentions");}
+    int invalid_dimensions() { return set_error(2, "invalid_dimensions");}
 
     int libpressio_type(pressio_data* data, zfp_type* type) {
       switch(pressio_data_dtype(data))
@@ -172,14 +171,14 @@ class zfp_plugin: public libpressio_compressor_plugin {
     int convert_pressio_data_to_field(struct pressio_data* data, zfp_field** field) {
       zfp_type type;
       void* in_data = pressio_data_ptr(data, nullptr);
-      unsigned int r0 = pressio_data_get_dimention(data, 0);
-      unsigned int r1 = pressio_data_get_dimention(data, 1);
-      unsigned int r2 = pressio_data_get_dimention(data, 2);
-      unsigned int r3 = pressio_data_get_dimention(data, 3);
+      unsigned int r0 = pressio_data_get_dimension(data, 0);
+      unsigned int r1 = pressio_data_get_dimension(data, 1);
+      unsigned int r2 = pressio_data_get_dimension(data, 2);
+      unsigned int r3 = pressio_data_get_dimension(data, 3);
       if(libpressio_type(data, &type)) {
         return invalid_type();
       }
-      switch(pressio_data_num_dimentions(data))
+      switch(pressio_data_num_dimensions(data))
       {
         case 1:
           *field = zfp_field_1d(in_data, type, r0);
@@ -194,7 +193,7 @@ class zfp_plugin: public libpressio_compressor_plugin {
           *field = zfp_field_4d(in_data, type, r0, r1, r2, r3);
           break;
         default:
-          return invalid_dimentions();
+          return invalid_dimensions();
       }
       return 0;
     }

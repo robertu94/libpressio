@@ -3,6 +3,7 @@
 
 #include <sz/sz.h>
 
+#include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/compressor.h"
 #include "pressio_data.h"
 #include "pressio_options.h"
@@ -88,14 +89,13 @@ class sz_plugin: public libpressio_compressor_plugin {
     return 0;
   }
 
-  int compress_impl(struct pressio_data* input, struct pressio_data** output) override {
-    size_t r1 = pressio_data_get_dimention(input, 0);
-    size_t r2 = pressio_data_get_dimention(input, 1);
-    size_t r3 = pressio_data_get_dimention(input, 2);
-    size_t r4 = pressio_data_get_dimention(input, 3);
-    size_t r5 = pressio_data_get_dimention(input, 4);
+  int compress_impl(struct pressio_data* input, struct pressio_data* output) override {
+    size_t r1 = pressio_data_get_dimension(input, 0);
+    size_t r2 = pressio_data_get_dimension(input, 1);
+    size_t r3 = pressio_data_get_dimension(input, 2);
+    size_t r4 = pressio_data_get_dimension(input, 3);
+    size_t r5 = pressio_data_get_dimension(input, 4);
     size_t outsize = 0;
-    pressio_data_free(*output);
     unsigned char* compressed_data = SZ_compress(
         libpressio_type_to_sz_type(pressio_data_dtype(input)),
         pressio_data_ptr(input, nullptr),
@@ -105,33 +105,32 @@ class sz_plugin: public libpressio_compressor_plugin {
         r3,
         r2,
         r1);
-    *output = pressio_data_new_move(pressio_byte_dtype, compressed_data, 1, &outsize, pressio_data_libc_free_fn, nullptr);
+    *output = pressio_data::move(pressio_byte_dtype, compressed_data, 1, &outsize, pressio_data_libc_free_fn, nullptr);
     return 0;
   }
-  int decompress_impl(struct pressio_data* input, struct pressio_data** output) override {
+  int decompress_impl(struct pressio_data* input, struct pressio_data* output) override {
 
     size_t r[] = {
-     pressio_data_get_dimention(*output, 0),
-     pressio_data_get_dimention(*output, 1),
-     pressio_data_get_dimention(*output, 2),
-     pressio_data_get_dimention(*output, 3),
-     pressio_data_get_dimention(*output, 4),
+     pressio_data_get_dimension(output, 0),
+     pressio_data_get_dimension(output, 1),
+     pressio_data_get_dimension(output, 2),
+     pressio_data_get_dimension(output, 3),
+     pressio_data_get_dimension(output, 4),
     };
-    size_t ndims = pressio_data_num_dimentions(*output);
+    size_t ndims = pressio_data_num_dimensions(output);
 
-    pressio_dtype type = pressio_data_dtype(*output);
+    pressio_dtype type = pressio_data_dtype(output);
     void* decompressed_data = SZ_decompress(
         libpressio_type_to_sz_type(type),
         (unsigned char*)pressio_data_ptr(input, nullptr),
-        pressio_data_get_dimention(input, 0),
+        pressio_data_get_dimension(input, 0),
         r[4],
         r[3],
         r[2],
         r[1],
         r[0]
         );
-    pressio_data_free(*output);
-    *output = pressio_data_new_move(type, decompressed_data, ndims, r, pressio_data_libc_free_fn, nullptr);
+    *output = pressio_data::move(type, decompressed_data, ndims, r, pressio_data_libc_free_fn, nullptr);
     return 0;
   }
 

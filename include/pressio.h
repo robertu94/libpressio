@@ -32,7 +32,7 @@ void pressio_release(struct pressio** library);
  * \returns non-owning pointer to the requested instantiated pressio compressor; it may return the same pointer on multiple calls
  * \see pressio_features for a list of available compressors
  */
-struct pressio_compressor* pressio_get_compressor(struct pressio* library, const char* const compressor_id);
+struct pressio_compressor* pressio_get_compressor(struct pressio* library, const char* compressor_id);
 
 /**
  * creates a possibly composite metrics structure

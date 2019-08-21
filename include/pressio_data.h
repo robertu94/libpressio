@@ -36,40 +36,40 @@ void pressio_data_libc_free_fn (void* data, void* metadata);
  *
  *  \param[in] dtype type of the data stored by the pointer
  *  \param[in] data the actual data to be represented
- *  \param[in] num_dimentions the number of dimentions; must match the length of dimensions
- *  \param[in] dimensions an array corresponding to the dimentions of the data, a copy is made of this on construction
+ *  \param[in] num_dimensions the number of dimensions; must match the length of dimensions
+ *  \param[in] dimensions an array corresponding to the dimensions of the data, a copy is made of this on construction
  */
-struct pressio_data* pressio_data_new_nonowning(const enum pressio_dtype dtype, void* data, size_t const num_dimentions, size_t const dimensions[]);
+struct pressio_data* pressio_data_new_nonowning(const enum pressio_dtype dtype, void* data, size_t const num_dimensions, size_t const dimensions[]);
 /** 
  *  allocates a new pressio_data structure and corresponding data and copies data in from the specified source
  *  use this function when the underlying data pointer may be deleted
  *
  *  \param[in] dtype type of the data stored by the pointer
  *  \param[in] src the data to be copied into the data structure
- *  \param[in] num_dimentions the number of dimentions; must match the length of dimensions
- *  \param[in] dimensions an array corresponding to the dimentions of the data, a copy is made of this on construction
+ *  \param[in] num_dimensions the number of dimensions; must match the length of dimensions
+ *  \param[in] dimensions an array corresponding to the dimensions of the data, a copy is made of this on construction
  */
-struct pressio_data* pressio_data_new_copy(const enum pressio_dtype dtype, void* src, size_t const num_dimentions, size_t const dimensions[]);
+struct pressio_data* pressio_data_new_copy(const enum pressio_dtype dtype, void* src, size_t const num_dimensions, size_t const dimensions[]);
 /** 
  *  allocates a new pressio_data structure and corresponding data. The corresponding data is uninitialized
  *
  *  \param[in] dtype type of the data stored by the pointer
- *  \param[in] num_dimentions the number of dimentions; must match the length of dimensions
- *  \param[in] dimensions an array corresponding to the dimentions of the data, a copy is made of this on construction
+ *  \param[in] num_dimensions the number of dimensions; must match the length of dimensions
+ *  \param[in] dimensions an array corresponding to the dimensions of the data, a copy is made of this on construction
  *
  *  \see pressio_data_ptr to access the allocated data
  */
-struct pressio_data* pressio_data_new_owning(const enum pressio_dtype dtype, size_t const num_dimentions, size_t const dimensions[]);
+struct pressio_data* pressio_data_new_owning(const enum pressio_dtype dtype, size_t const num_dimensions, size_t const dimensions[]);
 /** 
  *  allocates a new pressio_data without data.
  *
  *  \param[in] dtype type of the data stored by the pointer
- *  \param[in] num_dimentions the number of dimentions; must match the length of dimensions
+ *  \param[in] num_dimensions the number of dimensions; must match the length of dimensions
  *  \param[in] dimensions an array corresponding to the dimensions of the data, a copy is made of this on construction
  *  \see pressio_compressor_compress to provide output buffer meta data.
  *  \see pressio_compressor_decompress to provide output buffer meta data.
  */
-struct pressio_data* pressio_data_new_empty(const enum pressio_dtype dtype, size_t const num_dimentions, size_t const dimensions[]);
+struct pressio_data* pressio_data_new_empty(const enum pressio_dtype dtype, size_t const num_dimensions, size_t const dimensions[]);
 
 /**
  * allocates a new pressio_data structure using data that was already allocated.
@@ -78,12 +78,12 @@ struct pressio_data* pressio_data_new_empty(const enum pressio_dtype dtype, size
  *
  * \param[in] dtype the type of the data to store
  * \param[in] data the pointer to be "moved" into the pressio_data structure
- * \param[in] num_dimentions the number of dimentions; must match the length of dimensions
- * \param[in] dimensions an array corresponding to the dimentions of the data, a copy is made of this on construction
+ * \param[in] num_dimensions the number of dimensions; must match the length of dimensions
+ * \param[in] dimensions an array corresponding to the dimensions of the data, a copy is made of this on construction
  * \param[in] deleter the function to be called when pressio_data_free is called on this structure
  * \param[in] metadata passed to the deleter function when pressio_data_free is called, it may be null if unneeded
  */
-struct pressio_data* pressio_data_new_move(const enum pressio_dtype dtype, void* data, size_t const num_dimentions,
+struct pressio_data* pressio_data_new_move(const enum pressio_dtype dtype, void* data, size_t const num_dimensions,
     size_t const dimensions[], pressio_data_delete_fn deleter, void* metadata);
 
 /**
@@ -121,14 +121,14 @@ bool pressio_data_has_data(struct pressio_data const* data);
  * \param[in] data the pressio data to query
  * \returns the number of dimensions contained in the object
  */
-size_t pressio_data_num_dimentions(struct pressio_data const* data);
+size_t pressio_data_num_dimensions(struct pressio_data const* data);
 /**
  * returns the value of a given dimension. 
  * \param[in] data the pressio data to query
  * \param[in] dimension zero indexed dimension
- * \returns the dimension or 0 If the dimension requested exceeds num_dimentions
+ * \returns the dimension or 0 If the dimension requested exceeds num_dimensions
  */
-size_t pressio_data_get_dimention(struct pressio_data const* data, size_t const dimension);
+size_t pressio_data_get_dimension(struct pressio_data const* data, size_t const dimension);
 
 /**
  * returns the number of bytes to represent the data

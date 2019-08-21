@@ -2,8 +2,8 @@
 #include <variant>
 #include <string>
 #include <map>
-#include <libpressio/pressio_options.h>
-#include <libpressio/pressio_option.h>
+#include "pressio_options.h"
+#include "pressio_option.h"
 
 /**
  * \file

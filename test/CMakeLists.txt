@@ -55,3 +55,11 @@ add_test(full_test full)
 add_executable(metrics metrics.c make_input_data.cc)
 target_link_libraries(metrics libpressio)
 add_test(metrics_test metrics)
+
+if(BUILD_PYTHON_WRAPPER)
+  add_test(test_python_wrapper 
+    ${Python_EXECUTABLE}
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_python.py
+    ${CMAKE_BINARY_DIR}/swig
+  )
+endif()

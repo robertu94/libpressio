@@ -41,11 +41,11 @@ class libpressio_compressor_plugin {
   /** compresses a pressio_data buffer
    * \see pressio_compressor_compress for the semantics this function should obey
    */
-  int compress(struct pressio_data* input, struct pressio_data** output);
+  int compress(struct pressio_data* input, struct pressio_data* output);
   /** decompress a pressio_data buffer
    * \see pressio_compressor_decompress for the semantics this function should obey
    */
-  int decompress(struct pressio_data* input, struct pressio_data** output);
+  int decompress(struct pressio_data* input, struct pressio_data* output);
   /** get a version string for the compressor
    * \see pressio_compressor_version for the semantics this function should obey
    */
@@ -123,11 +123,11 @@ class libpressio_compressor_plugin {
   /** compresses a pressio_data buffer
    * \see pressio_compressor_compress for the semantics this function should obey
    */
-  virtual int compress_impl(struct pressio_data* input, struct pressio_data** output)=0;
+  virtual int compress_impl(struct pressio_data* input, struct pressio_data* output)=0;
   /** decompress a pressio_data buffer
    * \see pressio_compressor_decompress for the semantics this function should obey
    */
-  virtual int decompress_impl(struct pressio_data* input, struct pressio_data** output)=0;
+  virtual int decompress_impl(struct pressio_data* input, struct pressio_data* output)=0;
 
   /** checks for extra arguments set for the compressor.
    * Unlike other functions, this option is NOT required

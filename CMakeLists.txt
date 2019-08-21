@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
-project(libpressio VERSION "0.7.0" LANGUAGES CXX C)
+project(libpressio VERSION "0.8.0" LANGUAGES CXX C)
 
 enable_testing()
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -10,6 +10,7 @@ find_package(ZFP REQUIRED)
 find_package(SZ REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(PkgConfig REQUIRED)
+find_package(Python COMPONENTS Interpreter Development NumPy)
 pkg_search_module(ZSTD IMPORTED_TARGET GLOBAL libzstd)
 
 
@@ -76,21 +77,26 @@ target_compile_options(libpressio PRIVATE $<$<CONFIG:Debug>: -Wall -Werror -Wext
 target_link_libraries(libpressio PUBLIC zfp::zfp SZ)
 target_compile_features(libpressio PUBLIC cxx_std_17)
 
+export(TARGETS libpressio NAMESPACE LibPressio:: FILE LibPressio.cmake)
 install(TARGETS libpressio EXPORT LibPressioConfig
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   )
-install(EXPORT LibPressioConfig DESTINATION share/LibPressio/cmake)
+install(EXPORT LibPressioConfig NAMESPACE LibPressio:: DESTINATION share/LibPressio/cmake)
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libpressio)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/pressio_version.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libpressio)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libpressio.pc DESTINATION ${CMAKE_INSTALL_PREFIX}/share/pkgconfig)
-export(TARGETS libpressio FILE LibPressio.cmake)
 
 option(BUILD_TESTS "build the test cases and examples" OFF)
 
 if(BUILD_TESTS)
   add_subdirectory(test)
+endif()
+
+option(BUILD_PYTHON_WRAPPER "build python wrapper" OFF)
+if(BUILD_PYTHON_WRAPPER)
+  add_subdirectory(swig)
 endif()
 
 option(BUILD_DOCS "build the documetation" OFF)

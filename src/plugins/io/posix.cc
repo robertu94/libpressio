@@ -5,11 +5,11 @@
 #include "libpressio_ext/io/posix.h"
 
 namespace {
-  std::vector<size_t> get_all_dimentions(struct pressio_data const* data) {
+  std::vector<size_t> get_all_dimensions(struct pressio_data const* data) {
     std::vector<size_t> dims;
     if(data) {
-      for (size_t i = 0; i < pressio_data_num_dimentions(data); ++i) {
-        dims.emplace_back(pressio_data_get_dimention(data, i));
+      for (size_t i = 0; i < pressio_data_num_dimensions(data); ++i) {
+        dims.emplace_back(pressio_data_get_dimension(data, i));
       }
     }
     return dims;
@@ -27,7 +27,7 @@ extern "C" {
       } else {
         //create a new buffer of the appropriate size
         auto dtype = pressio_data_dtype(dims);
-        auto dims_v = get_all_dimentions(dims);
+        auto dims_v = get_all_dimensions(dims);
         pressio_data_free(dims);
         ret = pressio_data_new_owning(dtype, dims_v.size(), dims_v.data());
       }

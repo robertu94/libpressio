@@ -47,21 +47,21 @@ class time_plugin : public libpressio_metrics_plugin {
     set_options->end = high_resolution_clock::now();
   }
 
-  void begin_compress(const struct pressio_data * , struct pressio_data * const * ) override {
+  void begin_compress(const struct pressio_data * , struct pressio_data const * ) override {
     compress = time_range();
     compress->begin = high_resolution_clock::now();
   }
 
-  void end_compress(struct pressio_data const* , pressio_data * const * , int ) override {
+  void end_compress(struct pressio_data const* , pressio_data const * , int ) override {
     compress->end = high_resolution_clock::now();
   }
 
-  void begin_decompress(struct pressio_data const* , pressio_data *const* ) override {
+  void begin_decompress(struct pressio_data const* , pressio_data const* ) override {
     decompress = time_range();
     decompress->begin = high_resolution_clock::now();
   }
 
-  void end_decompress(struct pressio_data const* , pressio_data *const* , int ) override {
+  void end_decompress(struct pressio_data const* , pressio_data const* , int ) override {
     decompress->end = high_resolution_clock::now();
   }
 

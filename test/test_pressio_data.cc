@@ -21,9 +21,9 @@ TEST_F(PressioDataTests, MakePressioData) {
   pressio_data* d = pressio_data_new_nonowning(pressio_int32_dtype, data.data(), 2, dims);
   EXPECT_NE(d, nullptr);
   EXPECT_EQ(pressio_data_dtype(d), pressio_int32_dtype);
-  EXPECT_EQ(pressio_data_num_dimentions(d), 2);
-  EXPECT_EQ(pressio_data_get_dimention(d, 0), 2);
-  EXPECT_EQ(pressio_data_get_dimention(d, 1), 3);
+  EXPECT_EQ(pressio_data_num_dimensions(d), 2);
+  EXPECT_EQ(pressio_data_get_dimension(d, 0), 2);
+  EXPECT_EQ(pressio_data_get_dimension(d, 1), 3);
   EXPECT_EQ(pressio_data_ptr(d, nullptr), data.data());
   size_t size = 0;
   EXPECT_EQ(pressio_data_ptr(d, &size), data.data());

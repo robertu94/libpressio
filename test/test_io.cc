@@ -125,7 +125,7 @@ TEST_F(PressioDataIOTests, TestWrite) {
   auto data = pressio_data_new_owning(pressio_int32_dtype, 2, sizes);
   size_t buffer_size;
   int* buffer = static_cast<int*>(pressio_data_ptr(data, &buffer_size));
-  std::iota(buffer, buffer + pressio_data_num_dimentions(data), 0);
+  std::iota(buffer, buffer + pressio_data_num_dimensions(data), 0);
   auto tmpwrite_name = std::string("test_io_readXXXXXX\0");
   auto tmpwrite_fd = mkstemp(const_cast<char*>(tmpwrite_name.data()));
   EXPECT_EQ(pressio_io_data_write(data, tmpwrite_fd), sizeof(int)*6);

@@ -44,25 +44,25 @@ class composite_plugin : public libpressio_metrics_plugin {
     }
   }
 
-  void begin_compress(const struct pressio_data * input, struct pressio_data * const * output) override {
+  void begin_compress(const struct pressio_data * input, struct pressio_data const * output) override {
     for (auto& plugin : plugins) {
       plugin->begin_compress(input, output);
     }
   }
 
-  void end_compress(struct pressio_data const* input, pressio_data * const * output, int rc) override {
+  void end_compress(struct pressio_data const* input, pressio_data const * output, int rc) override {
     for (auto& plugin : plugins) {
       plugin->end_compress(input, output, rc);
     }
   }
 
-  void begin_decompress(struct pressio_data const* input, pressio_data *const* output) override {
+  void begin_decompress(struct pressio_data const* input, pressio_data const* output) override {
     for (auto& plugin : plugins) {
       plugin->begin_decompress(input, output);
     }
   }
 
-  void end_decompress(struct pressio_data const* input, pressio_data *const* output, int rc) override {
+  void end_decompress(struct pressio_data const* input, pressio_data const* output, int rc) override {
     for (auto& plugin : plugins) {
       plugin->end_decompress(input, output, rc);
     }

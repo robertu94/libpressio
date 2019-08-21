@@ -110,13 +110,13 @@ void run_compressor(const char* compressor_name, struct pressio_compressor* comp
   struct pressio_data* decompressed_data = pressio_data_new_empty(pressio_double_dtype, 3, dims);
 
   //compress the data
-  if(pressio_compressor_compress(compressor, input_data, &compressed_data)) {
+  if(pressio_compressor_compress(compressor, input_data, compressed_data)) {
     printf("%s\n", pressio_compressor_error_msg(compressor));
     exit(pressio_compressor_error_code(compressor));
   }
   
   //decompress the data
-  if(pressio_compressor_decompress(compressor, compressed_data, &decompressed_data)) {
+  if(pressio_compressor_decompress(compressor, compressed_data, decompressed_data)) {
     printf("%s\n", pressio_compressor_error_msg(compressor));
     exit(pressio_compressor_error_code(compressor));
   }

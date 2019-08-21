@@ -64,7 +64,7 @@ int pressio_compressor_check_options(struct pressio_compressor* compressor, stru
  *      2. A new owning pressio_data structure with the results of the compression
  * \returns 0 if successful, positive values on errors, negative values on warnings
  */
-int pressio_compressor_compress(struct pressio_compressor* compressor, struct pressio_data * input, struct pressio_data** output);
+int pressio_compressor_compress(struct pressio_compressor* compressor, struct pressio_data * input, struct pressio_data* output);
 /*!
  * decompresses the compressed data using the specified compressor
  * calling this without calling libpressio_compressor_set_options() has undefined behavior
@@ -80,7 +80,7 @@ int pressio_compressor_compress(struct pressio_compressor* compressor, struct pr
  * \see pressio_data_new_empty often used as the pointer passed into \c output
  * \see pressio_data_new_move often used as the pointer passed out of \c output
  */
-int pressio_compressor_decompress(struct pressio_compressor* compressor, struct pressio_data * input, struct pressio_data** output);
+int pressio_compressor_decompress(struct pressio_compressor* compressor, struct pressio_data * input, struct pressio_data* output);
 
 /**
  * \param[in] compressor the compressor to get results from
