@@ -233,8 +233,15 @@ struct pressio_data {
   /**
    * \returns the number of dimensions
    */
-  size_t dimensions() const {
+  size_t num_dimensions() const {
     return dims.size();
+  }
+
+  /**
+   * \returns a copy of the vector of dimensions
+   */
+  std::vector<size_t> dimensions() const {
+    return dims;
   }
 
   /**
@@ -242,7 +249,7 @@ struct pressio_data {
    * \returns a specific dimension of the buffer of zero if the index exceeds dimensions()
    */
   size_t get_dimension(size_t idx) const {
-    if(idx >= dimensions()) return 0;
+    if(idx >= num_dimensions()) return 0;
     else return dims[idx];
   }
 
@@ -250,14 +257,14 @@ struct pressio_data {
    * \returns the size of the buffer in bytes
    */
   size_t size_in_bytes() const {
-    return data_size_in_bytes(data_dtype, dimensions(), dims.data());
+    return data_size_in_bytes(data_dtype, num_dimensions(), dims.data());
   }
 
   /**
    * \returns the size of the buffer in elements
    */
   size_t num_elements() const {
-    return data_size_in_elements(dimensions(), dims.data());
+    return data_size_in_elements(num_dimensions(), dims.data());
   }
 
   private:

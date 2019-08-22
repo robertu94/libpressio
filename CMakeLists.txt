@@ -1,29 +1,14 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
-project(libpressio VERSION "0.8.0" LANGUAGES CXX C)
+project(libpressio VERSION "0.9.0" LANGUAGES CXX C)
 
 enable_testing()
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(BUILD_SHARED_LIBS "build libpressio as a shared library" ON)
 
 include(GNUInstallDirs)
-find_package(ZFP REQUIRED)
-find_package(SZ REQUIRED)
-find_package(ZLIB REQUIRED)
-find_package(PkgConfig REQUIRED)
-find_package(Python COMPONENTS Interpreter Development NumPy)
-pkg_search_module(ZSTD IMPORTED_TARGET GLOBAL libzstd)
 
 
-set(LIBPRESSIO_FEATURES "sz zfp")
-configure_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/pressio_version.h.in
-  ${CMAKE_CURRENT_BINARY_DIR}/include/pressio_version.h
-  )
-configure_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/libpressio.pc.in
-  ${CMAKE_CURRENT_BINARY_DIR}/libpressio.pc
-  @ONLY
-  )
+set(LIBPRESSIO_FEATURES "")
 
 add_library(libpressio
   #core implementation
@@ -38,8 +23,6 @@ add_library(libpressio
 
   #plugins
   ./src/plugins/compressors/compressor_base.cc
-  ./src/plugins/compressors/sz_plugin.cc
-  ./src/plugins/compressors/zfp_plugin.cc
   ./src/plugins/metrics/composite.cc
   ./src/plugins/metrics/metrics_base.cc
   ./src/plugins/metrics/size.cc
@@ -48,8 +31,6 @@ add_library(libpressio
 
   #public headers
   include/libpressio.h
-  include/libpressio_ext/compressors/sz.h
-  include/libpressio_ext/compressors/zfp.h
   include/libpressio_ext/cpp/compressor.h
   include/libpressio_ext/cpp/metrics.h
   include/libpressio_ext/cpp/plugins.h
@@ -74,8 +55,56 @@ target_include_directories(libpressio
   PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/include
   )
 target_compile_options(libpressio PRIVATE $<$<CONFIG:Debug>: -Wall -Werror -Wextra -Wpedantic>)
-target_link_libraries(libpressio PUBLIC zfp::zfp SZ)
 target_compile_features(libpressio PUBLIC cxx_std_17)
+
+option(LIBPRESSIO_HAS_MGARD "build the MGARD plugin" OFF)
+if(LIBPRESSIO_HAS_MGARD)
+  set(LIBPRESSIO_FEATURES "${LIBPRESSIO_FEATURES} mgard")
+  find_package(mgard REQUIRED)
+  target_sources(libpressio
+    PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/mgard_plugin.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/libpressio_ext/compressors/mgard.h
+    )
+  target_link_libraries(libpressio PUBLIC mgard::mgard)
+endif()
+
+option(LIBPRESSIO_HAS_ZFP "build the ZFP plugin" ON)
+if(LIBPRESSIO_HAS_ZFP)
+  set(LIBPRESSIO_FEATURES "${LIBPRESSIO_FEATURES} zfp")
+  find_package(ZFP REQUIRED)
+  target_sources(libpressio
+    PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/zfp_plugin.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/libpressio_ext/compressors/zfp.h
+    )
+  target_link_libraries(libpressio PUBLIC zfp::zfp)
+endif()
+
+option(LIBPRESSIO_HAS_SZ "build the SZ plugin" ON)
+if(LIBPRESSIO_HAS_SZ)
+  set(LIBPRESSIO_FEATURES "${LIBPRESSIO_FEATURES} sz")
+  find_package(SZ REQUIRED)
+  find_package(ZLIB REQUIRED)
+  find_package(PkgConfig REQUIRED)
+  pkg_search_module(ZSTD IMPORTED_TARGET GLOBAL libzstd)
+  target_sources(libpressio
+    PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/sz_plugin.cc
+      ${CMAKE_CURRENT_SOURCE_DIR}/include/libpressio_ext/compressors/sz.h
+    )
+  target_link_libraries(libpressio PUBLIC SZ)
+endif()
+
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/pressio_version.h.in
+  ${CMAKE_CURRENT_BINARY_DIR}/include/pressio_version.h
+  )
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/libpressio.pc.in
+  ${CMAKE_CURRENT_BINARY_DIR}/libpressio.pc
+  @ONLY
+  )
 
 export(TARGETS libpressio NAMESPACE LibPressio:: FILE LibPressio.cmake)
 install(TARGETS libpressio EXPORT LibPressioConfig
@@ -89,7 +118,6 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/pressio_version.h DESTINATION 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libpressio.pc DESTINATION ${CMAKE_INSTALL_PREFIX}/share/pkgconfig)
 
 option(BUILD_TESTS "build the test cases and examples" OFF)
-
 if(BUILD_TESTS)
   add_subdirectory(test)
 endif()

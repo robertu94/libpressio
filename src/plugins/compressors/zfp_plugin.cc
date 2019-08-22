@@ -77,10 +77,11 @@ class zfp_plugin: public libpressio_compressor_plugin {
       return 0;
     }
 
-    int compress_impl(struct pressio_data* input, struct pressio_data* output) override {
+    int compress_impl(const pressio_data *input, struct pressio_data* output) override {
 
       zfp_field* in_field;
-      if(int ret = convert_pressio_data_to_field(input, &in_field)) {
+      auto input_copy = pressio_data::copy(input->dtype(),input->data(), input->dimensions());
+      if(int ret = convert_pressio_data_to_field(&input_copy, &in_field)) {
         return ret;
       }
 
@@ -99,7 +100,7 @@ class zfp_plugin: public libpressio_compressor_plugin {
       return 0;
     }
 
-    int decompress_impl(struct pressio_data* input, struct pressio_data* output) override {
+    int decompress_impl(const pressio_data *input, struct pressio_data* output) override {
       size_t size;
       void* ptr = pressio_data_ptr(input, &size);
       bitstream* stream = stream_open(ptr, size);

@@ -12,9 +12,17 @@
 
 namespace {
 
-  std::map compressor_constructors{
+  std::map<std::string, std::function<std::unique_ptr<libpressio_compressor_plugin>()>>
+    compressor_constructors{
+#if LIBPRESSIO_HAS_SZ
     std::pair(std::string("sz"), std::function(make_c_sz)),
+#endif
+#if LIBPRESSIO_HAS_ZFP
     std::pair(std::string("zfp"), std::function(make_c_zfp)),
+#endif
+#if LIBPRESSIO_HAS_MGARD
+    std::pair(std::string("mgard"), std::function(make_c_mgard)),
+#endif
   };
   std::map metrics_constructor{
     std::pair(std::string("time"), std::function(make_m_time)),

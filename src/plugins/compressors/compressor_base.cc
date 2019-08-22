@@ -87,14 +87,14 @@ int libpressio_compressor_plugin::set_options(struct pressio_options const* opti
   return ret;
 }
 
-int libpressio_compressor_plugin::compress(struct pressio_data* input, struct pressio_data* output) {
+int libpressio_compressor_plugin::compress(const pressio_data *input, struct pressio_data* output) {
   if(metrics_plugin) (*metrics_plugin)->begin_compress(input, output);
   auto ret = compress_impl(input, output);
   if(metrics_plugin) (*metrics_plugin)->end_compress(input, output, ret);
   return ret;
 }
 
-int libpressio_compressor_plugin::decompress(struct pressio_data* input, struct pressio_data* output) {
+int libpressio_compressor_plugin::decompress(const pressio_data *input, struct pressio_data* output) {
   if(metrics_plugin) (*metrics_plugin)->begin_decompress(input, output);
   auto ret = decompress_impl(input, output);
   if(metrics_plugin) (*metrics_plugin)->end_decompress(input, output, ret);

@@ -1,3 +1,6 @@
+#ifndef PRESSIO_OPTIONS_CPP
+#define PRESSIO_OPTIONS_CPP
+
 #include <optional>
 #include <variant>
 #include <string>
@@ -53,11 +56,6 @@ struct pressio_option final {
   template<class T>
   pressio_option(T value): option(std::optional<T>(value)) {}
 
-  /** specialization for option to reset the type to hold no type or value
-   * \param[in] value the monostate singleton
-   * */
-  template<>
-  pressio_option(std::monostate value): option(value) {}
 
   /** returns a pressio option that has the appropriate type if the conversion is allowed for the specified safety
    * \param[in] type the type to convert to
@@ -75,7 +73,7 @@ struct pressio_option final {
    * \returns returns true if the option holds the current type
    */
   template <class T>
-  constexpr bool holds_alternative() const {
+  bool holds_alternative() const {
     return std::holds_alternative<std::optional<T>>(option);
   }
 
@@ -83,13 +81,13 @@ struct pressio_option final {
    * \returns true if the option has no specified type or value
    */
   template <>
-  constexpr bool holds_alternative<std::monostate>() const;
+  bool holds_alternative<std::monostate>() const;
 
   /** 
    * \returns a std::optional which holds a value if the option has one or an empty optional otherwise
    */
   template <class T>
-  constexpr std::optional<T> const& get() const{
+  std::optional<T> const& get() const{
     return std::get<std::optional<T>>(option);
   }
 
@@ -98,7 +96,7 @@ struct pressio_option final {
    * \returns the value contained by the option
    */
   template <class T>
-  constexpr T const& get_value() const{
+  T const& get_value() const{
     return get<T>().value();
   }
 
@@ -187,14 +185,17 @@ struct pressio_option final {
   option_type option;
 };
 
+/** specialization for option to reset the type to hold no type or value
+ * \param[in] value the monostate singleton
+ * */
+template<>
+pressio_option::pressio_option(std::monostate value);
+
 /** Specialization for the std::monostate singleton
  * \returns true if the option has no specified type or value
  */
 template <>
-constexpr bool pressio_option::holds_alternative<std::monostate>() const {
-  return std::holds_alternative<std::monostate>(option);
-}
-
+bool pressio_option::holds_alternative<std::monostate>() const;
 /**
  * represents a map of dynamically typed objects
  */
@@ -381,3 +382,5 @@ enum pressio_options_key_status pressio_options::get(std::string const& key, con
  */
 template <>
 enum pressio_options_key_status pressio_options::cast(std::string const& key, char** value, enum pressio_conversion_safety safety) const;
+
+#endif

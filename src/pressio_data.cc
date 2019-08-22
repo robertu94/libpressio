@@ -60,7 +60,7 @@ bool pressio_data_has_data(struct pressio_data const* data) {
 }
 
 size_t pressio_data_num_dimensions(struct pressio_data const* data) {
-  return data->dimensions();
+  return data->num_dimensions();
 }
 
 size_t pressio_data_get_dimension(struct pressio_data const* data, size_t dimension) {

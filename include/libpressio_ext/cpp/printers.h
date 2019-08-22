@@ -1,6 +1,7 @@
 #include <string>
 #include <ostream>
 #include "options.h"
+#include "pressio_dtype.h"
 
 /** \file 
  *  \brief C++ stream compatible IO functions
@@ -82,3 +83,37 @@ operator<<(std::basic_ostream<CharT, Traits>& out, pressio_options const& option
   return out;
 }
 
+/**
+ * human readable debugging IO function for pressio_dtype, the format is unspecified
+ * \param[in] out the stream to write to
+ * \param[in] type the type to print
+ */
+template <class CharT = char, class Traits = std::char_traits<CharT>>
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& out, enum pressio_dtype type)
+{
+  switch (type) {
+    case pressio_double_dtype:
+      return out << "double";
+    case pressio_float_dtype:
+      return out << "float";
+    case pressio_uint8_dtype:
+      return out << "uint8_t";
+    case pressio_uint16_dtype:
+      return out << "uint16_t";
+    case pressio_uint32_dtype:
+      return out << "uint32_t";
+    case pressio_uint64_dtype:
+      return out << "uint64_t";
+    case pressio_int8_dtype:
+      return out << "int8_t";
+    case pressio_int16_dtype:
+      return out << "int16_t";
+    case pressio_int32_dtype:
+      return out << "int32_t";
+    case pressio_int64_dtype:
+      return out << "int64_t";
+    case pressio_byte_dtype:
+      return out << "byte";
+  }
+}

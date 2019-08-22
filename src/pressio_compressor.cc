@@ -8,10 +8,10 @@ struct pressio_options* pressio_compressor_get_options(struct pressio_compressor
 int pressio_compressor_set_options(struct pressio_compressor* compressor, struct pressio_options const * options) {
   return compressor->plugin->set_options(options);
 }
-int pressio_compressor_compress(struct pressio_compressor* compressor, struct pressio_data * input, struct pressio_data * output) {
+int pressio_compressor_compress(struct pressio_compressor* compressor, const pressio_data *input, struct pressio_data * output) {
   return compressor->plugin->compress(input, output);
 }
-int pressio_compressor_decompress(struct pressio_compressor* compressor, struct pressio_data * input, struct pressio_data * output) {
+int pressio_compressor_decompress(struct pressio_compressor* compressor, const pressio_data *input, struct pressio_data * output) {
   return compressor->plugin->decompress(input, output);
 }
 const char* pressio_compressor_version(struct pressio_compressor const* compressor) {

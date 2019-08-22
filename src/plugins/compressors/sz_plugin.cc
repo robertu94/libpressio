@@ -89,7 +89,7 @@ class sz_plugin: public libpressio_compressor_plugin {
     return 0;
   }
 
-  int compress_impl(struct pressio_data* input, struct pressio_data* output) override {
+  int compress_impl(const pressio_data *input, struct pressio_data* output) override {
     size_t r1 = pressio_data_get_dimension(input, 0);
     size_t r2 = pressio_data_get_dimension(input, 1);
     size_t r3 = pressio_data_get_dimension(input, 2);
@@ -108,7 +108,7 @@ class sz_plugin: public libpressio_compressor_plugin {
     *output = pressio_data::move(pressio_byte_dtype, compressed_data, 1, &outsize, pressio_data_libc_free_fn, nullptr);
     return 0;
   }
-  int decompress_impl(struct pressio_data* input, struct pressio_data* output) override {
+  int decompress_impl(const pressio_data *input, struct pressio_data* output) override {
 
     size_t r[] = {
      pressio_data_get_dimension(output, 0),

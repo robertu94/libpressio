@@ -1,3 +1,4 @@
+find_package(Python COMPONENTS Interpreter Development NumPy)
 find_package(SWIG)
 if(SWIG_FOUND AND PYTHON_FOUND)
   include(UseSWIG)
