@@ -39,8 +39,13 @@ extern "C" {
       size_t size = static_cast<size_t>(statbuf.st_size); 
       ret = pressio_data_new_owning(pressio_byte_dtype, 1, &size);
     }
-    read(in_filedes, pressio_data_ptr(ret, nullptr), pressio_data_get_bytes(ret));
-    return ret;
+    size_t bytes_read = read(in_filedes, pressio_data_ptr(ret, nullptr), pressio_data_get_bytes(ret));
+    if(bytes_read != pressio_data_get_bytes(ret)) {
+      pressio_data_free(ret);
+      return nullptr;
+    } else  {
+      return ret;
+    }
   }
 
   struct pressio_data* pressio_io_data_fread(struct pressio_data* dims, FILE* in_file) {

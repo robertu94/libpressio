@@ -5,6 +5,7 @@
 #include <variant>
 #include <string>
 #include <map>
+#include <type_traits>
 #include "pressio_options.h"
 #include "pressio_option.h"
 
@@ -72,7 +73,7 @@ struct pressio_option final {
   /** 
    * \returns returns true if the option holds the current type
    */
-  template <class T>
+  template <class T, std::enable_if_t<!std::is_same_v<T,std::monostate>,int> = 0>
   bool holds_alternative() const {
     return std::holds_alternative<std::optional<T>>(option);
   }
@@ -80,8 +81,10 @@ struct pressio_option final {
   /** Specialization for the std::monostate singleton
    * \returns true if the option has no specified type or value
    */
-  template <>
-  bool holds_alternative<std::monostate>() const;
+  template <class T, std::enable_if_t<std::is_same_v<T,std::monostate>,int> = 0>
+  bool holds_alternative() const {
+    return std::holds_alternative<std::monostate>(option);
+  }
 
   /** 
    * \returns a std::optional which holds a value if the option has one or an empty optional otherwise
@@ -121,6 +124,7 @@ struct pressio_option final {
         case pressio_option_userptr_type:
           return get<void*>().has_value();
         case pressio_option_unset_type:
+        default:
           return false;
       }
     }
@@ -191,11 +195,6 @@ struct pressio_option final {
 template<>
 pressio_option::pressio_option(std::monostate value);
 
-/** Specialization for the std::monostate singleton
- * \returns true if the option has no specified type or value
- */
-template <>
-bool pressio_option::holds_alternative<std::monostate>() const;
 /**
  * represents a map of dynamically typed objects
  */

@@ -6,13 +6,6 @@
 template<>
 pressio_option::pressio_option(std::monostate value): option(value) {}
 
-/** Specialization for the std::monostate singleton
- * \returns true if the option has no specified type or value
- */
-template <>
-bool pressio_option::holds_alternative<std::monostate>() const {
-  return std::holds_alternative<std::monostate>(option);
-}
 
 
 extern "C" {

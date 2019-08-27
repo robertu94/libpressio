@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
-project(libpressio VERSION "0.9.0" LANGUAGES CXX C)
+project(libpressio VERSION "0.9.1" LANGUAGES CXX C)
 
 enable_testing()
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -51,7 +51,7 @@ add_library(libpressio
 target_include_directories(libpressio
   PUBLIC 
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
+  $<INSTALL_INTERFACE:include/libpressio>
   PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/include
   )
 target_compile_options(libpressio PRIVATE $<$<CONFIG:Debug>: -Wall -Werror -Wextra -Wpedantic>)

@@ -11,7 +11,8 @@ class PressioDataIOTests: public ::testing::Test {
       std::iota(std::begin(data), std::end(data), 0);
       tmp_name = std::string("test_io_readXXXXXX\0");
       tmp_fd = mkstemp(const_cast<char*>(tmp_name.data()));
-      write(tmp_fd, data.data(), sizeof(int)*data.size());
+      size_t bytes_written = write(tmp_fd, data.data(), sizeof(int)*data.size());
+      ASSERT_EQ(bytes_written, data.size() * sizeof(int));
       lseek(tmp_fd, 0, SEEK_SET);
     }
 

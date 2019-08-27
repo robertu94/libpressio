@@ -29,6 +29,7 @@ operator<<(std::basic_ostream<CharT, Traits>& out, enum pressio_option_type type
         return out << "char*";
       case pressio_option_userptr_type:
         return out << "void*";
+      default:
       case pressio_option_unset_type:
         return out << "unset";
     }
@@ -60,6 +61,7 @@ operator<<(std::basic_ostream<CharT, Traits>& out, pressio_option const& option)
       case pressio_option_userptr_type:
         return out << option.get_value<void*>();
       case pressio_option_unset_type:
+      default:
         return out << "<empty>";
     }
   } else { 
@@ -113,6 +115,7 @@ operator<<(std::basic_ostream<CharT, Traits>& out, enum pressio_dtype type)
       return out << "int32_t";
     case pressio_int64_dtype:
       return out << "int64_t";
+    default:
     case pressio_byte_dtype:
       return out << "byte";
   }
