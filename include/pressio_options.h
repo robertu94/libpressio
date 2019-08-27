@@ -166,6 +166,8 @@ void pressio_options_clear(struct pressio_options* options, const char* key);
 /** internal macro used to define getter functions */
 #define pressio_options_define_type_get(name, type) \
   /** Gets a particular value in a map if it exists
+   *
+   * pressio_options_get_string returns a newly allocated copy of the string
    \param[in] options the options structure to modify
    \param[in] key  the key to change
    \param[out] value the value retrieved

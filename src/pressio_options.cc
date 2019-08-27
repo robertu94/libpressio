@@ -98,7 +98,7 @@ enum pressio_options_key_status pressio_options::get(std::string const& key, con
       {
         auto opt = get(key);
         if(opt.holds_alternative<std::string>()) {
-          *value = opt.get_value<std::string>().c_str();
+          *value = strdup(opt.get_value<std::string>().c_str());
           return pressio_options_key_set;
         }  else { 
           return pressio_options_key_exists;

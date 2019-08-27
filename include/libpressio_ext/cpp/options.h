@@ -372,6 +372,9 @@ struct pressio_options final {
 //special case for strings
 /**
  * special case for strings for memory management reasons \see pressio_options::get
+ *
+ * \param[in] key the option to access
+ * \param[out] value a newly allocated c-string, the pointer returned must be passed to free()
  */
 template <>
 enum pressio_options_key_status pressio_options::get(std::string const& key, const char** value) const;

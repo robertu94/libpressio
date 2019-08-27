@@ -24,7 +24,7 @@ namespace {
     std::pair(std::string("mgard"), std::function(make_c_mgard)),
 #endif
   };
-  std::map metrics_constructor{
+  std::map<std::string, std::function<std::unique_ptr<libpressio_metrics_plugin>()>> metrics_constructor{
     std::pair(std::string("time"), std::function(make_m_time)),
     std::pair(std::string("size"), std::function(make_m_size)),
   };

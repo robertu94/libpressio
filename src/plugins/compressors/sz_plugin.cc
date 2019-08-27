@@ -1,5 +1,6 @@
 #include <memory>
 #include <sstream>
+#include <cstdlib>
 
 #include <sz/sz.h>
 
@@ -48,6 +49,8 @@ class sz_plugin: public libpressio_compressor_plugin {
 	  pressio_options_set_type(options, "sz:plus_bits", pressio_option_int32_type);
 	  pressio_options_set_type(options, "sz:random_access", pressio_option_int32_type);
     pressio_options_set_type(options, "sz:data_type", pressio_option_double_type);
+    pressio_options_set_string(options, "sz:app", app.c_str());
+    pressio_options_set_userptr(options, "sz:user_params", user_params);
     return options;
   }
 
@@ -85,6 +88,13 @@ class sz_plugin: public libpressio_compressor_plugin {
     pressio_options_get_integer(options, "sz:plus_bits", &confparams_cpr->plus_bits);
     pressio_options_get_integer(options, "sz:random_access", &confparams_cpr->randomAccess);
     pressio_options_get_integer(options, "sz:data_type", &confparams_cpr->dataType);
+    const char* tmp_app;
+    if(pressio_options_get_string(options, "sz:app", &tmp_app) == pressio_options_key_set)
+    {
+      app = tmp_app;
+      free((void*)tmp_app);
+    }
+    pressio_options_get_userptr(options, "sz:user_params", &user_params);
 
     return 0;
   }
@@ -95,16 +105,19 @@ class sz_plugin: public libpressio_compressor_plugin {
     size_t r3 = pressio_data_get_dimension(input, 2);
     size_t r4 = pressio_data_get_dimension(input, 3);
     size_t r5 = pressio_data_get_dimension(input, 4);
+    int status = SZ_NSCS;
     size_t outsize = 0;
-    unsigned char* compressed_data = SZ_compress(
+    unsigned char* compressed_data = SZ_compress_customize(app.c_str(), user_params,
         libpressio_type_to_sz_type(pressio_data_dtype(input)),
         pressio_data_ptr(input, nullptr),
-        &outsize,
         r5,
         r4,
         r3,
         r2,
-        r1);
+        r1,
+        &outsize,
+        &status
+        );
     *output = pressio_data::move(pressio_byte_dtype, compressed_data, 1, &outsize, pressio_data_libc_free_fn, nullptr);
     return 0;
   }
@@ -119,8 +132,11 @@ class sz_plugin: public libpressio_compressor_plugin {
     };
     size_t ndims = pressio_data_num_dimensions(output);
 
+    int status = SZ_NSCS;
     pressio_dtype type = pressio_data_dtype(output);
-    void* decompressed_data = SZ_decompress(
+    void* decompressed_data = SZ_decompress_customize(
+        app.c_str(),
+        user_params,
         libpressio_type_to_sz_type(type),
         (unsigned char*)pressio_data_ptr(input, nullptr),
         pressio_data_get_dimension(input, 0),
@@ -128,7 +144,8 @@ class sz_plugin: public libpressio_compressor_plugin {
         r[3],
         r[2],
         r[1],
-        r[0]
+        r[0],
+        &status
         );
     *output = pressio_data::move(type, decompressed_data, ndims, r, pressio_data_libc_free_fn, nullptr);
     return 0;
@@ -170,6 +187,8 @@ class sz_plugin: public libpressio_compressor_plugin {
     return -1;
   }
   std::string sz_version;
+  std::string app = "SZ";
+  void* user_params = nullptr;
 };
 
 std::unique_ptr<libpressio_compressor_plugin> make_c_sz() {

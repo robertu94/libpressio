@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
-project(libpressio VERSION "0.9.1" LANGUAGES CXX C)
+project(libpressio VERSION "0.10.0" LANGUAGES CXX C)
 
 enable_testing()
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -88,6 +88,7 @@ if(LIBPRESSIO_HAS_SZ)
   find_package(ZLIB REQUIRED)
   find_package(PkgConfig REQUIRED)
   pkg_search_module(ZSTD IMPORTED_TARGET GLOBAL libzstd)
+  pkg_search_module(FFTW3 IMPORTED_TARGET GLOBAL fftw3)
   target_sources(libpressio
     PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/sz_plugin.cc
