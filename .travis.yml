@@ -1,0 +1,25 @@
+language: cpp
+dist: bionic
+matrix:
+  include:
+    - os: linux
+      env:
+        - CC=gcc-7
+        - CXX=g++-7
+    - os: linux
+      env:
+        - CC=clang
+        - CXX=clang++
+
+before_install:
+  - wget -O cmake.sh https://github.com/Kitware/CMake/releases/download/v3.14.6/cmake-3.14.6-Linux-x86_64.sh
+  - sudo sh cmake.sh --skip-licence --exclude-subdir --prefix=/usr/local
+  - export PATH=/usr/local/bin:$PATH
+  - cmake --version
+
+script:
+  - mkdir build
+  - cd build
+  - cmake .. -DBUILD_TESTS=ON -DCMAKE_BUILD_TYPE=Release -DLIBPRESSIO_HAS_SZ=OFF -DLIBPRESSIO_HAS_ZFP=OFF
+  - cmake --build .
+  - ctest
