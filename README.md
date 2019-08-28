@@ -1,5 +1,7 @@
 # LibPressio
 
+[![Build Status](https://travis-ci.org/robertu94/libpressio.svg?branch=master)](https://travis-ci.org/robertu94/libpressio)
+
 *the upstream version of this code is found at [at the CODARCode organization](https://github.com/CODARcode/libpressio)*
 
 Pressio is latin for compression.  LibPressio is a C++ library with C compatible bindings to abstract between different lossless and lossy compressors and their configurations.  It solves the problem of having to having to write separate application level code for each lossy compressor that is developed.  Instead, users write application level code using LibPressio, and the library will make the correct underlying calls to the compressors.  It provides interfaces to represent data, compressors settings, and compressors.
