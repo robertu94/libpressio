@@ -156,7 +156,7 @@ struct pressio_option final {
         option = std::optional<int>();
         break;
       case pressio_option_uint32_type:
-        option = std::optional<int>();
+        option = std::optional<unsigned int>();
         break;
       case pressio_option_float_type:
         option = std::optional<float>();

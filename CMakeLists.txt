@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
-project(libpressio VERSION "0.10.0" LANGUAGES CXX C)
+project(libpressio VERSION "0.10.1" LANGUAGES CXX C)
 
 enable_testing()
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
