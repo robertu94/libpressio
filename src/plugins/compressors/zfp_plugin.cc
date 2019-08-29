@@ -162,7 +162,7 @@ class zfp_plugin: public libpressio_compressor_plugin {
           *type = zfp_type_double;
           break;
         case pressio_float_dtype:
-          *type = zfp_type_double;
+          *type = zfp_type_float;
           break;
         default:
           invalid_type();
