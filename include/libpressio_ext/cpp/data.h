@@ -43,7 +43,7 @@ struct pressio_data {
    * \returns an empty data object (i.e. has no data)
    * \see pressio_data_new_empty
    * */
-  static pressio_data empty(const pressio_dtype dtype, std::vector<size_t> const dimensions) {
+  static pressio_data empty(const pressio_dtype dtype, std::vector<size_t> const& dimensions) {
     return pressio_data(dtype, nullptr, nullptr, nullptr, dimensions.size(), dimensions.data());
   }
   /**  
@@ -55,14 +55,15 @@ struct pressio_data {
    * \returns an non-owning data object (i.e. calling pressio_data_free will not deallocate this memory)
    * \see pressio_data_new_nonowning
    * */
-  static pressio_data nonowning(const pressio_dtype dtype, void* data, std::vector<size_t> const dimensions) {
+  static pressio_data nonowning(const pressio_dtype dtype, void* data, std::vector<size_t> const& dimensions) {
     return pressio_data::nonowning(dtype, data, dimensions.size(), dimensions.data());
   }
   /**  
    * creates a copy of a data buffer
    *
    * \param[in] dtype the type of the buffer
-   * \param[in] src the buffer to copy \param[in] dimensions the dimensions of the buffer \returns an owning copy of the data object \see pressio_data_new_copy */ static pressio_data copy(const enum pressio_dtype dtype, void* src, std::vector<size_t> const dimensions) {
+   * \param[in] src the buffer to copy \param[in] dimensions the dimensions of the buffer \returns an owning copy of the data object \see pressio_data_new_copy */
+  static pressio_data copy(const enum pressio_dtype dtype, void* src, std::vector<size_t> const& dimensions) {
     return pressio_data::copy(dtype, src, dimensions.size(), dimensions.data());
   }
   /**  
@@ -73,7 +74,7 @@ struct pressio_data {
    * \returns an owning data object with uninitialized memory
    * \see pressio_data_new_owning
    * */
-  static pressio_data owning(const pressio_dtype dtype, std::vector<size_t> const dimensions) {
+  static pressio_data owning(const pressio_dtype dtype, std::vector<size_t> const& dimensions) {
     return pressio_data::owning(dtype, dimensions.size(), dimensions.data());
   }
   /**  
@@ -89,7 +90,7 @@ struct pressio_data {
    * */
   static pressio_data move(const pressio_dtype dtype,
       void* data,
-      std::vector<size_t> const dimensions,
+      std::vector<size_t> const& dimensions,
       pressio_data_delete_fn deleter,
       void* metadata) {
     return pressio_data::move(dtype, data, dimensions.size(), dimensions.data(), deleter, metadata);
@@ -194,7 +195,7 @@ struct pressio_data {
    * \param[in] rhs the data buffer to move from
    * \returns a reference to the object moved into
    */
-  pressio_data(pressio_data&& rhs):
+  pressio_data(pressio_data&& rhs) noexcept:
     data_dtype(rhs.data_dtype),
     data_ptr(std::exchange(rhs.data_ptr, nullptr)),
     metadata_ptr(std::exchange(rhs.metadata_ptr, nullptr)),
@@ -207,7 +208,7 @@ struct pressio_data {
    * \param[in] rhs the data buffer to move from
    * \returns a l-value reference to the object moved into
    */
-  pressio_data& operator=(pressio_data && rhs) {
+  pressio_data& operator=(pressio_data && rhs) noexcept {
     data_dtype = rhs.data_dtype,
     data_ptr = std::exchange(rhs.data_ptr, nullptr),
     metadata_ptr = std::exchange(rhs.metadata_ptr, nullptr),

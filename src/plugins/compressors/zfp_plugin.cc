@@ -47,11 +47,12 @@ class zfp_plugin: public libpressio_compressor_plugin {
       } else if (double tolerance; pressio_options_get_double(options, "zfp:accuracy", &tolerance) == pressio_options_key_set) {
         zfp_stream_set_accuracy(zfp, tolerance);
       } else if (double rate; pressio_options_get_double(options, "zfp:rate", &rate) == pressio_options_key_set) {
-        unsigned int type, dims, wra;
+        unsigned int type, dims;
+        int wra;
         if(
             pressio_options_get_uinteger(options, "zfp:type", &type) == pressio_options_key_set &&
             pressio_options_get_uinteger(options, "zfp:dims", &dims) == pressio_options_key_set &&
-            pressio_options_get_uinteger(options, "zfp:wra", &wra) == pressio_options_key_set) {
+            pressio_options_get_integer(options, "zfp:wra", &wra) == pressio_options_key_set) {
           zfp_stream_set_rate(zfp, rate, (zfp_type)type, dims, wra);
         } else {
           set_error(1, "if you set rate, you must set type, dims, and wra for the rate mode");
@@ -165,6 +166,7 @@ class zfp_plugin: public libpressio_compressor_plugin {
           *type = zfp_type_float;
           break;
         default:
+          *type = zfp_type_none;
           invalid_type();
       }
       return 0;
@@ -194,6 +196,7 @@ class zfp_plugin: public libpressio_compressor_plugin {
           *field = zfp_field_4d(in_data, type, r0, r1, r2, r3);
           break;
         default:
+          *field = nullptr;
           return invalid_dimensions();
       }
       return 0;

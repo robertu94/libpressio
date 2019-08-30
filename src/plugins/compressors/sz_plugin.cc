@@ -15,7 +15,7 @@ class sz_plugin: public libpressio_compressor_plugin {
   public:
   sz_plugin() {
     std::stringstream ss;
-    ss << major_version() << "." << minor_version() << "." << patch_version() << "." << revision_version();
+    ss << sz_plugin::major_version() << "." << sz_plugin::minor_version() << "." << sz_plugin::patch_version() << "." << revision_version();
     sz_version = ss.str();
     SZ_Init(NULL);
   };

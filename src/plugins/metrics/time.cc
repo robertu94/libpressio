@@ -85,6 +85,7 @@ class time_plugin : public libpressio_metrics_plugin {
     return opt;
   }
 
+  private:
   timer check_options;
   timer set_options;
   timer get_options;
