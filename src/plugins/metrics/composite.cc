@@ -86,7 +86,7 @@ class composite_plugin : public libpressio_metrics_plugin {
     //compression_rate
     {
       unsigned int compression_time, uncompressed_size;
-      if(pressio_options_get_uinteger(opt, "timer:compress", &compression_time) == pressio_options_key_set &&
+      if(pressio_options_get_uinteger(opt, "time:compress", &compression_time) == pressio_options_key_set &&
          pressio_options_get_uinteger(opt, "size:uncompressed_size", &uncompressed_size) == pressio_options_key_set) {
         pressio_options_set_double(opt, "composite:compression_rate", static_cast<double>(uncompressed_size)/compression_time);
       }
@@ -95,7 +95,7 @@ class composite_plugin : public libpressio_metrics_plugin {
     //decompression_rate
     {
       unsigned int decompression_time, compressed_size;
-      if(pressio_options_get_uinteger(opt, "timer:compress", &decompression_time) == pressio_options_key_set &&
+      if(pressio_options_get_uinteger(opt, "time:compress", &decompression_time) == pressio_options_key_set &&
          pressio_options_get_uinteger(opt, "size:uncompressed_size", &compressed_size) == pressio_options_key_set) {
         pressio_options_set_double(opt, "composite:decompression_rate", static_cast<double>(compressed_size)/decompression_time);
       }

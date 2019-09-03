@@ -76,11 +76,11 @@ class time_plugin : public libpressio_metrics_plugin {
       }
     };
 
-    set_or("timer:check_options", check_options);
-    set_or("timer:set_options", set_options);
-    set_or("timer:get_options", get_options);
-    set_or("timer:compress", compress);
-    set_or("timer:decompress", decompress);
+    set_or("time:check_options", check_options);
+    set_or("time:set_options", set_options);
+    set_or("time:get_options", get_options);
+    set_or("time:compress", compress);
+    set_or("time:decompress", decompress);
 
     return opt;
   }
