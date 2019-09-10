@@ -166,7 +166,7 @@ pressio_data pressio_data::select(std::vector<size_t> const& start,
 extern "C" {
 
 struct pressio_data* pressio_data_select(
-    struct pressio_data* data,
+    struct pressio_data const* data,
     const size_t* start,
     const size_t* stride,
     const size_t* count,
