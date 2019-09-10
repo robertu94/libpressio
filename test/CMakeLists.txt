@@ -35,6 +35,7 @@ function(add_gtest)
 endfunction()
 
 add_gtest(test_pressio_data.cc)
+target_include_directories(test_pressio_data PRIVATE ${CMAKE_SOURCE_DIR}/src)
 add_gtest(test_pressio_options.cc)
 add_gtest(test_io.cc)
 

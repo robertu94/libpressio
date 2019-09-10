@@ -1,11 +1,39 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
-project(libpressio VERSION "0.10.4" LANGUAGES CXX C)
+project(libpressio VERSION "0.11.0" LANGUAGES CXX C)
+
+#correct was to set a default build type
+# https://blog.kitware.com/cmake-and-the-default-build-type/
+set(default_build_type "Release")
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(STATUS "No build type was set. Setting build type to ${default_build_type}.")
+  set(CMAKE_BUILD_TYPE ${default_build_type} CACHE 
+    STRING "Choose the type to build" FORCE)
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release"
+    "MinSizeRel" "RelWithDebInfo")
+endif()
 
 enable_testing()
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(BUILD_SHARED_LIBS "build libpressio as a shared library" ON)
 
 include(GNUInstallDirs)
+
+#check for c++17 numeric functions
+function(check_cpp_standard api)
+  string(TOUPPER "${api}" HEADER_SUFFIX)
+  try_compile(
+    COMPILED
+    ${CMAKE_BINARY_DIR}
+    SOURCES "${CMAKE_SOURCE_DIR}/checks/${api}.cc" 
+    CXX_STANDARD 17
+    CXX_STANDARD_REQUIRED ON
+  )
+  message(STATUS "Checking for ${api}: ${COMPILED}")
+  set(LIBPRESSIO_COMPAT_HAS_${HEADER_SUFFIX} ${COMPILED} PARENT_SCOPE)
+endfunction()
+
+check_cpp_standard(transform_reduce)
+check_cpp_standard(exclusive_scan)
 
 
 set(LIBPRESSIO_FEATURES "")

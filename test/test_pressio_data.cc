@@ -1,7 +1,11 @@
 #include <vector>
 #include <numeric>
+#include <memory>
+#include <array>
 #include "pressio_data.h"
+#include "multi_dimensional_iterator.h"
 #include "gtest/gtest.h"
+#include "gmock/gmock.h"
 
 class PressioDataTests: public ::testing::Test {
   protected:
@@ -46,3 +50,126 @@ TEST_F(PressioDataTests, MakeCopy) {
   free(copy);
   free(copy2);
 }
+
+TEST_F(PressioDataTests, Select) {
+  size_t dim[] = {9ul, 10ul};
+  auto* data = pressio_data_new_owning(pressio_int32_dtype, 2ul, dim);
+  auto* ptr = static_cast<int*>(pressio_data_ptr(data, nullptr));
+  std::iota(ptr, ptr+90, 0);
+
+
+  std::array<size_t,2> start{1,0};
+  std::array<size_t,2> stride{5,7};
+  std::array<size_t,2> count{2,2};
+  std::array<size_t,2> block{2,3};
+  std::array<int,24> expected = {
+     1,  2, 10, 11, 19, 20, /*block 0*/
+     6,  7, 15, 16, 24, 25, /*block 1*/
+    64, 65, 73, 74, 82, 83, /*block 2*/
+    69, 70, 78, 79, 87, 88  /*block 3*/
+  };
+
+  auto* slab = pressio_data_select(data,
+      start.data(),
+      stride.data(),
+      count.data(),
+      block.data());
+
+  ASSERT_EQ(pressio_data_num_elements(slab), 24);
+  ASSERT_EQ(pressio_data_dtype(slab), pressio_int32_dtype);
+
+  //check the actual values
+  std::array<int,24> results;
+  std::copy_n((int*)pressio_data_ptr(slab, nullptr), 24, begin(results));
+  EXPECT_EQ(results, expected);
+
+  pressio_data_free(data);
+}
+
+TEST(test_mulit_dimensional_array, test_mulit_dimensional_array) {
+  std::array<int, 12> values;
+  std::iota(begin(values), end(values), 0);
+  std::vector<size_t> global_dims = {3, 4};
+  std::vector<size_t> stride = {2, 3};
+  std::vector<size_t> count = {2, 2};
+  std::vector<size_t> start = {0, 0};
+  auto range = std::make_shared<multi_dimensional_range<int>>(
+      values.data(),
+      std::begin(global_dims),
+      std::end(global_dims),
+      std::begin(count),
+      std::begin(stride),
+      std::begin(start)
+      );
+  std::vector<int> results;
+  int expected[] = {0, 2, 9, 11};
+  std::copy(std::begin(*range), std::end(*range), std::back_inserter(results));
+  EXPECT_THAT(results, ::testing::ElementsAreArray(expected));
+}
+
+TEST(test_mulit_dimensional_array, test_mulit_dimensional_array_default_start) {
+  std::array<int, 12> values;
+  std::iota(begin(values), end(values), 0);
+  std::vector<size_t> global_dims = {3, 4};
+  std::vector<size_t> stride = {2, 3};
+  std::vector<size_t> count = {2, 2};
+  auto range = std::make_shared<multi_dimensional_range<int>>(
+      values.data(),
+      std::begin(global_dims),
+      std::end(global_dims),
+      std::begin(count),
+      std::begin(stride)
+      );
+  std::vector<int> results;
+  int expected[] = {0, 2, 9, 11};
+  std::copy(std::begin(*range), std::end(*range), std::back_inserter(results));
+  EXPECT_THAT(results, ::testing::ElementsAreArray(expected));
+}
+
+
+TEST(test_mulit_dimensional_array, test_mulit_dimensional_array_default_stride) {
+  std::array<int, 12> values;
+  std::iota(begin(values), end(values), 0);
+  std::vector<size_t> global_dims = {3, 4};
+  std::vector<size_t> count = {2, 2};
+  auto range = std::make_shared<multi_dimensional_range<int>>(
+      values.data(),
+      std::begin(global_dims),
+      std::end(global_dims),
+      std::begin(count)
+      );
+  std::vector<int> results;
+  int expected[] = {0, 1, 3, 4};
+  std::copy(std::begin(*range), std::end(*range), std::back_inserter(results));
+  EXPECT_THAT(results, ::testing::ElementsAreArray(expected));
+}
+
+TEST(test_mulit_dimensional_array, test_mulit_dimensional_array_operator) {
+  size_t dim[] = {9ul, 10ul};
+  auto* data = pressio_data_new_owning(pressio_int32_dtype, 2ul, dim);
+  auto* ptr = static_cast<int*>(pressio_data_ptr(data, nullptr));
+  std::iota(ptr, ptr+90, 0);
+  
+  std::array<size_t,2> start{1,0};
+  std::array<size_t,2> stride{5,7};
+  std::array<size_t,2> count{2,2};
+  auto range = std::make_shared<multi_dimensional_range<int>>(ptr,
+      dim,
+      dim+2,
+      std::begin(count),
+      std::begin(stride),
+      std::begin(start)
+      );
+  EXPECT_EQ((*range)(0,0), 1);
+  EXPECT_EQ((*range)(1,0), 6);
+  EXPECT_EQ((*range)(0,1), 64);
+  EXPECT_EQ((*range)(1,1), 69);
+  ASSERT_EQ(range->num_dims(), 2);
+  EXPECT_EQ(range->get_global_dims(0), 9);
+  EXPECT_EQ(range->get_global_dims(1), 10);
+  EXPECT_EQ(range->get_local_dims(0), 2);
+  EXPECT_EQ(range->get_local_dims(1), 2);
+
+  pressio_data_free(data);
+}
+

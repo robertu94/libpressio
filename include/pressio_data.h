@@ -107,6 +107,31 @@ void* pressio_data_copy(struct pressio_data const* data, size_t* out_bytes);
  * \see pressio_data_dtype to get the data-type 
  */
 void* pressio_data_ptr(struct pressio_data const* data, size_t* out_bytes);
+
+/**
+ * Copies a possibly strided subset of from the data pointer
+ *
+ * \param[in] data the data to copy from
+ * \param[in] start the coordinate to start at; must have the same dimension as data or null.
+ *            if null is chosen the zero vector of size N is used.
+ * \param[in] stride how many elements from the first element in each block to skip in each directions before the next block
+ *            if null is chosen the one vector of size N is used.
+ * \param[in] count how many blocks to copy in each direction.
+ *            if null is chosen the one vector of size N is used.
+ * \param[in] block the dimentions of each block to copy
+ *            if null is chosen the one vector of size N is used.
+ *
+ *
+ * 
+ * \returns a new pressio data structure containing a copy of the memory described
+ *          if an error occurs, an new empty structure is returned instead.
+ *
+ */
+struct pressio_data* pressio_data_select(struct pressio_data* data,
+    const size_t* start,
+    const size_t* stride,
+    const size_t* count,
+    const size_t* block);
 /**
  * \param[in] data the pressio data to query
  * \returns an integer code corresponding to the data-type

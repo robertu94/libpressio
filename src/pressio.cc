@@ -12,21 +12,23 @@
 
 namespace {
 
-  std::map<std::string, std::function<std::unique_ptr<libpressio_compressor_plugin>()>>
+  using compressor_plugin_factory = std::function<std::unique_ptr<libpressio_compressor_plugin>()>;
+  using metrics_plugin_factory = std::function<std::unique_ptr<libpressio_metrics_plugin>()>;
+  std::map<std::string, compressor_plugin_factory>
     compressor_constructors{
 #if LIBPRESSIO_HAS_SZ
-    std::pair(std::string("sz"), std::function(make_c_sz)),
+    std::pair(std::string("sz"), compressor_plugin_factory(make_c_sz)),
 #endif
 #if LIBPRESSIO_HAS_ZFP
-    std::pair(std::string("zfp"), std::function(make_c_zfp)),
+    std::pair(std::string("zfp"), compressor_plugin_factory(make_c_zfp)),
 #endif
 #if LIBPRESSIO_HAS_MGARD
-    std::pair(std::string("mgard"), std::function(make_c_mgard)),
+    std::pair(std::string("mgard"), compressor_plugin_factory(make_c_mgard)),
 #endif
   };
-  std::map<std::string, std::function<std::unique_ptr<libpressio_metrics_plugin>()>> metrics_constructor{
-    std::pair(std::string("time"), std::function(make_m_time)),
-    std::pair(std::string("size"), std::function(make_m_size)),
+  std::map<std::string, metrics_plugin_factory> metrics_constructor{
+    std::pair(std::string("time"), metrics_plugin_factory(make_m_time)),
+    std::pair(std::string("size"), metrics_plugin_factory(make_m_size)),
   };
 
   template <class MapType>

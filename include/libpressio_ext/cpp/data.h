@@ -268,6 +268,22 @@ struct pressio_data {
     return data_size_in_elements(num_dimensions(), dims.data());
   }
 
+  /**
+   * Copies a set of blocks of data from the data stream to a new pressio_data structure
+   *
+   * \param[in] start the position in the array to start iterating, start[i]>=0
+   * \param[in] stride the number of blocks to skip in each direction, stride[i] >=1
+   * \param[in] count the number of blocks to copy, count[i] >= 1
+   * \param[in] block the dimensions of the block to copy, block[i] >= 1
+   *
+   * \returns the copied blocks, or an empty structure if an error occurs
+   */
+  pressio_data select(std::vector<size_t> const& start = {},
+      std::vector<size_t> const& stride = {},
+      std::vector<size_t> const& count = {},
+      std::vector<size_t> const& block = {}) const;
+  
+
   private:
   /**
    * constructor use the static methods instead

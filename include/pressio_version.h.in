@@ -5,3 +5,8 @@
 #define LIBPRESSIO_PATCH_VERSION @PROJECT_VERSION_PATCH@
 #cmakedefine01 LIBPRESSIO_HAS_SZ
 #cmakedefine01 LIBPRESSIO_HAS_ZFP
+#cmakedefine01 LIBPRESSIO_HAS_MGRAD
+
+/* defined if the standard library implementation has the requested symbol */
+#cmakedefine01 LIBPRESSIO_COMPAT_HAS_EXCLUSIVE_SCAN
+#cmakedefine01 LIBPRESSIO_COMPAT_HAS_TRANSFORM_REDUCE
