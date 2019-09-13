@@ -55,11 +55,7 @@ class mgard_plugin: public libpressio_compressor_plugin {
     }
 
     auto dims = input->dimensions();
-    auto input_copy = pressio_data::copy(
-        input->dtype(),
-        input->data(),
-        dims
-        );
+    auto input_copy = pressio_data::clone(*input);
 
     int out_size;
     double tol = tolerance.get_value<double>();
@@ -89,11 +85,7 @@ class mgard_plugin: public libpressio_compressor_plugin {
        return invalid_dims(input);
      }
 
-     auto input_copy = pressio_data::copy(
-         input->dtype(),
-         input->data(),
-         input->dimensions()
-     );
+     auto input_copy = pressio_data::clone(*input);
 
 
      void* decompressed_data = mgard_decompress(

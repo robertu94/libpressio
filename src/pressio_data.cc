@@ -188,6 +188,10 @@ struct pressio_data* pressio_data_select(
         ));
 }
 
+struct pressio_data* pressio_data_new_clone(const struct pressio_data* src) {
+  return new pressio_data(pressio_data::clone(*src));
+}
+
 struct pressio_data* pressio_data_new_move(const enum pressio_dtype dtype, void* data, size_t const num_dimensions, size_t const dimensions[], pressio_data_delete_fn deleter, void* metadata) {
   return new pressio_data(pressio_data::move(dtype, data, num_dimensions, dimensions, deleter, metadata));
 }

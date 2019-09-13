@@ -1,6 +1,6 @@
 Copyright © 2019 , UChicago Argonne, LLC
 All Rights Reserved
-[libpressio, Version 0.11.2]
+[libpressio, Version 0.12.0]
 Robert Underwood
 Argonne National Laboratory
 

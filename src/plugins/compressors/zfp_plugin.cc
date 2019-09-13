@@ -81,7 +81,7 @@ class zfp_plugin: public libpressio_compressor_plugin {
     int compress_impl(const pressio_data *input, struct pressio_data* output) override {
 
       zfp_field* in_field;
-      auto input_copy = pressio_data::copy(input->dtype(),input->data(), input->dimensions());
+      auto input_copy = pressio_data::clone(*input);
       if(int ret = convert_pressio_data_to_field(&input_copy, &in_field)) {
         return ret;
       }

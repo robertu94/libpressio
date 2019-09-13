@@ -40,6 +40,13 @@ void pressio_data_libc_free_fn (void* data, void* metadata);
  *  \param[in] dimensions an array corresponding to the dimensions of the data, a copy is made of this on construction
  */
 struct pressio_data* pressio_data_new_nonowning(const enum pressio_dtype dtype, void* data, size_t const num_dimensions, size_t const dimensions[]);
+
+/** 
+ *  allocates a new pressio_data structure and corresponding data and copies data from provided data structure
+ *  \param[in] src the pressio_data structure to be cloned
+ *  \returns the newly allocated copy 
+ */
+struct pressio_data* pressio_data_new_clone(const struct pressio_data* src);
 /** 
  *  allocates a new pressio_data structure and corresponding data and copies data in from the specified source
  *  use this function when the underlying data pointer may be deleted

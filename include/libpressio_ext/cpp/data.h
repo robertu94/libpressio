@@ -176,6 +176,27 @@ struct pressio_data {
     return pressio_data(dtype, data, metadata, deleter, num_dimensions, dimensions);
   }
 
+  /**
+   * clones a existing data buffer
+   *
+   * Does not use the copy constructor to enforce strict semantics around copies
+   *
+   * \param[in] src the object
+   * \returns a new data structure
+   *
+   */
+  static pressio_data clone(pressio_data const& src){
+    auto data = static_cast<unsigned char*>(malloc(src.size_in_bytes()));
+    memcpy(data, src.data(), src.size_in_bytes());
+    return pressio_data(src.dtype(),
+        data,
+        nullptr,
+        pressio_data_libc_free_fn,
+        src.num_dimensions(),
+        src.dimensions().data()
+        );
+  }
+
 
 
   ~pressio_data() {

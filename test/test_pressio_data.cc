@@ -50,6 +50,20 @@ TEST_F(PressioDataTests, MakeCopy) {
   free(copy);
   free(copy2);
 }
+TEST_F(PressioDataTests, Clone) {
+  pressio_data* d = pressio_data_new_nonowning(pressio_int32_dtype, data.data(), 2, dims);
+  pressio_data* cloned = pressio_data_new_clone(d);
+  EXPECT_NE(d, nullptr);
+  size_t bytes, bytes2;
+  unsigned char * orig = (unsigned char*)pressio_data_ptr(d, &bytes);
+  unsigned char * clone = (unsigned char*)pressio_data_ptr(cloned, &bytes2);
+  ASSERT_EQ(bytes, bytes2);
+  ASSERT_NE(orig, clone);
+  EXPECT_TRUE(memcpy(orig, clone, bytes));
+
+  pressio_data_free(d);
+  pressio_data_free(cloned);
+}
 
 TEST_F(PressioDataTests, Select) {
   size_t dim[] = {9ul, 10ul};
