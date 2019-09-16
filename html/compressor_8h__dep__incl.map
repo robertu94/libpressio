@@ -1,0 +1,8 @@
+<map id="include/libpressio_ext/cpp/compressor.h" name="include/libpressio_ext/cpp/compressor.h">
+<area shape="rect" id="node1" title="an extension header for adding compressor plugins to libpressio" alt="" coords="159,5,327,47"/>
+<area shape="rect" id="node2" href="$libpressio__ext_2cpp_2libpressio_8h.html" title="convenience header for the c++ interface" alt="" coords="5,191,161,233"/>
+<area shape="rect" id="node3" href="$libpressio__ext_2cpp_2pressio_8h.html" title="C++ interface to the compressor loader." alt="" coords="281,95,421,136"/>
+<area shape="rect" id="node4" href="$subgroup__manager_8h.html" title="helper for subgroups in meta&#45;objects which support multiple inputs" alt="" coords="185,191,403,233"/>
+<area shape="rect" id="node5" href="$external__launch_8h.html" title="interface for external launch methods" alt="" coords="427,184,582,240"/>
+<area shape="rect" id="node6" href="$printers_8h.html" title="C++ stream compatible IO functions." alt="" coords="12,95,155,136"/>
+</map>

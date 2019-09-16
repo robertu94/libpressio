@@ -1,0 +1,9 @@
+<map id="include/pressio_option.h" name="include/pressio_option.h">
+<area shape="rect" id="node1" title="A single option value for a compressor." alt="" coords="114,5,294,32"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,155,88,181"/>
+<area shape="rect" id="node3" title=" " alt="" coords="113,155,183,181"/>
+<area shape="rect" id="node4" href="$pressio__options_8h.html" title="A set of options for a compressor." alt="" coords="197,80,333,107"/>
+<area shape="rect" id="node6" href="$pressio__compressor_8h.html" title="Compress, decompress, and configure pressio and lossless compressors." alt="" coords="408,155,571,181"/>
+<area shape="rect" id="node5" href="$pressio__dtype_8h.html" title="Information on types used by libpressio." alt="" coords="208,155,333,181"/>
+<area shape="rect" id="node7" title=" " alt="" coords="392,229,467,256"/>
+</map>
