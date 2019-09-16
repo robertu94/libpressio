@@ -2,6 +2,9 @@
 
 extern "C" {
 
+struct pressio_options* pressio_compressor_get_configuration(struct pressio_compressor const* compressor) {
+  return compressor->plugin->get_configuration();
+}
 struct pressio_options* pressio_compressor_get_options(struct pressio_compressor const* compressor) {
   return compressor->plugin->get_options();
 }

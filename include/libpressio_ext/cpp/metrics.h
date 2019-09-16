@@ -43,6 +43,19 @@ class libpressio_metrics_plugin {
    * called at the beginning of set_options 
    * \param [in] options the value passed in to set_options
    */
+  /**
+   * called at the beginning of get_configuration 
+   */
+  virtual void begin_get_configuration();
+  /**
+   * called at the end of get_configuration 
+   * \param [in] ret the return value from the underlying compressor get_options command
+   */
+  virtual void end_get_configuration(struct pressio_options const* ret);
+  /**
+   * called at the beginning of set_options 
+   * \param [in] options the value passed in to set_options
+   */
   virtual void begin_set_options(struct pressio_options const* options);
   /**
    * called at the end of set_options 

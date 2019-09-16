@@ -33,6 +33,12 @@ class libpressio_compressor_plugin {
    * \see pressio_options_set_string to set a string value
    */
   struct pressio_options* get_options() const;
+
+  /** get the compile time configuration of a compressor
+   *
+   * \see pressio_compressor_get_configuration for the semantics this function should obey
+   */
+  struct pressio_options* get_configuration() const;
   /** sets a set of options for the compressor 
    * \param[in] options to set for configuration of the compressor
    * \see pressio_compressor_set_options for the semantics this function should obey
@@ -115,6 +121,11 @@ class libpressio_compressor_plugin {
    * \see pressio_options_set_string to set a string value
    */
   virtual struct pressio_options* get_options_impl() const=0;
+  /** get a set of compile-time configurations for the compressor.
+   *
+   * \see pressio_compressor_get_configuration for the semantics this function should obey
+   */
+  virtual struct pressio_options* get_configuration_impl() const=0;
   /** sets a set of options for the compressor 
    * \param[in] options to set for configuration of the compressor
    * \see pressio_compressor_set_options for the semantics this function should obey
@@ -143,5 +154,6 @@ class libpressio_compressor_plugin {
   } error;
   struct pressio_metrics* metrics_plugin;
 };
+
 
 #endif

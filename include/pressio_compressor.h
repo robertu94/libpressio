@@ -15,9 +15,14 @@ struct pressio_options;
 
 //option getting/setting functions
 /*!
+ * \returns a pressio options struct that represents the compile time configuration of the compressor
+ * \param[in] compressor which compressor to get compile-time configuration for
+ */
+struct pressio_options* pressio_compressor_get_configuration(struct pressio_compressor const* compressor);
+
+/*!
  * \returns a pressio options struct that represents the current options of the compressor
  * \param[in] compressor which compressor to get options for
- * It may return a pointer to the same memory on multiple calls.
  */
 struct pressio_options* pressio_compressor_get_options(struct pressio_compressor const* compressor);
 /*!
@@ -137,6 +142,57 @@ int pressio_compressor_minor_version(struct pressio_compressor const* compressor
  */
 int pressio_compressor_patch_version(struct pressio_compressor const* compressor);
 
+/**
+ * reports the level of thread safety supported by the compressor.
+ *
+ * Compressors MUST report a thread safety by setting the pressio:thread_safe
+ * option on the object returned by get_configuration and the level supported
+ * by the plug-in.
+ *
+ * Safety is defined in terms of if the both of the following sequence of calls
+ * from multiple threads can be made without a data race:
+ *
+ * \code{.c}
+ * pressio_compressor_get_options(...)
+ * pressio_compressor_set_options(...)
+ * \endcode
+ *
+ * and
+ *
+ * \code{.c}
+ * pressio_compressor_get_options(...)
+ * pressio_compressor_set_options(...)
+ * \endcode
+ *
+ * and
+ *
+ * \code{.c}
+ * pressio_compressor_set_options(...)
+ * pressio_compressor_compress(...)
+ * pressio_compressor_error_code(...)
+ * pressio_compressor_error_msg(...)
+ * \endcode
+ *
+ * and
+ *
+ * \code{.c}
+ * pressio_compressor_set_options(...)
+ * pressio_compressor_decompress(...)
+ * pressio_compressor_error_code(...)
+ * pressio_compressor_error_msg(...)
+ * \endcode
+ *
+ * All metrics plugins MUST support pressio_thread_safety_multiple (i.e. safe as long as different objects are used)
+ *
+ */
+enum pressio_thread_safety {
+  /** use of this compressor in a multi-threaded environment is unsafe. */
+  pressio_thread_safety_single = 0,
+  /** calls are safe if and only if only one thread will execute the above sequences of calls to any instance of the compressor at a time*/
+  pressio_thread_safety_serialized = 1,
+  /** calls are safe if and only if only one thread will execute the above sequences of calls to an instance of the compressor at a time*/
+  pressio_thread_safety_multiple = 2,
+};
 
 
 

@@ -4,6 +4,7 @@
 #include "libpressio_ext/cpp/compressor.h"
 #include "pressio_options.h"
 #include "pressio_data.h"
+#include "pressio_compressor.h"
 #include "zfp.h"
 
 class zfp_plugin: public libpressio_compressor_plugin {
@@ -34,6 +35,12 @@ class zfp_plugin: public libpressio_compressor_plugin {
       pressio_options_set_type(options, "zfp:dims", pressio_option_int32_type);
       pressio_options_set_type(options, "zfp:wra", pressio_option_int32_type);
       pressio_options_set_type(options, "zfp:mode", pressio_option_uint32_type);
+      return options;
+    }
+
+    struct pressio_options* get_configuration_impl() const override {
+      struct pressio_options* options = pressio_options_new();
+      pressio_options_set_integer(options, "pressio:thread_safe", pressio_thread_safety_multiple);
       return options;
     }
 

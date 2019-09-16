@@ -38,6 +38,16 @@ class time_plugin : public libpressio_metrics_plugin {
     get_options->end = high_resolution_clock::now();
   }
 
+  void begin_get_configuration() override {
+    get_configuration = time_range();
+    get_configuration->begin = high_resolution_clock::now();
+  }
+
+  void end_get_configuration(struct pressio_options const* ) override {
+    get_configuration->end = high_resolution_clock::now();
+  }
+
+
   void begin_set_options(struct pressio_options const* ) override {
     set_options = time_range();
     set_options->begin = high_resolution_clock::now();
@@ -89,6 +99,7 @@ class time_plugin : public libpressio_metrics_plugin {
   timer check_options;
   timer set_options;
   timer get_options;
+  timer get_configuration;
   timer compress;
   timer decompress;
 };

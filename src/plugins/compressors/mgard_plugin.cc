@@ -3,6 +3,7 @@
 #include <mgard_capi.h>
 #include "pressio_data.h"
 #include "pressio_options.h"
+#include "pressio_compressor.h"
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/compressor.h"
 #include "libpressio_ext/cpp/options.h"
@@ -17,6 +18,13 @@ namespace {
 }
 
 class mgard_plugin: public libpressio_compressor_plugin {
+
+  struct pressio_options* get_configuration_impl() const override {
+    struct pressio_options* options = pressio_options_new();
+    pressio_options_set_integer(options, "pressio:thread_safe", pressio_thread_safety_single);
+    return options;
+  }
+
   struct pressio_options * 	get_options_impl () const override {
     struct pressio_options* options = pressio_options_new();
     auto set_if_set = [options](const char* key, pressio_option_type type, pressio_option const& option) {

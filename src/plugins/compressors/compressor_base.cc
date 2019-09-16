@@ -73,6 +73,13 @@ int libpressio_compressor_plugin::check_options(struct pressio_options const* op
   return ret;
 }
 
+struct pressio_options* libpressio_compressor_plugin::get_configuration() const {
+  if(metrics_plugin) (*metrics_plugin)->begin_get_configuration();
+  auto ret = get_configuration_impl();
+  if(metrics_plugin) (*metrics_plugin)->end_get_configuration(ret);
+  return ret;
+}
+
 struct pressio_options* libpressio_compressor_plugin::get_options() const {
   if(metrics_plugin) (*metrics_plugin)->begin_get_options();
   auto ret = get_options_impl();

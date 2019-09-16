@@ -96,8 +96,11 @@ void test_options(struct pressio_options const* options) {
 }
 
 void run_compressor(const char* compressor_name, struct pressio_compressor* compressor, struct pressio_options* options) {
-  printf("%s\n", compressor_name);
+  printf("%s\n configuration\n", compressor_name);
   pressio_compressor_set_options(compressor, options);
+  struct pressio_options* configuration = pressio_compressor_get_configuration(compressor);
+  print_all_options(configuration);
+  pressio_options_free(configuration);
 
 
   //load a 300x300x300 dataset

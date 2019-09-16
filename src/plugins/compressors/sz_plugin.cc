@@ -7,6 +7,7 @@
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/compressor.h"
 #include "pressio_data.h"
+#include "pressio_compressor.h"
 #include "pressio_options.h"
 #include "pressio_option.h"
 
@@ -21,6 +22,13 @@ class sz_plugin: public libpressio_compressor_plugin {
   };
   ~sz_plugin() {
     SZ_Finalize();
+  }
+
+
+  struct pressio_options* get_configuration_impl() const override {
+    struct pressio_options* options = pressio_options_new();
+    pressio_options_set_integer(options, "pressio:thread_safe", pressio_thread_safety_serialized);
+    return options;
   }
 
   struct pressio_options* get_options_impl() const override {

@@ -6,6 +6,22 @@
 
 Pressio is latin for compression.  LibPressio is a C++ library with C compatible bindings to abstract between different lossless and lossy compressors and their configurations.  It solves the problem of having to having to write separate application level code for each lossy compressor that is developed.  Instead, users write application level code using LibPressio, and the library will make the correct underlying calls to the compressors.  It provides interfaces to represent data, compressors settings, and compressors.
 
+## Dependencies
+
+Libpressio unconditionally requires:
+
++ CMake version `3.14` or later
++ either:
+  + `gcc-7.4` or later
+  + `clang-7.0.0` or later using either `libc++` or `libstdc++`
+
+Libpressio additionally optionally requires:
+
++ `zfp` commit `e8edaced12f139ddf16167987ded15e5da1b98da` or later and its dependencies to provide the SZ plugin
++ `sz` commit `7b7463411f02be4700d13aac6737a6a9662806b4` or later and its dependencies to provide the ZFP plugin
++ `numpy` version `1.14.5` or later and its dependencies to provide the python bindings
++ `Doxygen` version 1.8.15 or later to generate documentation
+
 
 ## Configuring LibPressio
 
