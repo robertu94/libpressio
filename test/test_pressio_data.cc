@@ -3,6 +3,7 @@
 #include <memory>
 #include <array>
 #include "pressio_data.h"
+#include "libpressio_ext/cpp/data.h"
 #include "multi_dimensional_iterator.h"
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
@@ -35,6 +36,16 @@ TEST_F(PressioDataTests, MakePressioData) {
 
   pressio_data_free(d);
 }
+TEST_F(PressioDataTests, ForEach) {
+  pressio_data* d = pressio_data_new_nonowning(pressio_int32_dtype, data.data(), 2, dims);
+  auto result = pressio_data_for_each(d, [](auto begin, auto end) {
+        return static_cast<double>(std::accumulate(begin, end, 0));
+      });
+
+  EXPECT_EQ(result, static_cast<double>(std::accumulate(std::begin(data), std::end(data), 0)));
+  pressio_data_free(d);
+}
+
 
 
 TEST_F(PressioDataTests, MakeCopy) {

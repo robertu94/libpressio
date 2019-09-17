@@ -29,6 +29,7 @@ namespace {
   std::map<std::string, metrics_plugin_factory> metrics_constructor{
     std::pair(std::string("time"), metrics_plugin_factory(make_m_time)),
     std::pair(std::string("size"), metrics_plugin_factory(make_m_size)),
+    std::pair(std::string("error_stat"), metrics_plugin_factory(make_m_error_stat)),
   };
 
   template <class MapType>

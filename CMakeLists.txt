@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
-project(libpressio VERSION "0.13.1" LANGUAGES CXX C)
+project(libpressio VERSION "0.14.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -55,6 +55,7 @@ add_library(libpressio
   ./src/plugins/metrics/metrics_base.cc
   ./src/plugins/metrics/size.cc
   ./src/plugins/metrics/time.cc
+  ./src/plugins/metrics/error_stat.cc
   ./src/plugins/io/posix.cc
 
   #public headers

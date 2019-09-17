@@ -27,6 +27,9 @@ std::unique_ptr<libpressio_compressor_plugin> make_c_mgard();
 std::unique_ptr<libpressio_metrics_plugin> make_m_time();
 /** construct the size metrics plugin */
 std::unique_ptr<libpressio_metrics_plugin> make_m_size();
+/** construct the error_stat metrics plugin */
+std::unique_ptr<libpressio_metrics_plugin> make_m_error_stat();
+
 /** construct a composite metrics plugin 
  * \param[in] plugins the plugins to wrap
  * */
