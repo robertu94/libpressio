@@ -81,7 +81,7 @@ extern "C" {
         );
   }
 
-  size_t pressio_io_path_path_write(struct pressio_data* data, const char* path) {
+  size_t pressio_io_data_path_write(struct pressio_data* data, const char* path) {
     FILE* out_file = fopen(path, "w");
     if(out_file != nullptr) {
       auto ret = pressio_io_data_fwrite(data, out_file);
