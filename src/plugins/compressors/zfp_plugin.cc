@@ -11,6 +11,11 @@ class zfp_plugin: public libpressio_compressor_plugin {
   public:
     zfp_plugin() {
       zfp = zfp_stream_open(NULL);
+      //note the order here is important. zfp_stream_set_omp_{threads,chunk_size}
+      //call zfp_stream_set_execution implicitly.  Since we want the execution policy
+      //to be serial by default, we need to set it last.  However, we also want the 
+      //threads and chunck sizes to be set rather than undefined in the default case so
+      //we must set them too
       zfp_stream_set_omp_threads(zfp, 0);
       zfp_stream_set_omp_chunk_size(zfp, 0);
       zfp_stream_set_execution(zfp,  zfp_exec_serial);
@@ -62,8 +67,7 @@ class zfp_plugin: public libpressio_compressor_plugin {
             pressio_options_get_integer(options, "zfp:wra", &wra) == pressio_options_key_set) {
           zfp_stream_set_rate(zfp, rate, (zfp_type)type, dims, wra);
         } else {
-          set_error(1, "if you set rate, you must set type, dims, and wra for the rate mode");
-          return 1;
+          return invalid_rate();
         }
       } else {
         pressio_options_get_uinteger(options, "zfp:minbits", &zfp->minbits);
@@ -72,14 +76,16 @@ class zfp_plugin: public libpressio_compressor_plugin {
         pressio_options_get_integer(options, "zfp:minexp", &zfp->minexp);
       }
 
-      if(unsigned int threads; pressio_options_get_uinteger(options, "zfp:omp_threads", &threads) == pressio_options_key_set) {
-        zfp_stream_set_omp_threads(zfp, threads);
-      }
-      if(unsigned int chunk_size; pressio_options_get_uinteger(options, "zfp:omp_chunk_size", &chunk_size) == pressio_options_key_set) {
-        zfp_stream_set_omp_chunk_size(zfp, chunk_size);
-      }
       if(unsigned int execution;pressio_options_get_uinteger(options, "zfp:execution", &execution) == pressio_options_key_set) { 
         zfp_stream_set_execution(zfp, (zfp_exec_policy)execution);
+      }
+      if(zfp_stream_execution(zfp) == zfp_exec_omp) {
+        if(unsigned int threads; pressio_options_get_uinteger(options, "zfp:omp_threads", &threads) == pressio_options_key_set) {
+          zfp_stream_set_omp_threads(zfp, threads);
+        }
+        if(unsigned int chunk_size; pressio_options_get_uinteger(options, "zfp:omp_chunk_size", &chunk_size) == pressio_options_key_set) {
+          zfp_stream_set_omp_chunk_size(zfp, chunk_size);
+        }
       }
 
       return 0;
@@ -101,11 +107,17 @@ class zfp_plugin: public libpressio_compressor_plugin {
       zfp_stream_rewind(zfp);
 
       size_t outsize = zfp_compress(zfp, in_field);
-      *output = pressio_data::move(pressio_byte_dtype, stream_data(stream), 1, &outsize, pressio_data_libc_free_fn, nullptr);
+      if(outsize != 0) {
+        *output = pressio_data::move(pressio_byte_dtype, stream_data(stream), 1, &outsize, pressio_data_libc_free_fn, nullptr);
+        zfp_field_free(in_field);
+        stream_close(stream);
+        return 0;
+      } else {
+        zfp_field_free(in_field);
+        stream_close(stream);
+        return compression_failed();
+      }
 
-      zfp_field_free(in_field);
-      stream_close(stream);
-      return 0;
     }
 
     int decompress_impl(const pressio_data *input, struct pressio_data* output) override {
@@ -129,11 +141,15 @@ class zfp_plugin: public libpressio_compressor_plugin {
       if(int ret = convert_pressio_data_to_field(output, &out_field)) {
         return ret;
       }
-      zfp_decompress(zfp, out_field);
-
+      int num_bytes = zfp_decompress(zfp, out_field);
       zfp_field_free(out_field);
       stream_close(stream);
-      return 0;
+
+      if(num_bytes == 0) {
+        return decompression_failed();
+      } else {
+        return 0;
+      }
     }
 
     int major_version() const override {
@@ -156,6 +172,9 @@ class zfp_plugin: public libpressio_compressor_plugin {
   private:
     int invalid_type() { return set_error(1, "invalid_type");}
     int invalid_dimensions() { return set_error(2, "invalid_dimensions");}
+    int compression_failed() { return set_error(3, "compression failed");}
+    int decompression_failed() { return set_error(4, "decompression failed");}
+    int invalid_rate() { return set_error(1, "if you set rate, you must set type, dims, and wra for the rate mode"); }
 
     int libpressio_type(pressio_data* data, zfp_type* type) {
       switch(pressio_data_dtype(data))

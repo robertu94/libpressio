@@ -19,6 +19,10 @@ namespace {
     double average_error;
     double difference_range;
     double error_range;
+    double value_min;
+    double value_max;
+    double value_std;
+    double value_mean;
   };
 
   struct compute_metrics{
@@ -30,6 +34,8 @@ namespace {
       double sum_of_squared_error = 0;
       double sum_of_difference = 0;
       double sum_of_error = 0;
+      double sum_of_values_squared =0;
+      double sum = 0;
       size_t num_elements = 0;
       auto value_min = *input_begin; 
       auto value_max = *input_begin;
@@ -42,6 +48,8 @@ namespace {
         auto error = std::abs(double(diff));
         auto squared_error = error*error;
 
+        sum += *input_begin;
+        sum_of_values_squared += (*input_begin * *input_begin);
         sum_of_difference += diff;
         sum_of_error += error;
         sum_of_squared_error += squared_error;
@@ -62,7 +70,12 @@ namespace {
       m.average_difference = sum_of_difference/num_elements;
       m.average_error = sum_of_error/num_elements;
 
+      m.value_min = value_min;
+      m.value_max = value_max;
+      m.value_mean = sum/num_elements;
+      m.value_std = sum_of_values_squared - (sum*sum)/num_elements;
       m.value_range = value_max-value_min;
+
       m.difference_range = diff_max - diff_min;
       m.error_range = error_max - error_min;
 
@@ -81,10 +94,10 @@ namespace {
 class error_stat_plugin : public libpressio_metrics_plugin {
 
   public:
-    void begin_compress(const struct pressio_data * input, struct pressio_data const * output) override {
+    void begin_compress(const struct pressio_data * input, struct pressio_data const * ) override {
       input_data = pressio_data_new_clone(input);
     }
-    void end_decompress(struct pressio_data const* input, struct pressio_data const* output, int rc) override {
+    void end_decompress(struct pressio_data const*, struct pressio_data const* output, int ) override {
       err_metrics = pressio_data_for_each(input_data, output, compute_metrics{});      
       pressio_data_free(input_data);
     }
@@ -95,6 +108,10 @@ class error_stat_plugin : public libpressio_metrics_plugin {
         pressio_options_set_double(opt, "error_stat:psnr", (*err_metrics).psnr);
         pressio_options_set_double(opt, "error_stat:mse", (*err_metrics).mse);
         pressio_options_set_double(opt, "error_stat:rmse", (*err_metrics).rmse);
+        pressio_options_set_double(opt, "error_stat:value_mean", (*err_metrics).value_mean);
+        pressio_options_set_double(opt, "error_stat:value_std", (*err_metrics).value_std);
+        pressio_options_set_double(opt, "error_stat:value_min", (*err_metrics).value_min);
+        pressio_options_set_double(opt, "error_stat:value_max", (*err_metrics).value_max);
         pressio_options_set_double(opt, "error_stat:value_range", (*err_metrics).value_range);
         pressio_options_set_double(opt, "error_stat:min_error", (*err_metrics).min_error);
         pressio_options_set_double(opt, "error_stat:max_error", (*err_metrics).max_error);
