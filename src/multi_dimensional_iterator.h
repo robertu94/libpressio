@@ -193,13 +193,12 @@ class multi_dimensional_range: public std::enable_shared_from_this<multi_dimensi
     
   }
 
-  template <class ForwardIt1, class ForwardIt2 = cycle<size_t>, class ForwardIt3 = cycle<size_t>>
+  template <class ForwardIt = cycle<size_t>, class ForwardIt2 = cycle<size_t>>
   multi_dimensional_range(
       multi_dimensional_iterator iterator,
-      ForwardIt1 global_dims_it,
-      ForwardIt2 count,
-      ForwardIt3 stride = cycle(1ul)
-      ): global_dims(global_dims_it, std::next(global_dims_it, iterator.range->global_dims.size())),
+      ForwardIt count,
+      ForwardIt2 stride = cycle(1ul)
+      ): global_dims(iterator.range->global_dims),
          local_dims(count, std::next(count, global_dims.size())),
          local_stride(global_dims.size()),
          global_stride(global_dims.size()),
@@ -210,21 +209,15 @@ class multi_dimensional_range: public std::enable_shared_from_this<multi_dimensi
   {
     static_assert(
         std::is_convertible<
-          typename std::iterator_traits<ForwardIt1>::value_type,
+          typename std::iterator_traits<ForwardIt>::value_type,
           std::size_t>::value,
-          "ForwardIt1 must be convertible to std::size_t"
+          "ForwardIt must be convertible to std::size_t"
     );
     static_assert(
         std::is_convertible<
           typename std::iterator_traits<ForwardIt2>::value_type,
           std::size_t>::value,
           "ForwardIt2 must be convertible to std::size_t"
-    );
-    static_assert(
-        std::is_convertible<
-          typename std::iterator_traits<ForwardIt3>::value_type,
-          std::size_t>::value,
-          "ForwardIt3 must be convertible to std::size_t"
     );
     compat::exclusive_scan(std::begin(global_dims), std::end(global_dims), std::begin(global_stride),  1, std::multiplies<>{});
     std::transform(std::begin(global_stride), std::end(global_stride), stride, std::begin(global_stride), std::multiplies<>{});

@@ -69,16 +69,17 @@ class composite_plugin : public libpressio_metrics_plugin {
   }
 
   struct pressio_options* get_metrics_results() const override {
-    struct pressio_options* opt = pressio_options_new();
+    struct pressio_options* metrics_result = pressio_options_new();
     for (auto const& plugin : plugins) {
       auto plugin_options = plugin->get_metrics_results();
-      auto tmp = pressio_options_merge(opt, plugin_options);
-      pressio_options_free(opt);
-      opt = tmp;
+      auto tmp = pressio_options_merge(metrics_result, plugin_options);
+      pressio_options_free(plugin_options);
+      pressio_options_free(metrics_result);
+      metrics_result = tmp;
     }
-    set_composite_metrics(opt);
+    set_composite_metrics(metrics_result);
 
-    return opt;
+    return metrics_result;
   }
 
   private:

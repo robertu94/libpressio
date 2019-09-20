@@ -88,10 +88,13 @@ TEST_F(PressioDataTests, Select) {
   std::array<size_t,2> count{2,2};
   std::array<size_t,2> block{2,3};
   std::array<int,24> expected = {
-     1,  2, 10, 11, 19, 20, /*block 0*/
-     6,  7, 15, 16, 24, 25, /*block 1*/
-    64, 65, 73, 74, 82, 83, /*block 2*/
-    69, 70, 78, 79, 87, 88  /*block 3*/
+     1,  2,    6,  7,
+    10, 11,   15, 16,
+    19, 20,   24, 25,
+
+    64, 65,   69, 70,
+    73, 74,   78, 79,
+    82, 83,   87, 88,
   };
 
   auto* slab = pressio_data_select(data,

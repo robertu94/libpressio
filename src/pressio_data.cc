@@ -73,24 +73,46 @@ namespace {
     Type* source = static_cast<Type*>(src);
     Type* dest = static_cast<Type*>(out);
     std::vector<size_t> const ones(args.global_dims.size(), 1);
-    auto blocks = std::make_shared<multi_dimensional_range<Type>>(source,
+    std::vector<size_t> const zeros(args.global_dims.size(), 0);
+    std::vector<size_t> dest_global_dims(args.global_dims.size());
+    std::transform(
+        std::begin(args.block),
+        std::end(args.block),
+        std::begin(args.count),
+        std::begin(dest_global_dims),
+        std::multiplies{}
+        );
+
+    auto src_blocks = std::make_shared<multi_dimensional_range<Type>>(source,
         std::begin(args.global_dims),
         std::end(args.global_dims),
         std::begin(args.count),
         std::begin(args.stride),
         std::begin(args.start)
         );
+    auto dst_blocks = std::make_shared<multi_dimensional_range<Type>>(dest,
+        std::begin(dest_global_dims),
+        std::end(dest_global_dims),
+        std::begin(args.count),
+        std::begin(args.block),
+        std::begin(zeros)
+        );
 
     {
-      auto block = std::begin(*blocks);
-      auto block_end = std::end(*blocks);
-      for(; block != block_end; ++block) {
-        auto block_it = std::make_shared<multi_dimensional_range<Type>>(block,
-            std::begin(args.global_dims),
+      auto src_block = std::begin(*src_blocks);
+      auto src_block_end = std::end(*src_blocks);
+      auto dst_block = std::begin(*dst_blocks);
+      auto dst_block_end = std::end(*dst_blocks);
+      for(; src_block != src_block_end; ++src_block, ++dst_block) {
+        auto src_block_it = std::make_shared<multi_dimensional_range<Type>>(src_block,
             std::begin(args.block),
             std::begin(ones)
             );
-        dest = std::copy(std::begin(*block_it), std::end(*block_it), dest);
+        auto dst_block_it = std::make_shared<multi_dimensional_range<Type>>(dst_block,
+            std::begin(args.block),
+            std::begin(ones)
+            );
+        std::copy(std::begin(*src_block_it), std::end(*src_block_it), std::begin(*dst_block_it));
         
       }
     }
