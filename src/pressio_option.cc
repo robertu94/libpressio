@@ -178,7 +178,7 @@ pressio_option pressio_option::as(const enum pressio_option_type to_type, const 
             if (allow_special(safety)) return pressio_option(std::stod(s));
             else return {};
           case pressio_option_float_type:
-            if (allow_special(safety)) return pressio_option(std::stod(s));
+            if (allow_special(safety)) return pressio_option(std::stof(s));
             else return {};
           case pressio_option_int32_type:
             if (allow_special(safety)) return pressio_option(std::stoi(s));

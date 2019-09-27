@@ -18,7 +18,7 @@ namespace {
     ~cycle()=default;
     cycle(cycle const&)=default;
     cycle& operator=(cycle const&)=default;
-    cycle& operator=(cycle &&)=default;
+    cycle& operator=(cycle &&) noexcept =default;
 
     cycle(Type v): value(v) {}
 
@@ -58,9 +58,9 @@ class multi_dimensional_range: public std::enable_shared_from_this<multi_dimensi
       multi_dimensional_iterator()=default;
       multi_dimensional_iterator(multi_dimensional_iterator const&)=default;
       multi_dimensional_iterator& operator=(multi_dimensional_iterator const&)=default;
-      multi_dimensional_iterator(multi_dimensional_iterator &&)=default;
-      multi_dimensional_iterator& operator=(multi_dimensional_iterator &&)=default;
-      multi_dimensional_iterator(std::shared_ptr<multi_dimensional_range>&& range, std::size_t current):
+      multi_dimensional_iterator(multi_dimensional_iterator &&) noexcept=default;
+      multi_dimensional_iterator& operator=(multi_dimensional_iterator &&) noexcept=default;
+      multi_dimensional_iterator(std::shared_ptr<multi_dimensional_range>&& range, std::size_t current) noexcept:
         range(range), current(current) {}
 
       multi_dimensional_iterator& operator+=(std::ptrdiff_t rhs) {

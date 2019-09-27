@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
-project(libpressio VERSION "0.16.0" LANGUAGES CXX C)
+project(libpressio VERSION "0.16.1" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -16,7 +16,15 @@ enable_testing()
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(BUILD_SHARED_LIBS "build libpressio as a shared library" ON)
 
+
 include(GNUInstallDirs)
+include(CheckCXXCompilerFlag)
+
+check_cxx_compiler_flag("-fno-omit-frame-pointer" HAVE_NO_OMIT_FRAME_POINTER)
+set(NO_OMIT_FRAME_POINTER_FLAG "")
+if(HAVE_NO_OMIT_FRAME_POINTER)
+  set(NO_OMIT_FRAME_POINTER_FLAG "-fno-omit-frame-pointer")
+endif()
 
 #check for c++17 numeric functions
 function(check_cpp_standard api)
@@ -83,7 +91,10 @@ target_include_directories(libpressio
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/libpressio>
   PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/include
   )
-target_compile_options(libpressio PRIVATE $<$<CONFIG:Debug>: -Wall -Werror -Wextra -Wpedantic>)
+target_compile_options(libpressio PRIVATE 
+  $<$<CONFIG:Debug>: -Wall -Werror -Wextra -Wpedantic>
+  $<$<CONFIG:RelWithDebInfo>: ${NO_OMIT_FRAME_POINTER_FLAG}>
+  )
 target_compile_features(libpressio PUBLIC cxx_std_17)
 
 option(LIBPRESSIO_HAS_MGARD "build the MGARD plugin" OFF)
@@ -135,6 +146,14 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/libpressio.pc
   @ONLY
   )
+
+option(USE_CLANG_TIDY "include clang-tidy warnings in the build log" OFF)
+if(USE_CLANG_TIDY)
+  find_program(CLANG_TIDY clang-tidy)
+  set_target_properties(libpressio PROPERTIES CXX_CLANG_TIDY "${CLANG_TIDY}")
+  set_target_properties(libpressio PROPERTIES C_CLANG_TIDY "${CLANG_TIDY}")
+endif()
+
 
 export(TARGETS libpressio NAMESPACE LibPressio:: FILE LibPressio.cmake)
 install(TARGETS libpressio EXPORT LibPressioConfig
