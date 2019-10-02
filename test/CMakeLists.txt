@@ -59,7 +59,7 @@ if(LIBPRESSIO_HAS_ZFP)
   add_test(zfp_basic_test zfp_basic)
 endif()
 
-if(LIBPRESSIO_HAS_SZ AND LIBPRESSIO_HAS_ZFP)
+if(LIBPRESSIO_HAS_SZ AND LIBPRESSIO_HAS_ZFP AND LIBPRESSIO_HAS_MGARD)
   add_executable(full full.c make_input_data.cc)
   target_link_libraries(full libpressio)
   add_test(full_test full)
