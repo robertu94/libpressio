@@ -1,3 +1,4 @@
+cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 find_package(Python COMPONENTS Interpreter Development NumPy)
 find_package(SWIG)
 if(SWIG_FOUND AND PYTHON_FOUND)

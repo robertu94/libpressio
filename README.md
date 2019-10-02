@@ -13,7 +13,7 @@ Documentation for the `master` branch can be [found here](https://robertu94.gith
 
 Libpressio unconditionally requires:
 
-+ `cmake` version `3.14` or later
++ `cmake` version `3.13` or later (3.14 required for python bindings)
 + either:
   + `gcc-7.4` or later
   + `clang-7.0.0` or later using either `libc++` or `libstdc++`
