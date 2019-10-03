@@ -76,6 +76,16 @@ const char* pressio_error_msg(struct pressio* library) {
   return library->error.msg.c_str();
 }
 
+void pressio_set_error(pressio* library, int code, std::string&& msg) {
+  library->error.code = code;
+  library->error.msg = std::move(msg);
+}
+
+void invalid_compressor(struct pressio* library, const char* compressor_id) {
+  std::string err = std::string("invalid_compressor: ") + compressor_id;
+  pressio_set_error(library, 1, std::move(err));
+}
+
 struct pressio_compressor* pressio_get_compressor(struct pressio* library, const char* compressor_id) {
   if(auto compressor = library->compressors.find(compressor_id); compressor != library->compressors.end())
   {
@@ -86,6 +96,7 @@ struct pressio_compressor* pressio_get_compressor(struct pressio* library, const
       library->compressors[compressor_id] = constructor();
       return &library->compressors[compressor_id];
     } else {
+      invalid_compressor(library, compressor_id);
       return nullptr;
     }
   }
