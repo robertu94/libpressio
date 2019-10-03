@@ -95,10 +95,10 @@ class composite_plugin : public libpressio_metrics_plugin {
 
     //decompression_rate
     {
-      unsigned int decompression_time, compressed_size;
-      if(pressio_options_get_uinteger(opt, "time:compress", &decompression_time) == pressio_options_key_set &&
-         pressio_options_get_uinteger(opt, "size:uncompressed_size", &compressed_size) == pressio_options_key_set) {
-        pressio_options_set_double(opt, "composite:decompression_rate", static_cast<double>(compressed_size)/decompression_time);
+      unsigned int decompression_time, uncompressed_size;
+      if (pressio_options_get_uinteger(opt, "time:decompress", &decompression_time) == pressio_options_key_set &&
+          pressio_options_get_uinteger(opt, "size:uncompressed_size", &uncompressed_size) == pressio_options_key_set) {
+        pressio_options_set_double(opt, "composite:decompression_rate", static_cast<double>(uncompressed_size)/decompression_time);
       }
     }
 
