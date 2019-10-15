@@ -39,6 +39,10 @@ target_include_directories(test_pressio_data PRIVATE ${CMAKE_SOURCE_DIR}/src)
 add_gtest(test_pressio_options.cc)
 add_gtest(test_io.cc)
 
+if(LIBPRESSIO_HAS_HDF)
+  add_gtest(test_hdf5.cc)
+endif()
+
 if(LIBPRESSIO_HAS_SZ)
   add_gtest(test_sz_plugin.cc)
   target_include_directories(test_sz_plugin PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/../include)

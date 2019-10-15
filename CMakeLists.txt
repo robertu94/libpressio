@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.17.2" LANGUAGES CXX C)
+project(libpressio VERSION "0.18.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -45,6 +45,7 @@ check_cpp_standard(exclusive_scan)
 
 
 set(LIBPRESSIO_FEATURES "")
+set(LIBPRESSIO_COMPRESSORS "")
 
 add_library(libpressio
   #core implementation
@@ -99,7 +100,7 @@ target_compile_features(libpressio PUBLIC cxx_std_17)
 
 option(LIBPRESSIO_HAS_MGARD "build the MGARD plugin" OFF)
 if(LIBPRESSIO_HAS_MGARD)
-  set(LIBPRESSIO_FEATURES "${LIBPRESSIO_FEATURES} mgard")
+  set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} mgard")
   find_package(mgard REQUIRED)
   target_sources(libpressio
     PRIVATE
@@ -111,7 +112,7 @@ endif()
 
 option(LIBPRESSIO_HAS_ZFP "build the ZFP plugin" ON)
 if(LIBPRESSIO_HAS_ZFP)
-  set(LIBPRESSIO_FEATURES "${LIBPRESSIO_FEATURES} zfp")
+  set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} zfp")
   find_package(ZFP REQUIRED)
   target_sources(libpressio
     PRIVATE
@@ -123,7 +124,7 @@ endif()
 
 option(LIBPRESSIO_HAS_SZ "build the SZ plugin" ON)
 if(LIBPRESSIO_HAS_SZ)
-  set(LIBPRESSIO_FEATURES "${LIBPRESSIO_FEATURES} sz")
+  set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} sz")
   find_package(SZ REQUIRED)
   find_package(ZLIB REQUIRED)
   find_package(PkgConfig REQUIRED)
@@ -135,6 +136,20 @@ if(LIBPRESSIO_HAS_SZ)
       ${CMAKE_CURRENT_SOURCE_DIR}/include/libpressio_ext/compressors/sz.h
     )
   target_link_libraries(libpressio PUBLIC SZ)
+endif()
+
+option(LIBPRESSIO_HAS_HDF "build the hdf5 io plugin" ON)
+if(LIBPRESSIO_HAS_HDF)
+  set(LIBPRESSIO_FEATURES "${LIBPRESSIO_FEATURES} hdf5")
+  find_package(HDF5 REQUIRED COMPONENTS C)
+  target_link_libraries(libpressio PUBLIC ${HDF5_C_LIBRARIES})
+  target_include_directories(libpressio PUBLIC ${HDF5_C_INCLUDE_DIRS})
+  target_compile_definitions(libpressio PUBLIC ${HDF5_C_DEFINITIONS})
+  target_sources(libpressio
+    PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/io/hdf5.cc
+      ${CMAKE_CURRENT_SOURCE_DIR}/include/libpressio_ext/io/hdf5.h
+    )
 endif()
 
 configure_file(

@@ -28,18 +28,25 @@ using option_type = std::variant<std::monostate,
 /** defines constants to convert between types and pressio_option_*_type */
 template <class T>
 enum pressio_option_type pressio_type_to_enum;
+/** maps to int to pressio_option_int32_type */
 template <>
 inline constexpr enum pressio_option_type pressio_type_to_enum<int> = pressio_option_int32_type;
+/** maps to unsigned int to pressio_option_uint32_type */
 template <>
 inline constexpr enum pressio_option_type pressio_type_to_enum<unsigned int> = pressio_option_uint32_type;
+/** maps to float to pressio_option_float_type */
 template <>
 inline constexpr enum pressio_option_type pressio_type_to_enum<float> = pressio_option_float_type;
+/** maps to double to pressio_option_double_type */
 template <>
 inline constexpr enum pressio_option_type pressio_type_to_enum<double> = pressio_option_double_type;
+/** maps to std::string to pressio_option_charptr_type */
 template <>
 inline constexpr enum pressio_option_type pressio_type_to_enum<std::string> = pressio_option_charptr_type;
+/** maps to const char* to pressio_option_charptr_type */
 template <>
 inline constexpr enum pressio_option_type pressio_type_to_enum<const char*> = pressio_option_charptr_type;
+/** maps to void* to pressio_option_userptr_type */
 template <>
 inline constexpr enum pressio_option_type pressio_type_to_enum<void*> = pressio_option_userptr_type;
 

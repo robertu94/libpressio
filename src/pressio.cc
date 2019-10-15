@@ -129,6 +129,9 @@ const char* pressio_version() {
 const char* pressio_features() {
   return LIBPRESSIO_FEATURES;
 }
+const char* pressio_supported_compressors() {
+  return LIBPRESSIO_COMPRESSORS;
+}
 unsigned int pressio_major_version() {
   return LIBPRESSIO_MAJOR_VERSION;
 }

@@ -57,15 +57,20 @@ int pressio_error_code(struct pressio* library);
 const char* pressio_error_msg(struct pressio* library);
 
 /**
+ * it will not return more information than the tailored functions below
  * \returns a string with version and feature information
  */
 const char* pressio_version();
 /**
- * \returns a string containing all the compressor_ids supported by this version separated by a space
- * it will not return more information than the tailored functions below
+ * \returns a string containing all the features supported by this version separated by a space.  Some features are compressors, but not all are.
  * \see pressio_get_compressor the compressor_ids may be passed to pressio_get_compressor
  */
 const char* pressio_features();
+/**
+ * \returns a string containing all the compressors supported by this version separated by a space
+ * \see pressio_get_supported_compressors the compressor_ids may be passed to pressio_get_compressor
+ */
+const char* pressio_supported_compressors();
 /**
  * \returns the major version of the library
  */

@@ -24,6 +24,7 @@ Libpressio additionally optionally requires:
 + `sz` commit `7b7463411f02be4700d13aac6737a6a9662806b4` or later and its dependencies to provide the ZFP plugin
 + `numpy` version `1.14.5` or later and its dependencies to provide the python bindings
 + `Doxygen` version 1.8.15 or later to generate documentation
++ `HDF5` version 1.10.0 or later for HDF5 data support
 
 
 ## Configuring LibPressio
