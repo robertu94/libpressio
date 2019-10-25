@@ -1,0 +1,53 @@
+FROM fedora:29 as builder
+RUN echo "fastestmirror=True">>/etc/dnf/dnf.conf && \
+    dnf install -y git swig cmake gcc-c++ zlib-devel libzstd-devel ninja-build hdf5-devel python3-devel python3-numpy && \
+    dnf clean all
+RUN git clone https://github.com/LLNL/zfp /src/zfp && \
+    git clone https://github.com/disheng222/sz /src/sz && \
+    git clone https://github.com/CODARcode/MGARD /src/mgard && \
+    git clone https://github.com/CODARcode/libpressio /src/libpressio && \
+    mkdir -p /src/autotuning && \
+    cd /src/sz && \
+    mkdir build && \
+    cd build && \
+    cmake .. -DCMAKE_INSTALL_PREFIX=/usr -G Ninja && \
+    cmake --build . && \
+    ninja install && \
+    cd /src/zfp && \
+    mkdir build && \
+    cd build && \
+    cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DBUILD_TESTING=OFF -G Ninja && \
+    cmake --build . && \
+    ninja install && \
+    cd /src/mgard && \
+    mkdir build && \
+    cd build && \
+    cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib64 -DBUILD_TESTING=OFF -G Ninja && \
+    cmake --build . && \
+    ninja install && \
+    cd /src/libpressio && \
+    mkdir build && \
+    cd build && \
+    cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DBUILD_TESTS=ON -DLIBPRESSIO_HAS_MGARD=ON -DBUILD_PYTHON_WRAPPER=ON -G Ninja && \
+    cmake --build . && \
+    CTEST_OUTPUT_ON_FAILURE=1 ctest . && \
+    ninja install
+
+FROM fedora:29
+RUN echo "fastestmirror=True">>/etc/dnf/dnf.conf && \
+    dnf install -y zlib hdf5 libzstd fftw python3-numpy \
+    && \
+    dnf clean all
+COPY --from=builder /usr/lib64/libSZ.so* \
+                    /usr/lib64/liblibpressio.so* \
+                    /usr/lib64/libzfp.so*  \
+                    /usr/lib64/libmgard.so* \
+                    /usr/lib64/
+COPY --from=builder /usr/include/libpressio \
+                    /usr/include/sz \
+                    /usr/include/zfp* \
+                    /usr/include/mgard* \
+                    /usr/include/
+COPY --from=builder /usr/bin/sz /usr/bin/
+COPY --from=builder /usr/lib/python3.7/site-packages/*pressio* /usr/lib64/python3.7/site-packages/
+

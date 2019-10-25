@@ -26,6 +26,8 @@ Libpressio additionally optionally requires:
 + `Doxygen` version 1.8.15 or later to generate documentation
 + `HDF5` version 1.10.0 or later for HDF5 data support
 
+You can also use the provided `Dockerfile` in `./docker` to get a working libpressio install.  Doing so requires installing `docker` version 17.05 or higher or other build tool that supports this version of Dockerfile syntax or later.
+
 
 ## Configuring LibPressio
 
