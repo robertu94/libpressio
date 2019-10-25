@@ -6,9 +6,11 @@ if(SWIG_FOUND AND PYTHON_FOUND)
 
 
   function(build_pressio_swig_module)
-    get_filename_component(libname ${ARGV0} NAME_WE)
+    get_filename_component(filelibname ${ARGV0} NAME_WE)
+    string(SUBSTRING "${filelibname}" 2 -1 libname)
     set_property(SOURCE ${ARGV0} PROPERTY CPLUSPLUS ON)
     set_property(SOURCE ${ARGV0} PROPERTY USE_TARGET_INCLUDE_DIRECTORIES ON)
+    set_property(SOURCE ${ARGV0}.i PROPERTY SWIG_MODULE_NAME ${libname})
     swig_add_library(
       ${libname}
       LANGUAGE python

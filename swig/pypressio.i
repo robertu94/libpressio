@@ -118,16 +118,16 @@ __pressio_from_numpy = {
   (4, numpy.dtype('int64')): _pressio_io_data_from_numpy_4d_int64_t,
 }
 __pressio_to_numpy = {
-  _pypressio.float_dtype : _pressio_io_data_to_numpy_float,
-  _pypressio.double_dtype : _pressio_io_data_to_numpy_double,
-  _pypressio.uint8_dtype : _pressio_io_data_to_numpy_uint8_t,
-  _pypressio.int8_dtype : _pressio_io_data_to_numpy_int8_t,
-  _pypressio.uint16_dtype : _pressio_io_data_to_numpy_uint16_t,
-  _pypressio.int16_dtype : _pressio_io_data_to_numpy_int16_t,
-  _pypressio.uint32_dtype : _pressio_io_data_to_numpy_uint32_t,
-  _pypressio.int32_dtype : _pressio_io_data_to_numpy_int32_t,
-  _pypressio.uint64_dtype : _pressio_io_data_to_numpy_uint64_t,
-  _pypressio.int64_dtype : _pressio_io_data_to_numpy_int64_t,
+  _pressio.float_dtype : _pressio_io_data_to_numpy_float,
+  _pressio.double_dtype : _pressio_io_data_to_numpy_double,
+  _pressio.uint8_dtype : _pressio_io_data_to_numpy_uint8_t,
+  _pressio.int8_dtype : _pressio_io_data_to_numpy_int8_t,
+  _pressio.uint16_dtype : _pressio_io_data_to_numpy_uint16_t,
+  _pressio.int16_dtype : _pressio_io_data_to_numpy_int16_t,
+  _pressio.uint32_dtype : _pressio_io_data_to_numpy_uint32_t,
+  _pressio.int32_dtype : _pressio_io_data_to_numpy_int32_t,
+  _pressio.uint64_dtype : _pressio_io_data_to_numpy_uint64_t,
+  _pressio.int64_dtype : _pressio_io_data_to_numpy_int64_t,
 }
 
 def io_data_from_numpy(array):

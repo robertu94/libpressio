@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import sys
 #kind of ugly hack to load the path to the library without installing it
 #the path gets passed from the CMakeLists.txt file
