@@ -14,17 +14,17 @@ struct pressio_compressor;
 struct pressio_metrics;
 
 /**
- * gets a reference to a possibly shared instance of libpressio; initializes the library if necessary
+ * gets a reference to a new instance of libpressio; initializes the library if necessary
  * \returns a pointer to a library instance
  */
 struct pressio* pressio_instance();
 
 
 /**
- * \param[in,out] library the pointer to the library
+ * \param[in] library the pointer to the library
  * \returns informs the library that this instance is no longer required; the pointer passed becomes invalid
  */
-void pressio_release(struct pressio** library);
+void pressio_release(struct pressio* library);
 
 /**
  * \param[in] library the pointer to the library

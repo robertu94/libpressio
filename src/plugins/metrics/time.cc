@@ -2,6 +2,7 @@
 #include <optional>
 #include "pressio_options.h"
 #include "libpressio_ext/cpp/metrics.h"
+#include "libpressio_ext/cpp/pressio.h"
 
 using std::chrono::high_resolution_clock;
 using std::chrono::time_point;
@@ -104,6 +105,4 @@ class time_plugin : public libpressio_metrics_plugin {
   timer decompress;
 };
 
-std::unique_ptr<libpressio_metrics_plugin> make_m_time() {
-  return std::make_unique<time_plugin>();
-}
+static inline pressio_register X(metrics_plugins(), "time", [](){ return std::make_unique<time_plugin>(); });

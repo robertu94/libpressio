@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.18.2" LANGUAGES CXX C)
+project(libpressio VERSION "0.19.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -13,6 +13,9 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 enable_testing()
+include(CTestCustom.cmake)
+include(CTest)
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(BUILD_SHARED_LIBS "build libpressio as a shared library" ON)
 
@@ -70,8 +73,12 @@ add_library(libpressio
   #public headers
   include/libpressio.h
   include/libpressio_ext/cpp/compressor.h
+  include/libpressio_ext/cpp/data.h
+  include/libpressio_ext/cpp/libpressio.h
   include/libpressio_ext/cpp/metrics.h
-  include/libpressio_ext/cpp/plugins.h
+  include/libpressio_ext/cpp/options.h
+  include/libpressio_ext/cpp/pressio.h
+  include/libpressio_ext/cpp/printers.h
   include/libpressio_ext/io/posix.h
   include/pressio.h
   include/pressio_compressor.h
@@ -81,9 +88,6 @@ add_library(libpressio
   include/pressio_option.h
   include/pressio_options.h
   include/pressio_options_iter.h
-
-  #private headers
-  src/pressio_compressor_impl.h
   )
 
 target_include_directories(libpressio

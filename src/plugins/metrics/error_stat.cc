@@ -4,6 +4,7 @@
 #include "pressio_options.h"
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/metrics.h"
+#include "libpressio_ext/cpp/pressio.h"
 
 namespace {
   struct error_metrics {
@@ -132,7 +133,4 @@ class error_stat_plugin : public libpressio_metrics_plugin {
 
 };
 
-std::unique_ptr<libpressio_metrics_plugin> make_m_error_stat() {
-  return std::make_unique<error_stat_plugin>();
-}
-
+static inline pressio_register X(metrics_plugins(), "error_stat", [](){ return std::make_unique<error_stat_plugin>(); });

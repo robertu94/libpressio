@@ -13,6 +13,11 @@ struct pressio_compressor;
 struct pressio_data;
 struct pressio_options;
 
+/*!
+ * \param[in] compressor deallocates a reference to a compressor.
+ */
+void pressio_compressor_release(struct pressio_compressor* compressor);
+
 //option getting/setting functions
 /*!
  * \returns a pressio options struct that represents the compile time configuration of the compressor

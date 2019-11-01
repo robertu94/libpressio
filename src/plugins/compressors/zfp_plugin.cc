@@ -2,6 +2,7 @@
 #include <memory>
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/compressor.h"
+#include "libpressio_ext/cpp/pressio.h"
 #include "pressio_options.h"
 #include "pressio_data.h"
 #include "pressio_compressor.h"
@@ -231,6 +232,4 @@ class zfp_plugin: public libpressio_compressor_plugin {
     zfp_stream* zfp;
 };
 
-std::unique_ptr<libpressio_compressor_plugin> make_c_zfp() {
-  return std::make_unique<zfp_plugin>();
-}
+static inline pressio_register X(compressor_plugins(), "zfp", [](){ return std::make_unique<zfp_plugin>(); });

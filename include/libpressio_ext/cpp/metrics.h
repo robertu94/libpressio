@@ -2,6 +2,7 @@
 #define PRESIO_METRIC_PLUGIN
 
 #include <memory>
+#include <vector>
 
 struct pressio_options;
 struct pressio_data;
@@ -112,5 +113,11 @@ struct pressio_metrics {
   private:
   std::unique_ptr<libpressio_metrics_plugin> plugin;
 };
+
+/**
+ * returns a composite metrics plugin from a vector of metrics_plugins
+ */
+std::unique_ptr<libpressio_metrics_plugin> make_m_composite(std::vector<std::unique_ptr<libpressio_metrics_plugin>>&& plugins); 
+
 
 #endif

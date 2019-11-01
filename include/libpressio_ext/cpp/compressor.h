@@ -1,6 +1,7 @@
 #ifndef LIBPRESSIO_COMPRESSOR_IMPL_H
 #define LIBPRESSIO_COMPRESSOR_IMPL_H
 #include <string>
+#include <memory>
 
 /*!\file 
  * \brief an extension header for adding compressor plugins to libpressio
@@ -155,5 +156,31 @@ class libpressio_compressor_plugin {
   struct pressio_metrics* metrics_plugin;
 };
 
+/**
+ * wrapper for the compressor to use in C
+ */
+struct pressio_compressor {
+  /**
+   * \param[in] impl a newly constructed compressor plugin
+   */
+  pressio_compressor(std::shared_ptr<libpressio_compressor_plugin>&& impl): plugin(std::forward<std::shared_ptr<libpressio_compressor_plugin>>(impl)) {}
+  /**
+   * defaults constructs a compressor with a nullptr
+   */
+  pressio_compressor()=default;
+  /**
+   * move constructs a compressor from another pointer
+   */
+  pressio_compressor(pressio_compressor&& compressor)=default;
+  /**
+   * move assigns a compressor from another pointer
+   */
+  pressio_compressor& operator=(pressio_compressor&& compressor)=default;
+
+  /**
+   * pointer to the implementation
+   */
+  std::shared_ptr<libpressio_compressor_plugin> plugin;
+};
 
 #endif

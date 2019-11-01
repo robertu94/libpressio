@@ -51,6 +51,10 @@ if(LIBPRESSIO_HAS_SZ)
   target_link_libraries(sz_basic libpressio)
   add_test(sz_basic_test sz_basic)
 
+  add_executable(sz_cpp sz_cpp.cc make_input_data.cc)
+  target_link_libraries(sz_cpp libpressio)
+  add_test(sz_cpp_test sz_cpp)
+
   add_executable(metrics metrics.c make_input_data.cc)
   target_link_libraries(metrics libpressio)
   add_test(metrics_test metrics)

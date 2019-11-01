@@ -70,7 +70,7 @@ TEST_F(PressioOptionsTests, IterateKeys) {
   auto it = pressio_options_get_iter(o);
   while(pressio_options_iter_has_value(it)) {
     const char* key = pressio_options_iter_get_key(it);
-    struct pressio_option const* value = pressio_options_iter_get_value(it);
+    struct pressio_option * value = pressio_options_iter_get_value(it);
     switch(pressio_option_get_type(value)) {
       case pressio_option_charptr_type:
         EXPECT_THAT(key, ::testing::StrEq("string"));
@@ -100,6 +100,7 @@ TEST_F(PressioOptionsTests, IterateKeys) {
     }
 
     count++;
+    pressio_option_free(value);
     pressio_options_iter_next(it);
   }
 
@@ -287,6 +288,8 @@ TEST_F(PressioOptionsTests, OptionsAssign) {
       FAIL() << "failed to set integer";
     }
   } 
+  pressio_option_free(rhs);
+  pressio_options_free(options);
 }
 
 TEST_F(PressioOptionsTests, Printers) {
@@ -306,4 +309,5 @@ TEST_F(PressioOptionsTests, Printers) {
   for (auto expected : expecteds) {
     EXPECT_THAT(ss.str(), ::testing::HasSubstr(expected));
   }
+  pressio_options_free(opts);
 }

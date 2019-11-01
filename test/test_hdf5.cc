@@ -44,6 +44,7 @@ TEST_F(PressioIOHDFTests, read_and_write) {
     void* result_ptr = pressio_data_ptr(result, &size_in_bytes);
     memcpy(result_data.data(), result_ptr, size_in_bytes);
     EXPECT_EQ(floats, result_data);
+    pressio_data_free(result);
   }
 
   pressio_data_free(data);
@@ -76,6 +77,7 @@ TEST_F(PressioIOHDFTests, write_twice) {
     memcpy(result_data.data(), result_ptr, size_in_bytes);
     ASSERT_EQ(result_data.front(), 0.0f);
     EXPECT_EQ(floats, result_data);
+    pressio_data_free(result);
   }
 
   std::iota(std::rbegin(floats), std::rend(floats), 0);
@@ -100,6 +102,7 @@ TEST_F(PressioIOHDFTests, write_twice) {
     memcpy(result_data.data(), result_ptr, size_in_bytes);
     ASSERT_EQ(result_data.back(), 0.0f);
     EXPECT_EQ(floats, result_data);
+    pressio_data_free(result);
   }
 
 

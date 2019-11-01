@@ -1,4 +1,5 @@
-#include "pressio_compressor_impl.h"
+#include "libpressio_ext/cpp/compressor.h"
+#include "libpressio_ext/cpp/options.h"
 
 extern "C" {
 
@@ -49,6 +50,10 @@ struct pressio_metrics* pressio_compressor_get_metrics(struct pressio_compressor
 
 void pressio_compressor_set_metrics(struct pressio_compressor* compressor, struct pressio_metrics* plugin) {
   return compressor->plugin->set_metrics(plugin);
+}
+
+void pressio_compressor_release(struct pressio_compressor* compressor) {
+  delete compressor;
 }
 
 }

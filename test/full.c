@@ -204,7 +204,10 @@ int main(int argc, char *argv[])
   run_compressor("mgard", mgard_compressor, options);
 
   pressio_options_free(options);
-  pressio_release(&library);
+  pressio_compressor_release(sz_compressor);
+  pressio_compressor_release(zfp_compressor);
+  pressio_compressor_release(mgard_compressor);
+  pressio_release(library);
 
   return 0;
 }

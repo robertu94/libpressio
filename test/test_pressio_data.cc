@@ -112,6 +112,7 @@ TEST_F(PressioDataTests, Select) {
   EXPECT_EQ(results, expected);
 
   pressio_data_free(data);
+  pressio_data_free(slab);
 }
 
 TEST(test_mulit_dimensional_array, test_mulit_dimensional_array) {

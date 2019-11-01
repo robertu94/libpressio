@@ -41,10 +41,10 @@ import_array();
 %include "pypressio.h"
 
 %define pressio_numpy_type(type)
-  %apply (type* IN_ARRAY1, int DIM1 ) {( type * data, size_t r1)};
-  %apply (type* IN_ARRAY2, int DIM1, int DIM2 ) { ( type * data, size_t r1, size_t r2)};
-  %apply (type* IN_ARRAY3, int DIM1, int DIM2, int DIM3 ) {( type* data, size_t r1, size_t r2, size_t r3)};
-  %apply (type* IN_ARRAY4, int DIM1, int DIM2, int DIM3, int DIM4 ) {( type* data, size_t r1, size_t r2, size_t r3, size_t r4)};
+  %apply (type* INPLACE_ARRAY1, int DIM1 ) {( type * data, size_t r1)};
+  %apply (type* INPLACE_ARRAY2, int DIM1, int DIM2 ) { ( type * data, size_t r1, size_t r2)};
+  %apply (type* INPLACE_ARRAY3, int DIM1, int DIM2, int DIM3 ) {( type* data, size_t r1, size_t r2, size_t r3)};
+  %apply (type* INPLACE_ARRAY4, int DIM1, int DIM2, int DIM3, int DIM4 ) {( type* data, size_t r1, size_t r2, size_t r3, size_t r4)};
 namespace std {
   %template( vector_ ## type ) vector< type >;
 }

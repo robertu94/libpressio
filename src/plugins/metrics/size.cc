@@ -2,6 +2,7 @@
 #include "pressio_data.h"
 #include "pressio_options.h"
 #include "libpressio_ext/cpp/metrics.h"
+#include "libpressio_ext/cpp/pressio.h"
 
 class size_plugin : public libpressio_metrics_plugin {
   public:
@@ -54,6 +55,4 @@ class size_plugin : public libpressio_metrics_plugin {
 
 };
 
-std::unique_ptr<libpressio_metrics_plugin> make_m_size() {
-  return std::make_unique<size_plugin>();
-}
+static inline pressio_register X(metrics_plugins(), "size", [](){ return std::make_unique<size_plugin>(); });

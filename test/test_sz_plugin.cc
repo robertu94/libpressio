@@ -14,7 +14,8 @@ class PressioCompressor: public ::testing::Test {
     }
 
     void TearDown() {
-      pressio_release(&library);
+      pressio_compressor_release(compressor);
+      pressio_release(library);
     }
 
     struct pressio* library;
@@ -22,6 +23,7 @@ class PressioCompressor: public ::testing::Test {
 };
 
 TEST_F(PressioCompressor, VersionTest) {
+  ASSERT_NE(compressor, nullptr);
   EXPECT_THAT(pressio_version(), ::testing::StrEq(LIBPRESSIO_VERSION));
   EXPECT_EQ(pressio_major_version(), LIBPRESSIO_MAJOR_VERSION);
   EXPECT_EQ(pressio_minor_version(), LIBPRESSIO_MINOR_VERSION);

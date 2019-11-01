@@ -51,6 +51,7 @@ int main(int argc, char *argv[])
 
   //free options and the library
   pressio_options_free(sz_options);
-  pressio_release(&library);
+  pressio_compressor_release(compressor);
+  pressio_release(library);
   return 0;
 }

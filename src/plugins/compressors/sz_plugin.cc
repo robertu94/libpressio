@@ -6,6 +6,7 @@
 
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/compressor.h"
+#include "libpressio_ext/cpp/pressio.h"
 #include "pressio_data.h"
 #include "pressio_compressor.h"
 #include "pressio_options.h"
@@ -202,3 +203,5 @@ class sz_plugin: public libpressio_compressor_plugin {
 std::unique_ptr<libpressio_compressor_plugin> make_c_sz() {
   return std::make_unique<sz_plugin>();
 }
+
+static inline pressio_register X(compressor_plugins(), "sz", [](){ static auto sz = std::make_shared<sz_plugin>(); return sz; });

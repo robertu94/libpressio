@@ -5,141 +5,110 @@
 #include <functional>
 #include "pressio.h"
 #include "pressio_version.h"
-#include <libpressio_ext/cpp/plugins.h>
 #include "libpressio_ext/cpp/metrics.h"
+#include "libpressio_ext/cpp/pressio.h"
+#include "libpressio_ext/cpp/compressor.h"
 
-#include "pressio_compressor_impl.h"
 
-namespace {
 
-  using compressor_plugin_factory = std::function<std::unique_ptr<libpressio_compressor_plugin>()>;
-  using metrics_plugin_factory = std::function<std::unique_ptr<libpressio_metrics_plugin>()>;
-  std::map<std::string, compressor_plugin_factory>
-    compressor_constructors{
-#if LIBPRESSIO_HAS_SZ
-    std::pair(std::string("sz"), compressor_plugin_factory(make_c_sz)),
-#endif
-#if LIBPRESSIO_HAS_ZFP
-    std::pair(std::string("zfp"), compressor_plugin_factory(make_c_zfp)),
-#endif
-#if LIBPRESSIO_HAS_MGARD
-    std::pair(std::string("mgard"), compressor_plugin_factory(make_c_mgard)),
-#endif
-  };
-  std::map<std::string, metrics_plugin_factory> metrics_constructor{
-    std::pair(std::string("time"), metrics_plugin_factory(make_m_time)),
-    std::pair(std::string("size"), metrics_plugin_factory(make_m_size)),
-    std::pair(std::string("error_stat"), metrics_plugin_factory(make_m_error_stat)),
-  };
+pressio_registry<std::shared_ptr<libpressio_compressor_plugin>>& compressor_plugins() {
+  static pressio_registry<std::shared_ptr<libpressio_compressor_plugin>> registry;
+  return registry;
+}
 
-  template <class MapType>
-  typename MapType::mapped_type get_or(MapType map, typename MapType::key_type const& key) {
-    if(auto it = map.find(key); it != map.end()) {
-      return it->second;
-    } else {
-      return nullptr;
-    }
-  }
+pressio_registry<std::unique_ptr<libpressio_metrics_plugin>>& metrics_plugins() {
+  static pressio_registry<std::unique_ptr<libpressio_metrics_plugin>> registry;
+  return registry;
 }
 
 extern "C" {
 
-struct pressio {
-  public:
-  std::map<std::string, pressio_compressor> compressors;
-  struct {
-    int code;
-    std::string msg;
-  } error;
-};
-
 struct pressio* pressio_instance() {
-  static struct pressio library;
-  return &library;
+  return new pressio;
 }
-
 
 //IMPLEMENTATION NOTE this function exists to preserve the option of releasing the memory for the library in the future.
 //currently this is undesirable because some libraries such as SZ don't handle this well, but may be possible
 //after the planned C++ rewrite.
 //
 //Therefore, it intentionally does not release the memory
-void pressio_release(struct pressio** library) {
-  *library = nullptr;
+void pressio_release(struct pressio* library) {
+  delete library;
 }
 
 int pressio_error_code(struct pressio* library) {
-  return library->error.code;
+  return library->err_code();
 }
 
 const char* pressio_error_msg(struct pressio* library) {
-  return library->error.msg.c_str();
+  return library->err_msg().c_str();
 }
 
-void pressio_set_error(pressio* library, int code, std::string&& msg) {
-  library->error.code = code;
-  library->error.msg = std::move(msg);
+void pressio_set_error(pressio* library, int code, const char* msg) {
+  library->set_error(code, msg);
 }
 
-void invalid_compressor(struct pressio* library, const char* compressor_id) {
-  std::string err = std::string("invalid_compressor: ") + compressor_id;
-  pressio_set_error(library, 1, std::move(err));
-}
 
 struct pressio_compressor* pressio_get_compressor(struct pressio* library, const char* compressor_id) {
-  if(auto compressor = library->compressors.find(compressor_id); compressor != library->compressors.end())
-  {
-    return &compressor->second;
-  } else {
-    auto constructor = get_or(compressor_constructors, compressor_id);
-    if(constructor) {
-      library->compressors[compressor_id] = constructor();
-      return &library->compressors[compressor_id];
-    } else {
-      invalid_compressor(library, compressor_id);
-      return nullptr;
-    }
-  }
+  auto compressor = library->get_compressor(compressor_id);
+  if(compressor != nullptr) return new pressio_compressor(std::move(compressor));
+  else return nullptr;
 }
 
-
 struct pressio_metrics* pressio_new_metrics(struct pressio* library, const char* metrics_ids[], int num_metrics) {
-  (void)library;
-  try {
-    std::vector<std::unique_ptr<libpressio_metrics_plugin>> plugins;
-    for (int i = 0; i < num_metrics; ++i) {
-      auto constructor = get_or(metrics_constructor, metrics_ids[i]);
-      if(constructor) {
-        plugins.emplace_back(constructor());
-      } else {
-        throw std::runtime_error("failed to locate metrics");
-      }
-    }
-
-    auto metrics = make_m_composite(std::move(plugins));
-    return new pressio_metrics{std::move(metrics)};
-  } catch (std::runtime_error const&) {
-    return nullptr;
-  }
+  auto metrics = library->get_metrics(metrics_ids, metrics_ids+num_metrics);
+  if (metrics != nullptr) return new pressio_metrics(std::move(metrics));
+  else return nullptr;
 }
 
 const char* pressio_version() {
-  return LIBPRESSIO_VERSION;
+  return pressio::version();
 }
+
 const char* pressio_features() {
-  return LIBPRESSIO_FEATURES;
+  return pressio::features();
 }
+
 const char* pressio_supported_compressors() {
-  return LIBPRESSIO_COMPRESSORS;
+  return pressio::supported_compressors();
 }
+
 unsigned int pressio_major_version() {
-  return LIBPRESSIO_MAJOR_VERSION;
+  return pressio::major_version();
 }
+
 unsigned int pressio_minor_version() {
-  return LIBPRESSIO_MINOR_VERSION;
+  return pressio::minor_version();
 }
+
 unsigned int pressio_patch_version() {
-  return LIBPRESSIO_PATCH_VERSION;
+  return pressio::patch_version();
 }
 
 }
+
+
+const char* pressio::version() {
+  return LIBPRESSIO_VERSION;
+}
+
+const char* pressio::features() {
+  return LIBPRESSIO_FEATURES;
+}
+
+const char* pressio::supported_compressors() {
+  return LIBPRESSIO_COMPRESSORS;
+}
+
+unsigned int pressio::major_version() {
+  return LIBPRESSIO_MAJOR_VERSION;
+}
+
+unsigned int pressio::minor_version() {
+  return LIBPRESSIO_MINOR_VERSION;
+}
+
+unsigned int pressio::patch_version() {
+  return LIBPRESSIO_PATCH_VERSION;
+}
+
