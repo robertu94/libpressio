@@ -7,29 +7,28 @@ if(SWIG_FOUND AND PYTHON_FOUND)
 
   function(build_pressio_swig_module)
     get_filename_component(filelibname ${ARGV0} NAME_WE)
-    string(SUBSTRING "${filelibname}" 2 -1 libname)
     set_property(SOURCE ${ARGV0} PROPERTY CPLUSPLUS ON)
     set_property(SOURCE ${ARGV0} PROPERTY USE_TARGET_INCLUDE_DIRECTORIES ON)
-    set_property(SOURCE ${ARGV0}.i PROPERTY SWIG_MODULE_NAME ${libname})
+    set_property(SOURCE ${ARGV0}.i PROPERTY SWIG_MODULE_NAME ${filelibname})
     swig_add_library(
-      ${libname}
+      ${filelibname}
       LANGUAGE python
       SOURCES ${ARGV}
       )
-    set_property(TARGET ${libname} PROPERTY SWIG_COMPILE_DEFINITIONS "SWIGWORDSIZE64")
-    target_link_libraries(${libname} PUBLIC libpressio Python::Python Python::NumPy)
-    target_include_directories(${libname} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-    get_property(swig_generated_module TARGET ${libname} PROPERTY SWIG_SUPPORT_FILES)
+    set_property(TARGET ${filelibname} PROPERTY SWIG_COMPILE_DEFINITIONS "SWIGWORDSIZE64")
+    target_link_libraries(${filelibname} PUBLIC libpressio Python::Python Python::NumPy)
+    target_include_directories(${filelibname} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+    get_property(swig_generated_module TARGET ${filelibname} PROPERTY SWIG_SUPPORT_FILES)
 
-    install(TARGETS ${libname} DESTINATION ${Python_SITELIB})
+    install(TARGETS ${filelibname} DESTINATION ${Python_SITELIB})
     install(FILES ${swig_generated_module} DESTINATION ${Python_SITELIB})
 
   endfunction()
 
 
-  build_pressio_swig_module(pypressio.i)
-  build_pressio_swig_module(pypressio_sz.i)
-  build_pressio_swig_module(pypressio_zfp.i)
+  build_pressio_swig_module(pressio.i)
+  build_pressio_swig_module(pressio_sz.i)
+  build_pressio_swig_module(pressio_zfp.i)
 
 
 endif()
