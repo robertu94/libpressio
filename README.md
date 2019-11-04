@@ -25,8 +25,9 @@ Libpressio additionally optionally requires:
 + `numpy` version `1.14.5` or later and its dependencies to provide the python bindings
 + `Doxygen` version 1.8.15 or later to generate documentation
 + `HDF5` version 1.10.0 or later for HDF5 data support
++ `swig` version 3.0.12 or later for python support
 
-You can also use the provided `Dockerfile` in `./docker` to get a working libpressio install.  Doing so requires installing `docker` version 17.05 or higher or other build tool that supports this version of Dockerfile syntax or later.
+You can also use the provided `Dockerfile`s in `./docker` to get a working libpressio install.  Doing so requires installing `docker` version 17.05 or higher or other build tool that supports this version of Dockerfile syntax or later.
 
 
 ## Configuring LibPressio

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.19.1" LANGUAGES CXX C)
+project(libpressio VERSION "0.19.2" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -211,5 +211,25 @@ if(BUILD_DOCS)
     ${PROJECT_SOURCE_DIR}/include
     COMMENT "Generate Documenation"
   )
+
+option(BUILD_DOCKER_CONTAINERS "build docker containers for testing" OFF)
+if(BUILD_DOCKER_CONTAINERS)
+  
+  foreach(CONTAINER Fedora Ubuntu18.04)
+    set(BuildSentinel ${CMAKE_BINARY_DIR}/${CONTAINER}-built)
+    set(Dockerfile docker/Dockerfile-${CONTAINER})
+    string(TOLOWER "libpressio-${CONTAINER}" CONTAINER_TAG)
+    add_custom_command(OUTPUT ${BuildSentinel}
+      COMMAND docker build -t ${CONTAINER_TAG} -f ${Dockerfile} .
+      COMMAND touch ${BuildSentinel}
+      MAIN_DEPENDENCY ${Dockerfile}
+      DEPENDS SZ
+      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+      COMMENT "DOCKER ${Dockerfile}"
+      )
+    list(APPEND DOCKER_CONTAINERS ${BuildSentinel})
+  endforeach()
+  add_custom_target(docker DEPENDS ${DOCKER_CONTAINERS} COMMENT "building docker containers")
+endif()
   
 endif()
