@@ -1,7 +1,7 @@
 ---
 Checks:          'clang-diagnostic-*,clang-analyzer-*,clang-diagnostic-*,clang-analyzer-*,bugprone-*,-bugprone-macro-parentheses,performance-*,portability-*,security-*,moderize*'
 WarningsAsErrors: ''
-HeaderFilterRegex: '.*'
+HeaderFilterRegex: '(\./include.*)|(.*presio.*)'
 AnalyzeTemporaryDtors: false
 FormatStyle:     none
 User:            runderwood

@@ -30,4 +30,38 @@ int pressio_dtype_size (enum pressio_dtype dtype) {
       return -1;
   }
 }
+
+int pressio_dtype_is_floating (enum pressio_dtype dtype) {
+  switch(dtype) {
+    case pressio_double_dtype:
+    case pressio_float_dtype:
+      return true;
+    default:
+      return false;
+  }
+}
+
+int pressio_dtype_is_signed (enum pressio_dtype dtype) {
+  switch(dtype) {
+    case pressio_double_dtype:
+    case pressio_float_dtype:
+    case pressio_int8_dtype:
+    case pressio_int16_dtype:
+    case pressio_int32_dtype:
+    case pressio_int64_dtype:
+      return true;
+    default:
+      return false;
+  }
+}
+
+int pressio_dtype_is_numeric (enum pressio_dtype dtype) {
+  switch(dtype) {
+    case pressio_byte_dtype:
+      return false;
+    default:
+      return true;
+  }
+}
+
 }

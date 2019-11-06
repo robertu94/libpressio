@@ -63,7 +63,7 @@ struct pressio_data {
    *
    * \param[in] dtype the type of the buffer
    * \param[in] src the buffer to copy \param[in] dimensions the dimensions of the buffer \returns an owning copy of the data object \see pressio_data_new_copy */
-  static pressio_data copy(const enum pressio_dtype dtype, void* src, std::vector<size_t> const& dimensions) {
+  static pressio_data copy(const enum pressio_dtype dtype, const void* src, std::vector<size_t> const& dimensions) {
     return pressio_data::copy(dtype, src, dimensions.size(), dimensions.data());
   }
   /**  
@@ -133,7 +133,7 @@ struct pressio_data {
    * \returns an owning copy of the data object
    * \see pressio_data_new_copy
    * */
-  static pressio_data copy(const enum pressio_dtype dtype, void* src, size_t const num_dimensions, size_t const dimensions[]) {
+  static pressio_data copy(const enum pressio_dtype dtype, const void* src, size_t const num_dimensions, size_t const dimensions[]) {
     size_t bytes = data_size_in_bytes(dtype, num_dimensions, dimensions);
     void* data = malloc(bytes);
     memcpy(data, src, bytes);
@@ -244,6 +244,13 @@ struct pressio_data {
   void* data() const {
     return data_ptr;
   }
+
+  /**
+   * \returns true if the structure has has data
+   */
+  bool has_data() const {
+    return data_ptr != nullptr;
+  }
   
   /**
    * \returns the data type of the buffer
@@ -303,6 +310,32 @@ struct pressio_data {
       std::vector<size_t> const& stride = {},
       std::vector<size_t> const& count = {},
       std::vector<size_t> const& block = {}) const;
+
+
+  /**
+   * modifies the dimensions of this pressio_data structure in-place.
+   *
+   * This API does not change the size of the underlying buffer.
+   * A future version of this API may change this.
+   *
+   * \param[in] new_dimensions the new dimensions to use
+   *
+   * \returns 0 if the resize was successful, negative values on warnings (i.e. dimensions mismatch), positive values on errors
+   */
+  int reshape(std::vector<size_t> const& new_dimensions) {
+    const size_t old_size = data_size_in_elements(num_dimensions(), dims.data());
+    const size_t new_size = data_size_in_elements(new_dimensions.size(), new_dimensions.data());
+
+    dims = new_dimensions;
+
+    if(old_size == new_size) {
+      return 0;
+    } else if (old_size > new_size){
+      return -1;
+    } else {
+      return 1;
+    }
+  }
   
 
   private:

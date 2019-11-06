@@ -258,7 +258,7 @@ pressio_dtype pressio_data_dtype(struct pressio_data const* data) {
 }
 
 bool pressio_data_has_data(struct pressio_data const* data) {
-  return data->data() != nullptr;
+  return data->has_data();
 }
 
 size_t pressio_data_num_dimensions(struct pressio_data const* data) {
@@ -275,6 +275,14 @@ size_t pressio_data_get_bytes(struct pressio_data const* data) {
 
 size_t pressio_data_num_elements(struct pressio_data const* data) {
   return data->num_elements();
+}
+
+int pressio_data_reshape(struct pressio_data* data,
+    size_t const num_dimensions,
+    size_t const dimensions[]
+    ) {
+  std::vector<size_t> new_dims(dimensions, dimensions+num_dimensions);
+  return data->reshape(new_dims);
 }
 
 

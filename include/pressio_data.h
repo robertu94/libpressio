@@ -139,6 +139,24 @@ struct pressio_data* pressio_data_select(struct pressio_data const* data,
     const size_t* stride,
     const size_t* count,
     const size_t* block);
+
+/**
+ * modifies the dimensions of a pressio_data structure inplace.
+ *
+ * This API does not change the size of the underlying buffer.
+ * A future version of this API may change this.
+ *
+ * \param[in] data the data structure to modify
+ * \param[in] num_dimensions the size of the new dimensions
+ * \param[in] dimensions the new dimensions to use
+ *
+ * \returns 0 if the resize was successful, negative values on warnings (i.e. dimensions mismatch), positive values on errors
+ */
+int pressio_data_reshape(struct pressio_data* data,
+    size_t const num_dimensions,
+    size_t const dimensions[]
+    );
+
 /**
  * \param[in] data the pressio data to query
  * \returns an integer code corresponding to the data-type

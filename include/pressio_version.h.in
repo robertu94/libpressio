@@ -11,3 +11,4 @@
 /* defined if the standard library implementation has the requested symbol */
 #cmakedefine01 LIBPRESSIO_COMPAT_HAS_EXCLUSIVE_SCAN
 #cmakedefine01 LIBPRESSIO_COMPAT_HAS_TRANSFORM_REDUCE
+#cmakedefine01 LIBPRESSIO_COMPAT_HAS_IMAGEMAGICK_LONGLONG

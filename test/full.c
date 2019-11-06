@@ -68,6 +68,22 @@ void print_all_options(struct pressio_options* options) {
   pressio_options_iter_free(iter);
 }
 
+void rescale(struct pressio_data* data) {
+  assert(pressio_data_dtype(data) == pressio_double_dtype);
+  double* begin_ptr = pressio_data_ptr(data, NULL);
+  size_t size = pressio_data_num_elements(data);
+
+  double min, max;
+  min = max = begin_ptr[0];
+  for (size_t i = 0; i < size; ++i) {
+    if(begin_ptr[i] < min)  min = begin_ptr[i];
+    if(begin_ptr[i] > max)  max = begin_ptr[i];
+  }
+  for (size_t i = 0; i < size; ++i) {
+    begin_ptr[i] = (begin_ptr[i] - min)/ (max - min);
+  }
+}
+
 void test_options(struct pressio_options const* options) {
   struct pressio_options* sz_options = pressio_options_copy(options);
   //set a configuration option for a compressor
@@ -90,27 +106,26 @@ void test_options(struct pressio_options const* options) {
   pressio_options_free(sz_options);
 }
 
-void run_compressor(const char* compressor_name, struct pressio_compressor* compressor, struct pressio_options* options) {
+void run_compressor(const char* compressor_name,
+    struct pressio_compressor* compressor,
+    struct pressio_options* options,
+    struct pressio_data const* input_data
+    ) {
   printf("%s\n configuration\n", compressor_name);
-  pressio_compressor_set_options(compressor, options);
-  struct pressio_options* configuration = pressio_compressor_get_configuration(compressor);
-  print_all_options(configuration);
-  pressio_options_free(configuration);
-
   //configure metrics
   const char* metrics[] = {"time", "size", "error_stat"};
   struct pressio_metrics* metrics_plugin = pressio_new_metrics(pressio_instance(), metrics, 3);
   pressio_compressor_set_metrics(compressor, metrics_plugin);
 
+  pressio_compressor_set_options(compressor, options);
+  struct pressio_options* configuration = pressio_compressor_get_configuration(compressor);
+  print_all_options(configuration);
+  pressio_options_free(configuration);
 
-  //load a 300x300x300 dataset
-  double* rawinput_data = make_input_data();
-  size_t dims[] = {300,300,300};
-  struct pressio_data* input_data = pressio_data_new_move(pressio_double_dtype, rawinput_data, 3, dims, pressio_data_libc_free_fn, NULL);
 
   //creates an output dataset pointer
   struct pressio_data* compressed_data = pressio_data_new_empty(pressio_byte_dtype, 0, NULL);
-  struct pressio_data* decompressed_data = pressio_data_new_empty(pressio_double_dtype, 3, dims);
+  struct pressio_data* decompressed_data = pressio_data_new_clone(input_data);
 
   //compress the data
   if(pressio_compressor_compress(compressor, input_data, compressed_data)) {
@@ -130,7 +145,6 @@ void run_compressor(const char* compressor_name, struct pressio_compressor* comp
 
   pressio_data_free(decompressed_data);
   pressio_data_free(compressed_data);
-  pressio_data_free(input_data);
   pressio_options_free(metrics_results);
   pressio_metrics_free(metrics_plugin);
 
@@ -154,14 +168,17 @@ int main(int argc, char *argv[])
   struct pressio_compressor* zfp_compressor = pressio_get_compressor(library, "zfp");
   struct pressio_compressor* sz_compressor = pressio_get_compressor(library, "sz");
   struct pressio_compressor* mgard_compressor = pressio_get_compressor(library, "mgard");
+  struct pressio_compressor* magick_compressor = pressio_get_compressor(library, "magick");
 
   assert(sz_compressor != NULL);
   assert(zfp_compressor != NULL);
   assert(mgard_compressor != NULL);
+  assert(magick_compressor != NULL);
 
   printf("sz version: %s\n", pressio_compressor_version(sz_compressor));
   printf("zfp version: %s\n", pressio_compressor_version(zfp_compressor));
   printf("mgard version: %s\n", pressio_compressor_version(mgard_compressor));
+  printf("mgard version: %s\n", pressio_compressor_version(magick_compressor));
 
   //get the list of configuration options
   printf("getting options\n");
@@ -187,26 +204,56 @@ int main(int argc, char *argv[])
     exit(pressio_compressor_error_code(mgard_compressor));
   }
 
-  struct pressio_options* options_part = pressio_options_merge(sz_options, zfp_options);
-  struct pressio_options* options = pressio_options_merge(sz_options, mgard_options);
-  pressio_options_free(options_part);
+  struct pressio_options* magick_options = pressio_compressor_get_options(magick_compressor);
+  pressio_options_set_string(magick_options, "magick:compressed_magick", "GIF");
+  if(pressio_compressor_check_options(magick_compressor, magick_options)) {
+    printf("%s\n", pressio_compressor_error_msg(magick_compressor));
+    exit(pressio_compressor_error_code(magick_compressor));
+  }
+
+
+  struct pressio_options* options_part1 = pressio_options_merge(sz_options, zfp_options);
+  struct pressio_options* options_part2 = pressio_options_merge(options_part1, mgard_options);
+  struct pressio_options* options = pressio_options_merge(options_part2, magick_options);
+  pressio_options_free(options_part1);
+  pressio_options_free(options_part2);
   pressio_options_free(sz_options);
   pressio_options_free(zfp_options);
   pressio_options_free(mgard_options);
+  pressio_options_free(magick_options);
   assert(options != NULL);
 
   //print all the configuration options
   print_all_options(options);
   test_options(options);
 
-  run_compressor("sz", sz_compressor, options);
-  run_compressor("zfp", zfp_compressor, options);
-  run_compressor("mgard", mgard_compressor, options);
+  //load a 300x300x300 dataset
+  double* rawinput_data = make_input_data();
+  size_t dims[] = {300,300,300};
+  struct pressio_data* input_data = pressio_data_new_move(pressio_double_dtype, rawinput_data, 3, dims, pressio_data_libc_free_fn, NULL);
+
+
+  //select the first image for magick2d
+  size_t first_layer_dims[] = {1,300,300};
+  struct pressio_data* first_layer = pressio_data_select(input_data, /*start*/NULL, /*stride*/NULL, first_layer_dims, /*blocks*/NULL);
+  pressio_data_reshape(first_layer, 2, &first_layer_dims[1]);
+  rescale(first_layer);
+
+
+  run_compressor("sz", sz_compressor, options, input_data);
+  run_compressor("zfp", zfp_compressor, options, input_data);
+  run_compressor("mgard", mgard_compressor, options, input_data);
+  run_compressor("magick 2d", magick_compressor, options, first_layer);
+  rescale(input_data);
+  run_compressor("magick 3d", magick_compressor, options, input_data);
 
   pressio_options_free(options);
+  pressio_data_free(input_data);
+  pressio_data_free(first_layer);
   pressio_compressor_release(sz_compressor);
   pressio_compressor_release(zfp_compressor);
   pressio_compressor_release(mgard_compressor);
+  pressio_compressor_release(magick_compressor);
   pressio_release(library);
 
   return 0;

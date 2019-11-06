@@ -32,6 +32,21 @@ enum pressio_dtype {
  */
 int pressio_dtype_size (enum pressio_dtype dtype);
 
+/**
+ * \returns non-zero if the type is a floating point value
+ */
+int pressio_dtype_is_floating (enum pressio_dtype dtype);
+
+/**
+ * \returns non-zero if the type is a numeric value
+ */
+int pressio_dtype_is_numeric (enum pressio_dtype dtype);
+
+/**
+ * \returns non-zero if the type is signed
+ */
+int pressio_dtype_is_signed (enum pressio_dtype dtype);
+
 #endif
 
 #ifdef __cplusplus

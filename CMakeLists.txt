@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.19.2" LANGUAGES CXX C)
+project(libpressio VERSION "0.20.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -102,6 +102,8 @@ target_compile_options(libpressio PRIVATE
   )
 target_compile_features(libpressio PUBLIC cxx_std_17)
 
+find_package(PkgConfig REQUIRED)
+
 option(LIBPRESSIO_HAS_MGARD "build the MGARD plugin" OFF)
 if(LIBPRESSIO_HAS_MGARD)
   set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} mgard")
@@ -131,7 +133,6 @@ if(LIBPRESSIO_HAS_SZ)
   set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} sz")
   find_package(SZ REQUIRED)
   find_package(ZLIB REQUIRED)
-  find_package(PkgConfig REQUIRED)
   pkg_search_module(ZSTD IMPORTED_TARGET GLOBAL libzstd)
   pkg_search_module(FFTW3 IMPORTED_TARGET GLOBAL fftw3)
   target_sources(libpressio
@@ -140,6 +141,26 @@ if(LIBPRESSIO_HAS_SZ)
       ${CMAKE_CURRENT_SOURCE_DIR}/include/libpressio_ext/compressors/sz.h
     )
   target_link_libraries(libpressio PUBLIC SZ)
+endif()
+
+option(LIBPRESSIO_HAS_MAGICK "build the image magick plugin" ON)
+if(LIBPRESSIO_HAS_MAGICK)
+  pkg_search_module(ImageMagick IMPORTED_TARGET GLOBAL Magick++)
+  try_compile(
+    LIBPRESSIO_COMPAT_HAS_IMAGEMAGICK_LONGLONG
+    ${CMAKE_BINARY_DIR}
+    SOURCES "${CMAKE_SOURCE_DIR}/checks/imagemagick.cc"
+    LINK_LIBRARIES PkgConfig::ImageMagick
+    CXX_STANDARD 17
+    CXX_STANDARD_REQUIRED ON
+  )
+  message(STATUS "Checking for Magick::LongLong: ${LIBPRESSIO_COMPAT_HAS_IMAGEMAGICK_LONGLONG}")
+  set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} magick")
+  target_link_libraries(libpressio PUBLIC PkgConfig::ImageMagick)
+  target_sources(libpressio
+    PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/magick++.cc
+    )
 endif()
 
 option(LIBPRESSIO_HAS_HDF "build the hdf5 io plugin" ON)
@@ -211,6 +232,7 @@ if(BUILD_DOCS)
     ${PROJECT_SOURCE_DIR}/include
     COMMENT "Generate Documenation"
   )
+endif()
 
 option(BUILD_DOCKER_CONTAINERS "build docker containers for testing" OFF)
 if(BUILD_DOCKER_CONTAINERS)
@@ -230,6 +252,4 @@ if(BUILD_DOCKER_CONTAINERS)
     list(APPEND DOCKER_CONTAINERS ${BuildSentinel})
   endforeach()
   add_custom_target(docker DEPENDS ${DOCKER_CONTAINERS} COMMENT "building docker containers")
-endif()
-  
 endif()
