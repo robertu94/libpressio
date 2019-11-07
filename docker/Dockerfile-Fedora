@@ -1,6 +1,6 @@
 FROM fedora:29 as builder
 RUN echo "fastestmirror=True">>/etc/dnf/dnf.conf && \
-    dnf install -y git swig cmake gcc-c++ zlib-devel libzstd-devel ninja-build hdf5-devel python3-devel python3-numpy ImageMagick-c++-devel && \
+    dnf install -y git swig cmake gcc-c++ zlib-devel libzstd-devel ninja-build hdf5-devel python3-devel python3-numpy ImageMagick-c++-devel blosc-devel && \
     dnf clean all
 RUN git clone https://github.com/LLNL/zfp /src/zfp && \
     git clone https://github.com/disheng222/sz /src/sz && \
@@ -35,7 +35,7 @@ RUN git clone https://github.com/LLNL/zfp /src/zfp && \
 
 FROM fedora:29
 RUN echo "fastestmirror=True">>/etc/dnf/dnf.conf && \
-    dnf install -y zlib hdf5 libzstd fftw python3-numpy ImageMagick-c++ \
+    dnf install -y zlib hdf5 libzstd fftw python3-numpy ImageMagick-c++ blosc \
     && \
     dnf clean all
 COPY --from=builder /usr/lib64/libSZ.so* \

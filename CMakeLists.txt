@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.20.0" LANGUAGES CXX C)
+project(libpressio VERSION "0.21.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -142,6 +142,32 @@ if(LIBPRESSIO_HAS_SZ)
     )
   target_link_libraries(libpressio PUBLIC SZ)
 endif()
+
+option(LIBPRESSIO_HAS_BLOSC "build the BLOSC plugin" ON)
+if(LIBPRESSIO_HAS_BLOSC)
+  set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} blosc")
+  target_sources(libpressio
+    PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/blosc_plugin.cc
+      ${CMAKE_CURRENT_SOURCE_DIR}/include/libpressio_ext/compressors/blosc.h
+    )
+  pkg_search_module(BLOSC IMPORTED_TARGET GLOBAL blosc)
+  if(BLOSC_FOUND)
+          target_link_libraries(libpressio PUBLIC PkgConfig::BLOSC)
+  else()
+          find_library(BLOSC_LIBRARIES blosc)
+          find_file(BLOSC_INCLUDE_FILE blosc.h)
+          if(NOT BLOSC_LIBRARIES)
+            message(FATAL_ERROR "Failed to find blosc and it was enabled")
+          endif()
+          get_filename_component(BLOSC_INCLUDE_DIRS ${BLOSC_INCLUDE_FILE} DIRECTORY)
+          target_link_libraries(libpressio PUBLIC ${BLOSC_LIBRARIES})
+          target_include_directories(libpressio PUBLIC ${BLOSC_INCLUDE_DIRS})
+          
+  endif()
+
+endif()
+
 
 option(LIBPRESSIO_HAS_MAGICK "build the image magick plugin" ON)
 if(LIBPRESSIO_HAS_MAGICK)

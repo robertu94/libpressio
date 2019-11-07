@@ -163,12 +163,15 @@ int main(int argc, char *argv[])
   assert(strstr(pressio_features(), "sz") != NULL);
   assert(strstr(pressio_features(), "zfp") != NULL);
   assert(strstr(pressio_features(), "mgard") != NULL);
+  assert(strstr(pressio_features(), "magick") != NULL);
+  assert(strstr(pressio_features(), "blosc") != NULL);
 
   //get an instance of a compressor
   struct pressio_compressor* zfp_compressor = pressio_get_compressor(library, "zfp");
   struct pressio_compressor* sz_compressor = pressio_get_compressor(library, "sz");
   struct pressio_compressor* mgard_compressor = pressio_get_compressor(library, "mgard");
   struct pressio_compressor* magick_compressor = pressio_get_compressor(library, "magick");
+  struct pressio_compressor* blosc_compressor = pressio_get_compressor(library, "blosc");
 
   assert(sz_compressor != NULL);
   assert(zfp_compressor != NULL);
@@ -211,16 +214,27 @@ int main(int argc, char *argv[])
     exit(pressio_compressor_error_code(magick_compressor));
   }
 
+  struct pressio_options* blosc_options = pressio_compressor_get_options(blosc_compressor);
+  pressio_options_set_integer(blosc_options, "blosc:clevel", 9);
+  if(pressio_compressor_check_options(blosc_compressor, blosc_options)) {
+    printf("%s\n", pressio_compressor_error_msg(blosc_compressor));
+    exit(pressio_compressor_error_code(blosc_compressor));
+  }
+
+
 
   struct pressio_options* options_part1 = pressio_options_merge(sz_options, zfp_options);
   struct pressio_options* options_part2 = pressio_options_merge(options_part1, mgard_options);
-  struct pressio_options* options = pressio_options_merge(options_part2, magick_options);
+  struct pressio_options* options_part3 = pressio_options_merge(options_part2, blosc_options);
+  struct pressio_options* options = pressio_options_merge(options_part3, magick_options);
   pressio_options_free(options_part1);
   pressio_options_free(options_part2);
+  pressio_options_free(options_part3);
   pressio_options_free(sz_options);
   pressio_options_free(zfp_options);
   pressio_options_free(mgard_options);
   pressio_options_free(magick_options);
+  pressio_options_free(blosc_options);
   assert(options != NULL);
 
   //print all the configuration options
@@ -243,6 +257,7 @@ int main(int argc, char *argv[])
   run_compressor("sz", sz_compressor, options, input_data);
   run_compressor("zfp", zfp_compressor, options, input_data);
   run_compressor("mgard", mgard_compressor, options, input_data);
+  run_compressor("blosc", blosc_compressor, options, input_data);
   run_compressor("magick 2d", magick_compressor, options, first_layer);
   rescale(input_data);
   run_compressor("magick 3d", magick_compressor, options, input_data);
@@ -254,6 +269,7 @@ int main(int argc, char *argv[])
   pressio_compressor_release(zfp_compressor);
   pressio_compressor_release(mgard_compressor);
   pressio_compressor_release(magick_compressor);
+  pressio_compressor_release(blosc_compressor);
   pressio_release(library);
 
   return 0;
