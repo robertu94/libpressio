@@ -1,10 +1,10 @@
 #include <cmath>
-#include <optional>
 #include "pressio_data.h"
 #include "pressio_options.h"
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/pressio.h"
+#include "libpressio_ext/compat/std_compat.h"
 
 namespace {
   struct error_metrics {
@@ -28,10 +28,10 @@ namespace {
 
   struct compute_metrics{
     template <class ForwardIt1, class ForwardIt2>
-    std::optional<error_metrics> operator()(ForwardIt1 input_begin, ForwardIt1 input_end, ForwardIt2 input2_begin)
+    error_metrics operator()(ForwardIt1 input_begin, ForwardIt1 input_end, ForwardIt2 input2_begin)
     {
       using value_type = typename std::iterator_traits<ForwardIt1>::value_type;
-      static_assert(std::is_same_v<typename std::iterator_traits<ForwardIt1>::value_type, value_type>);
+      static_assert(std::is_same<typename std::iterator_traits<ForwardIt1>::value_type, value_type>::value, "the iterators must have the same type");
       double sum_of_squared_error = 0;
       double sum_of_difference = 0;
       double sum_of_error = 0;
@@ -99,7 +99,7 @@ class error_stat_plugin : public libpressio_metrics_plugin {
       input_data = pressio_data_new_clone(input);
     }
     void end_decompress(struct pressio_data const*, struct pressio_data const* output, int ) override {
-      err_metrics = pressio_data_for_each(input_data, output, compute_metrics{});      
+      err_metrics = pressio_data_for_each<error_metrics>(input_data, output, compute_metrics{});      
       pressio_data_free(input_data);
     }
 
@@ -129,8 +129,8 @@ class error_stat_plugin : public libpressio_metrics_plugin {
 
   private:
   struct pressio_data* input_data;
-  std::optional<error_metrics> err_metrics;
+  compat::optional<error_metrics> err_metrics;
 
 };
 
-static inline pressio_register X(metrics_plugins(), "error_stat", [](){ return std::make_unique<error_stat_plugin>(); });
+static pressio_register X(metrics_plugins(), "error_stat", [](){ return compat::make_unique<error_stat_plugin>(); });

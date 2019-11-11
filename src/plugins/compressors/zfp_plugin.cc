@@ -53,13 +53,15 @@ class zfp_plugin: public libpressio_compressor_plugin {
     int set_options_impl(struct pressio_options const* options) override {
       
       //precision, accuracy, and expert mode settings
-      if(unsigned int mode; pressio_options_get_uinteger(options, "zfp:mode", &mode) == pressio_options_key_set) {
+      unsigned int mode, precision; 
+      double tolerance, rate; 
+      if(pressio_options_get_uinteger(options, "zfp:mode", &mode) == pressio_options_key_set) {
         zfp_stream_set_mode(zfp, mode);
-      } else if(unsigned int precision; pressio_options_get_uinteger(options, "zfp:precision", &precision) == pressio_options_key_set) {
+      } else if(pressio_options_get_uinteger(options, "zfp:precision", &precision) == pressio_options_key_set) {
         zfp_stream_set_precision(zfp, precision);
-      } else if (double tolerance; pressio_options_get_double(options, "zfp:accuracy", &tolerance) == pressio_options_key_set) {
+      } else if (pressio_options_get_double(options, "zfp:accuracy", &tolerance) == pressio_options_key_set) {
         zfp_stream_set_accuracy(zfp, tolerance);
-      } else if (double rate; pressio_options_get_double(options, "zfp:rate", &rate) == pressio_options_key_set) {
+      } else if (pressio_options_get_double(options, "zfp:rate", &rate) == pressio_options_key_set) {
         unsigned int type, dims;
         int wra;
         if(
@@ -77,14 +79,17 @@ class zfp_plugin: public libpressio_compressor_plugin {
         pressio_options_get_integer(options, "zfp:minexp", &zfp->minexp);
       }
 
-      if(unsigned int execution;pressio_options_get_uinteger(options, "zfp:execution", &execution) == pressio_options_key_set) { 
+      unsigned int execution;
+      if(pressio_options_get_uinteger(options, "zfp:execution", &execution) == pressio_options_key_set) { 
         zfp_stream_set_execution(zfp, (zfp_exec_policy)execution);
       }
       if(zfp_stream_execution(zfp) == zfp_exec_omp) {
-        if(unsigned int threads; pressio_options_get_uinteger(options, "zfp:omp_threads", &threads) == pressio_options_key_set) {
+        unsigned int threads;
+        if(pressio_options_get_uinteger(options, "zfp:omp_threads", &threads) == pressio_options_key_set) {
           zfp_stream_set_omp_threads(zfp, threads);
         }
-        if(unsigned int chunk_size; pressio_options_get_uinteger(options, "zfp:omp_chunk_size", &chunk_size) == pressio_options_key_set) {
+        unsigned int chunk_size; 
+        if(pressio_options_get_uinteger(options, "zfp:omp_chunk_size", &chunk_size) == pressio_options_key_set) {
           zfp_stream_set_omp_chunk_size(zfp, chunk_size);
         }
       }
@@ -232,4 +237,4 @@ class zfp_plugin: public libpressio_compressor_plugin {
     zfp_stream* zfp;
 };
 
-static inline pressio_register X(compressor_plugins(), "zfp", [](){ return std::make_unique<zfp_plugin>(); });
+static pressio_register X(compressor_plugins(), "zfp", [](){ return compat::make_unique<zfp_plugin>(); });

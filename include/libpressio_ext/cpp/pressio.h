@@ -22,7 +22,8 @@ struct pressio_registry {
    * \returns the result of the factory function
    */
   T build(std::string const& name) const {
-    if (auto factory = factories.find(name); factory != factories.end()) {
+    auto factory = factories.find(name);
+    if ( factory != factories.end()) {
       return factory->second();
     } else {
       return nullptr;
@@ -40,17 +41,19 @@ struct pressio_registry {
     factories.emplace(std::forward<Name>(name), std::forward<Factory>(factory));
   }
 
+  private:
+  std::map<std::string, std::function<T()>> factories;
+
+  public:
   /**
    * \returns an begin iterator over the registered types
    */
-  auto begin() const { return std::begin(factories); }
+  auto begin() const -> decltype(factories.begin()) { return std::begin(factories); }
   /**
    * \returns an end iterator over the registered types
    */
-  auto end() const { return std::end(factories); }
+  auto end() const -> decltype(factories.end()) { return std::end(factories); }
 
-  private:
-  std::map<std::string, std::function<T()>> factories;
 };
 
 /**
@@ -60,7 +63,7 @@ struct pressio_registry {
 class pressio_register{
   public:
   /**
-   * Registers a new factory with a name in a registry.  Designed to be used as a static inline variable
+   * Registers a new factory with a name in a registry.  Designed to be used as a static variable
    *
    * \param[in] registry the registry to use
    * \param[in] name the name to register

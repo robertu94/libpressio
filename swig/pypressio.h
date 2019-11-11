@@ -6,33 +6,26 @@
 
 namespace {
   template <class T>
-  const pressio_dtype type_to_dtype = pressio_byte_dtype;
-  template <>
-  const pressio_dtype type_to_dtype<double> = pressio_double_dtype;
-  template <>
-  const pressio_dtype type_to_dtype<float> = pressio_float_dtype;
-  template <>
-  const pressio_dtype type_to_dtype<int64_t> = pressio_int64_dtype;
-  template <>
-  const pressio_dtype type_to_dtype<int32_t> = pressio_int32_dtype;
-  template <>
-  const pressio_dtype type_to_dtype<int16_t> = pressio_int16_dtype;
-  template <>
-  const pressio_dtype type_to_dtype<int8_t> = pressio_int8_dtype;
-  template <>
-  const pressio_dtype type_to_dtype<uint64_t> = pressio_uint64_dtype;
-  template <>
-  const pressio_dtype type_to_dtype<uint32_t> = pressio_uint32_dtype;
-  template <>
-  const pressio_dtype type_to_dtype<uint16_t> = pressio_uint16_dtype;
-  template <>
-  const pressio_dtype type_to_dtype<uint8_t> = pressio_uint8_dtype;
+  constexpr pressio_dtype type_to_dtype() {
+    return (std::is_same<T, double>::value ? pressio_double_dtype :
+        std::is_same<T, float>::value ? pressio_float_dtype :
+        std::is_same<T, int64_t>::value ? pressio_int64_dtype :
+        std::is_same<T, int32_t>::value ? pressio_int32_dtype :
+        std::is_same<T, int16_t>::value ? pressio_int16_dtype :
+        std::is_same<T, int8_t>::value ? pressio_int8_dtype :
+        std::is_same<T, uint64_t>::value ? pressio_uint64_dtype :
+        std::is_same<T, uint32_t>::value ? pressio_uint32_dtype :
+        std::is_same<T, uint16_t>::value ? pressio_uint16_dtype :
+        std::is_same<T, uint8_t>::value ? pressio_uint8_dtype :
+        pressio_byte_dtype
+        );
+  }
 
   template <class T>
   pressio_data*
   _pressio_io_data_from_numpy_impl(T* data, std::vector<size_t> dims) {
     return pressio_data_new_copy(
-        type_to_dtype<T>,
+        type_to_dtype<T>(),
         data,
         dims.size(),
         dims.data()
@@ -100,6 +93,6 @@ struct pressio_data* data_new_move(const pressio_dtype dtype,
 
 pressio_metrics* new_metrics(struct pressio* library, std::vector<std::string> metrics) {
   std::vector<const char*> m;
-  std::transform(std::begin(metrics), std::end(metrics), std::back_inserter(m), [](auto& i){ return i.c_str(); });
+  std::transform(std::begin(metrics), std::end(metrics), std::back_inserter(m), [](std::string& i){ return i.c_str(); });
   return pressio_new_metrics(library, m.data(), m.size());
 }

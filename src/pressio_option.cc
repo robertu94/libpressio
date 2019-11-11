@@ -1,11 +1,7 @@
 #include <string>
-#include <variant>
 #include "pressio_option.h"
 #include "libpressio_ext/cpp/options.h"
-
-template<>
-pressio_option::pressio_option(std::monostate value): option(value) {}
-
+#include "libpressio_ext/compat/std_compat.h"
 
 
 extern "C" {

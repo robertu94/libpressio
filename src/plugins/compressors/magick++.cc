@@ -254,9 +254,9 @@ class magick_plugin: public libpressio_compressor_plugin {
    * converts from a pressio_data structure to an image by treating it as
    * an image using samples.
    */
-  std::optional<Magick::Image> data_to_samples_image(pressio_data const& data) const {
+  compat::optional<Magick::Image> data_to_samples_image(pressio_data const& data) const {
     auto storage_type = data_type_to_storage_type(data);
-    if(storage_type == Magick::UndefinedPixel) return std::nullopt;
+    if(storage_type == Magick::UndefinedPixel) return {};
     Magick::Image image(
         data.get_dimension(0),
         data.get_dimension(1),
@@ -292,6 +292,6 @@ class magick_plugin: public libpressio_compressor_plugin {
   std::shared_ptr<magick_init> init;
 };
 
-static inline pressio_register X(compressor_plugins(), "magick", [](){
+static pressio_register X(compressor_plugins(), "magick", [](){
     return std::make_shared<magick_plugin>(magick_init::get_library()); 
 });

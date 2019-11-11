@@ -7,10 +7,10 @@
 #include <algorithm>
 #include <functional>
 #include <numeric>
-#include "std_compat.h"
 #include "pressio_data.h"
 #include "multi_dimensional_iterator.h"
 #include "libpressio_ext/cpp/data.h"
+#include "libpressio_ext/compat/std_compat.h"
 
 
 void pressio_data_libc_free_fn(void* data, void*) {
@@ -52,7 +52,7 @@ namespace {
       out_of_bounds[i] = ((start[i] + block[i] + (count[i] - 1) * stride[i] - 1) > dims[i]);
     }
 
-    auto is_true = [](auto v){ return v == true; };
+    auto is_true = [](int v){ return v == true; };
     if(any_of(begin(out_of_bounds), end(out_of_bounds), is_true)) {
       return false;
     }
@@ -80,7 +80,7 @@ namespace {
         std::end(args.block),
         std::begin(args.count),
         std::begin(dest_global_dims),
-        std::multiplies{}
+        compat::multiplies<>{}
         );
 
     auto src_blocks = std::make_shared<multi_dimensional_range<Type>>(source,
@@ -130,7 +130,7 @@ pressio_data pressio_data::select(std::vector<size_t> const& start,
 
   //compute output dimensions
   std::vector<size_t> output_dims(count.size());
-  transform(begin(block), end(block), begin(count), begin(output_dims), std::multiplies{});
+  transform(begin(block), end(block), begin(count), begin(output_dims), compat::multiplies<>{});
 
   //allocate output buffer
   auto output = pressio_data::owning(this->dtype(), output_dims);

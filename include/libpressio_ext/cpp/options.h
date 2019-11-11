@@ -1,13 +1,12 @@
 #ifndef PRESSIO_OPTIONS_CPP
 #define PRESSIO_OPTIONS_CPP
 
-#include <optional>
-#include <variant>
 #include <string>
 #include <map>
 #include <type_traits>
 #include "pressio_options.h"
 #include "pressio_option.h"
+#include "libpressio_ext/compat/std_compat.h"
 
 /**
  * \file
@@ -15,41 +14,28 @@
  */
 
 namespace {
-using option_type = std::variant<std::monostate,
-      std::optional<int>,
-      std::optional<unsigned int>,
-      std::optional<float>,
-      std::optional<double>,
-      std::optional<std::string>,
-      std::optional<void*>
+using option_type = compat::variant<compat::monostate,
+      compat::optional<int>,
+      compat::optional<unsigned int>,
+      compat::optional<float>,
+      compat::optional<double>,
+      compat::optional<std::string>,
+      compat::optional<void*>
       >;
 }
 
 /** defines constants to convert between types and pressio_option_*_type */
 template <class T>
-enum pressio_option_type pressio_type_to_enum;
-/** maps to int to pressio_option_int32_type */
-template <>
-inline constexpr enum pressio_option_type pressio_type_to_enum<int> = pressio_option_int32_type;
-/** maps to unsigned int to pressio_option_uint32_type */
-template <>
-inline constexpr enum pressio_option_type pressio_type_to_enum<unsigned int> = pressio_option_uint32_type;
-/** maps to float to pressio_option_float_type */
-template <>
-inline constexpr enum pressio_option_type pressio_type_to_enum<float> = pressio_option_float_type;
-/** maps to double to pressio_option_double_type */
-template <>
-inline constexpr enum pressio_option_type pressio_type_to_enum<double> = pressio_option_double_type;
-/** maps to std::string to pressio_option_charptr_type */
-template <>
-inline constexpr enum pressio_option_type pressio_type_to_enum<std::string> = pressio_option_charptr_type;
-/** maps to const char* to pressio_option_charptr_type */
-template <>
-inline constexpr enum pressio_option_type pressio_type_to_enum<const char*> = pressio_option_charptr_type;
-/** maps to void* to pressio_option_userptr_type */
-template <>
-inline constexpr enum pressio_option_type pressio_type_to_enum<void*> = pressio_option_userptr_type;
-
+constexpr enum pressio_option_type pressio_type_to_enum() {
+  return std::is_same<T, int>() ? pressio_option_int32_type :
+    std::is_same<T,unsigned int>() ? pressio_option_uint32_type :
+    std::is_same<T,float>() ? pressio_option_float_type :
+    std::is_same<T,double>() ? pressio_option_double_type :
+    std::is_same<T,std::string>() ? pressio_option_charptr_type :
+    std::is_same<T,const char*>() ? pressio_option_charptr_type :
+    pressio_option_userptr_type;
+    ;
+}
 
 /**
  * represents a dynamically typed object
@@ -61,9 +47,22 @@ struct pressio_option final {
   /** constructs an option that holds the specified value
    * \param[in] value the value the option is to hold
    * */
-  template<class T>
-  pressio_option(T value): option(std::optional<T>(value)) {}
+  template<class T, typename = typename std::enable_if<
+    !std::is_same<T, pressio_option>::value &&
+    !std::is_same<T, const char*>::value &&
+    !std::is_same<T, compat::monostate>::value
+    >::type>
+  pressio_option(T const& value): option(compat::optional<T>(value)) {}
 
+  /** specialization for option to reset the type to hold no type or value
+   * \param[in] value the monostate singleton
+   * */
+  pressio_option(compat::monostate value): option(value) { }
+
+  /** specialization for strings to be compatable with c++11
+   * \param[in] value the monostate singleton
+   * */
+  pressio_option(const char* value): option(std::string(value)) { }
 
   /** returns a pressio option that has the appropriate type if the conversion is allowed for the specified safety
    * \param[in] type the type to convert to
@@ -80,25 +79,25 @@ struct pressio_option final {
   /** 
    * \returns returns true if the option holds the current type
    */
-  template <class T, std::enable_if_t<!std::is_same_v<T,std::monostate>,int> = 0>
+  template <class T, typename std::enable_if<!std::is_same<T,compat::monostate>::value,int>::type = 0>
   bool holds_alternative() const {
-    return std::holds_alternative<std::optional<T>>(option);
+    return compat::holds_alternative<compat::optional<T>>(option);
   }
 
-  /** Specialization for the std::monostate singleton
+  /** Specialization for the compat::monostate singleton
    * \returns true if the option has no specified type or value
    */
-  template <class T, std::enable_if_t<std::is_same_v<T,std::monostate>,int> = 0>
+  template <class T, typename std::enable_if<std::is_same<T,compat::monostate>::value,int>::type = 0>
   bool holds_alternative() const {
-    return std::holds_alternative<std::monostate>(option);
+    return compat::holds_alternative<compat::monostate>(option);
   }
 
   /** 
    * \returns a std::optional which holds a value if the option has one or an empty optional otherwise
    */
   template <class T>
-  std::optional<T> const& get() const{
-    return std::get<std::optional<T>>(option);
+  compat::optional<T> const& get() const{
+    return compat::get<compat::optional<T>>(option);
   }
 
   /** 
@@ -107,29 +106,29 @@ struct pressio_option final {
    */
   template <class T>
   T const& get_value() const{
-    return get<T>().value();
+    return *get<T>();
   }
 
   /**
    * \returns true if the option holds a value or false otherwise
    */
   bool has_value() const {
-    if (holds_alternative<std::monostate>()) return false;
+    if (holds_alternative<compat::monostate>()) return false;
     else {
       switch(type())
       {
         case pressio_option_int32_type:
-          return get<int>().has_value();
+          return (bool)get<int>();
         case pressio_option_uint32_type:
-          return get<unsigned int>().has_value();
+          return (bool)get<unsigned int>();
         case pressio_option_float_type:
-          return get<float>().has_value();
+          return (bool)get<float>();
         case pressio_option_double_type:
-          return get<double>().has_value();
+          return (bool)get<double>();
         case pressio_option_charptr_type:
-          return get<std::string>().has_value();
+          return (bool)get<std::string>();
         case pressio_option_userptr_type:
-          return get<void*>().has_value();
+          return (bool)get<void*>();
         case pressio_option_unset_type:
         default:
           return false;
@@ -143,7 +142,7 @@ struct pressio_option final {
    */
   template <class T>
   void set(T v) {
-    option = std::optional(v);
+    option = compat::optional<T>(v);
   }
 
   /**
@@ -154,25 +153,25 @@ struct pressio_option final {
     switch(type)
     {
       case pressio_option_charptr_type:
-        option = std::optional<std::string>();
+        option = compat::optional<std::string>();
         break;
       case pressio_option_userptr_type:
-        option = std::optional<void*>();
+        option = compat::optional<void*>();
         break;
       case pressio_option_int32_type:
-        option = std::optional<int>();
+        option = compat::optional<int>();
         break;
       case pressio_option_uint32_type:
-        option = std::optional<unsigned int>();
+        option = compat::optional<unsigned int>();
         break;
       case pressio_option_float_type:
-        option = std::optional<float>();
+        option = compat::optional<float>();
         break;
       case pressio_option_double_type:
-        option = std::optional<double>();
+        option = compat::optional<double>();
         break;
       case pressio_option_unset_type:
-        option = std::monostate{};
+        option = compat::monostate{};
         break;
     }
   }
@@ -196,11 +195,6 @@ struct pressio_option final {
   option_type option;
 };
 
-/** specialization for option to reset the type to hold no type or value
- * \param[in] value the monostate singleton
- * */
-template<>
-pressio_option::pressio_option(std::monostate value);
 
 /**
  * represents a map of dynamically typed objects
@@ -278,7 +272,7 @@ struct pressio_options final {
    */
   template <class PointerType>
   enum pressio_options_key_status get(std::string const& key, PointerType value) const {
-    using ValueType = std::remove_pointer_t<PointerType>;
+    using ValueType = typename std::remove_pointer<PointerType>::type;
     switch(key_status(key)){
       case pressio_options_key_set:
         {
@@ -308,12 +302,12 @@ struct pressio_options final {
    */
   template <class PointerType>
   enum pressio_options_key_status cast(std::string const& key, PointerType value, enum pressio_conversion_safety safety) const {
-    using ValueType = std::remove_pointer_t<PointerType>;
+    using ValueType = typename std::remove_pointer<PointerType>::type;
     switch(key_status(key)){
       case pressio_options_key_set:
         {
           auto variant = get(key);
-          auto converted = pressio_option(variant).as(pressio_type_to_enum<ValueType>, safety);
+          auto converted = pressio_option(variant).as(pressio_type_to_enum<ValueType>(), safety);
           if(converted.has_value()) {
             *value = converted.template get_value<ValueType>();
             return pressio_options_key_set;
@@ -328,31 +322,6 @@ struct pressio_options final {
     }
   }
 
-  /**
-   * \returns an begin iterator over the keys
-   */
-  auto begin() const {
-    return std::begin(options);
-  }
-  /**
-   * \returns an end iterator over the keys
-   */
-  auto end() const {
-    return std::end(options);
-  }
-
-  /**
-   * \returns an begin iterator over the keys
-   */
-  auto begin() {
-    return std::begin(options);
-  }
-  /**
-   * \returns an end iterator over the keys
-   */
-  auto end() {
-    return std::end(options);
-  }
 
   /**
    * type of the returned iterator
@@ -374,6 +343,34 @@ struct pressio_options final {
 
   private:
   std::map<std::string, pressio_option> options;
+
+  public:
+
+  /**
+   * \returns an begin iterator over the keys
+   */
+  auto begin() const -> decltype(std::begin(options)) {
+    return std::begin(options);
+  }
+  /**
+   * \returns an end iterator over the keys
+   */
+  auto end() const -> decltype(std::end(options)) {
+    return std::end(options);
+  }
+
+  /**
+   * \returns an begin iterator over the keys
+   */
+  auto begin() -> decltype(std::begin(options)){
+    return std::begin(options);
+  }
+  /**
+   * \returns an end iterator over the keys
+   */
+  auto end() -> decltype(std::end(options)){
+    return std::end(options);
+  }
 };
 
 //special case for strings

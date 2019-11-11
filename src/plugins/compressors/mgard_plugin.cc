@@ -33,7 +33,7 @@ Type
 get_converted(pressio_option const& arg)
 {
   assert(arg.has_value());
-  return arg.as(pressio_type_to_enum<Type>, pressio_conversion_explicit).template get_value<Type>();
+  return arg.as(pressio_type_to_enum<Type>(), pressio_conversion_explicit).template get_value<Type>();
   }
 }
 
@@ -78,9 +78,12 @@ class mgard_plugin: public libpressio_compressor_plugin {
   }
 
   int 	compress_impl (const pressio_data *input, struct pressio_data *output) override {
-    if(int rc = check_configuration(input); rc != 0) {
-      return rc;
-    } 
+    {
+      int rc = check_configuration(input);
+      if( rc != 0) {
+        return rc;
+      } 
+    }
     //mgard destroys the input so we must copy it here to prevent the real input from being destroyed
     auto type = pressio_data_dtype(input); 
     auto input_copy = pressio_data::clone(*input);
@@ -99,9 +102,12 @@ class mgard_plugin: public libpressio_compressor_plugin {
   
 
    int 	decompress_impl (const pressio_data *input, struct pressio_data *output) override {
-      if(int rc = check_configuration(output); rc != 0) {
+     {
+      int rc = check_configuration(output);
+      if( rc != 0) {
         return rc;
       } 
+     }
     auto input_copy = pressio_data::clone(*input);
     auto type = pressio_data_dtype(output); 
     switch(type) {
@@ -434,4 +440,4 @@ class mgard_plugin: public libpressio_compressor_plugin {
   pressio_option qoi_float;
   pressio_option norm_of_qoi;
 };
-static inline pressio_register X(compressor_plugins(), "mgard", [](){ return std::make_unique<mgard_plugin>(); });
+static pressio_register X(compressor_plugins(), "mgard", [](){ return compat::make_unique<mgard_plugin>(); });

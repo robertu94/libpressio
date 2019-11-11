@@ -1,12 +1,14 @@
 #include <hdf5.h>
 #include <unistd.h>
+#include <errno.h>
 #include <pressio_data.h>
 #include <cassert>
 #include <vector>
-#include <optional>
+#include <string>
+#include <libpressio_ext/compat/std_compat.h>
 
 namespace {
-  std::optional<pressio_dtype> h5t_to_pressio(hid_t h5type) {
+  compat::optional<pressio_dtype> h5t_to_pressio(hid_t h5type) {
     if(H5Tequal(h5type, H5T_NATIVE_INT8) > 0) return pressio_int8_dtype;
     if(H5Tequal(h5type, H5T_NATIVE_INT16) > 0) return pressio_int16_dtype;
     if(H5Tequal(h5type, H5T_NATIVE_INT32) > 0) return pressio_int32_dtype;
@@ -17,7 +19,7 @@ namespace {
     if(H5Tequal(h5type, H5T_NATIVE_UINT64) > 0) return pressio_uint64_dtype;
     if(H5Tequal(h5type, H5T_NATIVE_FLOAT) > 0) return pressio_float_dtype;
     if(H5Tequal(h5type, H5T_NATIVE_DOUBLE) > 0) return pressio_double_dtype;
-    return std::nullopt;
+    return compat::optional<pressio_dtype>{};
   }
   hid_t pressio_to_h5t(pressio_dtype dtype) {
     switch(dtype) {
@@ -51,7 +53,7 @@ namespace {
   }
 
   bool hdf_path_exists(hid_t file, std::string const& path) {
-    if(path == "" or path == "/") return true;
+    if(path == std::string("") or path == std::string("/")) return true;
     else {
       //check for parent path
       auto last_slash_pos = path.find_last_of('/');
@@ -81,7 +83,7 @@ namespace {
       cleanup(cleanup const&)=delete;
       cleanup& operator=(cleanup const&)=delete;
       cleanup& operator=(cleanup && rhs) noexcept { 
-        do_cleanup = std::exchange(rhs.do_cleanup, false);
+        do_cleanup = compat::exchange(rhs.do_cleanup, false);
         cleanup_fn = std::move(rhs.cleanup_fn);
       }
       ~cleanup() { if(do_cleanup) cleanup_fn(); }
@@ -90,6 +92,10 @@ namespace {
       Function cleanup_fn;
       bool do_cleanup;
   };
+  template<class Function>
+  auto make_cleanup(Function&& f) -> decltype(cleanup<Function>(std::declval<Function>())) {
+    return cleanup<Function>(std::forward<Function>(f));
+  }
 }
 
 extern "C" {
@@ -99,15 +105,15 @@ pressio_io_data_path_h5read(const char* file_name, const char* dataset_name)
 {
   hid_t file = H5Fopen(file_name, H5F_ACC_RDONLY, H5P_DEFAULT);
   if(file < 0) return nullptr;
-  cleanup cleanup_file([&]{ H5Fclose(file); });
+  auto cleanup_file = make_cleanup([&]{ H5Fclose(file); });
 
   hid_t dataset = H5Dopen2(file, dataset_name, H5P_DEFAULT);
   if(dataset < 0) return nullptr;
-  cleanup cleanup_dataset([&]{ H5Dclose(dataset); });
+  auto cleanup_dataset = make_cleanup([&]{ H5Dclose(dataset); });
 
   hid_t dataspace = H5Dget_space(dataset);
   if(dataspace < 0) return nullptr;
-  cleanup cleanup_dataspace([&]{ H5Sclose(dataspace); });
+  auto cleanup_dataspace = make_cleanup([&]{ H5Sclose(dataspace); });
 
   int ndims = H5Sget_simple_extent_ndims(dataspace);
   std::vector<hsize_t> dims(ndims);
@@ -118,17 +124,20 @@ pressio_io_data_path_h5read(const char* file_name, const char* dataset_name)
 
   hid_t type = H5Dget_type(dataset);
   if(type < 0) return nullptr;
-  cleanup cleanup_type([&]{ H5Tclose(type);}) ;
+  auto cleanup_type = make_cleanup([&]{ H5Tclose(type);}) ;
 
-  if(auto dtype = h5t_to_pressio(type); dtype) {
-    auto ret = pressio_data_new_owning(*dtype, pressio_dims.size(), pressio_dims.data());
-    auto ptr = pressio_data_ptr(ret, nullptr);
+  {
+    auto dtype = h5t_to_pressio(type);
+    if( dtype) {
+      auto ret = pressio_data_new_owning(*dtype, pressio_dims.size(), pressio_dims.data());
+      auto ptr = pressio_data_ptr(ret, nullptr);
 
-    H5Dread(dataset, type, H5S_ALL, H5S_ALL, H5P_DEFAULT, ptr);
+      H5Dread(dataset, type, H5S_ALL, H5S_ALL, H5P_DEFAULT, ptr);
 
-    return ret;
-  } else {
-    return nullptr;
+      return ret;
+    } else {
+      return nullptr;
+    }
   }
 }
 
@@ -149,7 +158,7 @@ pressio_io_data_path_h5write(struct pressio_data const* data, const char* file_n
     }
   }
   if(file < 0) return 1;
-  cleanup cleanup_file([&]{ H5Fclose(file); });
+  auto cleanup_file = make_cleanup([&]{ H5Fclose(file); });
 
 
   //prepare the dataset for writing
@@ -165,7 +174,7 @@ pressio_io_data_path_h5write(struct pressio_data const* data, const char* file_n
       nullptr
       );
   if(dataspace < 0) return 1;
-  cleanup cleanup_space([&]{ H5Sclose(dataspace);});
+  auto cleanup_space = make_cleanup([&]{ H5Sclose(dataspace);});
 
   hid_t dataset;
   if (hdf_path_exists(file, dataset_name))
@@ -182,7 +191,7 @@ pressio_io_data_path_h5write(struct pressio_data const* data, const char* file_n
         );
   }
   if(dataset < 0) return 1;
-  cleanup cleanup_dataset([&]{ H5Dclose(dataset);});
+  auto cleanup_dataset = make_cleanup([&]{ H5Dclose(dataset);});
 
   //write the dataset
   return (H5Dwrite(

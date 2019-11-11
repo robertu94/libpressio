@@ -29,6 +29,7 @@ Libpressio additionally optionally requires:
 + `swig` version 3.0.12 or later for python support
 + `ImageMagick` version 6.9.7 or later for ImageMagick image support.  Version 7 or later supports additional data types.
 + `blosc` version 1.14.2 for lossless compressor support via blosc
++ `boost` version 1.53 to compile on a c++14 or earlier compiler
 
 You can also use the provided `Dockerfile`s in `./docker` to get a working libpressio install.  Doing so requires installing `docker` version 17.05 or higher or other build tool that supports this version of Dockerfile syntax or later.
 
@@ -65,6 +66,16 @@ cmake .. -DBUILD_DOCS=ON
 make docs
 # the html docs can be found in $BUILD_DIR/html/index.html
 # the man pages can be found in $BUILD_DIR/man/
+```
+
+To build on a C++11 compiler:
+
+```
+BUILD_DIR=build
+mkdir $BUILD_DIR
+cd $BUILD_DIR
+cmake -DLIBPRESSIO_CXX_VERSION=11
+make
 ```
 
 To build the experimental python bindings:

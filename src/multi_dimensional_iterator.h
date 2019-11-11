@@ -8,7 +8,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <numeric>
-#include "std_compat.h"
+#include "libpressio_ext/compat/std_compat.h"
 
 namespace {
   template <class Type> 
@@ -145,14 +145,14 @@ class multi_dimensional_range: public std::enable_shared_from_this<multi_dimensi
       ForwardIt1 global_dims_begin,
       ForwardIt1 global_dims_end,
       ForwardIt2 count,
-      ForwardIt3 stride = cycle(1ul),
-      ForwardIt4 start = cycle(0ul)
+      ForwardIt3 stride = cycle<size_t>(1ul),
+      ForwardIt4 start = cycle<size_t>(0ul)
       ): global_dims(global_dims_begin, global_dims_end),
          local_dims(count, std::next(count, global_dims.size())),
          local_stride(global_dims.size()),
          global_stride(global_dims.size()),
-         local_max_dim(std::accumulate(count, std::next(count,global_dims.size()), 1, std::multiplies<>{})),
-         global_max_dim(std::accumulate(std::begin(global_dims), std::end(global_dims), 1, std::multiplies<>{})),
+         local_max_dim(std::accumulate(count, std::next(count,global_dims.size()), 1, compat::multiplies<>{})),
+         global_max_dim(std::accumulate(std::begin(global_dims), std::end(global_dims), 1, compat::multiplies<>{})),
          origin(origin)
   {
     static_assert(
@@ -181,15 +181,15 @@ class multi_dimensional_range: public std::enable_shared_from_this<multi_dimensi
     );
 
     //compute the global stride
-    compat::exclusive_scan(std::begin(global_dims), std::end(global_dims), std::begin(global_stride),  1, std::multiplies<>{});
+    compat::exclusive_scan(std::begin(global_dims), std::end(global_dims), std::begin(global_stride),  1, compat::multiplies<>{});
 
     //compute the global offset without accounting for the stride
     global_offset = compat::transform_reduce(std::begin(global_stride), std::end(global_stride), start, 0);
 
     //change global stride to account for the stride
-    std::transform(std::begin(global_stride), std::end(global_stride), stride, std::begin(global_stride), std::multiplies<>{});
+    std::transform(std::begin(global_stride), std::end(global_stride), stride, std::begin(global_stride), compat::multiplies<>{});
 
-    compat::exclusive_scan(count, std::next(count,global_dims.size()), std::begin(local_stride), 1, std::multiplies<>{});
+    compat::exclusive_scan(count, std::next(count,global_dims.size()), std::begin(local_stride), 1, compat::multiplies<>{});
     
   }
 
@@ -197,12 +197,12 @@ class multi_dimensional_range: public std::enable_shared_from_this<multi_dimensi
   multi_dimensional_range(
       multi_dimensional_iterator iterator,
       ForwardIt count,
-      ForwardIt2 stride = cycle(1ul)
+      ForwardIt2 stride = cycle<size_t>(1ul)
       ): global_dims(iterator.range->global_dims),
          local_dims(count, std::next(count, global_dims.size())),
          local_stride(global_dims.size()),
          global_stride(global_dims.size()),
-         local_max_dim(std::accumulate(count, std::next(count, global_dims.size()), 1, std::multiplies<>{})),
+         local_max_dim(std::accumulate(count, std::next(count, global_dims.size()), 1, compat::multiplies<>{})),
          global_max_dim(iterator.range->global_max_dim),
          global_offset(iterator.range->current_to_offset(iterator.current)),
          origin(iterator.range->origin)
@@ -219,19 +219,19 @@ class multi_dimensional_range: public std::enable_shared_from_this<multi_dimensi
           std::size_t>::value,
           "ForwardIt2 must be convertible to std::size_t"
     );
-    compat::exclusive_scan(std::begin(global_dims), std::end(global_dims), std::begin(global_stride),  1, std::multiplies<>{});
-    std::transform(std::begin(global_stride), std::end(global_stride), stride, std::begin(global_stride), std::multiplies<>{});
+    compat::exclusive_scan(std::begin(global_dims), std::end(global_dims), std::begin(global_stride),  1, compat::multiplies<>{});
+    std::transform(std::begin(global_stride), std::end(global_stride), stride, std::begin(global_stride), compat::multiplies<>{});
 
-    compat::exclusive_scan(count, std::next(count, global_dims.size()), std::begin(local_stride), 1, std::multiplies<>{});
+    compat::exclusive_scan(count, std::next(count, global_dims.size()), std::begin(local_stride), 1, compat::multiplies<>{});
     
   }
 
   template<class ForwardIt>
-  std::enable_if_t<
-    std::is_base_of_v<std::forward_iterator_tag,
+  typename std::enable_if<
+    std::is_base_of<std::forward_iterator_tag,
       typename std::iterator_traits<ForwardIt>::iterator_category
-    >,
-    Type>
+    >::value,
+    Type>::type
     operator()(ForwardIt requested_begin, ForwardIt requested_end)
   {
     if(std::distance(requested_begin, requested_end) != global_dims.size())
@@ -247,9 +247,9 @@ class multi_dimensional_range: public std::enable_shared_from_this<multi_dimensi
   }
 
   template<class... T>
-  std::enable_if_t<
-    std::conjunction_v<std::is_convertible<T, size_t>...>
-  ,Type> operator()(T... pos)
+  typename std::enable_if<
+    compat::conjunction<std::is_convertible<T, size_t>...>::value
+  ,Type>::type operator()(T... pos)
   {
     std::vector<size_t> requested = {static_cast<size_t>(pos)...};
     if(requested.size() != global_dims.size())
@@ -267,9 +267,9 @@ class multi_dimensional_range: public std::enable_shared_from_this<multi_dimensi
       //first transform index to local_position
       std::vector<size_t> local_position(global_dims.size());
       std::transform(
-          std::rbegin(local_stride),
-          std::rend(local_stride),
-          std::rbegin(local_position),
+          compat::rbegin(local_stride),
+          compat::rend(local_stride),
+          compat::rbegin(local_position),
           [&current](size_t stride){
             auto ret = current/stride;
             current -= (ret*stride);

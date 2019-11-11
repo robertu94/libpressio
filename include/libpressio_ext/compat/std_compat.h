@@ -31,11 +31,56 @@
 //
 #include <functional>
 #include <numeric>
+#include <memory>
+#include <pressio_version.h>
 
 #ifndef PRESSIO_COMPAT
 #define PRESSIO_COMPAT
 
+#if !(LIBPRESSIO_COMPAT_HAS_OPTIONAL)
+#include <boost/optional.hpp>
+#else
+#include <optional>
+#endif
+
+#if !(LIBPRESSIO_COMPAT_HAS_VARIANT)
+#include <boost/variant.hpp>
+#else
+#include <variant>
+#endif
+
+
 namespace compat {
+
+#if !(LIBPRESSIO_COMPAT_HAS_MULITPLIES)
+template <class T = void>
+struct multiplies
+{
+  template <class U, class V>
+  constexpr auto operator()(U&& u, V&& v) const
+    noexcept(noexcept(std::forward<U>(u) * std::forward<V>(v)))
+      -> decltype(std::forward<U>(u) * std::forward<V>(v))
+  {
+    return std::forward<U>(u) * std::forward<V>(v);
+  }
+  using is_transparent = void;
+};
+template <class T = void>
+struct plus
+{
+  template <class U, class V>
+  constexpr auto operator()(U&& u, V&& v) const
+    noexcept(noexcept(std::forward<U>(u) + std::forward<V>(v)))
+      -> decltype(std::forward<U>(u) + std::forward<V>(v))
+  {
+    return u + v;
+  }
+  using is_transparent = void;
+};
+#else
+using std::multiplies;
+using std::plus;
+#endif
 
 #if (!LIBPRESSIO_COMPAT_HAS_EXCLUSIVE_SCAN)
 template <class InputIt, class OutputIt, class T, class BinaryOperation>
@@ -60,7 +105,7 @@ template <class InputIt, class OutputIt, class T>
 OutputIt
 exclusive_scan(InputIt first, InputIt last, OutputIt d_first, T init)
 {
-  ::compat::exclusive_scan(first, last, d_first, init, std::plus<>{});
+  ::compat::exclusive_scan(first, last, d_first, init, plus<>{});
 }
 #else
 using std::exclusive_scan;
@@ -93,12 +138,92 @@ inline Type
 transform_reduce(InputIterator1 first1, InputIterator1 last1,
                  InputIterator2 first2, Type init)
 {
-  return compat::transform_reduce(first1, last1, first2, std::move(init), std::plus<>(),
-                          std::multiplies<>());
+  return compat::transform_reduce(first1, last1, first2, std::move(init), compat::plus<>(),
+                          compat::multiplies<>());
 }
 #else
 using std::transform_reduce;
 #endif
+
+#if (!LIBPRESSIO_COMPAT_HAS_EXCHANGE)
+template<class T, class U = T>
+  T exchange(T& obj, U&& new_value)
+  {
+      T old_value = std::move(obj);
+      obj = std::forward<U>(new_value);
+      return old_value;
+  }
+#else
+  using std::exchange;
+#endif
+
+#if (!LIBPRESSIO_COMPAT_HAS_RBEGINEND)
+  template< class C >
+  auto rbegin( C& c ) -> decltype(c.rbegin()) {
+    return c.rbegin();
+  }
+  template< class C >
+  auto rend( C& c ) -> decltype(c.rend()) {
+    return c.rend();
+  }
+  template< class C >
+  auto rbegin( C const& c ) -> decltype(c.rbegin()) {
+    return c.rbegin();
+  }
+  template< class C >
+  auto rend( C const& c ) -> decltype(c.rend()) {
+    return c.rend();
+  }
+#else
+  using std::rbegin;
+  using std::rend;
+#endif
+
+#if (!LIBPRESSIO_COMPAT_HAS_OPTIONAL)
+  using boost::optional;
+#else
+#include<optional>
+  using std::optional;
+  using std::nullopt;
+#endif
+
+
+#if (!LIBPRESSIO_COMPAT_HAS_VARIANT)
+  using boost::variant;
+  using boost::get;
+  struct monostate {};
+  template <typename T, typename... Ts>
+  bool holds_alternative(const boost::variant<Ts...>& v) noexcept
+  {
+      return boost::get<T>(&v) != nullptr;
+  }
+#else
+  using std::variant;
+  using std::monostate;
+  using std::holds_alternative;
+  using std::get;
+#endif
+
+#if (!LIBPRESSIO_COMPAT_HAS_MAKE_UNIQUE)
+  template<typename T, typename... Args>
+  std::unique_ptr<T> make_unique(Args&&... args)
+  {
+      return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+  }
+#else
+  using std::make_unique;
+#endif
+
+#if !(LIBPRESSIO_COMPAT_HAS_CONJUNCTION)
+  template<class...> struct conjunction : std::true_type { };
+  template<class B1> struct conjunction<B1> : B1 { };
+  template<class B1, class... Bn>
+  struct conjunction<B1, Bn...> 
+    : std::conditional<bool(B1::value), typename conjunction<Bn...>::type, B1>::type {};
+#else
+  using std::conjunction;
+#endif
+
 
 } // namespace compat
 

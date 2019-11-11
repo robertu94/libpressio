@@ -2,6 +2,7 @@
 #include <memory>
 #include "pressio_options.h"
 #include "libpressio_ext/cpp/metrics.h"
+#include "libpressio_ext/compat/std_compat.h"
 
 class composite_plugin : public libpressio_metrics_plugin {
   public:
@@ -108,5 +109,5 @@ class composite_plugin : public libpressio_metrics_plugin {
 };
 
 std::unique_ptr<libpressio_metrics_plugin> make_m_composite(std::vector<std::unique_ptr<libpressio_metrics_plugin>>&& plugins) {
-  return std::make_unique<composite_plugin>(std::move(plugins));
+  return compat::make_unique<composite_plugin>(std::move(plugins));
 }

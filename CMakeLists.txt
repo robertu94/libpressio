@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.21.1" LANGUAGES CXX C)
+project(libpressio VERSION "0.22.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -10,6 +10,13 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     STRING "Choose the type to build" FORCE)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release"
     "MinSizeRel" "RelWithDebInfo")
+endif()
+
+set(default_cxx_standard 17)
+if(NOT LIBPRESSIO_CXX_VERSION)
+  set(LIBPRESSIO_CXX_VERSION ${default_cxx_standard} CACHE 
+    STRING "Which version of the cxx standard to expect" FORCE)
+  set_property(CACHE LIBPRESSIO_CXX_VERSION PROPERTY STRINGS 11 14 17)
 endif()
 
 enable_testing()
@@ -29,14 +36,15 @@ if(HAVE_NO_OMIT_FRAME_POINTER)
   set(NO_OMIT_FRAME_POINTER_FLAG "-fno-omit-frame-pointer")
 endif()
 
-#check for c++17 numeric functions
+
+#check for c++17 features
 function(check_cpp_standard api)
   string(TOUPPER "${api}" HEADER_SUFFIX)
   try_compile(
     COMPILED
     ${CMAKE_BINARY_DIR}
     SOURCES "${CMAKE_SOURCE_DIR}/checks/${api}.cc" 
-    CXX_STANDARD 17
+    CXX_STANDARD ${LIBPRESSIO_CXX_VERSION}
     CXX_STANDARD_REQUIRED ON
   )
   message(STATUS "Checking for ${api}: ${COMPILED}")
@@ -45,6 +53,13 @@ endfunction()
 
 check_cpp_standard(transform_reduce)
 check_cpp_standard(exclusive_scan)
+check_cpp_standard(exchange)
+check_cpp_standard(rbeginend)
+check_cpp_standard(optional)
+check_cpp_standard(variant)
+check_cpp_standard(make_unique)
+check_cpp_standard(conjunction)
+check_cpp_standard(multiplies)
 
 
 set(LIBPRESSIO_FEATURES "")
@@ -92,15 +107,20 @@ add_library(libpressio
 
 target_include_directories(libpressio
   PUBLIC 
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> 
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/libpressio>
-  PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/include
   )
 target_compile_options(libpressio PRIVATE 
   $<$<CONFIG:Debug>: -Wall -Werror -Wextra -Wpedantic>
   $<$<CONFIG:RelWithDebInfo>: ${NO_OMIT_FRAME_POINTER_FLAG}>
   )
-target_compile_features(libpressio PUBLIC cxx_std_17)
+target_compile_features(libpressio PUBLIC cxx_std_${LIBPRESSIO_CXX_VERSION})
+
+if(NOT (LIBPRESSIO_COMPAT_HAS_VARIANT OR LIBPRESSIO_COMPAT_HAS_OPTIONAL))
+  find_package(Boost COMPONENTS REQUIRED)
+  target_link_libraries(libpressio PUBLIC Boost::boost)
+endif()
 
 find_package(PkgConfig REQUIRED)
 
@@ -171,18 +191,16 @@ endif()
 
 option(LIBPRESSIO_HAS_MAGICK "build the image magick plugin" ON)
 if(LIBPRESSIO_HAS_MAGICK)
-  pkg_search_module(ImageMagick IMPORTED_TARGET GLOBAL Magick++)
+  pkg_search_module(Magick++ IMPORTED_TARGET GLOBAL Magick++)
   try_compile(
     LIBPRESSIO_COMPAT_HAS_IMAGEMAGICK_LONGLONG
     ${CMAKE_BINARY_DIR}
     SOURCES "${CMAKE_SOURCE_DIR}/checks/imagemagick.cc"
-    LINK_LIBRARIES PkgConfig::ImageMagick
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED ON
+    LINK_LIBRARIES PkgConfig::Magick++
   )
   message(STATUS "Checking for Magick::LongLong: ${LIBPRESSIO_COMPAT_HAS_IMAGEMAGICK_LONGLONG}")
   set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} magick")
-  target_link_libraries(libpressio PUBLIC PkgConfig::ImageMagick)
+  target_link_libraries(libpressio PUBLIC PkgConfig::Magick++)
   target_sources(libpressio
     PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/magick++.cc
@@ -263,7 +281,7 @@ endif()
 option(BUILD_DOCKER_CONTAINERS "build docker containers for testing" OFF)
 if(BUILD_DOCKER_CONTAINERS)
   
-  foreach(CONTAINER Fedora Ubuntu18.04)
+  foreach(CONTAINER Fedora Ubuntu18.04 CentOS)
     set(BuildSentinel ${CMAKE_BINARY_DIR}/${CONTAINER}-built)
     set(Dockerfile docker/Dockerfile-${CONTAINER})
     string(TOLOWER "libpressio-${CONTAINER}" CONTAINER_TAG)

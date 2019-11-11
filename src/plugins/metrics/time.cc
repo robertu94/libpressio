@@ -1,8 +1,8 @@
 #include <chrono>
-#include <optional>
 #include "pressio_options.h"
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/pressio.h"
+#include "libpressio_ext/compat/std_compat.h"
 
 using std::chrono::high_resolution_clock;
 using std::chrono::time_point;
@@ -15,7 +15,7 @@ namespace {
     time_point<high_resolution_clock> end;
     unsigned int elapsed() const { return duration_cast<milliseconds>(end-begin).count(); }
   };
-  using timer = std::optional<time_range>;
+  using timer = compat::optional<time_range>;
 }
 
 class time_plugin : public libpressio_metrics_plugin {
@@ -105,4 +105,4 @@ class time_plugin : public libpressio_metrics_plugin {
   timer decompress;
 };
 
-static inline pressio_register X(metrics_plugins(), "time", [](){ return std::make_unique<time_plugin>(); });
+static pressio_register X(metrics_plugins(), "time", [](){ return compat::make_unique<time_plugin>(); });

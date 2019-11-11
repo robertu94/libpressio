@@ -1,8 +1,8 @@
-#include <optional>
 #include "pressio_data.h"
 #include "pressio_options.h"
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/pressio.h"
+#include "libpressio_ext/compat/std_compat.h"
 
 class size_plugin : public libpressio_metrics_plugin {
   public:
@@ -21,7 +21,7 @@ class size_plugin : public libpressio_metrics_plugin {
   struct pressio_options* get_metrics_results() const override {
     pressio_options* opt = pressio_options_new();
 
-    auto set_or_double = [&opt](const char* key, std::optional<double> size) {
+    auto set_or_double = [&opt](const char* key, compat::optional<double> size) {
       if(size) {
         pressio_options_set_double(opt, key, *size);
       } else {
@@ -29,7 +29,7 @@ class size_plugin : public libpressio_metrics_plugin {
       }
     };
 
-    auto set_or_size_t = [&opt](const char* key, std::optional<size_t> size) {
+    auto set_or_size_t = [&opt](const char* key, compat::optional<size_t> size) {
       if(size) {
         pressio_options_set_uinteger(opt, key, *size);
       } else {
@@ -47,12 +47,12 @@ class size_plugin : public libpressio_metrics_plugin {
   }
 
   private:
-    std::optional<double> compression_ratio;
-    std::optional<double> bit_rate;
-    std::optional<size_t> uncompressed_size;
-    std::optional<size_t> compressed_size;
-    std::optional<size_t> decompressed_size;
+    compat::optional<double> compression_ratio;
+    compat::optional<double> bit_rate;
+    compat::optional<size_t> uncompressed_size;
+    compat::optional<size_t> compressed_size;
+    compat::optional<size_t> decompressed_size;
 
 };
 
-static inline pressio_register X(metrics_plugins(), "size", [](){ return std::make_unique<size_plugin>(); });
+static pressio_register X(metrics_plugins(), "size", [](){ return compat::make_unique<size_plugin>(); });

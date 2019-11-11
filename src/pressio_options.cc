@@ -1,10 +1,10 @@
-#include <variant>
 #include <map>
 #include <algorithm>
 #include <iterator>
 #include <string>
 #include <cstring>
 #include "libpressio_ext/cpp/options.h"
+#include "libpressio_ext/compat/std_compat.h"
 
 
 void pressio_options_free(struct pressio_options* options) {
@@ -20,7 +20,7 @@ struct pressio_options* pressio_options_new() {
 }
 
 void pressio_options_clear(struct pressio_options* options, const char* key) {
-  options->set(key, std::monostate());
+  options->set(key, compat::monostate());
 }
 
 void pressio_options_set(struct pressio_options* options, const char* key, struct pressio_option* option) {
@@ -118,7 +118,7 @@ enum pressio_options_key_status pressio_options::cast(std::string const& key, ch
     case pressio_options_key_set:
       {
         auto variant = get(key);
-        auto converted = pressio_option(variant).as(pressio_type_to_enum<ValueType>, safety);
+        auto converted = pressio_option(variant).as(pressio_type_to_enum<ValueType>(), safety);
         if(converted.has_value()) {
           *value = strdup(converted.get_value<std::string>().c_str());
           return pressio_options_key_set;

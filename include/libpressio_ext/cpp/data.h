@@ -9,6 +9,7 @@
 #include <utility>
 #include "pressio_data.h"
 #include "pressio_dtype.h"
+#include "libpressio_ext/compat/std_compat.h"
 
 /**
  * \file
@@ -218,10 +219,10 @@ struct pressio_data {
    */
   pressio_data(pressio_data&& rhs) noexcept:
     data_dtype(rhs.data_dtype),
-    data_ptr(std::exchange(rhs.data_ptr, nullptr)),
-    metadata_ptr(std::exchange(rhs.metadata_ptr, nullptr)),
-    deleter(std::exchange(rhs.deleter, nullptr)),
-    dims(std::exchange(rhs.dims, {})) {}
+    data_ptr(compat::exchange(rhs.data_ptr, nullptr)),
+    metadata_ptr(compat::exchange(rhs.metadata_ptr, nullptr)),
+    deleter(compat::exchange(rhs.deleter, nullptr)),
+    dims(compat::exchange(rhs.dims, {})) {}
   
   /**
    * move-assignment operator
@@ -231,10 +232,10 @@ struct pressio_data {
    */
   pressio_data& operator=(pressio_data && rhs) noexcept {
     data_dtype = rhs.data_dtype,
-    data_ptr = std::exchange(rhs.data_ptr, nullptr),
-    metadata_ptr = std::exchange(rhs.metadata_ptr, nullptr),
-    deleter = std::exchange(rhs.deleter, nullptr),
-    dims = std::exchange(rhs.dims, {});
+    data_ptr = compat::exchange(rhs.data_ptr, nullptr),
+    metadata_ptr = compat::exchange(rhs.metadata_ptr, nullptr),
+    deleter = compat::exchange(rhs.deleter, nullptr),
+    dims = compat::exchange(rhs.dims, {});
     return *this;
   }
 
@@ -373,8 +374,8 @@ struct pressio_data {
  * \param[in] f templated function to call, it must return the same type regardless of the type of the inputs.
  *            it should have the signature \code template <class T> f(T* input_begin, T* input_end) \endcode
  */
-template <class Function>
-auto pressio_data_for_each(pressio_data const* data, Function&& f)
+template <class ReturnType, class Function>
+ReturnType pressio_data_for_each(pressio_data const* data, Function&& f)
 {
   switch(data->dtype())
   {
@@ -443,10 +444,10 @@ auto pressio_data_for_each(pressio_data const* data, Function&& f)
  * \param[in] data first input data set
  * \param[in] data2 second input data set
  * \param[in] f templated function to call, it must return the same type regardless of the type of the inputs.
- *            it should have the signature \code template <class T> f(T* input_begin, T* input_end, T* input2_begin) \endcode
+ *            it should have the signature \code template <class T> U f(T* input_begin, T* input_end, T* input2_begin)  where U is some type\endcode
  */
-template <class Function>
-auto pressio_data_for_each(pressio_data const* data, pressio_data const* data2, Function&& f)
+template <class ReturnType, class Function>
+ReturnType pressio_data_for_each(pressio_data const* data, pressio_data const* data2, Function&& f) 
 {
   switch(data->dtype())
   {

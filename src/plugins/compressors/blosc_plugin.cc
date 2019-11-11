@@ -134,5 +134,5 @@ class blosc_plugin: public libpressio_compressor_plugin {
     
 };
 
-static inline pressio_register X(compressor_plugins(), "blosc", [](){ return std::make_unique<blosc_plugin>(); });
+static pressio_register X(compressor_plugins(), "blosc", [](){ return compat::make_unique<blosc_plugin>(); });
 
