@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.22.0" LANGUAGES CXX C)
+project(libpressio VERSION "0.23.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -19,8 +19,6 @@ if(NOT LIBPRESSIO_CXX_VERSION)
   set_property(CACHE LIBPRESSIO_CXX_VERSION PROPERTY STRINGS 11 14 17)
 endif()
 
-enable_testing()
-include(CTestCustom.cmake)
 include(CTest)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -250,8 +248,7 @@ install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libpressio)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/pressio_version.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libpressio)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libpressio.pc DESTINATION ${CMAKE_INSTALL_PREFIX}/share/pkgconfig)
 
-option(BUILD_TESTS "build the test cases and examples" OFF)
-if(BUILD_TESTS)
+if(BUILD_TESTING)
   add_subdirectory(test)
 endif()
 
@@ -273,6 +270,7 @@ if(BUILD_DOCS)
   doxygen_add_docs(
     docs
     ${PROJECT_SOURCE_DIR}/README.md
+    ${PROJECT_SOURCE_DIR}/docs
     ${PROJECT_SOURCE_DIR}/include
     COMMENT "Generate Documenation"
   )

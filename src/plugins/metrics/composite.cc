@@ -2,6 +2,7 @@
 #include <memory>
 #include "pressio_options.h"
 #include "libpressio_ext/cpp/metrics.h"
+#include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/compat/std_compat.h"
 
 class composite_plugin : public libpressio_metrics_plugin {
@@ -33,13 +34,13 @@ class composite_plugin : public libpressio_metrics_plugin {
     }
   }
 
-  void begin_set_options(struct pressio_options const* options) override {
+  void begin_set_options(struct pressio_options const& options) override {
     for (auto& plugin : plugins) {
       plugin->begin_set_options(options);
     }
   }
 
-  void end_set_options(struct pressio_options const* options, int rc) override {
+  void end_set_options(struct pressio_options const& options, int rc) override {
     for (auto& plugin : plugins) {
       plugin->end_set_options(options, rc);
     }
@@ -69,14 +70,13 @@ class composite_plugin : public libpressio_metrics_plugin {
     }
   }
 
-  struct pressio_options* get_metrics_results() const override {
-    struct pressio_options* metrics_result = pressio_options_new();
+  struct pressio_options get_metrics_results() const override {
+    struct pressio_options metrics_result;
     for (auto const& plugin : plugins) {
-      auto plugin_options = plugin->get_metrics_results();
-      auto tmp = pressio_options_merge(metrics_result, plugin_options);
-      pressio_options_free(plugin_options);
-      pressio_options_free(metrics_result);
-      metrics_result = tmp;
+      pressio_options plugin_options = plugin->get_metrics_results();
+      auto tmp = pressio_options_merge(&metrics_result, &plugin_options);
+      metrics_result = std::move(*tmp);
+      pressio_options_free(tmp);
     }
     set_composite_metrics(metrics_result);
 
@@ -84,22 +84,22 @@ class composite_plugin : public libpressio_metrics_plugin {
   }
 
   private:
-  void set_composite_metrics(struct pressio_options* opt) const {
+  void set_composite_metrics(struct pressio_options& opt) const {
     //compression_rate
     {
       unsigned int compression_time, uncompressed_size;
-      if(pressio_options_get_uinteger(opt, "time:compress", &compression_time) == pressio_options_key_set &&
-         pressio_options_get_uinteger(opt, "size:uncompressed_size", &uncompressed_size) == pressio_options_key_set) {
-        pressio_options_set_double(opt, "composite:compression_rate", static_cast<double>(uncompressed_size)/compression_time);
+      if(opt.get("time:compress", &compression_time) == pressio_options_key_set &&
+         opt.get("size:uncompressed_size", &uncompressed_size) == pressio_options_key_set) {
+        opt.set("composite:compression_rate", static_cast<double>(uncompressed_size)/compression_time);
       }
     }
 
     //decompression_rate
     {
       unsigned int decompression_time, uncompressed_size;
-      if (pressio_options_get_uinteger(opt, "time:decompress", &decompression_time) == pressio_options_key_set &&
-          pressio_options_get_uinteger(opt, "size:uncompressed_size", &uncompressed_size) == pressio_options_key_set) {
-        pressio_options_set_double(opt, "composite:decompression_rate", static_cast<double>(uncompressed_size)/decompression_time);
+      if (opt.get( "time:decompress", &decompression_time) == pressio_options_key_set &&
+          opt.get("size:uncompressed_size", &uncompressed_size) == pressio_options_key_set) {
+        opt.set("composite:decompression_rate", static_cast<double>(uncompressed_size)/decompression_time);
       }
     }
 

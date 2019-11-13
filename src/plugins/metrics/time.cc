@@ -1,6 +1,7 @@
 #include <chrono>
 #include "pressio_options.h"
 #include "libpressio_ext/cpp/metrics.h"
+#include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
 #include "libpressio_ext/compat/std_compat.h"
 
@@ -44,17 +45,17 @@ class time_plugin : public libpressio_metrics_plugin {
     get_configuration->begin = high_resolution_clock::now();
   }
 
-  void end_get_configuration(struct pressio_options const* ) override {
+  void end_get_configuration(struct pressio_options const& ) override {
     get_configuration->end = high_resolution_clock::now();
   }
 
 
-  void begin_set_options(struct pressio_options const* ) override {
+  void begin_set_options(struct pressio_options const& ) override {
     set_options = time_range();
     set_options->begin = high_resolution_clock::now();
   }
 
-  void end_set_options(struct pressio_options const* , int ) override {
+  void end_set_options(struct pressio_options const& , int ) override {
     set_options->end = high_resolution_clock::now();
   }
 
@@ -76,14 +77,14 @@ class time_plugin : public libpressio_metrics_plugin {
     decompress->end = high_resolution_clock::now();
   }
 
-  struct pressio_options* get_metrics_results() const override {
-    struct pressio_options* opt = pressio_options_new();
+  struct pressio_options get_metrics_results() const override {
+    struct pressio_options opt;
 
     auto set_or = [&opt](const char* key, timer time) {
       if(time) {
-        pressio_options_set_uinteger(opt, key, time->elapsed());
+        opt.set(key, time->elapsed());
       } else {
-        pressio_options_set_type(opt, key, pressio_option_uint32_type);
+        opt.set_type(key, pressio_option_uint32_type);
       }
     };
 

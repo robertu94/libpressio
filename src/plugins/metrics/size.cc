@@ -2,6 +2,7 @@
 #include "pressio_options.h"
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/pressio.h"
+#include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/compat/std_compat.h"
 
 class size_plugin : public libpressio_metrics_plugin {
@@ -18,22 +19,22 @@ class size_plugin : public libpressio_metrics_plugin {
       decompressed_size = pressio_data_get_bytes(output);
     }
 
-  struct pressio_options* get_metrics_results() const override {
-    pressio_options* opt = pressio_options_new();
+  struct pressio_options get_metrics_results() const override {
+    pressio_options opt;
 
     auto set_or_double = [&opt](const char* key, compat::optional<double> size) {
       if(size) {
-        pressio_options_set_double(opt, key, *size);
+        opt.set(key, *size);
       } else {
-        pressio_options_set_type(opt, key, pressio_option_double_type);
+        opt.set_type(key, pressio_option_double_type);
       }
     };
 
     auto set_or_size_t = [&opt](const char* key, compat::optional<size_t> size) {
       if(size) {
-        pressio_options_set_uinteger(opt, key, *size);
+        opt.set(key, static_cast<unsigned int>(*size));
       } else {
-        pressio_options_set_type(opt, key, pressio_option_uint32_type);
+        opt.set_type(key, pressio_option_uint32_type);
       }
     };
 

@@ -8,18 +8,22 @@ int main(int argc, char *argv[])
 {
   pressio library;
   auto compressor = library.get_compressor("sz");
-  pressio_options* options = compressor->get_options();
-  options->set("sz:error_bound_mode", ABS);
-  options->set("sz:abs_err_bound", 0.5);
+  const char* metrics_ids[] = {"time"};
+  auto metrics = pressio_metrics(library.get_metrics(std::begin(metrics_ids), std::end(metrics_ids)));
+
+  compressor->set_metrics(metrics);
+  pressio_options options = compressor->get_options();
+  options.set("sz:error_bound_mode", ABS);
+  options.set("sz:abs_err_bound", 0.5);
 
   if(compressor->check_options(options)) {
-    std::cerr << library.err_msg() << std::endl;
-    exit(library.err_code());
+    std::cerr << compressor->error_msg() << std::endl;
+    exit(compressor->error_code());
   }
 
   if(compressor->set_options(options)) {
-    std::cerr << library.err_msg() << std::endl;
-    exit(library.err_code());
+    std::cerr << compressor->error_msg() << std::endl;
+    exit(compressor->error_code());
   }
 
   double* rawinput_data = make_input_data();
@@ -41,7 +45,10 @@ int main(int argc, char *argv[])
     exit(library.err_code());
   }
 
-  delete options;
+  auto metrics_results = compressor->get_metrics_results();
+  for (auto const& metric : metrics_results) {
+    std::cout << metric.second << std::endl;
+  }
 
   return 0;
 }

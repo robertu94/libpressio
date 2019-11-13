@@ -4,13 +4,13 @@
 extern "C" {
 
 struct pressio_options* pressio_compressor_get_configuration(struct pressio_compressor const* compressor) {
-  return compressor->plugin->get_configuration();
+  return new pressio_options(compressor->plugin->get_configuration());
 }
 struct pressio_options* pressio_compressor_get_options(struct pressio_compressor const* compressor) {
-  return compressor->plugin->get_options();
+  return new pressio_options(compressor->plugin->get_options());
 }
 int pressio_compressor_set_options(struct pressio_compressor* compressor, struct pressio_options const * options) {
-  return compressor->plugin->set_options(options);
+  return compressor->plugin->set_options(*options);
 }
 int pressio_compressor_compress(struct pressio_compressor* compressor, const pressio_data *input, struct pressio_data * output) {
   return compressor->plugin->compress(input, output);
@@ -37,19 +37,19 @@ const char* pressio_compressor_error_msg(struct pressio_compressor const* compre
   return compressor->plugin->error_msg();
 }
 int pressio_compressor_check_options(struct pressio_compressor* compressor, struct pressio_options const * options) {
-  return compressor->plugin->check_options(options);
+  return compressor->plugin->check_options(*options);
 }
 
 struct pressio_options* pressio_compressor_get_metrics_results(struct pressio_compressor const* compressor) {
-  return compressor->plugin->get_metrics_results();
+  return new pressio_options(compressor->plugin->get_metrics_results());
 }
 
 struct pressio_metrics* pressio_compressor_get_metrics(struct pressio_compressor const* compressor) {
-  return compressor->plugin->get_metrics();
+  return new pressio_metrics(compressor->plugin->get_metrics());
 }
 
 void pressio_compressor_set_metrics(struct pressio_compressor* compressor, struct pressio_metrics* plugin) {
-  return compressor->plugin->set_metrics(plugin);
+  return compressor->plugin->set_metrics(*plugin);
 }
 
 void pressio_compressor_release(struct pressio_compressor* compressor) {

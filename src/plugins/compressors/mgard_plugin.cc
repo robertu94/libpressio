@@ -39,20 +39,20 @@ get_converted(pressio_option const& arg)
 
 class mgard_plugin: public libpressio_compressor_plugin {
 
-  struct pressio_options* get_configuration_impl() const override {
-    struct pressio_options* options = pressio_options_new();
-    pressio_options_set_integer(options, "pressio:thread_safe", pressio_thread_safety_single);
+  struct pressio_options get_configuration_impl() const override {
+    struct pressio_options options;
+    pressio_options_set_integer(&options, "pressio:thread_safe", pressio_thread_safety_single);
     return options;
   }
 
-  struct pressio_options * 	get_options_impl () const override {
-    struct pressio_options* options = pressio_options_new();
+  struct pressio_options	get_options_impl () const override {
+    struct pressio_options options;
 
-    auto set_if_set = [options](const char* key, pressio_option_type type, pressio_option const& option) {
+    auto set_if_set = [&options](const char* key, pressio_option_type type, pressio_option const& option) {
       if(option.has_value()) {
-        options->set(key, option);
+        options.set(key, option);
       } else {
-        options->set_type(key, type);
+        options.set_type(key, type);
       }
     };
     set_if_set("mgard:tolerance", pressio_option_double_type, tolerance);
@@ -63,10 +63,10 @@ class mgard_plugin: public libpressio_compressor_plugin {
     return options;
   };
 
-  int 	set_options_impl (struct pressio_options const *options) override {
+  int 	set_options_impl (struct pressio_options const& options) override {
     auto set_fn = [options](const char* key, pressio_option& option_out) {
-      if(options->key_status(key) == pressio_options_key_set) {
-        option_out = options->get(key);
+      if(options.key_status(key) == pressio_options_key_set) {
+        option_out = options.get(key);
       }
     };
     set_fn("mgard:tolerance", tolerance);
@@ -144,6 +144,11 @@ class mgard_plugin: public libpressio_compressor_plugin {
   const char* version() const override {
     return "0.0.0.2";
   }
+
+  const char* prefix() const override {
+    return "mgard";
+  }
+
 
   private:
 

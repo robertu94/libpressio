@@ -15,21 +15,20 @@ Libpressio unconditionally requires:
 
 + `cmake` version `3.13` or later (3.14 required for python bindings)
 + either:
-  + `gcc-7.4` or later
-  + `clang-7.0.0` or later using either `libc++` or `libstdc++`
+  + `gcc-4.8.5` or later
+  + `clang-7.0.0` or later using either `libc++` or `libstdc++`.  Beware that system libraries may need to be recompiled with `libc++` if using `libc++`
 
 Libpressio additionally optionally requires:
 
-+ `zfp` commit `e8edaced12f139ddf16167987ded15e5da1b98da` or later and its dependencies to provide the SZ plugin
-+ `sz` commit `7b7463411f02be4700d13aac6737a6a9662806b4` or later and its dependencies to provide the ZFP plugin
-+ `sz` commit `7b7463411f02be4700d13aac6737a6a9662806b4` or later and its dependencies to provide the ZFP plugin
-+ `numpy` version `1.14.5` or later and its dependencies to provide the python bindings
 + `Doxygen` version 1.8.15 or later to generate documentation
 + `HDF5` version 1.10.0 or later for HDF5 data support
-+ `swig` version 3.0.12 or later for python support
 + `ImageMagick` version 6.9.7 or later for ImageMagick image support.  Version 7 or later supports additional data types.
 + `blosc` version 1.14.2 for lossless compressor support via blosc
 + `boost` version 1.53 to compile on a c++14 or earlier compiler
++ `numpy` version `1.14.5` or later and its dependencies to provide the python bindings
++ `swig` version 3.0.12 or later for python support
++ `sz` commit `7b7463411f02be4700d13aac6737a6a9662806b4` or later and its dependencies to provide the SZ plugin
++ `zfp` commit `e8edaced12f139ddf16167987ded15e5da1b98da` or later and its dependencies to provide the ZFP plugin
 
 You can also use the provided `Dockerfile`s in `./docker` to get a working libpressio install.  Doing so requires installing `docker` version 17.05 or higher or other build tool that supports this version of Dockerfile syntax or later.
 
@@ -40,11 +39,11 @@ LibPressio uses cmake to configure build options.  See CMake documentation to se
 
 + `CMAKE_INSTALL_PREFIX` - install the library to a local directory prefix
 + `BUILD_DOCS` - build the project documentation
-+ `BUILD_TESTS` - build the test cases
++ `BUILD_TESTING` - build the test cases
 
 ## Building and Installing LibPressio
 
-To build and install the library only.
+To build and tests and install the library only.
 
 ```bash
 BUILD_DIR=build
@@ -52,6 +51,7 @@ mkdir $BUILD_DIR
 cd $BUILD_DIR
 cmake ..
 make
+make test
 make install
 ```
 
@@ -89,13 +89,13 @@ make
 make install
 ```
 
-To build the test cases
+To disable building the test cases
 
 ```
 BUILD_DIR=build
 mkdir $BUILD_DIR
 cd $BUILD_DIR
-cmake .. -DBUILD_TESTS=ON
+cmake .. -DBUILD_TESTING=OFF
 make
 ctest .
 ```
@@ -172,6 +172,9 @@ main(int argc, char* argv[])
 ~~~
 
 More examples can be found in `test/`
+
+For information on writing a compressor plugin see [Writing a Compressor Plugin](@ref writingacompressor)
+For information on writing a metrics plugin see [Writing a Compressor Plugin](@ref writingametric)
 
 ## Option Names
 

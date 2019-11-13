@@ -3,6 +3,7 @@
 #include "pressio_options.h"
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/metrics.h"
+#include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
 #include "libpressio_ext/compat/std_compat.h"
 
@@ -96,39 +97,38 @@ class error_stat_plugin : public libpressio_metrics_plugin {
 
   public:
     void begin_compress(const struct pressio_data * input, struct pressio_data const * ) override {
-      input_data = pressio_data_new_clone(input);
+      input_data = pressio_data::clone(*input);
     }
     void end_decompress(struct pressio_data const*, struct pressio_data const* output, int ) override {
-      err_metrics = pressio_data_for_each<error_metrics>(input_data, output, compute_metrics{});      
-      pressio_data_free(input_data);
+      err_metrics = pressio_data_for_each<error_metrics>(input_data, *output, compute_metrics{});      
     }
 
-    struct pressio_options* get_metrics_results() const override {
-      pressio_options* opt = pressio_options_new();
+    struct pressio_options get_metrics_results() const override {
+      pressio_options opt;
       if(err_metrics) {
-        pressio_options_set_double(opt, "error_stat:psnr", (*err_metrics).psnr);
-        pressio_options_set_double(opt, "error_stat:mse", (*err_metrics).mse);
-        pressio_options_set_double(opt, "error_stat:rmse", (*err_metrics).rmse);
-        pressio_options_set_double(opt, "error_stat:value_mean", (*err_metrics).value_mean);
-        pressio_options_set_double(opt, "error_stat:value_std", (*err_metrics).value_std);
-        pressio_options_set_double(opt, "error_stat:value_min", (*err_metrics).value_min);
-        pressio_options_set_double(opt, "error_stat:value_max", (*err_metrics).value_max);
-        pressio_options_set_double(opt, "error_stat:value_range", (*err_metrics).value_range);
-        pressio_options_set_double(opt, "error_stat:min_error", (*err_metrics).min_error);
-        pressio_options_set_double(opt, "error_stat:max_error", (*err_metrics).max_error);
-        pressio_options_set_double(opt, "error_stat:min_rel_error", (*err_metrics).min_rel_error);
-        pressio_options_set_double(opt, "error_stat:max_rel_error", (*err_metrics).max_rel_error);
-        pressio_options_set_double(opt, "error_stat:average_difference", (*err_metrics).average_difference);
-        pressio_options_set_double(opt, "error_stat:average_error", (*err_metrics).average_error);
-        pressio_options_set_double(opt, "error_stat:difference_range", (*err_metrics).difference_range);
-        pressio_options_set_double(opt, "error_stat:error_range", (*err_metrics).error_range);
+        opt.set("error_stat:psnr", (*err_metrics).psnr);
+        opt.set("error_stat:mse", (*err_metrics).mse);
+        opt.set("error_stat:rmse", (*err_metrics).rmse);
+        opt.set("error_stat:value_mean", (*err_metrics).value_mean);
+        opt.set("error_stat:value_std", (*err_metrics).value_std);
+        opt.set("error_stat:value_min", (*err_metrics).value_min);
+        opt.set("error_stat:value_max", (*err_metrics).value_max);
+        opt.set("error_stat:value_range", (*err_metrics).value_range);
+        opt.set("error_stat:min_error", (*err_metrics).min_error);
+        opt.set("error_stat:max_error", (*err_metrics).max_error);
+        opt.set("error_stat:min_rel_error", (*err_metrics).min_rel_error);
+        opt.set("error_stat:max_rel_error", (*err_metrics).max_rel_error);
+        opt.set("error_stat:average_difference", (*err_metrics).average_difference);
+        opt.set("error_stat:average_error", (*err_metrics).average_error);
+        opt.set("error_stat:difference_range", (*err_metrics).difference_range);
+        opt.set("error_stat:error_range", (*err_metrics).error_range);
       }
       return opt;
     }
 
 
   private:
-  struct pressio_data* input_data;
+  pressio_data input_data = pressio_data::empty(pressio_byte_dtype, {});
   compat::optional<error_metrics> err_metrics;
 
 };

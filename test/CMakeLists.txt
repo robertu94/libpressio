@@ -58,6 +58,9 @@ if(LIBPRESSIO_HAS_SZ)
   add_executable(metrics metrics.c make_input_data.cc)
   target_link_libraries(metrics libpressio)
   add_test(metrics_test metrics)
+
+  add_gtest(test_register_metrics.cc make_input_data.cc)
+  add_gtest(test_register_compressor.cc make_input_data.cc)
 endif()
 
 

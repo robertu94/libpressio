@@ -1,8 +1,13 @@
 /**
- * \file this header contains a couple of C++ standard algorithm replacements if
+ * \file 
+ * \brief internal portability header
+ * \details this header contains a couple of C++ standard algorithm replacements if
  * the provided standard library doesn't have them.  We prefer the standard
- * library versions if they exist
+ * library versions if they exist.  Use of any of these functions outside of
+ * libpressio may is NOT ALLOWED
  */
+
+///@cond INTERNAL
 
 //
 // functions in this file are adapted from libc++-v8.0.0 whose license is
@@ -228,3 +233,5 @@ template<class T, class U = T>
 } // namespace compat
 
 #endif /*end header guard*/
+
+///@endcond

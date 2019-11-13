@@ -49,18 +49,18 @@ class libpressio_metrics_plugin {
    * called at the end of get_configuration 
    * \param [in] ret the return value from the underlying compressor get_options command
    */
-  virtual void end_get_configuration(struct pressio_options const* ret);
+  virtual void end_get_configuration(struct pressio_options const& ret);
   /**
    * called at the beginning of set_options 
    * \param [in] options the value passed in to set_options
    */
-  virtual void begin_set_options(struct pressio_options const* options);
+  virtual void begin_set_options(struct pressio_options const& options);
   /**
    * called at the end of set_options 
    * \param [in] options the value passed in to set_options
    * \param [in] rc the return value from the underlying compressor set_options command
    */
-  virtual void end_set_options(struct pressio_options const* options, int rc);
+  virtual void end_set_options(struct pressio_options const& options, int rc);
 
   /**
    * called at the beginning of compress 
@@ -92,7 +92,7 @@ class libpressio_metrics_plugin {
   /**
    * \returns a pressio_options structure containing the metrics returned by the provided metrics plugin
    */
-  virtual struct pressio_options* get_metrics_results() const=0;
+  virtual struct pressio_options get_metrics_results() const=0;
 };
 
 /**
@@ -111,7 +111,7 @@ struct pressio_metrics {
   operator bool() const { return plugin.get() != nullptr; }
 
   private:
-  std::unique_ptr<libpressio_metrics_plugin> plugin;
+  std::shared_ptr<libpressio_metrics_plugin> plugin;
 };
 
 /**

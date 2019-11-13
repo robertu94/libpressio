@@ -4,6 +4,7 @@
 #include <blosc.h>
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/compressor.h"
+#include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
 #include "pressio_options.h"
 #include "pressio_data.h"
@@ -12,33 +13,30 @@
 
 class blosc_plugin: public libpressio_compressor_plugin {
   public:
-    struct pressio_options* get_options_impl() const override {
-      struct pressio_options* options = pressio_options_new();
-      pressio_options_set_integer(options, "blosc:clevel", clevel);
-      pressio_options_set_integer(options, "blosc:numinternalthreads", numinternalthreads);
-      pressio_options_set_integer(options, "blosc:doshuffle", doshuffle);
-      pressio_options_set_uinteger(options, "blosc:blocksize", blocksize);
-      pressio_options_set_string(options, "blosc:compressor", compressor.c_str());
+    struct pressio_options get_options_impl() const override {
+      struct pressio_options options;
+      options.set("blosc:clevel", clevel);
+      options.set("blosc:numinternalthreads", numinternalthreads);
+      options.set("blosc:doshuffle", doshuffle);
+      options.set("blosc:blocksize", blocksize);
+      options.set("blosc:compressor", compressor);
       return options;
     }
 
-    struct pressio_options* get_configuration_impl() const override {
-      struct pressio_options* options = pressio_options_new();
-      pressio_options_set_integer(options, "pressio:thread_safe", pressio_thread_safety_multiple);
+    struct pressio_options get_configuration_impl() const override {
+      struct pressio_options options;
+      options.set("pressio:thread_safe", static_cast<int>(pressio_thread_safety_multiple));
       return options;
     }
 
-    int set_options_impl(struct pressio_options const* options) override {
-      pressio_options_get_integer(options, "blosc:clevel", &clevel);
-      pressio_options_get_integer(options, "blosc:numinternalthreads", &numinternalthreads);
-      pressio_options_get_integer(options, "blosc:doshuffle", &doshuffle);
-
-      unsigned int tmp_blocksize;
-      pressio_options_get_uinteger(options, "blosc:blocksize", &tmp_blocksize);
-      blocksize = tmp_blocksize;
+    int set_options_impl(struct pressio_options const& options) override {
+      options.get("blosc:clevel", &clevel);
+      options.get("blosc:numinternalthreads", &numinternalthreads);
+      options.get("blosc:doshuffle", &doshuffle);
+      options.get("blosc:blocksize", &blocksize);
 
       const char* tmp = nullptr;
-      pressio_options_get_string(options, "blosc:compressor", &tmp);
+      pressio_options_get_string(&options, "blosc:compressor", &tmp);
       compressor = tmp;
       free((void*)tmp);
 
@@ -122,6 +120,11 @@ class blosc_plugin: public libpressio_compressor_plugin {
       return BLOSC_VERSION_STRING;
     }
 
+    const char* prefix() const override {
+      return "blosc";
+    }
+
+
   private:
     int internal_error(int rc) { std::stringstream ss; ss << "interal error " << rc; return set_error(1, ss.str()); }
     int reshape_error() { return set_error(2, "failed to reshape array after compression"); }
@@ -129,7 +132,7 @@ class blosc_plugin: public libpressio_compressor_plugin {
     int clevel;
     int numinternalthreads = 1;
     int doshuffle = BLOSC_NOSHUFFLE;
-    size_t blocksize = 0;
+    unsigned int blocksize = 0;
     std::string compressor{BLOSC_BLOSCLZ_COMPNAME};
     
 };

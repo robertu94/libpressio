@@ -1,11 +1,8 @@
-#include <iostream>
 #include <iterator>
 #include <cstdlib>
-#include <cstring>
 #include <vector>
 #include <cstring>
 #include <algorithm>
-#include <functional>
 #include <numeric>
 #include "pressio_data.h"
 #include "multi_dimensional_iterator.h"

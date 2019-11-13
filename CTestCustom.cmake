@@ -1,2 +1,0 @@
-set(MEMORYCHECK_SANITIZER_OPTIONS "--leak-checks=full")
-set(MEMORYCHECK_SUPPRESSIONS_FILE "${CMAKE_SOURCE_DIR}/test/valgrind.supp")

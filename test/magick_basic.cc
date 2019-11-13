@@ -56,8 +56,8 @@ int main(int argc, char *argv[])
     exit(pressio_compressor_error_code(compressor));
   }
 
-  pressio_options* options = pressio_compressor_get_metrics_results(compressor);
-  std::cout << *options << std::endl;
+  pressio_options* metric_results = pressio_compressor_get_metrics_results(compressor);
+  std::cout << *metric_results << std::endl;
 
   //recompress the data
   if(pressio_compressor_compress(compressor, decompressed_data, recompressed_data)) {
@@ -68,11 +68,13 @@ int main(int argc, char *argv[])
 
 
   //free the input, decompressed, and compressed data
+  pressio_data_free(recompressed_data);
   pressio_data_free(decompressed_data);
   pressio_data_free(compressed_data);
   pressio_data_free(input_data);
 
   //free options and the library
+  pressio_options_free(metric_results);
   pressio_options_free(magick_options);
   pressio_metrics_free(metrics);
   pressio_compressor_release(compressor);

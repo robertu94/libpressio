@@ -29,7 +29,7 @@ before_install:
 script:
   - mkdir build
   - cd build
-  - cmake .. -DBUILD_TESTS=ON -DCMAKE_BUILD_TYPE=Release -DLIBPRESSIO_HAS_SZ=OFF -DLIBPRESSIO_HAS_ZFP=OFF -DBUILD_DOCS=ON
+  - cmake .. -DCMAKE_BUILD_TYPE=Release -DLIBPRESSIO_HAS_SZ=OFF -DLIBPRESSIO_HAS_ZFP=OFF -DBUILD_DOCS=ON
   - cmake --build .
   - cmake --build . --target docs
   - ctest

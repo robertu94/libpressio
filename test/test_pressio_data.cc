@@ -48,7 +48,7 @@ struct accumulator {
 
 TEST_F(PressioDataTests, ForEach) {
   pressio_data* d = pressio_data_new_nonowning(pressio_int32_dtype, data.data(), 2, dims);
-  auto result = pressio_data_for_each<double>(d, accumulator{});
+  auto result = pressio_data_for_each<double>(*d, accumulator{});
 
   EXPECT_EQ(result, static_cast<double>(std::accumulate(std::begin(data), std::end(data), 0)));
   pressio_data_free(d);

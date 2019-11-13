@@ -231,6 +231,7 @@ struct pressio_data {
    * \returns a l-value reference to the object moved into
    */
   pressio_data& operator=(pressio_data && rhs) noexcept {
+    if(deleter!=nullptr) deleter(data_ptr,metadata_ptr);
     data_dtype = rhs.data_dtype,
     data_ptr = compat::exchange(rhs.data_ptr, nullptr),
     metadata_ptr = compat::exchange(rhs.metadata_ptr, nullptr),
@@ -375,65 +376,65 @@ struct pressio_data {
  *            it should have the signature \code template <class T> f(T* input_begin, T* input_end) \endcode
  */
 template <class ReturnType, class Function>
-ReturnType pressio_data_for_each(pressio_data const* data, Function&& f)
+ReturnType pressio_data_for_each(pressio_data const& data, Function&& f)
 {
-  switch(data->dtype())
+  switch(data.dtype())
   {
     case pressio_double_dtype: 
       return std::forward<Function>(f)(
-          static_cast<double*>(data->data()),
-          static_cast<double*>(data->data()) + data->num_elements()
+          static_cast<double*>(data.data()),
+          static_cast<double*>(data.data()) + data.num_elements()
         );
     case pressio_float_dtype:
       return std::forward<Function>(f)(
-          static_cast<float*>(data->data()),
-          static_cast<float*>(data->data()) + data->num_elements()
+          static_cast<float*>(data.data()),
+          static_cast<float*>(data.data()) + data.num_elements()
         );
     case pressio_uint8_dtype:
       return std::forward<Function>(f)(
-          static_cast<uint8_t*>(data->data()),
-          static_cast<uint8_t*>(data->data()) + data->num_elements()
+          static_cast<uint8_t*>(data.data()),
+          static_cast<uint8_t*>(data.data()) + data.num_elements()
         );
     case pressio_uint16_dtype:
       return std::forward<Function>(f)(
-          static_cast<uint16_t*>(data->data()),
-          static_cast<uint16_t*>(data->data()) + data->num_elements()
+          static_cast<uint16_t*>(data.data()),
+          static_cast<uint16_t*>(data.data()) + data.num_elements()
         );
     case pressio_uint32_dtype:
       return std::forward<Function>(f)(
-          static_cast<uint32_t*>(data->data()),
-          static_cast<uint32_t*>(data->data()) + data->num_elements()
+          static_cast<uint32_t*>(data.data()),
+          static_cast<uint32_t*>(data.data()) + data.num_elements()
         );
     case pressio_uint64_dtype:
       return std::forward<Function>(f)(
-          static_cast<uint64_t*>(data->data()),
-          static_cast<uint64_t*>(data->data()) + data->num_elements()
+          static_cast<uint64_t*>(data.data()),
+          static_cast<uint64_t*>(data.data()) + data.num_elements()
         );
     case pressio_int8_dtype:
       return std::forward<Function>(f)(
-          static_cast<int8_t*>(data->data()),
-          static_cast<int8_t*>(data->data()) + data->num_elements()
+          static_cast<int8_t*>(data.data()),
+          static_cast<int8_t*>(data.data()) + data.num_elements()
         );
     case pressio_int16_dtype:
       return std::forward<Function>(f)(
-          static_cast<int16_t*>(data->data()),
-          static_cast<int16_t*>(data->data()) + data->num_elements()
+          static_cast<int16_t*>(data.data()),
+          static_cast<int16_t*>(data.data()) + data.num_elements()
         );
     case pressio_int32_dtype:
       return std::forward<Function>(f)(
-          static_cast<int32_t*>(data->data()),
-          static_cast<int32_t*>(data->data()) + data->num_elements()
+          static_cast<int32_t*>(data.data()),
+          static_cast<int32_t*>(data.data()) + data.num_elements()
         );
     case pressio_int64_dtype:
       return std::forward<Function>(f)(
-          static_cast<int64_t*>(data->data()),
-          static_cast<int64_t*>(data->data()) + data->num_elements()
+          static_cast<int64_t*>(data.data()),
+          static_cast<int64_t*>(data.data()) + data.num_elements()
         );
     case pressio_byte_dtype:
     default:
       return std::forward<Function>(f)(
-          static_cast<unsigned char*>(data->data()),
-          static_cast<unsigned char*>(data->data()) + data->size_in_bytes()
+          static_cast<unsigned char*>(data.data()),
+          static_cast<unsigned char*>(data.data()) + data.size_in_bytes()
         );
   }
 }
@@ -447,75 +448,75 @@ ReturnType pressio_data_for_each(pressio_data const* data, Function&& f)
  *            it should have the signature \code template <class T> U f(T* input_begin, T* input_end, T* input2_begin)  where U is some type\endcode
  */
 template <class ReturnType, class Function>
-ReturnType pressio_data_for_each(pressio_data const* data, pressio_data const* data2, Function&& f) 
+ReturnType pressio_data_for_each(pressio_data const& data, pressio_data const& data2, Function&& f) 
 {
-  switch(data->dtype())
+  switch(data.dtype())
   {
     case pressio_double_dtype: 
       return std::forward<Function>(f)(
-          static_cast<double*>(data->data()),
-          static_cast<double*>(data->data()) + data->num_elements(),
-          static_cast<double*>(data2->data())
+          static_cast<double*>(data.data()),
+          static_cast<double*>(data.data()) + data.num_elements(),
+          static_cast<double*>(data2.data())
         );
     case pressio_float_dtype:
       return std::forward<Function>(f)(
-          static_cast<float*>(data->data()),
-          static_cast<float*>(data->data()) + data->num_elements(),
-          static_cast<float*>(data2->data())
+          static_cast<float*>(data.data()),
+          static_cast<float*>(data.data()) + data.num_elements(),
+          static_cast<float*>(data2.data())
         );
     case pressio_uint8_dtype:
       return std::forward<Function>(f)(
-          static_cast<uint8_t*>(data->data()),
-          static_cast<uint8_t*>(data->data()) + data->num_elements(),
-          static_cast<uint8_t*>(data2->data())
+          static_cast<uint8_t*>(data.data()),
+          static_cast<uint8_t*>(data.data()) + data.num_elements(),
+          static_cast<uint8_t*>(data2.data())
         );
     case pressio_uint16_dtype:
       return std::forward<Function>(f)(
-          static_cast<uint16_t*>(data->data()),
-          static_cast<uint16_t*>(data->data()) + data->num_elements(),
-          static_cast<uint16_t*>(data2->data())
+          static_cast<uint16_t*>(data.data()),
+          static_cast<uint16_t*>(data.data()) + data.num_elements(),
+          static_cast<uint16_t*>(data2.data())
         );
     case pressio_uint32_dtype:
       return std::forward<Function>(f)(
-          static_cast<uint32_t*>(data->data()),
-          static_cast<uint32_t*>(data->data()) + data->num_elements(),
-          static_cast<uint32_t*>(data2->data())
+          static_cast<uint32_t*>(data.data()),
+          static_cast<uint32_t*>(data.data()) + data.num_elements(),
+          static_cast<uint32_t*>(data2.data())
         );
     case pressio_uint64_dtype:
       return std::forward<Function>(f)(
-          static_cast<uint64_t*>(data->data()),
-          static_cast<uint64_t*>(data->data()) + data->num_elements(),
-          static_cast<uint64_t*>(data2->data())
+          static_cast<uint64_t*>(data.data()),
+          static_cast<uint64_t*>(data.data()) + data.num_elements(),
+          static_cast<uint64_t*>(data2.data())
         );
     case pressio_int8_dtype:
       return std::forward<Function>(f)(
-          static_cast<int8_t*>(data->data()),
-          static_cast<int8_t*>(data->data()) + data->num_elements(),
-          static_cast<int8_t*>(data2->data())
+          static_cast<int8_t*>(data.data()),
+          static_cast<int8_t*>(data.data()) + data.num_elements(),
+          static_cast<int8_t*>(data2.data())
         );
     case pressio_int16_dtype:
       return std::forward<Function>(f)(
-          static_cast<int16_t*>(data->data()),
-          static_cast<int16_t*>(data->data()) + data->num_elements(),
-          static_cast<int16_t*>(data2->data())
+          static_cast<int16_t*>(data.data()),
+          static_cast<int16_t*>(data.data()) + data.num_elements(),
+          static_cast<int16_t*>(data2.data())
         );
     case pressio_int32_dtype:
       return std::forward<Function>(f)(
-          static_cast<int32_t*>(data->data()),
-          static_cast<int32_t*>(data->data()) + data->num_elements(),
-          static_cast<int32_t*>(data2->data())
+          static_cast<int32_t*>(data.data()),
+          static_cast<int32_t*>(data.data()) + data.num_elements(),
+          static_cast<int32_t*>(data2.data())
         );
     case pressio_int64_dtype:
       return std::forward<Function>(f)(
-          static_cast<int64_t*>(data->data()),
-          static_cast<int64_t*>(data->data()) + data->num_elements(),
-          static_cast<int64_t*>(data2->data())
+          static_cast<int64_t*>(data.data()),
+          static_cast<int64_t*>(data.data()) + data.num_elements(),
+          static_cast<int64_t*>(data2.data())
         );
     default:
       return std::forward<Function>(f)(
-          static_cast<unsigned char*>(data->data()),
-          static_cast<unsigned char*>(data->data()) + data->size_in_bytes(),
-          static_cast<unsigned char*>(data2->data())
+          static_cast<unsigned char*>(data.data()),
+          static_cast<unsigned char*>(data.data()) + data.size_in_bytes(),
+          static_cast<unsigned char*>(data2.data())
         );
   }
 }

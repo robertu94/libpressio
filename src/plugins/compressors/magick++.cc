@@ -7,6 +7,7 @@
 
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/compressor.h"
+#include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
 #include "pressio_data.h"
 #include "pressio_compressor.h"
@@ -50,32 +51,32 @@ class magick_plugin: public libpressio_compressor_plugin {
   };
 
 
-  struct pressio_options* get_configuration_impl() const override {
-    struct pressio_options* options = pressio_options_new();
-    pressio_options_set_integer(options, "pressio:thread_safe", pressio_thread_safety_multiple);
+  struct pressio_options get_configuration_impl() const override {
+    struct pressio_options options;
+    options.set( "pressio:thread_safe", static_cast<int>(pressio_thread_safety_multiple));
     return options;
   }
 
-  struct pressio_options* get_options_impl() const override {
-    struct pressio_options* options = pressio_options_new();
-    pressio_options_set_string(options, "magick:samples_magick", samples_magick.c_str());
-    pressio_options_set_string(options, "magick:compressed_magick", compressed_magick.c_str());
-    pressio_options_set_uinteger(options, "magick:quality", quality);
+  struct pressio_options get_options_impl() const override {
+    struct pressio_options options;
+    options.set("magick:samples_magick", samples_magick.c_str());
+    options.set("magick:compressed_magick", compressed_magick.c_str());
+    options.set("magick:quality", quality);
     return options;
   }
 
-  int set_options_impl(struct pressio_options const* options) override {
+  int set_options_impl(struct pressio_options const& options) override {
     const char* tmp = nullptr;
 
-    pressio_options_get_string(options, "magick:samples_magick", &tmp);
+    options.get("magick:samples_magick", &tmp);
     samples_magick = tmp;
     free((void*)tmp);
 
-    pressio_options_get_string(options, "magick:compressed_magick", &tmp);
+    options.get("magick:compressed_magick", &tmp);
     compressed_magick = tmp;
     free((void*)tmp);
 
-    pressio_options_get_uinteger(options, "magick:quality", &quality);
+    options.get("magick:quality", &quality);
 
     return 0;
   }
@@ -213,6 +214,10 @@ class magick_plugin: public libpressio_compressor_plugin {
   const char* version() const override {
     size_t unused;
     return MagickCore::GetMagickVersion(&unused); 
+  }
+
+  const char* prefix() const override {
+    return "magick";
   }
 
   private:
