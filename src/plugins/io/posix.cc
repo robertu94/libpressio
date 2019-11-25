@@ -3,6 +3,7 @@
 #include <vector>
 #include "pressio_data.h"
 #include "libpressio_ext/io/posix.h"
+#include "libpressio_ext/cpp/data.h"
 
 namespace {
   std::vector<size_t> get_all_dimensions(struct pressio_data const* data) {
@@ -23,7 +24,8 @@ extern "C" {
     if(dims != nullptr) {
       if(pressio_data_has_data(dims)) {
         //re-use the buffer provided by dims
-        ret = dims;
+        ret = pressio_data_new_empty(pressio_byte_dtype, 0, nullptr);
+        *ret = std::move(*dims);
       } else {
         //create a new buffer of the appropriate size
         auto dtype = pressio_data_dtype(dims);

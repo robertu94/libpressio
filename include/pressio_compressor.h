@@ -113,6 +113,21 @@ void pressio_compressor_set_metrics(struct pressio_compressor* compressor, struc
 
 
 /**
+ * Gets the options for a metrics structure
+ * \param[in] compressor the metrics structure to get options for
+ * \returns a new pressio_options structure with the options for the metrics
+ */
+struct pressio_options* pressio_compressor_metrics_get_options(struct pressio_compressor const* compressor);
+
+/**
+ * Gets the options for a metrics structure
+ * \param[in] compressor the compressor structure to get metrics options for
+ * \param[in] options the options to set
+ * \returns 0 if successful, positive values on errors, negative values on warnings
+ */
+int pressio_compressor_metrics_set_options(struct pressio_compressor const* compressor, struct pressio_options const* options);
+
+/**
  * \param[in] compressor the compressor to query
  * \returns last error code for the compressor
  */

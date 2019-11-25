@@ -83,6 +83,27 @@ class composite_plugin : public libpressio_metrics_plugin {
     return metrics_result;
   }
 
+  struct pressio_options get_metrics_options() const override {
+    struct pressio_options metrics_options;
+    for (auto const& plugin : plugins) {
+      pressio_options plugin_options = plugin->get_metrics_options();
+      auto tmp = pressio_options_merge(&metrics_options, &plugin_options);
+      metrics_options = std::move(*tmp);
+      pressio_options_free(tmp);
+    }
+    set_composite_metrics(metrics_options);
+
+    return metrics_options;
+  }
+
+  int set_metrics_options(pressio_options const& options) override {
+    int rc = 0;
+    for (auto const& plugin : plugins) {
+      rc |= plugin->set_metrics_options(options);
+    }
+    return rc;
+  }
+
   private:
   void set_composite_metrics(struct pressio_options& opt) const {
     //compression_rate

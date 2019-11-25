@@ -36,6 +36,12 @@ class libpressio_compressor_plugin {
    */
   struct pressio_options get_options() const;
 
+  /** get a set of metrics options available for the compressor.
+   *
+   * \see pressio_metrics_set_options for metrics options
+   */
+  struct pressio_options get_metrics_options() const;
+
   /** get the compile time configuration of a compressor
    *
    * \see pressio_compressor_get_configuration for the semantics this function should obey
@@ -46,6 +52,13 @@ class libpressio_compressor_plugin {
    * \see pressio_compressor_set_options for the semantics this function should obey
    */
   int set_options(struct pressio_options const& options);
+
+  /** sets a set of metrics options for the compressor 
+   * \param[in] options to set for configuration of the metrics
+   * \see pressio_metrics_set_options for the semantics this function should obey
+   */
+  int set_metrics_options(struct pressio_options const& options);
+
   /** compresses a pressio_data buffer
    * \see pressio_compressor_compress for the semantics this function should obey
    */
@@ -184,6 +197,16 @@ struct pressio_compressor {
   /** \returns true if the plugin is set */
   operator bool() const {
     return bool(plugin);
+  }
+
+  /** make libpressio_compressor_plugin behave like a shared_ptr */
+  libpressio_compressor_plugin& operator*() const noexcept {
+    return *plugin;
+  }
+
+  /** make libpressio_compressor_plugin behave like a shared_ptr */
+  libpressio_compressor_plugin* operator->() const noexcept {
+    return plugin.get();
   }
 
   /**

@@ -93,6 +93,16 @@ class libpressio_metrics_plugin {
    * \returns a pressio_options structure containing the metrics returned by the provided metrics plugin
    */
   virtual struct pressio_options get_metrics_results() const=0;
+
+  /**
+   * \returns a pressio_options structure containing the options for the provided metrics plugin
+   */
+  virtual struct pressio_options get_metrics_options() const;
+
+  /**
+   * \param[in] options a pressio_options structure containing the options for the provided metrics plugin
+   */
+  virtual int set_metrics_options(struct pressio_options const& options);
 };
 
 /**
@@ -106,7 +116,7 @@ struct pressio_metrics {
   /** allow access to underlying plugin*/
   libpressio_metrics_plugin* operator->() const noexcept {return plugin.get();}
   /** allow access to underlying plugin*/
-  libpressio_metrics_plugin& operator*() const {return *plugin;}
+  libpressio_metrics_plugin& operator*() const noexcept {return *plugin;}
   /** returns true if the pointer is not nullptr */
   operator bool() const { return plugin.get() != nullptr; }
 

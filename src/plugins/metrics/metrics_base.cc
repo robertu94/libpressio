@@ -1,4 +1,5 @@
 #include "libpressio_ext/cpp/metrics.h"
+#include "libpressio_ext/cpp/options.h"
 
 void libpressio_metrics_plugin::begin_check_options(struct pressio_options const*) {
 }
@@ -24,4 +25,9 @@ void libpressio_metrics_plugin::begin_decompress(struct pressio_data const*, pre
 }
 void libpressio_metrics_plugin::end_decompress(struct pressio_data const*, pressio_data const*, int) {
 }
-
+struct pressio_options libpressio_metrics_plugin::get_metrics_options() const {
+  return pressio_options();
+}
+int libpressio_metrics_plugin::set_metrics_options(pressio_options const&) {
+  return 0;
+}

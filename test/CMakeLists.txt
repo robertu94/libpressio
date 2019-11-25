@@ -60,6 +60,7 @@ if(LIBPRESSIO_HAS_SZ)
   add_test(metrics_test metrics)
 
   add_gtest(test_register_metrics.cc make_input_data.cc)
+  add_gtest(test_metrics_options.cc make_input_data.cc)
   add_gtest(test_register_compressor.cc make_input_data.cc)
 endif()
 

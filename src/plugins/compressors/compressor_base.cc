@@ -120,3 +120,12 @@ struct pressio_metrics libpressio_compressor_plugin::get_metrics() const {
 void libpressio_compressor_plugin::set_metrics(pressio_metrics& plugin) {
   metrics_plugin = plugin;
 }
+
+struct pressio_options libpressio_compressor_plugin::get_metrics_options() const {
+  return metrics_plugin->get_metrics_options();
+}
+
+int libpressio_compressor_plugin::set_metrics_options(struct pressio_options const& options) {
+  return metrics_plugin->set_metrics_options(options);
+}
+
