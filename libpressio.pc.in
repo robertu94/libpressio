@@ -5,5 +5,5 @@ Name: Libpressio
 Description: An abstraction between different pressio compressors
 Version: @PROJECT_VERSION@
 Cflags: -I${includedir}
-Libs: -L${libdir} -lpressio
+Libs: -L${libdir} -llibpressio
 
