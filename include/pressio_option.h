@@ -10,6 +10,7 @@ extern "C" {
  * hearder guard
  */
 #define PRESSIO_OPTION
+#include <stdbool.h>
 #include "pressio_options.h"
 
 

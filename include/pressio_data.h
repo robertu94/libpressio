@@ -1,4 +1,5 @@
 #include <stddef.h>
+#include <stdbool.h>
 #include "pressio_dtype.h"
 
 #ifdef __cplusplus
