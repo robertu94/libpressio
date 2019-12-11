@@ -322,6 +322,13 @@ struct pressio_options final {
     }
   }
 
+  /**
+   * removes all options
+   */
+  void clear() noexcept {
+    options.clear();
+  }
+
 
   /**
    * type of the returned iterator

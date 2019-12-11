@@ -67,7 +67,7 @@ extern "C" {
   }
 
 
-  size_t pressio_io_data_fwrite(struct pressio_data* data, FILE* out_file) {
+  size_t pressio_io_data_fwrite(struct pressio_data const* data, FILE* out_file) {
 
     return fwrite(pressio_data_ptr(data, nullptr),
         pressio_dtype_size(pressio_data_dtype(data)),
@@ -76,14 +76,14 @@ extern "C" {
         );
   }
 
-  size_t pressio_io_data_write(struct pressio_data* data, int out_filedes) {
+  size_t pressio_io_data_write(struct pressio_data const* data, int out_filedes) {
     return write(out_filedes,
         pressio_data_ptr(data, nullptr),
         pressio_data_get_bytes(data)
         );
   }
 
-  size_t pressio_io_data_path_write(struct pressio_data* data, const char* path) {
+  size_t pressio_io_data_path_write(struct pressio_data const* data, const char* path) {
     FILE* out_file = fopen(path, "w");
     if(out_file != nullptr) {
       auto ret = pressio_io_data_fwrite(data, out_file);

@@ -1,6 +1,6 @@
 # Built-in Modules {#builtins}
 
-Libpression provides a number of builtin compressor and metrics modules.
+Libpressio provides a number of builtin compressor and metrics modules.
 
 ## Compressor Plugins
 
@@ -14,4 +14,6 @@ Libpression provides a number of builtin compressor and metrics modules.
 
 + `time` -- time information on each compressor API
 + `error_stat` -- statistics on the difference between the uncompressed and decompressed values that can be computed in one pass in linear time.
++ `pearson` -- computes the pearson coefficient of correlation and pearson coefficient of determination.
 + `size` -- information on the size of the compressed and decompressed data
++ `external` -- run an external program to collect some metrics, see [using an external metric for more information](@ref usingexternalmetric)

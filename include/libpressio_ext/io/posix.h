@@ -65,7 +65,7 @@ extern "C" {
    * \returns the number of bytes written
    *
    */
-  size_t pressio_io_data_fwrite(struct pressio_data* data, FILE* out_file); 
+  size_t pressio_io_data_fwrite(struct pressio_data const* data, FILE* out_file); 
 
   /** write in a file to the specified POSIX file descriptor
    *
@@ -74,7 +74,7 @@ extern "C" {
    * \returns the number of bytes written
    *
    */
-  size_t pressio_io_data_write(struct pressio_data* data, int out_filedes); 
+  size_t pressio_io_data_write(struct pressio_data const* data, int out_filedes); 
 
   /** write in a file to the specified path on the file-system
    *
@@ -83,7 +83,7 @@ extern "C" {
    * \returns the number of bytes written
    *
    */
-  size_t pressio_io_data_path_write(struct pressio_data* data, const char* path); 
+  size_t pressio_io_data_path_write(struct pressio_data const* data, const char* path); 
 
 
 #endif /*PRESSIO_POSIX_IO*/

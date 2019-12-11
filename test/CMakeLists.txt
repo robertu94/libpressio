@@ -59,6 +59,12 @@ if(LIBPRESSIO_HAS_SZ)
   target_link_libraries(metrics libpressio)
   add_test(metrics_test metrics)
 
+  add_executable(test_external_helper test_external_helper.cc)
+  add_executable(test_external test_external.cc make_input_data.cc)
+  target_link_libraries(test_external libpressio)
+  target_link_libraries(test_external_helper libpressio)
+  add_test(test_external test_external ${CMAKE_CURRENT_BINARY_DIR}/test_external_helper)
+
   add_gtest(test_register_metrics.cc make_input_data.cc)
   add_gtest(test_metrics_options.cc make_input_data.cc)
   add_gtest(test_register_compressor.cc make_input_data.cc)

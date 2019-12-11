@@ -12,4 +12,13 @@ struct pressio_options* pressio_metrics_get_results(struct pressio_metrics const
   return new pressio_options((*metrics)->get_metrics_results());
 }
 
+struct pressio_options* pressio_metrics_get_options(struct pressio_metrics const* metrics) {
+  return new pressio_options((*metrics)->get_metrics_options());
+}
+
+int pressio_metrics_set_options(struct pressio_metrics const* metrics, struct pressio_options const* options){
+  return (*metrics)->set_metrics_options(*options);
+}
+
+
 }
