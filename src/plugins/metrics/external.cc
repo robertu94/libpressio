@@ -22,8 +22,8 @@ namespace {
       format_error=4
     };
     struct extern_proc_results {
-      std::stringstream stdout_stream; //stdout from the command
-      std::stringstream stderr_stream; //stdin from the command
+      std::string proc_stdout; //stdout from the command
+      std::string proc_stderr; //stdin from the command
       int return_code = 0; //the return code from the external process
       int error_code = success; //used to report errors with run_command
     };
@@ -86,24 +86,26 @@ namespace {
 
           int status = 0;
           char buffer[2048];
+          std::ostringstream stdout_stream;
+          std::ostringstream stderr_stream;
           do {
             //read the stdout[0]
             int nread;
             while((nread = read(stdout_pipe_fd[0], buffer, 2048)) > 0) {
-              results.stdout_stream.write(buffer, nread);
+              stdout_stream.write(buffer, nread);
             }
             
             //read the stderr[0]
             while((nread = read(stderr_pipe_fd[0], buffer, 2048)) > 0) {
-              results.stderr_stream.write(buffer, nread);
+              stderr_stream.write(buffer, nread);
             }
 
             //wait for the child to complete
             waitpid(child, &status, 0);
           } while (not WIFEXITED(status));
 
-          results.stdout_stream.seekg(0);
-          results.stderr_stream.seekg(0);
+          results.proc_stdout = stdout_stream.str();
+          results.proc_stderr = stderr_stream.str();
           results.return_code = WEXITSTATUS(status);
       }
 
@@ -146,9 +148,9 @@ class external_metric_plugin : public libpressio_metrics_plugin {
 
 
     //returns the version number parsed, starts at 1, zero means error
-    size_t api_version_number(extern_proc_results& results) {
+    size_t api_version_number(std::istringstream& stdout_stream) {
       std::string version_line;
-      std::getline(results.stdout_stream, version_line);
+      std::getline(stdout_stream, version_line);
       auto eq_pos = version_line.find('=') + 1;
       if(version_line.substr(0, eq_pos) == "external:api") {
         //report error
@@ -159,10 +161,11 @@ class external_metric_plugin : public libpressio_metrics_plugin {
 
     void parse_result(extern_proc_results& results) {
       try{
-        size_t api_version = api_version_number(results);
+        std::istringstream stdout_stream(results.proc_stdout);
+        size_t api_version = api_version_number(stdout_stream);
         switch(api_version) {
           case 1:
-            parse_v1(results);
+            parse_v1(stdout_stream, results);
             return;
           default:
             (void)0;
@@ -175,17 +178,17 @@ class external_metric_plugin : public libpressio_metrics_plugin {
       this->results.set("external:stderr", "");
     }
 
-    void parse_v1(extern_proc_results& input) {
+    void parse_v1(std::istringstream& stdout_stream, extern_proc_results& input) {
       results.clear();
 
-      for (std::string line; std::getline(input.stdout_stream, line); ) {
+      for (std::string line; std::getline(stdout_stream, line); ) {
         auto equal_pos = line.find('=');
         std::string name = "external:results:" + line.substr(0, equal_pos);
         std::string value_s = line.substr(equal_pos + 1);
         double value = std::stod(value_s);
         results.set(name, value);
       }
-      results.set("external:stderr", input.stderr_stream.str());
+      results.set("external:stderr", input.proc_stderr);
       results.set("external:return_code", input.return_code);
       results.set("external:error_code", input.return_code);
     }

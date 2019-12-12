@@ -8,6 +8,7 @@
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
 #include "libpressio_ext/compressors/sz.h"
+#include "libpressio_ext/compat/std_compat.h"
 
 namespace {
   struct log_fn{
@@ -108,13 +109,13 @@ class log_transform : public libpressio_compressor_plugin {
   pressio_compressor compressor;
 };
 
-static pressio_register X(compressor_plugins(), "log", [](){ return std::make_unique<log_transform>();});
+static pressio_register X(compressor_plugins(), "log", [](){ return compat::make_unique<log_transform>();});
 
 TEST(ExternalPlugin, TestLogCompressor) {
   pressio library;
 
   auto sz_compressor = library.get_compressor("sz");
-  auto log_compressor = std::make_unique<log_transform>(std::move(sz_compressor));
+  auto log_compressor = compat::make_unique<log_transform>(std::move(sz_compressor));
   auto options = log_compressor->get_options();
   options.set("sz:error_bound_mode", ABS);
   options.set("sz:abs_err_bound", 0.5);
