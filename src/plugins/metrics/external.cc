@@ -117,6 +117,12 @@ namespace {
 class external_metric_plugin : public libpressio_metrics_plugin {
 
   public:
+
+    external_metric_plugin() {
+      results.set_type("external:error_code", pressio_option_int32_type);
+      results.set_type("external:return_code", pressio_option_int32_type);
+      results.set_type("external:stderr", pressio_option_charptr_type);
+    }
     void begin_compress(const struct pressio_data * input, struct pressio_data const * ) override {
       input_data = pressio_data::clone(*input);
     }

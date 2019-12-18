@@ -9,6 +9,147 @@ Pressio is latin for compression.  LibPressio is a C++ library with C compatible
 
 Documentation for the `master` branch can be [found here](https://robertu94.github.io/libpressio/)
 
+## Using LibPressio
+
+Here is a minimal example with error checking of how to use LibPressio:
+
+```c
+#include <libpressio.h>
+#include <libpressio_ext/compressors/sz.h>
+
+// provides input function, found in ./test
+#include "make_input_data.h"
+
+int
+main(int argc, char* argv[])
+{
+  // get a handle to a compressor
+  struct pressio* library = pressio_instance();
+  struct pressio_compressor* compressor = pressio_get_compressor(library, "sz");
+
+  // configure metrics
+  const char* metrics[] = { "size" };
+  struct pressio_metrics* metrics_plugin =
+    pressio_new_metrics(library, metrics, 1);
+  pressio_compressor_set_metrics(compressor, metrics_plugin);
+
+  // configure the compressor
+  struct pressio_options* sz_options =
+    pressio_compressor_get_options(compressor);
+
+  pressio_options_set_integer(sz_options, "sz:error_bound_mode", ABS);
+  pressio_options_set_double(sz_options, "sz:abs_err_bound", 0.5);
+  if (pressio_compressor_check_options(compressor, sz_options)) {
+    printf("%s\n", pressio_compressor_error_msg(compressor));
+    exit(pressio_compressor_error_code(compressor));
+  }
+  if (pressio_compressor_set_options(compressor, sz_options)) {
+    printf("%s\n", pressio_compressor_error_msg(compressor));
+    exit(pressio_compressor_error_code(compressor));
+  }
+
+  // load a 300x300x300 dataset into data created with malloc
+  double* rawinput_data = make_input_data();
+  size_t dims[] = { 300, 300, 300 };
+  struct pressio_data* input_data =
+    pressio_data_new_move(pressio_double_dtype, rawinput_data, 3, dims,
+                          pressio_data_libc_free_fn, NULL);
+
+  // creates an output dataset pointer
+  struct pressio_data* compressed_data =
+    pressio_data_new_empty(pressio_byte_dtype, 0, NULL);
+
+  // configure the decompressed output area
+  struct pressio_data* decompressed_data =
+    pressio_data_new_empty(pressio_double_dtype, 3, dims);
+
+  // compress the data
+  if (pressio_compressor_compress(compressor, input_data, compressed_data)) {
+    printf("%s\n", pressio_compressor_error_msg(compressor));
+    exit(pressio_compressor_error_code(compressor));
+  }
+
+  // decompress the data
+  if (pressio_compressor_decompress(compressor, compressed_data,
+                                    decompressed_data)) {
+    printf("%s\n", pressio_compressor_error_msg(compressor));
+    exit(pressio_compressor_error_code(compressor));
+  }
+
+  // get the compression ratio
+  struct pressio_options* metric_results =
+    pressio_compressor_get_metrics_results(compressor);
+  double compression_ratio = 0;
+  if (pressio_options_get_double(metric_results, "size:compression_ratio",
+                                 &compression_ratio)) {
+    printf("failed to get compression ratio\n");
+    exit(1);
+  }
+  printf("compression ratio: %lf\n", compression_ratio);
+
+  // free the input, decompressed, and compressed data
+  pressio_data_free(decompressed_data);
+  pressio_data_free(compressed_data);
+  pressio_data_free(input_data);
+
+  // free options and the library
+  pressio_options_free(sz_options);
+  pressio_options_free(metric_results);
+  pressio_compressor_release(compressor);
+  pressio_release(library);
+  return 0;
+}
+```
+
+## Getting Started
+
+After skimming the example, LibPressio has 5 major headers that you will need to use:
+
+Type                  | Use 
+----------------------|-------------------
+`pressio.h`             | Error reporting and aquiring handles to compressors
+`pressio_compressor.h`  | Used to compress and decompress data, provided by plugins
+`pressio_data.h`        | Represents data and associated metadata (size, type, dimentionality, memory ownership)
+`pressio_options.h`     | Maps between names and values, used for options for compressors and metrics results
+`pressio_metrics.h`     | A set of metrics to run while compressors run
+
+All of these are included by the convience header `libpressio.h`.
+
+You can pick up the more advanced features as you need them.
+
+
+You can also find more examples in `test/`
+
+## Supported Compressors and Metrics
+
+Libpressio provides a number of builtin compressor and metrics modules.
+
+Additionally, Libpressio is extensible.
+For information on writing a compressor plugin see [Writing a Compressor Plugin](@ref writingacompressor)
+For information on writing a metrics plugin see [Writing a Metrics Plugin](@ref writingametric)
+
+
+### Compressor Plugins
+
+See the [compressor settings page](@ref pressiooptions) for information on how to configure them.
+
++ `sz` -- the SZ error bounded lossy compressor
++ `zfp` -- the ZFP error bounded lossy compressor
++ `mgard` -- the MGARD error bounded lossy compressor
++ `blosc` -- the blosc lossless compressor
++ `magick` -- the ImageMagick image compression/decompression library
++ `noop` -- a dummy compressor useful performance evaluation, testing, and introspection
+
+### Metrics Plugins
+
+See the [metrics results page](@ref metricsresults) for information on what they produce
+
++ `time` -- time information on each compressor API
++ `error_stat` -- statistics on the difference between the uncompressed and decompressed values that can be computed in one pass in linear time.
++ `pearson` -- computes the pearson coefficient of correlation and pearson coefficient of determination.
++ `size` -- information on the size of the compressed and decompressed data
++ `external` -- run an external program to collect some metrics, see [using an external metric for more information](@ref usingexternalmetric)
+
 ## Dependencies
 
 Libpressio unconditionally requires:
@@ -100,87 +241,12 @@ make
 ctest .
 ```
 
-## Using LibPressio
-
-Here is a minimal example with error checking of how to use LibPressio:
-
-
-~~~c
-#include <libpressio.h>
-#include <libpressio_ext/compressors/sz.h>
-
-#include "make_input_data.h"
-
-int
-main(int argc, char* argv[])
-{
-  struct pressio* library = pressio_instance();
-  struct pressio_compressor* compressor = pressio_get_compressor(library, "sz");
-  struct pressio_options* sz_options =
-    pressio_compressor_get_options(compressor);
-
-  pressio_options_set_integer(sz_options, "sz:error_bound_mode", ABS);
-  pressio_options_set_double(sz_options, "sz:abs_err_bound", 0.5);
-  if (pressio_compressor_check_options(compressor, sz_options)) {
-    printf("%s\n", pressio_compressor_error_msg(compressor));
-    exit(pressio_compressor_error_code(compressor));
-  }
-  if (pressio_compressor_set_options(compressor, sz_options)) {
-    printf("%s\n", pressio_compressor_error_msg(compressor));
-    exit(pressio_compressor_error_code(compressor));
-  }
-
-  // load a 300x300x300 dataset into data created with malloc
-  double* rawinput_data = make_input_data();
-  size_t dims[] = { 300, 300, 300 };
-  struct pressio_data* input_data =
-    pressio_data_new_move(pressio_double_dtype, rawinput_data, 3, dims,
-                          pressio_data_libc_free_fn, NULL);
-
-  // creates an output dataset pointer
-  struct pressio_data* compressed_data =
-    pressio_data_new_empty(pressio_byte_dtype, 0, NULL);
-
-  // configure the decompressed output area
-  struct pressio_data* decompressed_data =
-    pressio_data_new_empty(pressio_double_dtype, 3, dims);
-
-  // compress the data
-  if (pressio_compressor_compress(compressor, input_data, compressed_data)) {
-    printf("%s\n", pressio_compressor_error_msg(compressor));
-    exit(pressio_compressor_error_code(compressor));
-  }
-
-  // decompress the data
-  if (pressio_compressor_decompress(compressor, compressed_data,
-                                    decompressed_data)) {
-    printf("%s\n", pressio_compressor_error_msg(compressor));
-    exit(pressio_compressor_error_code(compressor));
-  }
-
-  // free the input, decompressed, and compressed data
-  pressio_data_free(decompressed_data);
-  pressio_data_free(compressed_data);
-  pressio_data_free(input_data);
-
-  // free options and the library
-  pressio_options_free(sz_options);
-  pressio_compressor_release(compressor);
-  pressio_release(library);
-  return 0;
-}
-~~~
-
-More examples can be found in `test/`
-
-For information on writing a compressor plugin see [Writing a Compressor Plugin](@ref writingacompressor)
-For information on writing a metrics plugin see [Writing a Compressor Plugin](@ref writingametric)
 
 ## Option Names
 
 LibPressio uses a key-value system to refer to configuration settings.
 
-Each compressor may find specific configuration settings for its specific compressor with settings beginning with its compressor id as prefix (i.e. configurations for SZ begin with `sz:`).  Refer to the specific compressors documentation for further documentation for each settings.
+Each compressor may find specific configuration settings for its specific compressor with settings beginning with its compressor id as prefix (i.e. configurations for SZ begin with `sz:`).  [Refer to the specific compressors documentation](@ref pressiooptions) for further documentation for each settings.
 
 The prefixes `metrics:` and `pressio:` are reserved for future use.
 

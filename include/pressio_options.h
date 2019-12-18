@@ -20,7 +20,7 @@ struct pressio_option;
 
 /** possible status of a particular key in the option structure*/
 enum  pressio_options_key_status{
-  /** the requested key exists and is set*/
+  /** the requested key exists and is set, evaluates to false*/
   pressio_options_key_set=0,
 
   /** the requested key exists but is not set, for pressio_option_set_* functions indicates a type mismatch*/

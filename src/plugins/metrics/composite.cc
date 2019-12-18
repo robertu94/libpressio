@@ -112,6 +112,8 @@ class composite_plugin : public libpressio_metrics_plugin {
       if(opt.get("time:compress", &compression_time) == pressio_options_key_set &&
          opt.get("size:uncompressed_size", &uncompressed_size) == pressio_options_key_set) {
         opt.set("composite:compression_rate", static_cast<double>(uncompressed_size)/compression_time);
+      } else {
+        opt.set_type("composite:compression_rate", pressio_option_double_type);
       }
     }
 
@@ -121,6 +123,8 @@ class composite_plugin : public libpressio_metrics_plugin {
       if (opt.get( "time:decompress", &decompression_time) == pressio_options_key_set &&
           opt.get("size:uncompressed_size", &uncompressed_size) == pressio_options_key_set) {
         opt.set("composite:decompression_rate", static_cast<double>(uncompressed_size)/decompression_time);
+      } else {
+        opt.set_type("composite:decompression_rate", pressio_option_double_type);
       }
     }
 

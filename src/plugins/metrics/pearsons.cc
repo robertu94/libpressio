@@ -88,6 +88,9 @@ public:
     if (err_metrics) {
       opt.set("pearson:r", (*err_metrics).r);
       opt.set("pearson:r2", (*err_metrics).r2);
+    } else {
+      opt.set_type("pearson:r", pressio_option_double_type);
+      opt.set_type("pearson:r2", pressio_option_double_type);
     }
     return opt;
   }

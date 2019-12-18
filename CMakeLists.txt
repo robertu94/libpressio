@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.25.1" LANGUAGES CXX C)
+project(libpressio VERSION "0.26.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -61,7 +61,7 @@ check_cpp_standard(multiplies)
 
 
 set(LIBPRESSIO_FEATURES "")
-set(LIBPRESSIO_COMPRESSORS "")
+set(LIBPRESSIO_COMPRESSORS "noop")
 
 add_library(libpressio
   #core implementation
@@ -76,6 +76,7 @@ add_library(libpressio
 
   #plugins
   ./src/plugins/compressors/compressor_base.cc
+  ./src/plugins/compressors/noop.cc
   ./src/plugins/metrics/composite.cc
   ./src/plugins/metrics/external.cc
   ./src/plugins/metrics/metrics_base.cc

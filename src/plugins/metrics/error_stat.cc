@@ -75,7 +75,7 @@ namespace {
       m.value_min = value_min;
       m.value_max = value_max;
       m.value_mean = sum/num_elements;
-      m.value_std = sum_of_values_squared - (sum*sum)/num_elements;
+      m.value_std = sum_of_values_squared - (sum*sum)/(num_elements);
       m.value_range = value_max-value_min;
 
       m.difference_range = diff_max - diff_min;
@@ -122,6 +122,23 @@ class error_stat_plugin : public libpressio_metrics_plugin {
         opt.set("error_stat:average_error", (*err_metrics).average_error);
         opt.set("error_stat:difference_range", (*err_metrics).difference_range);
         opt.set("error_stat:error_range", (*err_metrics).error_range);
+      } else {
+        opt.set_type("error_stat:psnr", pressio_option_double_type);
+        opt.set_type("error_stat:mse", pressio_option_double_type);
+        opt.set_type("error_stat:rmse", pressio_option_double_type);
+        opt.set_type("error_stat:value_mean", pressio_option_double_type);
+        opt.set_type("error_stat:value_std", pressio_option_double_type);
+        opt.set_type("error_stat:value_min", pressio_option_double_type);
+        opt.set_type("error_stat:value_max", pressio_option_double_type);
+        opt.set_type("error_stat:value_range", pressio_option_double_type);
+        opt.set_type("error_stat:min_error", pressio_option_double_type);
+        opt.set_type("error_stat:max_error", pressio_option_double_type);
+        opt.set_type("error_stat:min_rel_error", pressio_option_double_type);
+        opt.set_type("error_stat:max_rel_error", pressio_option_double_type);
+        opt.set_type("error_stat:average_difference", pressio_option_double_type);
+        opt.set_type("error_stat:average_error", pressio_option_double_type);
+        opt.set_type("error_stat:difference_range", pressio_option_double_type);
+        opt.set_type("error_stat:error_range", pressio_option_double_type);
       }
       return opt;
     }
