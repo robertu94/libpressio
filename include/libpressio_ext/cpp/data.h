@@ -276,6 +276,34 @@ struct pressio_data {
   }
 
   /**
+   * changes the dimensions of the size of the memory
+   * if the resulting buffer is smaller than the current buffer in bytes, nothing else is done
+   * if the resulting buffer is larger than the current buffer in bytes, a realloc-like operation is performed
+   * 
+   * \param[in] dims the new dimensions to use
+   * \returns the size of the new buffer in bytes, returns 0 if malloc fails
+   *
+   */
+  size_t set_dimensions(std::vector<size_t>&& dims) {
+    size_t new_size = data_size_in_bytes(data_dtype, dims.size(), dims.data());
+    if(size_in_bytes() < new_size) {
+      void* tmp = malloc(new_size);
+      if(tmp == nullptr) {
+        return 0;
+      } else {
+        memcpy(tmp, data_ptr, size_in_bytes());
+        if(deleter!=nullptr) deleter(data_ptr,metadata_ptr);
+
+        data_ptr = tmp;
+        deleter = pressio_data_libc_free_fn;
+        metadata_ptr = nullptr;
+      }
+    } 
+    this->dims = std::move(dims);
+    return size_in_bytes();
+  }
+
+  /**
    * \param idx the specific index to query
    * \returns a specific dimension of the buffer of zero if the index exceeds dimensions()
    */

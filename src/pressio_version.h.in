@@ -9,6 +9,7 @@
 #cmakedefine01 LIBPRESSIO_HAS_MGARD
 #cmakedefine01 LIBPRESSIO_HAS_MAGICK
 #cmakedefine01 LIBPRESSIO_HAS_BLOSC
+#cmakedefine01 LIBPRESSIO_HAS_FPZIP
 
 /* defined if the standard library implementation has the requested symbol */
 #cmakedefine01 LIBPRESSIO_COMPAT_HAS_EXCLUSIVE_SCAN

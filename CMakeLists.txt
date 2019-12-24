@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.26.0" LANGUAGES CXX C)
+project(libpressio VERSION "0.27.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -137,7 +137,7 @@ if(LIBPRESSIO_HAS_MGARD)
   target_link_libraries(libpressio PUBLIC mgard::mgard)
 endif()
 
-option(LIBPRESSIO_HAS_ZFP "build the ZFP plugin" ON)
+option(LIBPRESSIO_HAS_ZFP "build the ZFP plugin" OFF)
 if(LIBPRESSIO_HAS_ZFP)
   set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} zfp")
   find_package(ZFP REQUIRED)
@@ -149,7 +149,7 @@ if(LIBPRESSIO_HAS_ZFP)
   target_link_libraries(libpressio PUBLIC zfp::zfp)
 endif()
 
-option(LIBPRESSIO_HAS_SZ "build the SZ plugin" ON)
+option(LIBPRESSIO_HAS_SZ "build the SZ plugin" OFF)
 if(LIBPRESSIO_HAS_SZ)
   set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} sz")
   find_package(SZ REQUIRED)
@@ -164,7 +164,7 @@ if(LIBPRESSIO_HAS_SZ)
   target_link_libraries(libpressio PUBLIC SZ)
 endif()
 
-option(LIBPRESSIO_HAS_BLOSC "build the BLOSC plugin" ON)
+option(LIBPRESSIO_HAS_BLOSC "build the BLOSC plugin" OFF)
 if(LIBPRESSIO_HAS_BLOSC)
   set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} blosc")
   target_sources(libpressio
@@ -190,7 +190,7 @@ if(LIBPRESSIO_HAS_BLOSC)
 endif()
 
 
-option(LIBPRESSIO_HAS_MAGICK "build the image magick plugin" ON)
+option(LIBPRESSIO_HAS_MAGICK "build the image magick plugin" OFF)
 if(LIBPRESSIO_HAS_MAGICK)
   pkg_search_module(Magick++ IMPORTED_TARGET GLOBAL Magick++)
   try_compile(
@@ -208,7 +208,7 @@ if(LIBPRESSIO_HAS_MAGICK)
     )
 endif()
 
-option(LIBPRESSIO_HAS_HDF "build the hdf5 io plugin" ON)
+option(LIBPRESSIO_HAS_HDF "build the hdf5 io plugin" OFF)
 if(LIBPRESSIO_HAS_HDF)
   set(LIBPRESSIO_FEATURES "${LIBPRESSIO_FEATURES} hdf5")
   find_package(HDF5 REQUIRED COMPONENTS C)
@@ -220,6 +220,18 @@ if(LIBPRESSIO_HAS_HDF)
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/io/hdf5.cc
       ${CMAKE_CURRENT_SOURCE_DIR}/include/libpressio_ext/io/hdf5.h
     )
+endif()
+
+option(LIBPRESSIO_HAS_FPZIP "build the fpzip plugin" OFF)
+if(LIBPRESSIO_HAS_FPZIP)
+  set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} fpzip")
+  find_package(fpzip)
+  target_sources(libpressio
+    PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/fpzip_plugin.cc
+    )
+target_link_libraries(libpressio PUBLIC fpzip::fpzip)
+
 endif()
 
 configure_file(

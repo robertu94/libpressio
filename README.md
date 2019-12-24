@@ -123,6 +123,8 @@ You can also find more examples in `test/`
 ## Supported Compressors and Metrics
 
 Libpressio provides a number of builtin compressor and metrics modules.
+All of these are disabled by default.
+They can be enabled by passing the corresponding `LIBPRESSIO_HAS_*` variable to CMake.
 
 Additionally, Libpressio is extensible.
 For information on writing a compressor plugin see [Writing a Compressor Plugin](@ref writingacompressor)

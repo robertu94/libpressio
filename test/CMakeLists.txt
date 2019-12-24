@@ -83,7 +83,8 @@ if(LIBPRESSIO_HAS_MAGICK)
   add_test(magick_basic_test magick_basic)
 endif()
 
-if(LIBPRESSIO_HAS_SZ AND LIBPRESSIO_HAS_ZFP AND LIBPRESSIO_HAS_MGARD AND LIBPRESSIO_HAS_MAGICK)
+if(LIBPRESSIO_HAS_SZ AND LIBPRESSIO_HAS_ZFP AND LIBPRESSIO_HAS_MGARD AND
+    LIBPRESSIO_HAS_MAGICK AND LIBPRESSIO_HAS_FPZIP)
   add_executable(full full.c make_input_data.cc)
   target_link_libraries(full libpressio)
   add_test(full_test full)
