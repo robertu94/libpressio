@@ -272,3 +272,14 @@ Unstable means:
 + The API may change for any reason with the increase of the minor version number
 
 Additionally, the performance of functions, memory usage patterns may change for both stable and unstable code with the increase of the patch version.
+
+## Bug Reports
+
+Please files bugs to the Github Issues page on the CODARCode libpressio repository.
+
+Please read this post on [how to file a good bug report](https://codingnest.com/how-to-file-a-good-bug-report/).  After reading this post, please provide the following information specific to libpressio:
+
++ Your OS version and distribution information, usually this can be found in `/etc/os-release`
++ the output of `cmake -L $BUILD_DIR`
++ the version of each of libpressio's dependencies listed in the README that you have installed. Where possible, please provide the commit hashes.
+
