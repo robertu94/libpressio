@@ -14,6 +14,16 @@ option                  | type        | description
 `blosc:doshuffle` | int32 | what if any kind of pre-bit shuffling to preform
 `blosc:numinternalthreads` | int32 | number of threads used internally by the library
 
+### fpzip
+
+
+
+option                  | type        | description
+------------------------|-------------|------------
+`fpzip:prec` | uint32 | the prec parameter of fpzip
+`fpzip:has_header` | uint32 | if the buffer has a fpzip header, 0 false, otherwise true
+
+
 ### ImageMagick
 
 ImageMagick is a robust library that preforms a wide array of image compression and manipulation.  Only a fraction of its api is exposed.  More information on ImageMagick can be found on its [project homepage](https://imagemagick.org/)

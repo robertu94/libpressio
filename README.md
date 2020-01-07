@@ -140,6 +140,7 @@ See the [compressor settings page](@ref pressiooptions) for information on how t
 + `mgard` -- the MGARD error bounded lossy compressor
 + `blosc` -- the blosc lossless compressor
 + `magick` -- the ImageMagick image compression/decompression library
++ `fpzip` -- the fpzip floating point lossless compressor
 + `noop` -- a dummy compressor useful performance evaluation, testing, and introspection
 
 ### Metrics Plugins
@@ -168,6 +169,7 @@ Libpressio additionally optionally requires:
 + `ImageMagick` version 6.9.7 or later for ImageMagick image support.  Version 7 or later supports additional data types.
 + `blosc` version 1.14.2 for lossless compressor support via blosc
 + `boost` version 1.53 to compile on a c++14 or earlier compiler
++ `fpzip` version 1.3 for fpzip support
 + `numpy` version `1.14.5` or later and its dependencies to provide the python bindings
 + `swig` version 3.0.12 or later for python support
 + `sz` commit `7b7463411f02be4700d13aac6737a6a9662806b4` or later and its dependencies to provide the SZ plugin
