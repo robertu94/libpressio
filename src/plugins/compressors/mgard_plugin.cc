@@ -1,7 +1,14 @@
+#include <cassert>
 #include <memory>
 #include <sstream>
-#include <mgard_api.h>
+
+//some older version of mgard need a float header in addition to the api header
+//check for it in CMake and then conditionally include it here if needed
+#if LIBPRESSIO_MGARD_NEED_FLOAT_HEADER
 #include <mgard_api_float.h>
+#endif
+
+#include <mgard_api.h>
 #include "pressio_data.h"
 #include "pressio_options.h"
 #include "pressio_compressor.h"

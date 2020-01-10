@@ -30,7 +30,8 @@ class fpzip_plugin: public libpressio_compressor_plugin {
   };
 
   int 	set_options_impl (struct pressio_options const& options) override {
-    if(int tmp; options.get("fpzip:has_header", &tmp) != pressio_options_key_set) {
+    int tmp;
+    if( options.get("fpzip:has_header", &tmp) != pressio_options_key_set) {
       has_header = tmp != 0;
     } else {
       return set_error(7, "fpzip:has_header is required");

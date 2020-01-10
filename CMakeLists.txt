@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.27.0" LANGUAGES CXX C)
+project(libpressio VERSION "0.27.1" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -27,6 +27,7 @@ option(BUILD_SHARED_LIBS "build libpressio as a shared library" ON)
 
 include(GNUInstallDirs)
 include(CheckCXXCompilerFlag)
+include(CheckIncludeFileCXX)
 
 check_cxx_compiler_flag("-fno-omit-frame-pointer" HAVE_NO_OMIT_FRAME_POINTER)
 set(NO_OMIT_FRAME_POINTER_FLAG "")
@@ -129,6 +130,8 @@ option(LIBPRESSIO_HAS_MGARD "build the MGARD plugin" OFF)
 if(LIBPRESSIO_HAS_MGARD)
   set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} mgard")
   find_package(mgard REQUIRED)
+  check_include_file_cxx(mgard_api_float.h LIBPRESSIO_MGARD_NEED_FLOAT_HEADER
+    -I $<TARGET_PROPERTY:mgard::mgard,INTERFACE_INCLUDE_DIRECTORIES>)
   target_sources(libpressio
     PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/mgard_plugin.cc
@@ -302,8 +305,8 @@ if(BUILD_DOCKER_CONTAINERS)
       COMMAND docker build -t ${CONTAINER_TAG} -f ${Dockerfile} .
       COMMAND touch ${BuildSentinel}
       MAIN_DEPENDENCY ${Dockerfile}
-      DEPENDS SZ
-      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+      DEPENDS libpressio
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       COMMENT "DOCKER ${Dockerfile}"
       )
     list(APPEND DOCKER_CONTAINERS ${BuildSentinel})

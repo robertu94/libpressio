@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
-find_package(Python COMPONENTS Interpreter Development NumPy)
+find_package(Python3 COMPONENTS Interpreter Development NumPy)
 find_package(SWIG)
-if(SWIG_FOUND AND PYTHON_FOUND)
+if(SWIG_FOUND AND PYTHON3_FOUND)
   include(UseSWIG)
 
 
@@ -16,19 +16,25 @@ if(SWIG_FOUND AND PYTHON_FOUND)
       SOURCES ${ARGV}
       )
     set_property(TARGET ${filelibname} PROPERTY SWIG_COMPILE_DEFINITIONS "SWIGWORDSIZE64")
-    target_link_libraries(${filelibname} PUBLIC libpressio Python::Python Python::NumPy)
+    target_link_libraries(${filelibname} PUBLIC libpressio Python3::Python Python3::NumPy)
     target_include_directories(${filelibname} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
     get_property(swig_generated_module TARGET ${filelibname} PROPERTY SWIG_SUPPORT_FILES)
 
-    install(TARGETS ${filelibname} DESTINATION ${Python_SITELIB})
-    install(FILES ${swig_generated_module} DESTINATION ${Python_SITELIB})
+    install(TARGETS ${filelibname} DESTINATION ${Python3_SITELIB})
+    install(FILES ${swig_generated_module} DESTINATION ${Python3_SITELIB})
 
   endfunction()
 
 
   build_pressio_swig_module(pressio.i)
-  build_pressio_swig_module(pressio_sz.i)
-  build_pressio_swig_module(pressio_zfp.i)
+
+  if(LIBPRESSIO_HAS_SZ)
+    build_pressio_swig_module(pressio_sz.i)
+  endif()
+
+  if(LIBPRESSIO_HAS_ZFP)
+    build_pressio_swig_module(pressio_zfp.i)
+  endif()
 
 
 endif()

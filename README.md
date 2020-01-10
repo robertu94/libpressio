@@ -174,6 +174,7 @@ Libpressio additionally optionally requires:
 + `swig` version 3.0.12 or later for python support
 + `sz` commit `7b7463411f02be4700d13aac6737a6a9662806b4` or later and its dependencies to provide the SZ plugin
 + `zfp` commit `e8edaced12f139ddf16167987ded15e5da1b98da` or later and its dependencies to provide the ZFP plugin
++ `python` 3.4 or later for the python bindings
 
 You can also use the provided `Dockerfile`s in `./docker` to get a working libpressio install.  Doing so requires installing `docker` version 17.05 or higher or other build tool that supports this version of Dockerfile syntax or later.
 

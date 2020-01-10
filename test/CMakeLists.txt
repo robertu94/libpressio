@@ -90,10 +90,10 @@ if(LIBPRESSIO_HAS_SZ AND LIBPRESSIO_HAS_ZFP AND LIBPRESSIO_HAS_MGARD AND
   add_test(full_test full)
 endif()
 
-
+find_package(Python3)
 if(BUILD_PYTHON_WRAPPER AND LIBPRESSIO_HAS_SZ)
   add_test(test_python_wrapper 
-    ${Python_EXECUTABLE}
+    ${Python3_EXECUTABLE}
     ${CMAKE_CURRENT_SOURCE_DIR}/test_python.py
     ${CMAKE_BINARY_DIR}/swig
   )

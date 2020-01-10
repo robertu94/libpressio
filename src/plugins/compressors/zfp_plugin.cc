@@ -39,7 +39,7 @@ class zfp_plugin: public libpressio_compressor_plugin {
       options.set_type("zfp:accuracy", pressio_option_double_type);
       options.set_type("zfp:rate", pressio_option_double_type);
       options.set_type("zfp:type", pressio_option_uint32_type);
-      options.set_type("zfp:dims", pressio_option_int32_type);
+      options.set_type("zfp:dims", pressio_option_uint32_type);
       options.set_type("zfp:wra", pressio_option_int32_type);
       options.set_type("zfp:mode", pressio_option_uint32_type);
       return options;

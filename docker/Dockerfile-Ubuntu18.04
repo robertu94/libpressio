@@ -11,34 +11,54 @@ RUN apt-get update && \
 RUN git clone https://github.com/LLNL/zfp /src/zfp && \
     git clone https://github.com/disheng222/sz /src/sz && \
     git clone https://github.com/CODARcode/MGARD /src/mgard && \
-    git clone https://github.com/CODARcode/libpressio /src/libpressio && \
-    mkdir -p /src/autotuning && \
+    git clone https://github.com/llnl/fpzip /src/fpzip && \
     cd /src/sz && \
     mkdir build && \
     cd build && \
     cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local -G Ninja && \
     cmake --build . && \
     ninja install && \
+    \
     cd /src/zfp && \
     mkdir build && \
     cd build && \
     cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local -DBUILD_TESTING=OFF -G Ninja && \
     cmake --build . && \
     ninja install && \
+    \
     cd /src/mgard && \
     mkdir build && \
     cd build && \
     cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_INSTALL_LIBDIR=lib -DBUILD_TESTING=OFF -G Ninja && \
     cmake --build . && \
-    ninja install
-RUN cd /src/libpressio && \
+    ninja install && \
+    \
+    cd /src/fpzip && \
     mkdir build && \
     cd build && \
-    cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local -DBUILD_TESTS=ON -DLIBPRESSIO_HAS_MGARD=ON -DBUILD_PYTHON_WRAPPER=ON -G Ninja && \
+    cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DBUILD_TESTING=OFF -G Ninja && \
     cmake --build . && \
-    CTEST_OUTPUT_ON_FAILURE=1 ctest . && \
-    ninja install &&\
-    echo done
+    ninja install
+COPY . /src/libpressio
+RUN cd /src/libpressio && \
+    rm -rf build && \
+    mkdir build && \
+    cd build && \
+    cmake ..  \
+      -DCMAKE_INSTALL_PREFIX=/usr/local \
+      -DBUILD_TESTING=ON \
+      -DLIBPRESSIO_HAS_SZ=ON \
+      -DLIBPRESSIO_HAS_ZFP=ON \
+      -DLIBPRESSIO_HAS_MGARD=ON \
+      -DLIBPRESSIO_HAS_MGARD=ON \
+      -DLIBPRESSIO_HAS_BLOSC=ON \
+      -DLIBPRESSIO_HAS_MAGICK=ON \
+      -DLIBPRESSIO_HAS_HDF=ON \
+      -DBUILD_PYTHON_WRAPPER=ON \
+      -G Ninja && \
+    cmake --build . && \
+    ninja install && \
+    CTEST_OUTPUT_ON_FAILURE=1 ctest .
     
 
 
@@ -51,11 +71,13 @@ COPY --from=builder /usr/local/lib/libSZ.so* \
                     /usr/local/lib/liblibpressio.so* \
                     /usr/local/lib/libzfp.so*  \
                     /usr/local/lib/libmgard.so* \
+                    /usr/local/lib/fpzip.so* \
                     /usr/local/lib/
 COPY --from=builder /usr/local/include/libpressio \
                     /usr/local/include/sz \
                     /usr/local/include/zfp* \
                     /usr/local/include/mgard* \
+                    /usr/local/include/fpzip* \
                     /usr/local/include/
 COPY --from=builder /usr/local/bin/sz /usr/bin/
 COPY --from=builder /usr/lib/python3/dist-packages/*pressio* /usr/lib/python3/dist-packages/

@@ -19,7 +19,7 @@ class noop_compressor_plugin: public libpressio_compressor_plugin {
     return {};
   }
 
-  int set_options_impl(struct pressio_options const& options) override {
+  int set_options_impl(struct pressio_options const&) override {
     return 0;
   }
 
@@ -52,5 +52,5 @@ class noop_compressor_plugin: public libpressio_compressor_plugin {
   }
 };
 
-static pressio_register X(compressor_plugins(), "noop", [](){ return std::make_unique<noop_compressor_plugin>();});
+static pressio_register X(compressor_plugins(), "noop", [](){ return compat::make_unique<noop_compressor_plugin>();});
 
