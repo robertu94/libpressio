@@ -378,6 +378,16 @@ struct pressio_options final {
   auto end() -> decltype(std::end(options)){
     return std::end(options);
   }
+
+  size_t size() const {
+    return options.size();
+  }
+
+  size_t num_set() const {
+    return std::count_if(std::begin(options), std::end(options), [](decltype(options)::value_type const& key_option){
+          return key_option.second.has_value();
+        });
+  }
 };
 
 //special case for strings

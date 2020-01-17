@@ -39,6 +39,15 @@ enum pressio_options_key_status pressio_options_as_set(struct pressio_options* o
   return options->cast_set(key, *option);
 }
 
+size_t pressio_options_size(struct pressio_options const* options) {
+  return options->size();
+}
+
+size_t pressio_options_num_set(struct pressio_options const* options) {
+  return options->num_set();
+}
+
+
 
 #define pressio_options_define_type_impl_get(name, type) \
   void pressio_options_set_##name(struct pressio_options* options, const char* key, type value) { \

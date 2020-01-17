@@ -9,6 +9,7 @@ extern "C" {
  */
 #define LIBPRESSIO_OPTIONS_H
 #include "pressio_dtype.h"
+#include "stddef.h"
 
 /*! \file  
  *  \brief A set of options for a compressor
@@ -152,6 +153,19 @@ void pressio_options_set_type(struct pressio_options* options, const char* key, 
  * \param[in] key the key whose value to clear
  */
 void pressio_options_clear(struct pressio_options* options, const char* key);
+
+/**
+ * \param[in] options the options structure to get the size of
+ * \returns the number of keys with either the status pressio_options_key_set or pressio_options_key_exists
+ */
+size_t pressio_options_size(struct pressio_options const* options);
+
+/**
+ * \param[in] options the options structure to get the size of
+ * \returns the number of keys with the status pressio_options_key_set
+ */
+size_t pressio_options_num_set(struct pressio_options const* options);
+
 
 
 /** internal macro used to define setter functions */

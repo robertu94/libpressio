@@ -18,6 +18,7 @@ class PressioOptionsTests: public ::testing::Test {
       pressio_options_set_double(o, "double", 1.2);
       pressio_options_set_string(o, "string", "testing");
       pressio_options_set_userptr(o, "data", &data);
+      pressio_options_set_type(o, "type_float", pressio_option_float_type);
     }
 
     void TearDown() {
@@ -31,6 +32,11 @@ class PressioOptionsTests: public ::testing::Test {
       double b;
     } data = {1,2.0};
 };
+
+TEST_F(PressioOptionsTests, Sizes) {
+  EXPECT_EQ(pressio_options_size(o), 5);
+  EXPECT_EQ(pressio_options_num_set(o), 4);
+}
 
 TEST_F(PressioOptionsTests, MakeOptions) {
   struct pressio_options* o = pressio_options_new();
@@ -66,7 +72,8 @@ TEST_F(PressioOptionsTests, TestUserData) {
 }
 
 TEST_F(PressioOptionsTests, IterateKeys) {
-  int count = 0;
+  int size = 0;
+  int keys_set = 0;
   auto it = pressio_options_get_iter(o);
   while(pressio_options_iter_has_value(it)) {
     const char* key = pressio_options_iter_get_key(it);
@@ -75,17 +82,21 @@ TEST_F(PressioOptionsTests, IterateKeys) {
       case pressio_option_charptr_type:
         EXPECT_THAT(key, ::testing::StrEq("string"));
         EXPECT_THAT(pressio_option_get_string(value), ::testing::StrEq("testing"));
+        keys_set++;
         break;
       case pressio_option_double_type:
         EXPECT_THAT(key, ::testing::StrEq("double"));
         EXPECT_EQ(pressio_option_get_double(value), 1.2);
+        keys_set++;
         break;
       case pressio_option_float_type:
-        FAIL();
+        EXPECT_THAT(key, ::testing::StrEq("type_float"));
+        EXPECT_EQ(pressio_option_has_value(value), false);
         break;
       case pressio_option_int32_type:
         EXPECT_THAT(key, ::testing::StrEq("int"));
         EXPECT_EQ(pressio_option_get_integer(value), 1);
+        keys_set++;
         break;
       case pressio_option_uint32_type:
         FAIL();
@@ -93,18 +104,20 @@ TEST_F(PressioOptionsTests, IterateKeys) {
       case pressio_option_userptr_type:
         EXPECT_THAT(key, ::testing::StrEq("data"));
         EXPECT_EQ(pressio_option_get_userptr(value), &data);
+        keys_set++;
         break;
       case pressio_option_unset_type:
         FAIL();
         break;
     }
 
-    count++;
+    size++;
     pressio_option_free(value);
     pressio_options_iter_next(it);
   }
 
-  EXPECT_EQ(count, 4);
+  EXPECT_EQ(size, 5);
+  EXPECT_EQ(keys_set, 4);
   pressio_options_iter_free(it);
 }
 
