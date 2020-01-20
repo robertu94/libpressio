@@ -95,6 +95,15 @@ struct pressio_data* pressio_data_new_move(const enum pressio_dtype dtype, void*
     size_t const dimensions[], pressio_data_delete_fn deleter, void* metadata);
 
 /**
+ * Creates a data buffer with the specified type from an existing buffer
+ *
+ * \param[in] data the data to cast
+ * \param[in] dtype the datatype to cast to
+ * \returns a new owning data structure with data corresponding to each element casted to the appropriate type
+ */
+struct pressio_data* pressio_data_cast(const struct pressio_data* data, const enum pressio_dtype dtype);
+
+/**
  * frees a pressio_data structure, but not the underlying data
  * \param[in] data data structure to free
  */

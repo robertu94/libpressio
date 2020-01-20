@@ -55,6 +55,19 @@ TEST_F(PressioDataTests, ForEach) {
 }
 
 
+TEST_F(PressioDataTests, Cast) {
+  pressio_data* orig = pressio_data_new_copy(pressio_int32_dtype, data.data(), 2, dims);
+  pressio_data* casted = pressio_data_cast(orig, pressio_double_dtype);
+  std::vector<double> expected(data.size());
+  std::copy(std::begin(data), std::end(data), std::begin(expected));
+  auto actual_p  = static_cast<double*>(pressio_data_ptr(casted, nullptr));
+  std::vector<double> actual(actual_p, actual_p+data.size());
+
+  EXPECT_THAT(actual, testing::ElementsAreArray(expected));
+
+  pressio_data_free(orig);
+  pressio_data_free(casted);
+}
 
 TEST_F(PressioDataTests, MakeCopy) {
   pressio_data* d = pressio_data_new_nonowning(pressio_int32_dtype, data.data(), 2, dims);

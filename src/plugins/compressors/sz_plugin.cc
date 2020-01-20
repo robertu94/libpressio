@@ -68,10 +68,10 @@ class sz_plugin: public libpressio_compressor_plugin {
   int set_options_impl(struct pressio_options const& options) override {
 
     struct sz_params* sz_param;
-    const char* config_file;
+    std::string config_file;
     if(options.get("sz:config_file", &config_file) == pressio_options_key_set) {
       SZ_Finalize();
-      SZ_Init(config_file);
+      SZ_Init(config_file.c_str());
     } else if (options.get("sz:config_struct", (void**)&sz_param) == pressio_options_key_set) {
       SZ_Finalize();
       SZ_Init_Params(sz_param);
@@ -99,13 +99,8 @@ class sz_plugin: public libpressio_compressor_plugin {
     options.get("sz:plus_bits", &confparams_cpr->plus_bits);
     options.get("sz:random_access", &confparams_cpr->randomAccess);
     options.get("sz:data_type", &confparams_cpr->dataType);
-    const char* tmp_app;
-    if(pressio_options_get_string(&options, "sz:app", &tmp_app) == pressio_options_key_set)
-    {
-      app = tmp_app;
-      free((void*)tmp_app);
-    }
-    pressio_options_get_userptr(&options, "sz:user_params", &user_params);
+    options.get("sz:app", &app);
+    options.get("sz:user_params", &user_params);
 
     return 0;
   }

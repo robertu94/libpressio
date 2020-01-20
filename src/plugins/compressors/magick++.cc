@@ -59,25 +59,16 @@ class magick_plugin: public libpressio_compressor_plugin {
 
   struct pressio_options get_options_impl() const override {
     struct pressio_options options;
-    options.set("magick:samples_magick", samples_magick.c_str());
-    options.set("magick:compressed_magick", compressed_magick.c_str());
+    options.set("magick:samples_magick", samples_magick);
+    options.set("magick:compressed_magick", compressed_magick);
     options.set("magick:quality", quality);
     return options;
   }
 
   int set_options_impl(struct pressio_options const& options) override {
-    const char* tmp = nullptr;
-
-    options.get("magick:samples_magick", &tmp);
-    samples_magick = tmp;
-    free((void*)tmp);
-
-    options.get("magick:compressed_magick", &tmp);
-    compressed_magick = tmp;
-    free((void*)tmp);
-
+    options.get("magick:samples_magick", &samples_magick);
+    options.get("magick:compressed_magick", &compressed_magick);
     options.get("magick:quality", &quality);
-
     return 0;
   }
 

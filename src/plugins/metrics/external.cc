@@ -137,11 +137,7 @@ class external_metric_plugin : public libpressio_metrics_plugin {
     }
 
     int set_metrics_options(pressio_options const& opt) override {
-      const char* tmp = nullptr;
-      if(opt.get("external:command", &tmp) == pressio_options_key_set) {
-        command = tmp;
-      }
-      free((void*)tmp);
+      opt.get("external:command", &command);
       return 0;
     }
 

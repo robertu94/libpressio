@@ -198,19 +198,45 @@ struct pressio_data {
         );
   }
 
-
+  pressio_data() :
+    data_dtype(pressio_byte_dtype),
+    data_ptr(nullptr),
+    metadata_ptr(nullptr),
+    deleter(nullptr),
+    dims()
+  {}
 
   ~pressio_data() {
     if(deleter!=nullptr) deleter(data_ptr,metadata_ptr);
   };
 
-  //disable copy constructors/assignment to handle case of non-owning pointers
-  /** copy-assignment is disabled */
-  pressio_data& operator=(pressio_data const& rhs)=delete;
-  /** copy-constructing is disabled */
-  pressio_data(pressio_data const& rhs)=delete; 
-
-  
+  /**copy-assignment, clones the data
+   * \param[in] rhs the data to clone
+   * \see pressio_data::clone
+   * */
+  pressio_data& operator=(pressio_data const& rhs) {
+    if(this == &rhs) return *this;
+    data_dtype = rhs.data_dtype;
+    data_ptr = malloc(rhs.size_in_bytes());
+    memcpy(data_ptr, rhs.data_ptr, rhs.size_in_bytes());
+    metadata_ptr = nullptr;
+    deleter = pressio_data_libc_free_fn;
+    dims = rhs.dims;
+    return *this;
+  }
+  /**copy-constructor, clones the data
+   * \param[in] rhs the data to clone
+   * \see pressio_data::clone
+   * */
+  pressio_data(pressio_data const& rhs): 
+    data_dtype(rhs.data_dtype),
+    data_ptr(malloc(rhs.size_in_bytes())),
+    metadata_ptr(nullptr),
+    deleter(pressio_data_libc_free_fn),
+    dims(rhs.dims)
+  {
+    memcpy(data_ptr, rhs.data_ptr, rhs.size_in_bytes());
+  }
   /**
    * move-constructor
    *
@@ -231,6 +257,7 @@ struct pressio_data {
    * \returns a l-value reference to the object moved into
    */
   pressio_data& operator=(pressio_data && rhs) noexcept {
+    if(this==&rhs) return *this;
     if(deleter!=nullptr) deleter(data_ptr,metadata_ptr);
     data_dtype = rhs.data_dtype,
     data_ptr = compat::exchange(rhs.data_ptr, nullptr),
@@ -261,6 +288,11 @@ struct pressio_data {
     return data_dtype;
   }
 
+  /**
+   * \param[in] dtype the new datatype to assign
+   * \returns a new pressio_data structure based on the current structure with the new type
+   */
+  pressio_data cast(pressio_dtype dtype) const; 
   /**
    * \returns the number of dimensions
    */
@@ -467,86 +499,151 @@ ReturnType pressio_data_for_each(pressio_data const& data, Function&& f)
   }
 }
 
+namespace {
+  template <class ReturnType, class Function, class Type1, class Type2>
+  ReturnType pressio_data_for_each_call(pressio_data const& data, pressio_data const& data2, Function&& f) {
+      return std::forward<Function>(f)(
+          static_cast<Type1*>(data.data()),
+          static_cast<Type1*>(data.data()) + data.num_elements(),
+          static_cast<Type2*>(data2.data())
+        );
+  }
+  template <class ReturnType, class Function, class Type1>
+  ReturnType pressio_data_for_each_type2_switch(pressio_data const& data, pressio_data const& data2, Function&& f) {
+    switch(data2.dtype()) {
+    case pressio_double_dtype: 
+      return pressio_data_for_each_call<ReturnType, Function, Type1, double>(data, data2, std::forward<Function>(f));
+    case pressio_float_dtype:
+      return pressio_data_for_each_call<ReturnType, Function, Type1, float>(data, data2, std::forward<Function>(f));
+    case pressio_uint8_dtype:
+      return pressio_data_for_each_call<ReturnType, Function, Type1, uint8_t>(data, data2, std::forward<Function>(f));
+    case pressio_uint16_dtype:
+      return pressio_data_for_each_call<ReturnType, Function, Type1, uint16_t>(data, data2, std::forward<Function>(f));
+    case pressio_uint32_dtype:
+      return pressio_data_for_each_call<ReturnType, Function, Type1, uint32_t>(data, data2, std::forward<Function>(f));
+    case pressio_uint64_dtype:
+      return pressio_data_for_each_call<ReturnType, Function, Type1, uint64_t>(data, data2, std::forward<Function>(f));
+    case pressio_int8_dtype:
+      return pressio_data_for_each_call<ReturnType, Function, Type1, int8_t>(data, data2, std::forward<Function>(f));
+    case pressio_int16_dtype:
+      return pressio_data_for_each_call<ReturnType, Function, Type1, int16_t>(data, data2, std::forward<Function>(f));
+    case pressio_int32_dtype:
+      return pressio_data_for_each_call<ReturnType, Function, Type1, int32_t>(data, data2, std::forward<Function>(f));
+    case pressio_int64_dtype:
+      return pressio_data_for_each_call<ReturnType, Function, Type1, int64_t>(data, data2, std::forward<Function>(f));
+    default:
+      return pressio_data_for_each_call<ReturnType, Function, Type1, char>(data, data2, std::forward<Function>(f));
+    }
+  }
+  template <class ReturnType, class Function, class Type1, class Type2>
+  ReturnType pressio_data_for_each_call(pressio_data& data, pressio_data& data2, Function&& f) {
+      return std::forward<Function>(f)(
+          static_cast<Type1*>(data.data()),
+          static_cast<Type1*>(data.data()) + data.num_elements(),
+          static_cast<Type2*>(data2.data())
+        );
+  }
+  template <class ReturnType, class Function, class Type1>
+  ReturnType pressio_data_for_each_type2_switch(pressio_data& data, pressio_data& data2, Function&& f) {
+    switch(data2.dtype()) {
+    case pressio_double_dtype: 
+      return pressio_data_for_each_call<ReturnType, Function, Type1, double>(data, data2, std::forward<Function>(f));
+    case pressio_float_dtype:
+      return pressio_data_for_each_call<ReturnType, Function, Type1, float>(data, data2, std::forward<Function>(f));
+    case pressio_uint8_dtype:
+      return pressio_data_for_each_call<ReturnType, Function, Type1, uint8_t>(data, data2, std::forward<Function>(f));
+    case pressio_uint16_dtype:
+      return pressio_data_for_each_call<ReturnType, Function, Type1, uint16_t>(data, data2, std::forward<Function>(f));
+    case pressio_uint32_dtype:
+      return pressio_data_for_each_call<ReturnType, Function, Type1, uint32_t>(data, data2, std::forward<Function>(f));
+    case pressio_uint64_dtype:
+      return pressio_data_for_each_call<ReturnType, Function, Type1, uint64_t>(data, data2, std::forward<Function>(f));
+    case pressio_int8_dtype:
+      return pressio_data_for_each_call<ReturnType, Function, Type1, int8_t>(data, data2, std::forward<Function>(f));
+    case pressio_int16_dtype:
+      return pressio_data_for_each_call<ReturnType, Function, Type1, int16_t>(data, data2, std::forward<Function>(f));
+    case pressio_int32_dtype:
+      return pressio_data_for_each_call<ReturnType, Function, Type1, int32_t>(data, data2, std::forward<Function>(f));
+    case pressio_int64_dtype:
+      return pressio_data_for_each_call<ReturnType, Function, Type1, int64_t>(data, data2, std::forward<Function>(f));
+    default:
+      return pressio_data_for_each_call<ReturnType, Function, Type1, char>(data, data2, std::forward<Function>(f));
+    }
+  }
+}
+
+
 /**
  * get beginning and end pointers for two input data values
  *
  * \param[in] data first input data set
  * \param[in] data2 second input data set
  * \param[in] f templated function to call, it must return the same type regardless of the type of the inputs.
- *            it should have the signature \code template <class T> U f(T* input_begin, T* input_end, T* input2_begin)  where U is some type\endcode
+ *            it should have the signature \code template <class T, class U> ReturnType f(T* input_begin, T* input_end, T* input2_begin)  where U is some type\endcode
  */
 template <class ReturnType, class Function>
 ReturnType pressio_data_for_each(pressio_data const& data, pressio_data const& data2, Function&& f) 
 {
-  switch(data.dtype())
-  {
+    switch(data.dtype()) {
     case pressio_double_dtype: 
-      return std::forward<Function>(f)(
-          static_cast<double*>(data.data()),
-          static_cast<double*>(data.data()) + data.num_elements(),
-          static_cast<double*>(data2.data())
-        );
+      return pressio_data_for_each_type2_switch<ReturnType, Function, double>(data, data2, std::forward<Function>(f));
     case pressio_float_dtype:
-      return std::forward<Function>(f)(
-          static_cast<float*>(data.data()),
-          static_cast<float*>(data.data()) + data.num_elements(),
-          static_cast<float*>(data2.data())
-        );
+      return pressio_data_for_each_type2_switch<ReturnType, Function, float>(data, data2, std::forward<Function>(f));
     case pressio_uint8_dtype:
-      return std::forward<Function>(f)(
-          static_cast<uint8_t*>(data.data()),
-          static_cast<uint8_t*>(data.data()) + data.num_elements(),
-          static_cast<uint8_t*>(data2.data())
-        );
+      return pressio_data_for_each_type2_switch<ReturnType, Function, uint8_t>(data, data2, std::forward<Function>(f));
     case pressio_uint16_dtype:
-      return std::forward<Function>(f)(
-          static_cast<uint16_t*>(data.data()),
-          static_cast<uint16_t*>(data.data()) + data.num_elements(),
-          static_cast<uint16_t*>(data2.data())
-        );
+      return pressio_data_for_each_type2_switch<ReturnType, Function, uint16_t>(data, data2, std::forward<Function>(f));
     case pressio_uint32_dtype:
-      return std::forward<Function>(f)(
-          static_cast<uint32_t*>(data.data()),
-          static_cast<uint32_t*>(data.data()) + data.num_elements(),
-          static_cast<uint32_t*>(data2.data())
-        );
+      return pressio_data_for_each_type2_switch<ReturnType, Function, uint32_t>(data, data2, std::forward<Function>(f));
     case pressio_uint64_dtype:
-      return std::forward<Function>(f)(
-          static_cast<uint64_t*>(data.data()),
-          static_cast<uint64_t*>(data.data()) + data.num_elements(),
-          static_cast<uint64_t*>(data2.data())
-        );
+      return pressio_data_for_each_type2_switch<ReturnType, Function, uint64_t>(data, data2, std::forward<Function>(f));
     case pressio_int8_dtype:
-      return std::forward<Function>(f)(
-          static_cast<int8_t*>(data.data()),
-          static_cast<int8_t*>(data.data()) + data.num_elements(),
-          static_cast<int8_t*>(data2.data())
-        );
+      return pressio_data_for_each_type2_switch<ReturnType, Function, int8_t>(data, data2, std::forward<Function>(f));
     case pressio_int16_dtype:
-      return std::forward<Function>(f)(
-          static_cast<int16_t*>(data.data()),
-          static_cast<int16_t*>(data.data()) + data.num_elements(),
-          static_cast<int16_t*>(data2.data())
-        );
+      return pressio_data_for_each_type2_switch<ReturnType, Function, int16_t>(data, data2, std::forward<Function>(f));
     case pressio_int32_dtype:
-      return std::forward<Function>(f)(
-          static_cast<int32_t*>(data.data()),
-          static_cast<int32_t*>(data.data()) + data.num_elements(),
-          static_cast<int32_t*>(data2.data())
-        );
+      return pressio_data_for_each_type2_switch<ReturnType, Function, int32_t>(data, data2, std::forward<Function>(f));
     case pressio_int64_dtype:
-      return std::forward<Function>(f)(
-          static_cast<int64_t*>(data.data()),
-          static_cast<int64_t*>(data.data()) + data.num_elements(),
-          static_cast<int64_t*>(data2.data())
-        );
+      return pressio_data_for_each_type2_switch<ReturnType, Function, int64_t>(data, data2, std::forward<Function>(f));
     default:
-      return std::forward<Function>(f)(
-          static_cast<unsigned char*>(data.data()),
-          static_cast<unsigned char*>(data.data()) + data.size_in_bytes(),
-          static_cast<unsigned char*>(data2.data())
-        );
-  }
+      return pressio_data_for_each_type2_switch<ReturnType, Function, char>(data, data2, std::forward<Function>(f));
+    }
+}
+/**
+ * get beginning and end pointers for two input data values
+ *
+ * \param[in] data first input data set
+ * \param[in] data2 second input data set
+ * \param[in] f templated function to call, it must return the same type regardless of the type of the inputs.
+ *            it should have the signature \code template <class T, class U> ReturnType f(T* input_begin, T* input_end, T* input2_begin)  where U is some type\endcode
+ */
+template <class ReturnType, class Function>
+ReturnType pressio_data_for_each(pressio_data& data, pressio_data& data2, Function&& f) 
+{
+    switch(data.dtype()) {
+    case pressio_double_dtype: 
+      return pressio_data_for_each_type2_switch<ReturnType, Function, double>(data, data2, std::forward<Function>(f));
+    case pressio_float_dtype:
+      return pressio_data_for_each_type2_switch<ReturnType, Function, float>(data, data2, std::forward<Function>(f));
+    case pressio_uint8_dtype:
+      return pressio_data_for_each_type2_switch<ReturnType, Function, uint8_t>(data, data2, std::forward<Function>(f));
+    case pressio_uint16_dtype:
+      return pressio_data_for_each_type2_switch<ReturnType, Function, uint16_t>(data, data2, std::forward<Function>(f));
+    case pressio_uint32_dtype:
+      return pressio_data_for_each_type2_switch<ReturnType, Function, uint32_t>(data, data2, std::forward<Function>(f));
+    case pressio_uint64_dtype:
+      return pressio_data_for_each_type2_switch<ReturnType, Function, uint64_t>(data, data2, std::forward<Function>(f));
+    case pressio_int8_dtype:
+      return pressio_data_for_each_type2_switch<ReturnType, Function, int8_t>(data, data2, std::forward<Function>(f));
+    case pressio_int16_dtype:
+      return pressio_data_for_each_type2_switch<ReturnType, Function, int16_t>(data, data2, std::forward<Function>(f));
+    case pressio_int32_dtype:
+      return pressio_data_for_each_type2_switch<ReturnType, Function, int32_t>(data, data2, std::forward<Function>(f));
+    case pressio_int64_dtype:
+      return pressio_data_for_each_type2_switch<ReturnType, Function, int64_t>(data, data2, std::forward<Function>(f));
+    default:
+      return pressio_data_for_each_type2_switch<ReturnType, Function, char>(data, data2, std::forward<Function>(f));
+    }
 }
 
 #endif /* end of include guard: PRESSIO_DATA_CPP_H */

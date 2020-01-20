@@ -36,7 +36,8 @@ pressio_option_define_type_impl(userptr, void*)
 
 //special case string
 const char* pressio_option_get_string(struct pressio_option const* option) {
-  return option->get_value<std::string>().c_str();
+  auto const& value = option->get_value<std::string>();
+  return value.c_str();
 }
 
 void pressio_option_set_string(struct pressio_option* option, const char* value) {
@@ -44,7 +45,7 @@ void pressio_option_set_string(struct pressio_option* option, const char* value)
 }
 
 struct pressio_option* pressio_option_new_string(const char* value) {
-  return new pressio_option(value);
+  return new pressio_option(std::string(value));
 }
 
 enum pressio_options_key_status pressio_option_cast_set(struct pressio_option* lhs, struct pressio_option* rhs, enum pressio_conversion_safety safety) {
@@ -64,6 +65,8 @@ pressio_option_type pressio_option::type() const {
   else if (holds_alternative<double>()) return pressio_option_double_type;
   else if (holds_alternative<float>()) return pressio_option_float_type;
   else if (holds_alternative<void*>()) return pressio_option_userptr_type;
+  else if (holds_alternative<std::vector<std::string>>()) return pressio_option_charptr_array_type;
+  else if (holds_alternative<pressio_data>()) return pressio_option_data_type;
   else return pressio_option_unset_type;
 }
 
@@ -96,6 +99,16 @@ pressio_option pressio_option::as(const enum pressio_option_type to_type, const 
         case pressio_option_charptr_type:
             if (allow_special(safety)) return std::to_string(d);
             else return {};
+        case pressio_option_charptr_array_type:
+            if (allow_special(safety)) return std::vector<std::string>{std::to_string(d)};
+            else return {};
+        case pressio_option_data_type:
+            if (allow_special(safety)) {
+              auto ret = pressio_data::owning(pressio_double_dtype, {1});
+              *static_cast<double*>(ret.data()) = d;
+              return ret;
+            }
+            else return {};
         default:
           return {};
       }
@@ -119,6 +132,16 @@ pressio_option pressio_option::as(const enum pressio_option_type to_type, const 
         case pressio_option_charptr_type:
             if (allow_special(safety)) return pressio_option(std::to_string(f));
             else return {};
+        case pressio_option_charptr_array_type:
+            if (allow_special(safety)) return std::vector<std::string>{std::to_string(f)};
+            else return {};
+        case pressio_option_data_type:
+            if (allow_special(safety)) {
+              auto ret = pressio_data::owning(pressio_float_dtype, {1});
+              *static_cast<float*>(ret.data()) = f;
+              return ret;
+            }
+            else return {};
           default:
             return {};
         }
@@ -140,6 +163,17 @@ pressio_option pressio_option::as(const enum pressio_option_type to_type, const 
         case pressio_option_charptr_type:
             if (allow_special(safety)) return std::to_string(i);
             else return {};
+        case pressio_option_charptr_array_type:
+            if (allow_special(safety)) return std::vector<std::string>{std::to_string(i)};
+            else return {};
+        case pressio_option_data_type:
+            if (allow_special(safety)) {
+              auto ret = pressio_data::owning(pressio_int32_dtype, {1});
+              *static_cast<int32_t*>(ret.data()) = i;
+              return ret;
+            } else {
+              return {};
+            }
           default:
             return {};
       }
@@ -161,6 +195,18 @@ pressio_option pressio_option::as(const enum pressio_option_type to_type, const 
         case pressio_option_charptr_type:
             if (allow_special(safety)) return std::to_string(i);
             else return {};
+        case pressio_option_charptr_array_type:
+            if (allow_special(safety)) return std::vector<std::string>{std::to_string(i)};
+            else return {};
+        case pressio_option_data_type:
+            if (allow_special(safety)) {
+              auto ret = pressio_data::owning(pressio_uint32_dtype, {1});
+              *static_cast<uint32_t*>(ret.data()) = i;
+              return ret;
+            }else {
+              return {};
+            }
+
           default:
             return {};
         }
@@ -184,15 +230,53 @@ pressio_option pressio_option::as(const enum pressio_option_type to_type, const 
             else return {};
           case pressio_option_charptr_type:
             return s;
+          case pressio_option_charptr_array_type:
+              if (allow_special(safety)) return std::vector<std::string>{s};
+              else return {};
           default:
             return {};
         }
         } catch (std::invalid_argument const&) { return {}; }
         catch (std::out_of_range const&) {return {};}
       }
+    case pressio_option_charptr_array_type:
+      {
+        std::vector<std::string> const& sa = get_value<std::vector<std::string>>();
+        if(to_type == pressio_option_charptr_array_type) return pressio_option(sa);
+        if(sa.size() == 1) {
+          std::string const& s = sa.front();
+          try {
+          switch(to_type) {
+            case pressio_option_double_type:
+              if (allow_special(safety)) return pressio_option(std::stod(s));
+              else return {};
+            case pressio_option_float_type:
+              if (allow_special(safety)) return pressio_option(std::stof(s));
+              else return {};
+            case pressio_option_int32_type:
+              if (allow_special(safety)) return pressio_option(std::stoi(s));
+              else return {};
+            case pressio_option_uint32_type:
+              if (allow_special(safety)) return pressio_option(static_cast<unsigned int>(std::stoul(s)));
+              else return {};
+            case pressio_option_charptr_type:
+              return s;
+            case pressio_option_charptr_array_type:
+                if (allow_special(safety)) return std::vector<std::string>{s};
+                else return {};
+            default:
+              return {};
+          }
+          } catch (std::invalid_argument const&) { return {}; }
+          catch (std::out_of_range const&) {return {};}
+        } else {
+          return {};
+        }
+      }
     case pressio_option_userptr_type:
       if(to_type == pressio_option_userptr_type) return get_value<void*>();
       else return {};
+    //don't allow conversions from pressio_option_data_type for now
     default:
       return {};
   }

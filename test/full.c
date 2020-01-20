@@ -59,6 +59,12 @@ void print_all_options(struct pressio_options* options) {
         case pressio_option_unset_type:
           printf("%s <unset>: null\n", key);
           break;
+        case pressio_option_charptr_array_type:
+          printf("%s <char**>: null\n", key);
+          break;
+        case pressio_option_data_type:
+          printf("%s <data>: null\n", key);
+          break;
       }
     }
 

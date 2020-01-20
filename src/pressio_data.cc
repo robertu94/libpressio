@@ -114,6 +114,14 @@ namespace {
       }
     }
   }
+
+  struct cast_fn {
+    template <class T, class V>
+    int operator()(T* src_begin, T* src_end, V* dst_begin) {
+      std::copy(src_begin, src_end, dst_begin);
+      return 0;
+    }
+};
 }
 
 
@@ -231,6 +239,10 @@ struct pressio_data* pressio_data_new_empty(const pressio_dtype dtype, size_t co
   return new pressio_data(pressio_data::empty(dtype, num_dimensions, dimensions));
 }
 
+struct pressio_data* pressio_data_cast(const struct pressio_data* data, const enum pressio_dtype dtype) {
+  return new pressio_data(data->cast(dtype));
+}
+
 void pressio_data_free(struct pressio_data* data) {
   delete data;
 }
@@ -280,6 +292,14 @@ int pressio_data_reshape(struct pressio_data* data,
     ) {
   std::vector<size_t> new_dims(dimensions, dimensions+num_dimensions);
   return data->reshape(new_dims);
+}
+
+
+
+pressio_data pressio_data::cast(pressio_dtype const dtype) const {
+    pressio_data data = pressio_data::owning(dtype, dimensions());
+    pressio_data_for_each<int>(*this, data, cast_fn());
+    return data;
 }
 
 

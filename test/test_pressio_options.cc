@@ -1,7 +1,9 @@
 #include <cstdlib>
 #include <sstream>
+#include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/printers.h"
 #include "pressio_option.h"
+#include "pressio_data.h"
 #include "pressio_options.h"
 #include "pressio_options_iter.h"
 #include "gtest/gtest.h"
@@ -32,6 +34,48 @@ class PressioOptionsTests: public ::testing::Test {
       double b;
     } data = {1,2.0};
 };
+
+TEST_F(PressioOptionsTests, StringArray) {
+  auto tmp = pressio_options_new();
+
+  const char* expected[] = {"foo", "bar", "sue"};
+  pressio_options_set_strings(tmp, "strings", 3, expected);
+  size_t size;
+  const char** actual;
+  pressio_options_get_strings(tmp, "strings", &size, &actual);
+  ASSERT_EQ(size, 3);
+  for (int i = 0; i < 3; ++i) {
+    EXPECT_THAT(actual[i], testing::StrEq(expected[i]));
+    free((void*)actual[i]);
+  }
+  free((void*)actual);
+
+
+  pressio_options_free(tmp);
+}
+
+TEST_F(PressioOptionsTests, PressioData) {
+  double values[] = {.5, .4, .3, .2, .1};
+  size_t dims[] = {5};
+  struct pressio_data* expected = pressio_data_new_nonowning(pressio_double_dtype, values, 1, dims);
+  struct pressio_data* actual = pressio_data_new_empty(pressio_byte_dtype, 0, 0);
+
+  auto tmp = pressio_options_new();
+  pressio_options_set_data(tmp, "data", expected);
+  pressio_options_get_data(tmp, "data", &actual);
+  ASSERT_NE(actual, nullptr);
+  EXPECT_EQ(pressio_data_dtype(actual), pressio_double_dtype);
+  EXPECT_EQ(pressio_data_num_dimensions(actual), 1);
+  EXPECT_EQ(pressio_data_get_dimension(actual, 0), 5);
+  double* ptr = static_cast<double*>(pressio_data_ptr(actual, nullptr));
+  for (int i = 0; i < 5; ++i) {
+    EXPECT_EQ(values[i], ptr[i]);
+  }
+
+  pressio_data_free(expected);
+  pressio_data_free(actual);
+  pressio_options_free(tmp);
+}
 
 TEST_F(PressioOptionsTests, Sizes) {
   EXPECT_EQ(pressio_options_size(o), 5);
@@ -107,6 +151,12 @@ TEST_F(PressioOptionsTests, IterateKeys) {
         keys_set++;
         break;
       case pressio_option_unset_type:
+        FAIL();
+        break;
+      case pressio_option_charptr_array_type:
+        FAIL();
+        break;
+      case pressio_option_data_type:
         FAIL();
         break;
     }

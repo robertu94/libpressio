@@ -70,6 +70,7 @@ int main(int argc, char *argv[])
   pressio_metrics_free(metrics_plugin);
   pressio_options_free(metrics_result);
   pressio_options_free(sz_options);
+  pressio_options_free(external_options);
   pressio_compressor_release(compressor);
   pressio_release(library);
   return 0;

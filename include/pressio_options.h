@@ -18,6 +18,7 @@ extern "C" {
 struct pressio_options;
 struct pressio_options_iter;
 struct pressio_option;
+struct pressio_data;
 
 /** possible status of a particular key in the option structure*/
 enum  pressio_options_key_status{
@@ -58,6 +59,8 @@ enum pressio_option_type {
   /** option is a non-owning pointer to a c-style string  */pressio_option_charptr_type=4,
   /** option is a non-owning pointer to a arbitrary data */pressio_option_userptr_type=5,
   /** option is a non-owning pointer to a arbitrary data */pressio_option_unset_type=6,
+  /** option is an array of c-style strings */pressio_option_charptr_array_type=7,
+  /** option is a pressio_data structure */pressio_option_data_type=8
 };
 
 
@@ -233,12 +236,57 @@ pressio_options_define_type(integer, int)
 pressio_options_define_type(float, float)
 pressio_options_define_type(double, double)
 pressio_options_define_type(userptr, void*)
+pressio_options_define_type(data, struct pressio_data*)
 
-//special case string
+//special case string -- prefer const on get/set
 pressio_options_define_type_get(string, const char*)
 pressio_options_define_type_set(string, const char*)
 pressio_options_define_type_as(string, char*)
 pressio_options_define_type_cast(string, char*)
+
+//special case strings -- to also pass/get length information
+/** Sets an particular key in an options structure with the given key to a value
+ \param[in] options the options structure to modify
+ \param[in] key  the key to change
+ \param[in] size the number of strings passed
+ \param[in] values the value to change to
+ */
+void pressio_options_set_strings(struct pressio_options* options, const char* key, size_t size, const char** values);
+  /** Gets a particular value in a map if it exists
+   *
+   * pressio_options_get_string returns a newly allocated copy of the string
+   \param[in] options the options structure to modify
+   \param[in] key  the key to change
+   \param[out] size the number of strings returned, 0 on error
+   \param[out] values the value retrieved, both the values and the pointer must be freed with free()
+   \returns a status code
+   \see pressio_options_key_status status codes returned
+   */
+enum pressio_options_key_status pressio_options_get_strings(struct pressio_options const* options, const char* key, size_t* size, const char***  values);
+  /** Gets an particular key in an options structure, casting it if necessary
+   \param[in] options the options structure to modify
+   \param[in] key  the key to change
+   \param[in] safety  what kind of conversions to allow
+   \param[out] size the number of strings returned.  0 on error
+   \param[out] values the value retrieved, only if it is convertible. both the values and the pointer must be freed with free()
+   \returns a status code 
+   \see pressio_options_key_status status codes returned 
+   */ \
+enum pressio_options_key_status pressio_options_cast_strings(struct pressio_options \
+      const* options, const char* key, const enum pressio_conversion_safety safety, \
+      size_t* size, char*** values);
+  /** Gets an particular key in an options structure, casting it if necessary
+   \param[in] options the options structure to modify
+   \param[in] key  the key to change
+   \param[out] size the number of strings returned.  0 on error
+   \param[out] values the value retrieved, only if it is convertible. both the values and the pointer must be freed with free()
+   \returns a status code
+   \see pressio_options_key_status status codes returned
+   */ \
+enum pressio_options_key_status pressio_options_as_strings(struct pressio_options \
+      const* options, const char* key, size_t* size, char*** values);
+
+
 
 //undefine the type macro so it is not used by implementations
 #undef pressio_options_define_type

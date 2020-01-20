@@ -34,11 +34,7 @@ class blosc_plugin: public libpressio_compressor_plugin {
       options.get("blosc:numinternalthreads", &numinternalthreads);
       options.get("blosc:doshuffle", &doshuffle);
       options.get("blosc:blocksize", &blocksize);
-
-      const char* tmp = nullptr;
-      pressio_options_get_string(&options, "blosc:compressor", &tmp);
-      compressor = tmp;
-      free((void*)tmp);
+      options.get("blosc:compressor", &compressor);
 
       return 0;
     }

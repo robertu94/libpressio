@@ -4,8 +4,10 @@
 #include <string>
 #include <map>
 #include <type_traits>
+#include <vector>
 #include "pressio_options.h"
 #include "pressio_option.h"
+#include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/compat/std_compat.h"
 
 /**
@@ -20,7 +22,9 @@ using option_type = compat::variant<compat::monostate,
       compat::optional<float>,
       compat::optional<double>,
       compat::optional<std::string>,
-      compat::optional<void*>
+      compat::optional<void*>,
+      compat::optional<std::vector<std::string>>,
+      compat::optional<pressio_data>
       >;
 }
 
@@ -33,6 +37,9 @@ constexpr enum pressio_option_type pressio_type_to_enum() {
     std::is_same<T,double>() ? pressio_option_double_type :
     std::is_same<T,std::string>() ? pressio_option_charptr_type :
     std::is_same<T,const char*>() ? pressio_option_charptr_type :
+    std::is_same<T,const char**>() ? pressio_option_charptr_array_type :
+    std::is_same<T,std::vector<std::string>>() ? pressio_option_charptr_array_type :
+    std::is_same<T,pressio_data>() ? pressio_option_data_type :
     pressio_option_userptr_type;
     ;
 }
@@ -129,6 +136,10 @@ struct pressio_option final {
           return (bool)get<std::string>();
         case pressio_option_userptr_type:
           return (bool)get<void*>();
+        case pressio_option_charptr_array_type:
+          return (bool)get<std::vector<std::string>>();
+        case pressio_option_data_type:
+          return (bool)get<pressio_data>();
         case pressio_option_unset_type:
         default:
           return false;
@@ -173,6 +184,12 @@ struct pressio_option final {
       case pressio_option_unset_type:
         option = compat::monostate{};
         break;
+      case pressio_option_charptr_array_type:
+        option = compat::optional<std::vector<std::string>>();
+        break;
+      case pressio_option_data_type:
+        option = compat::optional<pressio_data>();
+        break;
     }
   }
 
@@ -184,7 +201,7 @@ struct pressio_option final {
   enum pressio_options_key_status cast_set(struct pressio_option const& rhs, enum pressio_conversion_safety safety = pressio_conversion_implicit) { 
     auto casted = rhs.as(type(), safety);
     if (casted.has_value()) {
-      *this = casted;
+      *this = std::move(casted);
       return pressio_options_key_set;
     } else {
       return pressio_options_key_exists; 
@@ -379,10 +396,12 @@ struct pressio_options final {
     return std::end(options);
   }
 
+  /**\returns the number of set and existing options*/
   size_t size() const {
     return options.size();
   }
 
+  /**\returns the number of set options*/
   size_t num_set() const {
     return std::count_if(std::begin(options), std::end(options), [](decltype(options)::value_type const& key_option){
           return key_option.second.has_value();
@@ -390,20 +409,5 @@ struct pressio_options final {
   }
 };
 
-//special case for strings
-/**
- * special case for strings for memory management reasons \see pressio_options::get
- *
- * \param[in] key the option to access
- * \param[out] value a newly allocated c-string, the pointer returned must be passed to free()
- */
-template <>
-enum pressio_options_key_status pressio_options::get(std::string const& key, const char** value) const;
-
-/**
- * special case for strings for memory management reasons \see pressio_options::cast
- */
-template <>
-enum pressio_options_key_status pressio_options::cast(std::string const& key, char** value, enum pressio_conversion_safety safety) const;
 
 #endif

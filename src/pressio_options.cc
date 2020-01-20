@@ -78,10 +78,85 @@ pressio_options_define_type_impl(float, float)
 pressio_options_define_type_impl(double, double)
 pressio_options_define_type_impl(userptr, void*)
 
-pressio_options_define_type_impl_get(string, const char*)
-pressio_options_define_type_impl_set(string, const char*)
-pressio_options_define_type_impl_cast(string, char*)
-pressio_options_define_type_impl_as(string, char*)
+//special case: string -- for memory management
+void pressio_options_set_string(struct pressio_options* options, const char* key, const char* value) { \
+  std::string value_tmp = value;
+  options->set(key, value_tmp);
+}
+enum pressio_options_key_status pressio_options_get_string(struct pressio_options const* options, const char* key, const char** value) { \
+  std::string value_tmp;
+  auto status = options->get(key, &value_tmp);
+  if(status == pressio_options_key_set) {
+    *value = strndup(value_tmp.c_str(), value_tmp.size());
+  }
+  return status;
+}
+
+enum pressio_options_key_status pressio_options_cast_string(struct pressio_options const* options, const char* key, const enum pressio_conversion_safety safety, char** value) {
+  std::string value_tmp;
+  auto status = options->cast(key, &value_tmp, safety); 
+  if(status == pressio_options_key_set) {
+    *value = strndup(value_tmp.c_str(), value_tmp.size());
+  }
+  return status;
+}
+enum pressio_options_key_status pressio_options_as_string(struct pressio_options const* options, const char* key, char** value) {
+  return pressio_options_cast_string(options, key, pressio_conversion_implicit, value);
+} 
+//special case: data -- to dereference the pointer
+void pressio_options_set_data(struct pressio_options* options, const char* key, struct pressio_data* value) {
+  options->set(key, *value);
+}
+enum pressio_options_key_status pressio_options_get_data(struct pressio_options const* options, const char* key, struct pressio_data** value) { \
+  return options->get(key, *value);
+}
+
+enum pressio_options_key_status pressio_options_cast_data(struct pressio_options const* options, const char* key, const enum pressio_conversion_safety safety, struct pressio_data** value) {
+  return options->cast(key, *value, safety);
+}
+enum pressio_options_key_status pressio_options_as_data(struct pressio_options const* options, const char* key, struct pressio_data** value) {
+  return pressio_options_cast_data(options, key, pressio_conversion_implicit, value);
+} 
+
+//special case: strings -- to get/pass length information
+void pressio_options_set_strings(struct pressio_options* options, const char* key, size_t size, const char** values) {
+  std::vector<std::string> strings(values, values+size);
+  return options->set(key, strings);
+}
+enum pressio_options_key_status pressio_options_get_strings(struct pressio_options const* options, const char* key, size_t* size, const char***  values) {
+  std::vector<std::string> strings;
+  auto status = options->get(key, &strings);
+    if(status == pressio_options_key_set) {
+    *size = strings.size();
+    *values = static_cast<const char**>(malloc(sizeof(const char*)**size));
+    for (size_t i = 0; i < *size; ++i) {
+      (*values)[i] = strndup(strings[i].c_str(), strings[i].size());
+    }
+  } else {
+    *size = 0;
+  }
+  return status;
+}
+enum pressio_options_key_status pressio_options_cast_strings(struct pressio_options
+      const* options, const char* key, const enum pressio_conversion_safety safety,
+      size_t* size, char*** values) {
+  std::vector<std::string> strings;
+  auto status = options->cast(key, &strings, safety);
+    if(status == pressio_options_key_set) {
+    *size = strings.size();
+    *values = static_cast<char**>(malloc(sizeof(char*)* (*size)));
+    for (size_t i = 0; i < *size; ++i) {
+      (*values)[i] = strndup(strings[i].c_str(), strings[i].size());
+    }
+  }
+  return status;
+}
+enum pressio_options_key_status pressio_options_as_strings(struct pressio_options
+      const* options, const char* key, size_t* size, char*** values) {
+  return pressio_options_cast_strings(options, key, pressio_conversion_implicit, size, values);
+}
+
+
 
 
 pressio_options_key_status pressio_options_exists(struct pressio_options const* options, const char* key) {
@@ -96,48 +171,4 @@ struct pressio_options* pressio_options_merge(struct pressio_options const* lhs,
   struct pressio_options* merged = new pressio_options(*lhs);
   std::copy(std::begin(*rhs), std::end(*rhs), std::inserter(*merged, merged->begin()));
   return merged;
-}
-
-
-//special case for strings
-template <>
-enum pressio_options_key_status pressio_options::get(std::string const& key, const char** value) const {
-  switch(key_status(key)){
-    case pressio_options_key_set:
-      {
-        auto opt = get(key);
-        if(opt.holds_alternative<std::string>()) {
-          *value = strdup(opt.get_value<std::string>().c_str());
-          return pressio_options_key_set;
-        }  else { 
-          return pressio_options_key_exists;
-        }
-      }
-    default:
-      return pressio_options_key_does_not_exist;
-  }
-}
-
-
-
-template <>
-enum pressio_options_key_status pressio_options::cast(std::string const& key, char** value, enum pressio_conversion_safety safety) const {
-  using ValueType = std::string;
-  switch(key_status(key)){
-    case pressio_options_key_set:
-      {
-        auto variant = get(key);
-        auto converted = pressio_option(variant).as(pressio_type_to_enum<ValueType>(), safety);
-        if(converted.has_value()) {
-          *value = strdup(converted.get_value<std::string>().c_str());
-          return pressio_options_key_set;
-        } else {
-          return pressio_options_key_exists;
-        }
-      }
-      break;
-    default:
-      //value does not exist
-      return pressio_options_key_does_not_exist;
-  }
 }

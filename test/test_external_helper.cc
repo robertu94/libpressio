@@ -109,7 +109,6 @@ int main(int argc, const char *argv[])
 
   pressio_data_free(input);
   pressio_data_free(output);
-
   std::flush(std::cout);
   return 0;
 }
