@@ -4,6 +4,7 @@
 #include <array>
 #include "pressio_data.h"
 #include "libpressio_ext/cpp/data.h"
+#include "libpressio_ext/cpp/printers.h"
 #include "multi_dimensional_iterator.h"
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
@@ -34,6 +35,14 @@ TEST_F(PressioDataTests, MakePressioData) {
   EXPECT_EQ(pressio_data_ptr(d, &size), data.data());
   EXPECT_EQ(size, 6*sizeof(int));
 
+  pressio_data_free(d);
+}
+
+TEST_F(PressioDataTests, Printers) {
+  pressio_data* d = pressio_data_new_nonowning(pressio_int32_dtype, data.data(), 2, dims);
+  std::stringstream ss;
+  ss << *d;
+  EXPECT_THAT(ss.str(), testing::StrEq("data{ type=int32_t dims={2, 3, } has_data=true}"));
   pressio_data_free(d);
 }
 

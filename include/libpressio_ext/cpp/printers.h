@@ -1,11 +1,24 @@
 #include <string>
 #include <ostream>
 #include "options.h"
+#include "data.h"
 #include "pressio_dtype.h"
 
 /** \file 
  *  \brief C++ stream compatible IO functions
  *  */
+
+template <class CharT = char, class Traits = std::char_traits<CharT>>
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& out, pressio_data const& data) {
+  
+  out << "data{ type=" << data.dtype();
+  out << " dims={";
+  for (auto const& dim : data.dimensions()) {
+    out << dim << ", ";  
+  }
+  return out << "} has_data=" << std::boolalpha << data.has_data() << "}";
+}
 
 /**
  * human readable debugging IO function for pressio_option_type, the format is unspecified
@@ -29,6 +42,10 @@ operator<<(std::basic_ostream<CharT, Traits>& out, enum pressio_option_type type
         return out << "char*";
       case pressio_option_userptr_type:
         return out << "void*";
+      case pressio_option_charptr_array_type:
+        return out << "char*[]";
+      case pressio_option_data_type:
+        return out << "data";
       default:
       case pressio_option_unset_type:
         return out << "unset";
@@ -60,6 +77,17 @@ operator<<(std::basic_ostream<CharT, Traits>& out, pressio_option const& option)
         return out << "\"" << option.get_value<std::string>() << "\"";
       case pressio_option_userptr_type:
         return out << option.get_value<void*>();
+      case pressio_option_charptr_array_type:
+        {
+          auto const& values = option.get_value<std::vector<std::string>>();
+          out << "{";
+          for (auto const& value : values) {
+            out << value << ", ";
+          }
+          return out << "}";
+        }
+      case pressio_option_data_type:
+        return out << option.get_value<pressio_data>();
       case pressio_option_unset_type:
       default:
         return out << "<empty>";
@@ -67,9 +95,8 @@ operator<<(std::basic_ostream<CharT, Traits>& out, pressio_option const& option)
   } else { 
     return out << "<empty>" ;
   }
-  
-
 }
+
 
 /**
  * human readable debugging IO function for pressio_options, the format is unspecified
