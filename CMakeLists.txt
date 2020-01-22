@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.29.1" LANGUAGES CXX C)
+project(libpressio VERSION "0.30.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -135,9 +135,8 @@ if(LIBPRESSIO_HAS_MGARD)
   target_sources(libpressio
     PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/mgard_plugin.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/libpressio_ext/compressors/mgard.h
     )
-  target_link_libraries(libpressio PUBLIC mgard::mgard)
+  target_link_libraries(libpressio PRIVATE mgard::mgard)
 endif()
 
 option(LIBPRESSIO_HAS_ZFP "build the ZFP plugin" OFF)
@@ -147,9 +146,8 @@ if(LIBPRESSIO_HAS_ZFP)
   target_sources(libpressio
     PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/zfp_plugin.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/libpressio_ext/compressors/zfp.h
     )
-  target_link_libraries(libpressio PUBLIC zfp::zfp)
+  target_link_libraries(libpressio PRIVATE zfp::zfp)
 endif()
 
 option(LIBPRESSIO_HAS_SZ "build the SZ plugin" OFF)
@@ -162,9 +160,8 @@ if(LIBPRESSIO_HAS_SZ)
   target_sources(libpressio
     PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/sz_plugin.cc
-      ${CMAKE_CURRENT_SOURCE_DIR}/include/libpressio_ext/compressors/sz.h
     )
-  target_link_libraries(libpressio PUBLIC SZ)
+  target_link_libraries(libpressio PRIVATE SZ)
 endif()
 
 option(LIBPRESSIO_HAS_BLOSC "build the BLOSC plugin" OFF)
@@ -173,11 +170,10 @@ if(LIBPRESSIO_HAS_BLOSC)
   target_sources(libpressio
     PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/blosc_plugin.cc
-      ${CMAKE_CURRENT_SOURCE_DIR}/include/libpressio_ext/compressors/blosc.h
     )
   pkg_search_module(BLOSC IMPORTED_TARGET GLOBAL blosc)
   if(BLOSC_FOUND)
-          target_link_libraries(libpressio PUBLIC PkgConfig::BLOSC)
+    target_link_libraries(libpressio PRIVATE PkgConfig::BLOSC)
   else()
           find_library(BLOSC_LIBRARIES blosc)
           find_file(BLOSC_INCLUDE_FILE blosc.h)
@@ -185,8 +181,8 @@ if(LIBPRESSIO_HAS_BLOSC)
             message(FATAL_ERROR "Failed to find blosc and it was enabled")
           endif()
           get_filename_component(BLOSC_INCLUDE_DIRS ${BLOSC_INCLUDE_FILE} DIRECTORY)
-          target_link_libraries(libpressio PUBLIC ${BLOSC_LIBRARIES})
-          target_include_directories(libpressio PUBLIC ${BLOSC_INCLUDE_DIRS})
+          target_link_libraries(libpressio PRIVATE ${BLOSC_LIBRARIES})
+          target_include_directories(libpressio PRIVATE ${BLOSC_INCLUDE_DIRS})
           
   endif()
 
@@ -204,7 +200,7 @@ if(LIBPRESSIO_HAS_MAGICK)
   )
   message(STATUS "Checking for Magick::LongLong: ${LIBPRESSIO_COMPAT_HAS_IMAGEMAGICK_LONGLONG}")
   set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} magick")
-  target_link_libraries(libpressio PUBLIC PkgConfig::Magick++)
+  target_link_libraries(libpressio PRIVATE PkgConfig::Magick++)
   target_sources(libpressio
     PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/magick++.cc
@@ -215,9 +211,9 @@ option(LIBPRESSIO_HAS_HDF "build the hdf5 io plugin" OFF)
 if(LIBPRESSIO_HAS_HDF)
   set(LIBPRESSIO_FEATURES "${LIBPRESSIO_FEATURES} hdf5")
   find_package(HDF5 REQUIRED COMPONENTS C)
-  target_link_libraries(libpressio PUBLIC ${HDF5_C_LIBRARIES})
-  target_include_directories(libpressio PUBLIC ${HDF5_C_INCLUDE_DIRS})
-  target_compile_definitions(libpressio PUBLIC ${HDF5_C_DEFINITIONS})
+  target_link_libraries(libpressio PRIVATE ${HDF5_C_LIBRARIES})
+  target_include_directories(libpressio PRIVATE ${HDF5_C_INCLUDE_DIRS})
+  target_compile_definitions(libpressio PRIVATE ${HDF5_C_DEFINITIONS})
   target_sources(libpressio
     PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/io/hdf5.cc
@@ -233,7 +229,7 @@ if(LIBPRESSIO_HAS_FPZIP)
     PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/fpzip_plugin.cc
     )
-target_link_libraries(libpressio PUBLIC fpzip::fpzip)
+  target_link_libraries(libpressio PRIVATE fpzip::fpzip)
 
 endif()
 

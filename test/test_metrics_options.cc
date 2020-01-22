@@ -1,14 +1,14 @@
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 #include <iterator>
-#include "make_input_data.h"
-
 #include <map>
+#include <sz/sz.h>
+
 #include "libpressio.h"
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
-#include "libpressio_ext/compressors/sz.h"
+#include "make_input_data.h"
 
 class hasoptoins_metric : public libpressio_metrics_plugin
 {

@@ -15,7 +15,7 @@ Here is a minimal example with error checking of how to use LibPressio:
 
 ```c
 #include <libpressio.h>
-#include <libpressio_ext/compressors/sz.h>
+#include <sz.h>
 
 // provides input function, found in ./test
 #include "make_input_data.h"

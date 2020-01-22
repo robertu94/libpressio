@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <libpressio.h>
-#include <libpressio_ext/compressors/zfp.h>
+#include <zfp.h>
 
 #include "make_input_data.h"
 

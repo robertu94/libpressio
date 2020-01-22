@@ -48,32 +48,35 @@ if(LIBPRESSIO_HAS_SZ)
   target_include_directories(test_sz_plugin PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/../include)
 
   add_executable(sz_basic sz_basic.c make_input_data.cc)
-  target_link_libraries(sz_basic libpressio)
+  target_link_libraries(sz_basic libpressio SZ)
   add_test(sz_basic_test sz_basic)
 
   add_executable(sz_cpp sz_cpp.cc make_input_data.cc)
-  target_link_libraries(sz_cpp libpressio)
+  target_link_libraries(sz_cpp libpressio SZ)
   add_test(sz_cpp_test sz_cpp)
 
   add_executable(metrics metrics.c make_input_data.cc)
-  target_link_libraries(metrics libpressio)
+  target_link_libraries(metrics libpressio SZ)
   add_test(metrics_test metrics)
 
   add_executable(test_external_helper test_external_helper.cc)
   add_executable(test_external test_external.cc make_input_data.cc)
-  target_link_libraries(test_external libpressio)
-  target_link_libraries(test_external_helper libpressio)
+  target_link_libraries(test_external libpressio SZ)
+  target_link_libraries(test_external_helper libpressio SZ)
   add_test(test_external test_external ${CMAKE_CURRENT_BINARY_DIR}/test_external_helper)
 
   add_gtest(test_register_metrics.cc make_input_data.cc)
+  target_link_libraries(test_register_metrics SZ)
   add_gtest(test_metrics_options.cc make_input_data.cc)
+  target_link_libraries(test_metrics_options SZ)
   add_gtest(test_register_compressor.cc make_input_data.cc)
+  target_link_libraries(test_register_compressor SZ)
 endif()
 
 
 if(LIBPRESSIO_HAS_ZFP)
   add_executable(zfp_basic zfp_basic.c make_input_data.cc)
-  target_link_libraries(zfp_basic libpressio)
+  target_link_libraries(zfp_basic libpressio zfp::zfp)
   add_test(zfp_basic_test zfp_basic)
 endif()
 

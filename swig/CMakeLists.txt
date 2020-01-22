@@ -16,7 +16,7 @@ if(SWIG_FOUND AND PYTHON3_FOUND)
       SOURCES ${ARGV}
       )
     set_property(TARGET ${filelibname} PROPERTY SWIG_COMPILE_DEFINITIONS "SWIGWORDSIZE64")
-    target_link_libraries(${filelibname} PUBLIC libpressio Python3::Python Python3::NumPy)
+    target_link_libraries(${filelibname} PUBLIC SZ libpressio Python3::Python Python3::NumPy)
     target_include_directories(${filelibname} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
     get_property(swig_generated_module TARGET ${filelibname} PROPERTY SWIG_SUPPORT_FILES)
 

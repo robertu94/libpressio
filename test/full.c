@@ -2,9 +2,10 @@
 #include <stdio.h>
 
 #include <libpressio.h>
-#include <libpressio_ext/compressors/sz.h>
+#include <sz/sz.h>
 
 #include "make_input_data.h"
+
 
 void print_all_options(struct pressio_options* options) {
   struct pressio_options_iter* iter = pressio_options_get_iter(options);

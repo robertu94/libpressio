@@ -1,14 +1,14 @@
-#include "gtest/gtest.h"
 #include <iterator>
-#include "make_input_data.h"
-
 #include <cmath>
+#include <gtest/gtest.h>
+#include <sz/sz.h>
+
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/compressor.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
-#include "libpressio_ext/compressors/sz.h"
 #include "libpressio_ext/compat/std_compat.h"
+#include "make_input_data.h"
 
 namespace {
   struct log_fn{
