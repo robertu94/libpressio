@@ -217,8 +217,12 @@ struct pressio_data {
   pressio_data& operator=(pressio_data const& rhs) {
     if(this == &rhs) return *this;
     data_dtype = rhs.data_dtype;
-    data_ptr = malloc(rhs.size_in_bytes());
-    memcpy(data_ptr, rhs.data_ptr, rhs.size_in_bytes());
+    if(rhs.has_data()) {
+      data_ptr = malloc(rhs.size_in_bytes());
+      memcpy(data_ptr, rhs.data_ptr, rhs.size_in_bytes());
+    } else {
+      data_ptr = nullptr;
+    }
     metadata_ptr = nullptr;
     deleter = pressio_data_libc_free_fn;
     dims = rhs.dims;
@@ -230,12 +234,14 @@ struct pressio_data {
    * */
   pressio_data(pressio_data const& rhs): 
     data_dtype(rhs.data_dtype),
-    data_ptr(malloc(rhs.size_in_bytes())),
+    data_ptr(rhs.has_data()? malloc(rhs.size_in_bytes()) : nullptr),
     metadata_ptr(nullptr),
     deleter(pressio_data_libc_free_fn),
     dims(rhs.dims)
   {
-    memcpy(data_ptr, rhs.data_ptr, rhs.size_in_bytes());
+    if(rhs.has_data()) {
+      memcpy(data_ptr, rhs.data_ptr, rhs.size_in_bytes());
+    }
   }
   /**
    * move-constructor

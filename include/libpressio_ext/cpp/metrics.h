@@ -113,6 +113,26 @@ struct pressio_metrics {
   /** construct a metrics wrapper*/
   pressio_metrics(std::unique_ptr<libpressio_metrics_plugin>&& metrics): plugin(std::move(metrics)) {}
 
+  /** allow default construction*/
+  pressio_metrics()=default;
+  /**
+   * move construct a metric from another pointer
+   */
+  pressio_metrics(pressio_metrics const& metrics)=default;
+  /**
+   * move assigns a metric from another pointer
+   */
+  pressio_metrics& operator=(pressio_metrics const& metrics)=default;
+  /**
+   * move construct a metric from another pointer
+   */
+  pressio_metrics(pressio_metrics&& metrics)=default;
+  /**
+   * move assigns a metric from another pointer
+   */
+  pressio_metrics& operator=(pressio_metrics&& metrics)=default;
+
+
   /** allow access to underlying plugin*/
   libpressio_metrics_plugin* operator->() const noexcept {return plugin.get();}
   /** allow access to underlying plugin*/
