@@ -214,13 +214,13 @@ make docs
 # the man pages can be found in $BUILD_DIR/man/
 ```
 
-To build on a C++11 compiler:
+To build on a C++11 compiler: (make sure boost is available)
 
 ```
 BUILD_DIR=build
 mkdir $BUILD_DIR
 cd $BUILD_DIR
-cmake -DLIBPRESSIO_CXX_VERSION=11
+cmake -DLIBPRESSIO_CXX_VERSION=11 ..
 make
 ```
 
