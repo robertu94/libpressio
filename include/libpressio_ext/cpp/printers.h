@@ -8,6 +8,11 @@
  *  \brief C++ stream compatible IO functions
  *  */
 
+/**
+ * human readable debugging IO function for pressio_data, the format is unspecified
+ * \param[in] out  the output stream to print to
+ * \param[in] data the data struct to print 
+ */
 template <class CharT = char, class Traits = std::char_traits<CharT>>
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& out, pressio_data const& data) {

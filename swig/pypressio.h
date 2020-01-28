@@ -1,4 +1,5 @@
 #include "pressio_data.h"
+#include "libpressio_ext/cpp/dtype.h"
 #include "libpressio_ext/cpp/data.h"
 #include <vector>
 #include <cstdint>
@@ -6,26 +7,10 @@
 
 namespace {
   template <class T>
-  constexpr pressio_dtype type_to_dtype() {
-    return (std::is_same<T, double>::value ? pressio_double_dtype :
-        std::is_same<T, float>::value ? pressio_float_dtype :
-        std::is_same<T, int64_t>::value ? pressio_int64_dtype :
-        std::is_same<T, int32_t>::value ? pressio_int32_dtype :
-        std::is_same<T, int16_t>::value ? pressio_int16_dtype :
-        std::is_same<T, int8_t>::value ? pressio_int8_dtype :
-        std::is_same<T, uint64_t>::value ? pressio_uint64_dtype :
-        std::is_same<T, uint32_t>::value ? pressio_uint32_dtype :
-        std::is_same<T, uint16_t>::value ? pressio_uint16_dtype :
-        std::is_same<T, uint8_t>::value ? pressio_uint8_dtype :
-        pressio_byte_dtype
-        );
-  }
-
-  template <class T>
   pressio_data*
   _pressio_io_data_from_numpy_impl(T* data, std::vector<size_t> dims) {
     return pressio_data_new_copy(
-        type_to_dtype<T>(),
+        pressio_dtype_from_type<T>(),
         data,
         dims.size(),
         dims.data()
