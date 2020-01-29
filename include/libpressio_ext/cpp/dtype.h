@@ -1,3 +1,5 @@
+#ifndef LIBPRESSIO_DTYPE_CPP
+#define LIBPRESSIO_DTYPE_CPP
 #include <pressio_dtype.h>
 
 /**
@@ -22,3 +24,4 @@ constexpr pressio_dtype pressio_dtype_from_type() {
       );
 }
 
+#endif /* end of include guard: LIBPRESSIO_DTYPE_CPP */
