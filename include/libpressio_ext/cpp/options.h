@@ -5,6 +5,7 @@
 #include <map>
 #include <type_traits>
 #include <vector>
+#include <initializer_list>
 #include "pressio_options.h"
 #include "pressio_option.h"
 #include "libpressio_ext/cpp/data.h"
@@ -70,6 +71,13 @@ struct pressio_option final {
    * \param[in] value the monostate singleton
    * */
   pressio_option(const char* value): option(std::string(value)) { }
+
+  /** 
+   * create an option from a std::initializer_list
+   */
+
+  template<class T>
+  pressio_option(std::initializer_list<T> ul): option(ul) {}
 
   /** returns a pressio option that has the appropriate type if the conversion is allowed for the specified safety
    * \param[in] type the type to convert to
@@ -217,6 +225,36 @@ struct pressio_option final {
  * represents a map of dynamically typed objects
  */
 struct pressio_options final {
+
+  /** create an empty pressio_options structure */
+  pressio_options()=default;
+  /** copy a pressio_options structure
+   *
+   * \param[in] rhs the structure to copy from
+   * */
+  pressio_options(pressio_options const& rhs)=default;
+  /** move a pressio_options structure
+   *
+   * \param[in] rhs the structure to move from
+   * */
+  pressio_options(pressio_options && rhs) noexcept=default;
+  /** copy a pressio_options structure
+   *
+   * \param[in] rhs the structure to copy from
+   * */
+  pressio_options& operator=(pressio_options const& rhs)=default;
+  /** move a pressio_options structure 
+   *
+   * \param[in] rhs the structure to move from
+   * */
+  pressio_options& operator=(pressio_options && rhs) noexcept=default;
+
+  /**
+   * create a literal pressio_options structure from a std::initializer_list
+   *
+   * \param[in] opts the options to put into the map
+   */
+  pressio_options(std::initializer_list<std::pair<const std::string, pressio_option>> opts): options(opts) {}
 
   /**
    * checks the status of a key in a option set

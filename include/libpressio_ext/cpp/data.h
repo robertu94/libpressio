@@ -8,7 +8,7 @@
 #include <cstring>
 #include <utility>
 #include "pressio_data.h"
-#include "pressio_dtype.h"
+#include "libpressio_ext/cpp/dtype.h"
 #include "libpressio_ext/compat/std_compat.h"
 
 /**
@@ -272,6 +272,23 @@ struct pressio_data {
     dims = compat::exchange(rhs.dims, {});
     return *this;
   }
+
+  /**
+   * construct a literal pressio_data object from a initializer list
+   *
+   * \param[in] il initializer list to use to create the data object
+   */
+  template <class T>
+  pressio_data(std::initializer_list<T> il):
+    data_dtype(pressio_dtype_from_type<T>()),
+    data_ptr(malloc(il.size() * sizeof(T))),
+    metadata_ptr(nullptr),
+    deleter(pressio_data_libc_free_fn),
+    dims({il.size()}) 
+  {
+    std::copy(std::begin(il), std::end(il), static_cast<T*>(data_ptr));
+  }
+    
 
   /**
    * \returns a non-owning pointer to the data

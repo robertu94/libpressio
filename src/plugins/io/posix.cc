@@ -2,23 +2,18 @@
 #include <unistd.h>
 #include <vector>
 #include "pressio_data.h"
+#include "pressio_compressor.h"
 #include "libpressio_ext/io/posix.h"
+#include "libpressio_ext/cpp/pressio.h"
+#include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/data.h"
+#include "libpressio_ext/cpp/io.h"
 
-namespace {
-  std::vector<size_t> get_all_dimensions(struct pressio_data const* data) {
-    std::vector<size_t> dims;
-    if(data) {
-      for (size_t i = 0; i < pressio_data_num_dimensions(data); ++i) {
-        dims.emplace_back(pressio_data_get_dimension(data, i));
-      }
-    }
-    return dims;
-  }
-}
+
+
+
 
 extern "C" {
-
   struct pressio_data* pressio_io_data_read(struct pressio_data* dims, int in_filedes) {
     pressio_data* ret;
     if(dims != nullptr) {
@@ -29,7 +24,7 @@ extern "C" {
       } else {
         //create a new buffer of the appropriate size
         auto dtype = pressio_data_dtype(dims);
-        auto dims_v = get_all_dimensions(dims);
+        auto dims_v = dims->dimensions();
         pressio_data_free(dims);
         ret = pressio_data_new_owning(dtype, dims_v.size(), dims_v.data());
       }
@@ -93,5 +88,83 @@ extern "C" {
       return 0;
     }
   }
-  
 }
+
+struct posix_io : public libpressio_io_plugin {
+  virtual struct pressio_data* read_impl(struct pressio_data* data) override {
+    if(path) return pressio_io_data_path_read(data, path->c_str());
+    if(file_ptr) return pressio_io_data_fread(data, *file_ptr);
+    if(fd) return pressio_io_data_read(data, *fd);
+
+    invalid_configuration();
+    return nullptr;
+  }
+
+  virtual int write_impl(struct pressio_data const* data) override{
+    if(path) return pressio_io_data_path_write(data, path->c_str()) != data->size_in_bytes();
+    else if(file_ptr) return pressio_io_data_fwrite(data, *file_ptr) != data->size_in_bytes();
+    else if(fd) return pressio_io_data_write(data, *fd) != data->size_in_bytes();
+    return invalid_configuration();
+  }
+  virtual struct pressio_options get_configuration_impl() const override{
+    return {
+      {"pressio:thread_safe",  static_cast<int>(pressio_thread_safety_single)}
+    };
+  }
+
+  virtual int set_options_impl(struct pressio_options const& options) override{
+    std::string path;
+    if(options.get("io:path", &path) == pressio_options_key_set) {
+      this->path = path;
+    } else {
+      this->path = {};
+    }
+
+    void* file_ptr;
+    if(options.get("io:file_pointer", &file_ptr ) == pressio_options_key_set) {
+      this->file_ptr = (FILE*)file_ptr;
+    } else {
+      this->file_ptr = {};
+    }
+
+    int fd;
+    if(options.get("io:file_descriptor", &fd) == pressio_options_key_set) {
+      this->fd = fd;
+    } else {
+      this->fd = {};
+    }
+    return 0;
+  }
+  virtual struct pressio_options get_options_impl() const override{
+    pressio_options opts;
+
+    if(path) opts.set("io:path", *path);
+    else opts.set_type("io:path", pressio_option_charptr_type);
+
+    if(file_ptr) opts.set("io:file_pointer", (void*)*file_ptr);
+    else opts.set_type("io:file_pointer", pressio_option_userptr_type);
+
+    if(fd) opts.set("io:file_descriptor", *fd);
+    else opts.set_type("io:file_descriptor", pressio_option_int32_type);
+
+    return opts;
+  }
+
+  int patch_version() const override{ 
+    return 1;
+  }
+  virtual const char* version() const override{
+    return "0.0.1";
+  }
+
+  private:
+  int invalid_configuration() {
+    return set_error(1, "invalid configuration");
+  }
+
+  std::optional<std::string> path;
+  std::optional<FILE*> file_ptr = nullptr;
+  std::optional<int> fd;
+};
+
+static pressio_register X(io_plugins(), "posix", [](){ return compat::make_unique<posix_io>(); });

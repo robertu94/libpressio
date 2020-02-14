@@ -46,6 +46,32 @@ TEST_F(PressioDataTests, Printers) {
   pressio_data_free(d);
 }
 
+TEST_F(PressioDataTests, InitalizerLists) {
+  pressio_data d_int{1,2,3};
+  pressio_data d_double{1.0,2.0,3.0};
+
+  EXPECT_EQ(d_int.dtype(), pressio_int32_dtype);
+  EXPECT_EQ(d_int.num_elements(), 3);
+  EXPECT_EQ(d_int.has_data(), true);
+  std::vector<int> expected_int{1,2,3};
+  std::vector<int> actual_int(
+      static_cast<int*>(d_int.data()),
+      static_cast<int*>(d_int.data())+ d_int.num_elements()
+    );
+  EXPECT_THAT(actual_int, testing::ElementsAreArray(expected_int));
+
+  EXPECT_EQ(d_double.dtype(), pressio_double_dtype);
+  EXPECT_EQ(d_double.num_elements(), 3);
+  EXPECT_EQ(d_double.has_data(), true);
+  std::vector<double> expected_double{1.0,2.0,3.0};
+  std::vector<double> actual_double(
+      static_cast<double*>(d_double.data()),
+      static_cast<double*>(d_double.data())+ d_double.num_elements()
+    );
+  EXPECT_THAT(actual_double, testing::ElementsAreArray(expected_double));
+
+}
+
 namespace {
 struct accumulator {
   template <class T>

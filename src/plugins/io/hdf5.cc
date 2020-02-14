@@ -5,7 +5,13 @@
 #include <cassert>
 #include <vector>
 #include <string>
+#include <pressio_compressor.h>
 #include <libpressio_ext/compat/std_compat.h>
+#include "libpressio_ext/io/posix.h"
+#include "libpressio_ext/cpp/pressio.h"
+#include "libpressio_ext/cpp/options.h"
+#include "libpressio_ext/cpp/data.h"
+#include "libpressio_ext/cpp/io.h"
 
 namespace {
   compat::optional<pressio_dtype> h5t_to_pressio(hid_t h5type) {
@@ -205,3 +211,44 @@ pressio_io_data_path_h5write(struct pressio_data const* data, const char* file_n
 }
 
 }
+
+struct hdf5_io: public libpressio_io_plugin {
+  virtual struct pressio_data* read_impl(struct pressio_data*) override {
+    return pressio_io_data_path_h5read(filename.c_str(), dataset.c_str());
+  }
+
+  virtual int write_impl(struct pressio_data const* data) override{
+    return pressio_io_data_path_h5write(data, filename.c_str(), dataset.c_str());
+  }
+
+  virtual struct pressio_options get_configuration_impl() const override{
+    return {
+      {"pressio:thread_safe",  static_cast<int>(pressio_thread_safety_single)}
+    };
+  }
+
+  virtual int set_options_impl(struct pressio_options const& options) override{
+    options.get("io:path", &filename);
+    options.get("hdf5:dataset", &dataset);
+    return 0;
+  }
+  virtual struct pressio_options get_options_impl() const override{
+    pressio_options opts;
+    opts.set("io:path", filename);
+    opts.set("hdf5:dataset", dataset);
+    return opts;
+  }
+
+  int patch_version() const override{ 
+    return 1;
+  }
+  virtual const char* version() const override{
+    return "0.0.1";
+  }
+
+  private:
+  std::string filename;
+  std::string dataset;
+};
+
+static pressio_register X(io_plugins(), "hdf5", [](){ return compat::make_unique<hdf5_io>(); });

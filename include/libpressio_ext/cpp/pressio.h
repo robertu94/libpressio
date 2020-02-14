@@ -9,6 +9,7 @@
 #include <functional>
 #include "compressor.h"
 #include "metrics.h"
+#include "io.h"
 
 /**
  * a type that registers constructor functions
@@ -85,6 +86,11 @@ pressio_registry<std::shared_ptr<libpressio_compressor_plugin>>& compressor_plug
 pressio_registry<std::unique_ptr<libpressio_metrics_plugin>>& metrics_plugins();
 
 /**
+ * the registry for metrics plugins
+ */
+pressio_registry<std::unique_ptr<libpressio_io_plugin>>& io_plugins();
+
+/**
  * the libraries basic state
  */
 struct pressio {
@@ -120,6 +126,22 @@ struct pressio {
     if (compressor) return compressor;
     else {
       set_error(1, std::string("invalid compressor id ") + compressor_id);
+      return nullptr;
+    }
+  }
+
+  /**
+   * Returns an io module
+   * \param[in] io_module_id name of the compressor to request
+   * \returns an instance of compressor registered at name, or nullptr on error
+   */
+  std::shared_ptr<libpressio_io_plugin> get_io(std::string const& io_module_id)
+  {
+    auto io_module = io_plugins().build(io_module_id);
+    if (io_module)
+      return io_module;
+    else {
+      set_error(1, std::string("invalid io_plugin id ") + io_module_id);
       return nullptr;
     }
   }

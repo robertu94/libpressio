@@ -6,11 +6,12 @@
 #include <unistd.h>
 #include "pressio_data.h"
 #include "pressio_options.h"
-#include "libpressio_ext/io/posix.h"
+#include "libpressio_ext/io/pressio_io.h"
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
+#include "libpressio_ext/cpp/io.h"
 #include "libpressio_ext/compat/std_compat.h"
 
 namespace {
@@ -133,11 +134,17 @@ class external_metric_plugin : public libpressio_metrics_plugin {
     struct pressio_options get_metrics_options() const override {
       auto opt = pressio_options();
       opt.set("external:command", command);
+      opt.set("external:io_format", io_format);
       return opt;
     }
 
     int set_metrics_options(pressio_options const& opt) override {
       opt.get("external:command", &command);
+      if(opt.get("external:io_format", &io_format) == pressio_options_key_set) {
+        pressio library;
+        io_module = library.get_io(io_format);
+      }
+      io_module->set_options(opt);
       return 0;
     }
 
@@ -226,12 +233,14 @@ class external_metric_plugin : public libpressio_metrics_plugin {
       //write uncompressed data to a temporary file
       char input_fd_name[] = {'.', 'p', 'r', 'e', 's', 's','i', 'o','i', 'n', 'X', 'X', 'X', 'X', 'X', 'X', 0};
       int input_fd = mkstemp(input_fd_name);
-      pressio_io_data_write(&input_data, input_fd);
+      io_module->set_options({{"io:path", std::string(input_fd_name)}});
+      io_module->write(&input_data);
 
       //write decompressed data to a temporary file
       char output_fd_name[] = {'.', 'p', 'r', 'e', 's', 's','i', 'o','o', 'u','t', 'X', 'X', 'X', 'X', 'X', 'X', 0};
       int decompressed_fd = mkstemp(output_fd_name);
-      pressio_io_data_write(&decompressed_data, decompressed_fd);
+      io_module->set_options({{"io:path", std::string(output_fd_name)}});
+      io_module->write(&decompressed_data);
 
       //build the command
       std::string full_command = build_command(input_fd_name, output_fd_name, input_data);
@@ -253,7 +262,9 @@ class external_metric_plugin : public libpressio_metrics_plugin {
 
     pressio_data input_data = pressio_data::empty(pressio_byte_dtype, {});
     std::string command;
+    std::string io_format = "posix";
     pressio_options results;
+    pressio_io io_module;
 
 };
 

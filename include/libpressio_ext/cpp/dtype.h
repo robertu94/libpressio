@@ -1,6 +1,12 @@
 #ifndef LIBPRESSIO_DTYPE_CPP
 #define LIBPRESSIO_DTYPE_CPP
 #include <pressio_dtype.h>
+#include <cstdint>
+
+/**
+ * \file
+ * \brief C++ interface to data types
+ */
 
 /**
  * Convert types to pressio_dtypes

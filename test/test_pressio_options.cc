@@ -374,3 +374,18 @@ TEST_F(PressioOptionsTests, Printers) {
   }
   pressio_options_free(opts);
 }
+
+TEST_F(PressioOptionsTests, Intializer) {
+  pressio_options opts{
+    {"int", 1},
+    {"uint", 2u},
+    {"str", "testing"}
+  };
+
+  EXPECT_EQ(opts.key_status("int"), pressio_options_key_set);
+  EXPECT_EQ(opts.key_status("uint"), pressio_options_key_set);
+  EXPECT_EQ(opts.key_status("str"), pressio_options_key_set);
+  EXPECT_EQ(opts.get("int").type(), pressio_option_int32_type);
+  EXPECT_EQ(opts.get("uint").type(), pressio_option_uint32_type);
+  EXPECT_EQ(opts.get("str").type(), pressio_option_charptr_type);
+}

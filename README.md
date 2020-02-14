@@ -103,7 +103,7 @@ main(int argc, char* argv[])
 
 ## Getting Started
 
-After skimming the example, LibPressio has 5 major headers that you will need to use:
+After skimming the example, LibPressio has 6 major headers that you will need to use:
 
 Type                  | Use 
 ----------------------|-------------------
@@ -112,6 +112,7 @@ Type                  | Use
 `pressio_data.h`        | Represents data and associated metadata (size, type, dimentionality, memory ownership)
 `pressio_options.h`     | Maps between names and values, used for options for compressors and metrics results
 `pressio_metrics.h`     | A set of metrics to run while compressors run
+`pressio_io.h`     | An extension header that provides methods to load or store data from/to persistent storage
 
 All of these are included by the convience header `libpressio.h`.
 

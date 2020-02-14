@@ -7,19 +7,24 @@ In order to correctly communicate between LibPressio and an External script, str
 The external module is not intended to replace writing metrics modules in C/C++.
 Pull requests for such modules will not be accepted.
 
-The `external` plugin will provide the following command line arguments to the script.
 
 ## Configuration Options
 
 `external:command` -- the command to execute,  the options passed by the module will be appended to this string
+`external:io_format` -- the format to write the data to disk.  It can be any format supported by `pressio_supported_io_modules`
+
+Additionally any options passed to this metric will be passed to the IO format module.
 
 ## Command line Arguments
 
-`--api` the maximum API version number the external module supports, begins at 1
+The `external` plugin will provide the following command line arguments to the script.
+These may change from version to version.
 
-`--input` path to a temporary file containing the input data prior to compression. It will be a binary blob in row-major order.
+`--api` the maximum API version number the external module supports, begins at 1.  The current version is 2
 
-`--decompressed` path to a temporary file containing the input data prior to compression.
+`--input` path to a temporary file containing the input data prior to compression. (new in version 2) It will be according to the `external:io_format` option
+
+`--decompressed` path to a temporary file containing the input data prior to compression. (new in version 2) It will be according to the `external:io_format` option
 
 `--dim` dimension the dimensions of the dataset from low to high.  This argument may be passed more than once.  If passed more than once, the dimensions are given in order same order as the `pressio_data_new` functions.
 
@@ -69,6 +74,10 @@ auto_cor3=.097
 ssim=.64
 my_analysis=1.03e-3
 ```
+
+### version 2:
+
+No changes were made to the output format since version 1.
 
 
 ## Expected Standard Error

@@ -118,3 +118,41 @@ The external metrics module allows running 3rd party metrics without having to p
 option                  | type        | description
 ------------------------|-------------|------------
 `external:command`      | char*       | the command to run
+
+## IO Modules
+
+As of LibPressio version 0.32.0, LibPressio gained support for Generic file IO plugins as an extension feature.  This allows applications to easily load data using a variety of formats in a generic way.
+
+Eventually the `pressio_io_data_*` methods may be deprecated in favor of these methods` methods may be deprecated in favor of these methods.
+
+### Generic IO
+
+IO Modules MAY support these "standard" options in addition to their own specific options.  If a specific option is given, the generic option should be overwritten.
+
+option                 | type          | description
+-----------------------|---------------|-----------------------------------------------------------------------------------
+`io:path`              | const char*   | path accessible via the `open` system call on your platform to be read or written
+`io:file_pointer`      | FILE*         | A POSIX FILE* pointer that was returned from `fopen()` to be read or written
+`io:file_descriptor`   | int32         | a POSIX file descriptor that was returned from `open()` to be read or written
+
+### POSIX
+
+A module to load or store data using the POSIX.1-2001 standard.
+
+option                 | type          | description
+-----------------------|---------------|-----------------------------------------------------------------------------------
+`io:path`              | const char*   | see "Generic IO" above
+`io:file_pointer`      | FILE*         | see "Generic IO" above
+`io:file_descriptor`   | int32         | see "Generic IO" above
+
+
+### HDF5
+
+A module to load or store data using the HDF file format.
+
+option                 | type          | description
+-----------------------|---------------|-----------------------------------------------------------------------------------
+`io:path`              | const char*   | see "Generic IO" above
+`hdf5:dataset`         | const char*   | path to the dataset within the hdf5 file
+
+
