@@ -17,13 +17,7 @@ void pressio_io_free(struct pressio_io* io) {
   delete io;
 }
 const char* pressio_supported_io_modules() {
-  static std::string modules;
-  std::ostringstream os;
-  for (auto const& it : io_plugins()) {
-    os << it.first << " "; 
-  }
-  modules = os.str();
-  return modules.c_str();
+  return pressio::supported_io();
 }
 
 struct pressio_options* pressio_io_get_configuration(struct pressio_io const* io) {

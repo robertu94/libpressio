@@ -2,6 +2,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <sstream>
 #include <functional>
 #include "pressio.h"
 #include "pressio_version.h"
@@ -73,6 +74,10 @@ const char* pressio_supported_compressors() {
   return pressio::supported_compressors();
 }
 
+const char* pressio_supported_metrics() {
+  return pressio::supported_metrics();
+}
+
 unsigned int pressio_major_version() {
   return pressio::major_version();
 }
@@ -96,8 +101,28 @@ const char* pressio::features() {
   return LIBPRESSIO_FEATURES;
 }
 
+template <class T>
+static std::string build_from(T const& plugins) {
+  std::ostringstream os;
+  for (auto const& it : plugins) {
+    os << it.first << " "; 
+  }
+  return os.str();
+}
+
 const char* pressio::supported_compressors() {
-  return LIBPRESSIO_COMPRESSORS;
+  static std::string modules = build_from(compressor_plugins());
+  return modules.c_str();
+}
+
+const char* pressio::supported_metrics() {
+  static std::string modules = build_from(metrics_plugins());
+  return modules.c_str();
+}
+
+const char* pressio::supported_io() {
+  static std::string modules = build_from(io_plugins());
+  return modules.c_str();
 }
 
 unsigned int pressio::major_version() {

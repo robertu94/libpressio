@@ -195,6 +195,20 @@ struct pressio {
   static const char* supported_compressors();
 
   /**
+   * \returns the supported metrics list for this version of libpressio
+   *
+   * \see pressio_supported_metrics
+   */
+  static const char* supported_metrics();
+
+  /**
+   * \returns the supported io modules list for this version of libpressio
+   *
+   * \see pressio_supported_io
+   */
+  static const char* supported_io();
+
+  /**
    * \returns the major version number of libpressio
    */
   static unsigned int major_version();

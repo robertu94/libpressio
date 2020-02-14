@@ -46,6 +46,7 @@ extern "C" {
   }
 
   struct pressio_data* pressio_io_data_fread(struct pressio_data* dims, FILE* in_file) {
+    if(in_file == nullptr) return nullptr;
     return pressio_io_data_read(dims, fileno(in_file));
   }
 
@@ -68,7 +69,7 @@ extern "C" {
         pressio_dtype_size(pressio_data_dtype(data)),
         pressio_data_num_elements(data),
         out_file
-        );
+        ) * pressio_dtype_size(pressio_data_dtype(data));
   }
 
   size_t pressio_io_data_write(struct pressio_data const* data, int out_filedes) {
@@ -92,18 +93,62 @@ extern "C" {
 
 struct posix_io : public libpressio_io_plugin {
   virtual struct pressio_data* read_impl(struct pressio_data* data) override {
-    if(path) return pressio_io_data_path_read(data, path->c_str());
-    if(file_ptr) return pressio_io_data_fread(data, *file_ptr);
-    if(fd) return pressio_io_data_read(data, *fd);
+    errno = 0;
+    if(path) {
+        auto ret = pressio_io_data_path_read(data, path->c_str());
+        if(ret == nullptr) {
+          if(errno != 0)set_error(2, strerror(errno));
+          else set_error(3, "invalid dims");
+        }
+        return ret;
+    }
+    if(file_ptr) {
+      auto ret = pressio_io_data_fread(data, *file_ptr);
+      if(ret == nullptr) {
+        if(errno != 0)set_error(2, strerror(errno));
+        else set_error(3, "invalid dims");
+      }
+      return ret;
+    }
+    if(fd) {
+      auto ret = pressio_io_data_read(data, *fd);
+      if(ret == nullptr) {
+        if(errno != 0) set_error(2, strerror(errno));
+        else set_error(3, "invalid dims");
+      }
+      return ret;
+    }
 
     invalid_configuration();
     return nullptr;
   }
 
   virtual int write_impl(struct pressio_data const* data) override{
-    if(path) return pressio_io_data_path_write(data, path->c_str()) != data->size_in_bytes();
-    else if(file_ptr) return pressio_io_data_fwrite(data, *file_ptr) != data->size_in_bytes();
-    else if(fd) return pressio_io_data_write(data, *fd) != data->size_in_bytes();
+    errno = 0;
+    if(path) {
+      int ret = pressio_io_data_path_write(data, path->c_str()) != data->size_in_bytes();
+      if(ret) {
+        if(errno) return set_error(2, strerror(errno));
+        else return set_error(3, "unknown failure");
+      }
+      return ret;
+    }
+    else if(file_ptr) {
+      int ret = pressio_io_data_fwrite(data, *file_ptr) != data->size_in_bytes();
+      if(ret) {
+        if(errno) set_error(2, strerror(errno));
+        else set_error(3, "unknown failure");
+      }
+      return ret;
+    }
+    else if(fd) {
+      int ret = pressio_io_data_write(data, *fd) != data->size_in_bytes();
+      if(ret) {
+        if(errno) set_error(2, strerror(errno));
+        else set_error(3, "unknown failure");
+      }
+      return ret;
+    }
     return invalid_configuration();
   }
   virtual struct pressio_options get_configuration_impl() const override{
@@ -163,7 +208,7 @@ struct posix_io : public libpressio_io_plugin {
   }
 
   std::optional<std::string> path;
-  std::optional<FILE*> file_ptr = nullptr;
+  std::optional<FILE*> file_ptr;
   std::optional<int> fd;
 };
 
