@@ -246,6 +246,10 @@ struct hdf5_io: public libpressio_io_plugin {
     return "0.0.1";
   }
 
+  std::shared_ptr<libpressio_io_plugin> clone() override {
+    return compat::make_unique<hdf5_io>(*this);
+  }
+
   private:
   std::string filename;
   std::string dataset;

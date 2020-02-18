@@ -85,6 +85,12 @@ struct libpressio_io_plugin {
    * \returns an implementation specific integer error code for the last error, 0 is reserved for no error
    */
   int error_code() const;
+
+  /**
+   * clones an io module 
+   * \returns a new reference to an io plugin.
+   */
+  virtual std::shared_ptr<libpressio_io_plugin> clone()=0;
   protected:
   /**
    * Should be used by implementing plug-ins to provide error codes
@@ -133,6 +139,7 @@ struct libpressio_io_plugin {
    * \see pressio_options.h for how to configure options
    */
   virtual struct pressio_options get_options_impl() const=0;
+
 
   private:
   struct {

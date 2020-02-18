@@ -56,6 +56,9 @@ int pressio_io_minor_version(struct pressio_io const* io) {
 int pressio_io_patch_version(struct pressio_io const* io) {
   return (*io)->patch_version();
 }
+struct pressio_io* pressio_io_clone(struct pressio_io* io) {
+  return new pressio_io((*io)->clone());
+}
 
 }
 

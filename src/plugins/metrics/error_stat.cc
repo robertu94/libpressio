@@ -142,6 +142,9 @@ class error_stat_plugin : public libpressio_metrics_plugin {
       }
       return opt;
     }
+    std::unique_ptr<libpressio_metrics_plugin> clone() override {
+      return compat::make_unique<error_stat_plugin>(*this);
+    }
 
 
   private:

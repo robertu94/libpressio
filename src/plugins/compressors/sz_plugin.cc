@@ -15,7 +15,7 @@
 #include "pressio_option.h"
 
 
-class sz_plugin: public libpressio_compressor_plugin {
+class sz_plugin: public libpressio_compressor_plugin, std::enable_shared_from_this<sz_plugin> {
   public:
   sz_plugin() {
     std::stringstream ss;
@@ -176,6 +176,10 @@ class sz_plugin: public libpressio_compressor_plugin {
 
   const char* prefix() const override {
     return "sz";
+  }
+
+  std::shared_ptr<libpressio_compressor_plugin> clone() override {
+    return this->shared_from_this();
   }
 
 

@@ -64,5 +64,8 @@ int pressio_compressor_metrics_set_options(struct pressio_compressor const* comp
   return (*compressor)->set_metrics_options(*options);
 }
 
+struct pressio_compressor* pressio_compressor_clone(struct pressio_compressor* compressor) {
+  return new pressio_compressor((*compressor)->clone());
+}
 
 }

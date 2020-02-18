@@ -211,6 +211,10 @@ class magick_plugin: public libpressio_compressor_plugin {
     return "magick";
   }
 
+  std::shared_ptr<libpressio_compressor_plugin> clone() override {
+    return compat::make_unique<magick_plugin>(*this);
+  }
+
   private:
 
   int invalid_dimensions(size_t n_dims) {

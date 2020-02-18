@@ -202,14 +202,18 @@ struct posix_io : public libpressio_io_plugin {
     return "0.0.1";
   }
 
+  std::shared_ptr<libpressio_io_plugin> clone() override {
+    return compat::make_unique<posix_io>(*this);
+  }
+
   private:
   int invalid_configuration() {
     return set_error(1, "invalid configuration");
   }
 
-  std::optional<std::string> path;
-  std::optional<FILE*> file_ptr;
-  std::optional<int> fd;
+  compat::optional<std::string> path;
+  compat::optional<FILE*> file_ptr;
+  compat::optional<int> fd;
 };
 
 static pressio_register X(io_plugins(), "posix", [](){ return compat::make_unique<posix_io>(); });

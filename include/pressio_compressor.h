@@ -163,6 +163,18 @@ int pressio_compressor_minor_version(struct pressio_compressor const* compressor
 int pressio_compressor_patch_version(struct pressio_compressor const* compressor);
 
 /**
+ * Clones a compressor and its configuration including metrics information
+ *
+ * \param[in] compressor the compressor to clone. It will not be modified
+ *                       except to modify a reference count as needed.
+ * \returns a pointer to a new compressor plugin reference which is equivalent
+ *          to the compressor cloned.  It the compressor is not thread safe, it may
+ *          return a new reference to the same object.
+ *                
+ */
+struct pressio_compressor* pressio_compressor_clone(struct pressio_compressor* compressor);
+
+/**
  * reports the level of thread safety supported by the compressor.
  *
  * Compressors MUST report a thread safety by setting the pressio:thread_safe

@@ -26,6 +26,10 @@ class counting_metric: public libpressio_metrics_plugin {
     counts[pressio_byte_dtype] = 0;
   }
 
+  std::unique_ptr<libpressio_metrics_plugin> clone() override {
+    return compat::make_unique<counting_metric>(*this);
+  }
+
   private:
   void begin_compress(pressio_data const* input, pressio_data const*) override {
     counts[input->dtype()]++;

@@ -43,6 +43,13 @@ struct pressio_options* pressio_metrics_get_options(struct pressio_metrics const
  */
 int pressio_metrics_set_options(struct pressio_metrics const* metrics, struct pressio_options const* options);
 
+/**
+ * Clones a pressio_metrics object and its configuration
+ * \param[in] metrics the metrics object to clone
+ * \returns a new reference to a pressio metrics object
+ */
+struct pressio_metrics* pressio_metrics_clone(struct pressio_metrics* metrics);
+
 
 #endif
 

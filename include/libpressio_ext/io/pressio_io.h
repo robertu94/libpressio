@@ -121,6 +121,14 @@ int pressio_io_minor_version(struct pressio_io const* io);
  */
 int pressio_io_patch_version(struct pressio_io const* io);
 
+/**
+ * Creates a new reference to an io module with the same configuration
+ *
+ * \param[in] io the io module to clone
+ * \returns a new reference to an io module
+ */
+struct presio_io* pressio_io_clone(struct pressio_io* io);
+
 #endif /* end of include guard: PRESSIO_IO_H */
 
 #ifdef __cplusplus

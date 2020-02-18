@@ -180,6 +180,10 @@ class zfp_plugin: public libpressio_compressor_plugin {
       return "zfp";
     }
 
+    std::shared_ptr<libpressio_compressor_plugin> clone() override{
+      return compat::make_unique<zfp_plugin>(*this);
+    }
+
 
   private:
     int invalid_type() { return set_error(1, "invalid_type");}

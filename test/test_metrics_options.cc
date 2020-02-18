@@ -28,6 +28,9 @@ public:
   pressio_options get_metrics_results() const override {
     return {};
   }
+  std::unique_ptr<libpressio_metrics_plugin> clone() override {
+    return compat::make_unique<hasoptoins_metric>(*this);
+  }
 
   int value = 3;
 };

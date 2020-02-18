@@ -50,6 +50,9 @@ class noop_compressor_plugin: public libpressio_compressor_plugin {
   const char* prefix() const override {
     return "noop";
   }
+  std::shared_ptr<libpressio_compressor_plugin> clone() override{
+    return std::make_unique<noop_compressor_plugin>(*this);
+  }
 };
 
 static pressio_register X(compressor_plugins(), "noop", [](){ return compat::make_unique<noop_compressor_plugin>();});

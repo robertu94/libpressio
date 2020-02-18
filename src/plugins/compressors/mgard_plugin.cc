@@ -156,6 +156,10 @@ class mgard_plugin: public libpressio_compressor_plugin {
     return "mgard";
   }
 
+  std::shared_ptr<libpressio_compressor_plugin> clone() override {
+    return std::make_unique<mgard_plugin>(*this);
+  }
+
 
   private:
 

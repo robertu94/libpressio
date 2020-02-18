@@ -97,6 +97,10 @@ class time_plugin : public libpressio_metrics_plugin {
     return opt;
   }
 
+  std::unique_ptr<libpressio_metrics_plugin> clone() override {
+    return compat::make_unique<time_plugin>(*this);
+  }
+
   private:
   timer check_options;
   timer set_options;

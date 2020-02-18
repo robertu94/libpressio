@@ -117,6 +117,15 @@ class libpressio_compressor_plugin {
    * */
   int check_options(struct pressio_options const&);
 
+  /**
+   * \returns a copy of each a compressor and its configuration.  If the
+   * compressor is not thread-safe and indicates such via its configuration, it
+   * may return a new shared pointer to the same object.  For this reason, this
+   * function may not be const.
+   */
+  virtual std::shared_ptr<libpressio_compressor_plugin> clone()=0;
+
+
   protected:
   /**
    * Should be used by implementing plug-ins to provide error codes

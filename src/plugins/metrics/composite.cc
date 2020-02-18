@@ -104,6 +104,14 @@ class composite_plugin : public libpressio_metrics_plugin {
     return rc;
   }
 
+  std::unique_ptr<libpressio_metrics_plugin> clone() override {
+    std::vector<std::unique_ptr<libpressio_metrics_plugin>> cloned;
+    for (auto& plugin : plugins) {
+      cloned.emplace_back(plugin->clone());
+    }
+    return compat::make_unique<composite_plugin>(std::move(cloned));
+  }
+
   private:
   void set_composite_metrics(struct pressio_options& opt) const {
     //compression_rate

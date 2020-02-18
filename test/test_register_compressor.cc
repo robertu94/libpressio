@@ -94,6 +94,12 @@ class log_transform : public libpressio_compressor_plugin {
   int patch_version() const override {
     return compressor.plugin->patch_version();
   }
+  std::shared_ptr<libpressio_compressor_plugin> clone() override {
+    auto tmp = compat::make_unique<log_transform>();
+    tmp->set_error(error_code(), error_msg());
+    tmp->compressor = tmp->compressor->clone();
+    return tmp;
+  }
 
   private:
   int check_error(int rc) { 

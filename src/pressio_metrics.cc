@@ -20,5 +20,9 @@ int pressio_metrics_set_options(struct pressio_metrics const* metrics, struct pr
   return (*metrics)->set_metrics_options(*options);
 }
 
+struct pressio_metrics* pressio_metrics_clone(struct pressio_metrics* metrics) {
+  return new pressio_metrics((*metrics)->clone());
+}
+
 
 }

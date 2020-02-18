@@ -95,6 +95,10 @@ public:
     return opt;
   }
 
+  std::unique_ptr<libpressio_metrics_plugin> clone() override {
+    return compat::make_unique<pearsons_plugin>(*this);
+  }
+
 private:
   pressio_data input_data = pressio_data::empty(pressio_byte_dtype, {});
   compat::optional<pearson_metrics> err_metrics;

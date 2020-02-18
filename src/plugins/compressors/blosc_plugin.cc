@@ -120,6 +120,10 @@ class blosc_plugin: public libpressio_compressor_plugin {
       return "blosc";
     }
 
+    std::shared_ptr<libpressio_compressor_plugin> clone() override {
+      return compat::make_unique<blosc_plugin>(*this);
+    }
+
 
   private:
     int internal_error(int rc) { std::stringstream ss; ss << "interal error " << rc; return set_error(1, ss.str()); }

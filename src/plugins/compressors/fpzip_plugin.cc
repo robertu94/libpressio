@@ -129,6 +129,9 @@ class fpzip_plugin: public libpressio_compressor_plugin {
   const char* prefix() const noexcept override {
     return "fpzip";
   }
+  std::shared_ptr<libpressio_compressor_plugin> clone() override {
+    return compat::make_unique<fpzip_plugin>(*this);
+  }
 
   private:
   std::string version_str;

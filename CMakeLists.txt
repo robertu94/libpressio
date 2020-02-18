@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.33.0" LANGUAGES CXX C)
+project(libpressio VERSION "0.34.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -87,6 +87,7 @@ add_library(libpressio
   ./src/plugins/metrics/pearsons.cc
   ./src/plugins/io/posix.cc
   ./src/plugins/io/noop.cc
+  ./src/plugins/io/csv.cc
   ./src/plugins/io/io.cc
 
   #public headers
@@ -235,6 +236,16 @@ if(LIBPRESSIO_HAS_FPZIP)
     )
   target_link_libraries(libpressio PRIVATE fpzip::fpzip)
 
+endif()
+
+option(LIBPRESSIO_HAS_PETSC "build the petsc io plugin" OFF)
+if(LIBPRESSIO_HAS_PETSC)
+  pkg_search_module(PETSc IMPORTED_TARGET PETSc)
+  target_sources(libpressio
+    PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/io/petsc.cc
+    )
+  target_link_libraries(libpressio PRIVATE PkgConfig::PETSc)
 endif()
 
 configure_file(

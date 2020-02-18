@@ -47,6 +47,10 @@ class size_plugin : public libpressio_metrics_plugin {
     return opt;
   }
 
+  std::unique_ptr<libpressio_metrics_plugin> clone() override {
+    return compat::make_unique<size_plugin>(*this);
+  }
+
   private:
     compat::optional<double> compression_ratio;
     compat::optional<double> bit_rate;

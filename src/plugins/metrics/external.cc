@@ -152,6 +152,16 @@ class external_metric_plugin : public libpressio_metrics_plugin {
       return results;
     }
 
+    std::unique_ptr<libpressio_metrics_plugin> clone() override {
+      auto cloned = compat::make_unique<external_metric_plugin>();
+      cloned->input_data = this->input_data;
+      cloned->command = this->command;
+      cloned->io_format = this->io_format;
+      cloned->results = this->results;
+      cloned->io_module = this->io_module->clone();
+      return cloned;
+    }
+
 
   private:
 
@@ -270,4 +280,3 @@ class external_metric_plugin : public libpressio_metrics_plugin {
 
 
 static pressio_register X(metrics_plugins(), "external", [](){ return compat::make_unique<external_metric_plugin>(); });
-

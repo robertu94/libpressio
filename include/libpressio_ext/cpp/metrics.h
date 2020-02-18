@@ -103,6 +103,11 @@ class libpressio_metrics_plugin {
    * \param[in] options a pressio_options structure containing the options for the provided metrics plugin
    */
   virtual int set_metrics_options(struct pressio_options const& options);
+
+  /**
+   * \returns a clone of the metric
+   */
+  virtual std::unique_ptr<libpressio_metrics_plugin> clone()=0;
 };
 
 /**
