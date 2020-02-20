@@ -35,118 +35,6 @@ namespace {
     const size_t rows, columns;
     std::ofstream& outfile;
   };
-
-  template <class Value>
-  struct csv_builder {
-
-    csv_builder()=default;
-    ~csv_builder() {
-      if(this->value) free(this->value);
-    }
-    csv_builder(csv_builder &&)=delete;
-    csv_builder& operator=(csv_builder &&)=delete;
-    csv_builder(csv_builder const&)=delete;
-    csv_builder& operator=(csv_builder const&)=delete;
-    
-    void resize(size_t new_rows, size_t new_columns) {
-      Value* tmp = static_cast<Value*>(malloc(sizeof(Value) * new_rows * new_columns));
-      copy_resized(
-          value, this->n_rows, this->n_columns,
-          tmp, new_rows, new_columns,
-          row_major
-          );
-
-      this->n_rows = new_rows;
-      this->n_columns = new_columns;
-      free(this->value);
-      this->value = std::move(tmp);
-    }
-
-		void reserve(size_t rows, size_t columns, size_t)
-		{
-      auto new_rows = std::max(this->n_rows, rows);
-      auto new_columns = std::max(this->n_columns, rows);
-      if(new_rows == this->n_rows && new_columns == this->n_columns) return;
-      else resize(rows, columns);
-		}
-
-		void set_entry(size_t row, size_t column, Value const& value)
-		{
-      if(row >= this->n_rows || column >= this->n_columns) {
-        resize(row >= this->n_rows ? row + 1 : this->n_rows, column >= this->n_columns ? column + 1: this->n_columns);
-      }
-      if(row_major) {
-        this->value[this->n_columns * row + column] = value;
-      } else {
-        this->value[this->n_rows * column + row] = value;
-      }
-		}
-
-    Value* build() {
-      auto tmp = this->value;
-      this->value = nullptr;
-      this->n_rows = 0;
-      this->n_columns = 0;
-      this->row_major = true;
-      return tmp;
-    }
-
-
-    size_t n_rows=0, n_columns=0;
-    bool row_major=true;
-    private:
-    Value* value=nullptr;
-
-    /**
-     * Copies or Zero initializes memory
-     *
-     * \param[in] old_values the memory to copy from
-     * \param[in] old_rows the old number of rows
-     * \param[in] old_columns the old number of columns
-     * \param[in] new_values the memory to fill/allocate
-     * \param[in] new_rows the new number of rows
-     * \param[in] new_columns the new number of columns
-     * \param[in] use_row_order -- the elements are in row-major order
-     *
-     * \tparam T the type of elements to copy
-     */
-    void copy_resized(Value* old_values, size_t old_rows, size_t old_columns,
-                Value* new_values, size_t new_rows, size_t new_columns,
-                bool use_row_order
-                )
-    {
-      if(old_rows == new_rows && old_columns == new_columns) return;
-      if(use_row_order)
-      {
-        for (size_t i = 0; i < std::min(new_rows,old_rows); ++i) {
-          for (size_t j = 0; j < std::min(new_columns,old_columns); ++j) {
-              new_values[i*new_columns + j] = old_values[i*old_columns + j];
-          }
-        }
-        
-        //zero initialize new values not set by previous code;
-        for (size_t i = std::min(new_rows, old_rows); i < new_rows; ++i) {
-          for (size_t j = std::min(new_columns, old_columns); j < new_columns; ++j) {
-              new_values[i*new_columns + j] = 0;
-          }
-        }
-
-      } else {
-        for (size_t j = 0; j < std::min(new_columns,old_columns); ++j) {
-          for (size_t i = 0; i < std::min(new_rows,old_rows); ++i) {
-              new_values[i*new_rows + j] = old_values[i*old_rows + j];
-          }
-        }
-        //zero initialize new values not set by previous code;
-        for (size_t j = std::min(new_columns, old_columns); j < new_columns; ++j) {
-          for (size_t i = std::min(new_rows, old_rows); i < new_rows; ++i) {
-              new_values[i*new_rows + j] = 0;
-          }
-        }
-      }
-
-    }
-  };
 }
 
 struct csv_io : public libpressio_io_plugin
@@ -160,24 +48,22 @@ struct csv_io : public libpressio_io_plugin
       return nullptr;
     }
     size_t sizes[2] = {0,0};
-    csv_builder<double> builder;
+    std::vector<double> builder;
     for(std::string line; std::getline(in, line); sizes[0]++) {
       if(sizes[0] < skip_rows) continue;
       std::istringstream line_ss(line);
       size_t column = 0;
       for(std::string value; std::getline(line_ss, value,','); ++column) {
-        builder.set_entry(sizes[0] - skip_rows, column, std::stold(value));
+        builder.emplace_back(std::stold(value));
       }
       sizes[1] = column;
     }
     sizes[0] -= skip_rows;
-    return pressio_data_new_move(
+    return pressio_data_new_copy(
         pressio_double_dtype,
-        builder.build(),
+        builder.data(),
         2,
-        sizes,
-        pressio_data_libc_free_fn,
-        nullptr
+        sizes
         );
   }
 

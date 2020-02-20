@@ -1,6 +1,7 @@
 #include <memory>
 #include <string>
 #include <sstream>
+#include <algorithm>
 #include <fpzip.h>
 #include "pressio_data.h"
 #include "pressio_compressor.h"
@@ -12,20 +13,27 @@
 
 namespace {
   constexpr int INVALID_TYPE = 8;
+    auto check_dim = [](size_t dim) {
+      if(dim == 0) return 1ul;
+      else return dim;
+    };
 }
 
 class fpzip_plugin: public libpressio_compressor_plugin {
 
   struct pressio_options 	get_options_impl () const override {
     struct pressio_options options = pressio_options();
-    options.set_type("fpzip:has_header", pressio_option_uint32_type);
-    options.set_type("fpzip:prec", pressio_option_uint32_type);
+    options.set("fpzip:has_header", has_header);
+    options.set("fpzip:prec", prec);
     return options;
   };
 
   struct pressio_options 	get_configuration_impl () const override {
     struct pressio_options options = pressio_options();
     pressio_options_set_integer(&options, "pressio:thread_safe", pressio_thread_safety_multiple);
+    pressio_options_set_uinteger(&options, "fpzip:codec_version", fpzip_codec_version);
+    pressio_options_set_uinteger(&options, "fpzip:library_version", fpzip_library_version);
+    pressio_options_set_uinteger(&options, "fpzip:data_model", fpzip_data_model);
     return options;
   };
 
@@ -33,13 +41,9 @@ class fpzip_plugin: public libpressio_compressor_plugin {
     int tmp;
     if( options.get("fpzip:has_header", &tmp) != pressio_options_key_set) {
       has_header = tmp != 0;
-    } else {
-      return set_error(7, "fpzip:has_header is required");
-    }
-    if(options.get("fpzip:prec", &prec) != pressio_options_key_set) {
-      return set_error(7, "fpzip:prec is required");
     }
 
+    options.get("fpzip:prec", &prec);
     return 0;
   }
 
@@ -61,10 +65,11 @@ class fpzip_plugin: public libpressio_compressor_plugin {
         pressio_data_get_bytes(output)
     );
 
-    fpz->nx = input->get_dimension(0);
-    fpz->ny = input->get_dimension(1);
-    fpz->nz = input->get_dimension(2);
-    fpz->nf = input->get_dimension(3);
+
+    fpz->nx = check_dim(input->get_dimension(0));
+    fpz->ny = check_dim(input->get_dimension(1));
+    fpz->nz = check_dim(input->get_dimension(2));
+    fpz->nf = check_dim(input->get_dimension(3));
     fpz->type = type;
     fpz->prec = prec;
 
@@ -75,14 +80,37 @@ class fpzip_plugin: public libpressio_compressor_plugin {
       }
     }
     size_t outsize = fpzip_write(fpz, input->data());
+    if(outsize == 0) {
+      return fpzip_error();
+    }
+    fpzip_write_close(fpz);
     output->set_dimensions({outsize});
 
     return 0;
   };
 
    int 	decompress_impl (const pressio_data *input, struct pressio_data *output) override {
-     (void)input;
-     (void)output;
+    int type = pressio_type_to_fpzip_type(output);
+    if(type == INVALID_TYPE) {
+      return INVALID_TYPE;
+    }
+
+    FPZ* fpz = fpzip_read_from_buffer(
+        pressio_data_ptr(input, nullptr)
+    );
+    if(has_header) {
+      fpzip_read_header(fpz);
+    } else {
+      fpz->nx = check_dim(output->get_dimension(0));
+      fpz->ny = check_dim(output->get_dimension(1));
+      fpz->nz = check_dim(output->get_dimension(2));
+      fpz->nf = check_dim(output->get_dimension(3));
+      fpz->type = type;
+      fpz->prec = prec;
+    }
+    fpzip_read(fpz, pressio_data_ptr(output, nullptr));
+    fpzip_read_close(fpz);
+
      return 0;
    }
 
@@ -124,7 +152,7 @@ class fpzip_plugin: public libpressio_compressor_plugin {
   }
 
   const char* version() const override {
-    return version_str.c_str();
+    return fpzip_version_string;
   }
   const char* prefix() const noexcept override {
     return "fpzip";
@@ -135,8 +163,8 @@ class fpzip_plugin: public libpressio_compressor_plugin {
 
   private:
   std::string version_str;
-  bool has_header;
-  int prec;
+  int has_header = 0;
+  int prec = 0;
 
 };
 
