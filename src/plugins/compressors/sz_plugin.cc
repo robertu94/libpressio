@@ -39,7 +39,7 @@ class sz_plugin: public libpressio_compressor_plugin, std::enable_shared_from_th
     options.set_type("sz:config_file", pressio_option_charptr_type);
     options.set_type("sz:config_struct", pressio_option_userptr_type);
     options.set("sz:max_quant_intervals", confparams_cpr->max_quant_intervals);
-    options.set("sz:quantization_intervals ", confparams_cpr->quantization_intervals);
+    options.set("sz:quantization_intervals", confparams_cpr->quantization_intervals);
     options.set("sz:max_range_radius", confparams_cpr->maxRangeRadius);
     options.set("sz:sol_id", confparams_cpr->sol_ID);
     options.set("sz:lossless_compressor", confparams_cpr->losslessCompressor);
@@ -78,7 +78,7 @@ class sz_plugin: public libpressio_compressor_plugin, std::enable_shared_from_th
     }
 
     options.get("sz:max_quant_intervals", &confparams_cpr->max_quant_intervals);
-    options.get("sz:quantization_intervals ", &confparams_cpr->quantization_intervals);
+    options.get("sz:quantization_intervals", &confparams_cpr->quantization_intervals);
     options.get("sz:max_range_radius", &confparams_cpr->maxRangeRadius);
     options.get("sz:sol_id", &confparams_cpr->sol_ID);
     options.get("sz:lossless_compressor", &confparams_cpr->losslessCompressor);
