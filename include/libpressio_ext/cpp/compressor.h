@@ -19,6 +19,27 @@ class libpressio_compressor_plugin {
   public:
 
   libpressio_compressor_plugin() noexcept;
+  libpressio_compressor_plugin(libpressio_compressor_plugin const& plugin):
+    error(plugin.error),
+    metrics_plugin(plugin.metrics_plugin->clone())
+  {}
+  libpressio_compressor_plugin& operator=(libpressio_compressor_plugin const& plugin)
+  {
+    error = plugin.error;
+    metrics_plugin = plugin.metrics_plugin->clone();
+    return *this;
+  }
+  libpressio_compressor_plugin(libpressio_compressor_plugin&& plugin) noexcept:
+    error(std::move(plugin.error)),
+    metrics_plugin(std::move(plugin.metrics_plugin))
+    {}
+  libpressio_compressor_plugin& operator=(libpressio_compressor_plugin&& plugin) noexcept
+  {
+    error = std::move(plugin.error);
+    metrics_plugin = std::move(plugin.metrics_plugin);
+    return *this;
+  }
+
 
   /** compressor should free their global memory in the destructor */
   virtual ~libpressio_compressor_plugin();
