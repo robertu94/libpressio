@@ -19,6 +19,7 @@
 namespace {
   template <class T>
   size_t data_size_in_elements(size_t dimensions, T const dims[]) {
+    if(dimensions == 0) return 0;
     size_t totalsize = 1;
     for (size_t i = 0; i < dimensions; ++i) {
       totalsize *= dims[i];
@@ -136,8 +137,11 @@ struct pressio_data {
    * */
   static pressio_data copy(const enum pressio_dtype dtype, const void* src, size_t const num_dimensions, size_t const dimensions[]) {
     size_t bytes = data_size_in_bytes(dtype, num_dimensions, dimensions);
-    void* data = malloc(bytes);
-    memcpy(data, src, bytes);
+    void* data = nullptr;
+    if(bytes != 0) {
+      data = malloc(bytes);
+      memcpy(data, src, bytes); 
+    }
     return pressio_data(dtype, data, nullptr, pressio_data_libc_free_fn, num_dimensions, dimensions);
   }
 
@@ -151,7 +155,9 @@ struct pressio_data {
    * \see pressio_data_new_owning
    * */
   static pressio_data owning(const pressio_dtype dtype, size_t const num_dimensions, size_t const dimensions[]) {
-    void* data = malloc(data_size_in_bytes(dtype, num_dimensions, dimensions));
+    size_t bytes = data_size_in_bytes(dtype, num_dimensions, dimensions);
+    void* data = nullptr;
+    if(bytes != 0) data = malloc(bytes);
     return pressio_data(dtype, data, nullptr, pressio_data_libc_free_fn, num_dimensions, dimensions);
   }
 
@@ -187,8 +193,12 @@ struct pressio_data {
    *
    */
   static pressio_data clone(pressio_data const& src){
-    auto data = static_cast<unsigned char*>(malloc(src.size_in_bytes()));
-    memcpy(data, src.data(), src.size_in_bytes());
+    size_t bytes = src.size_in_bytes(); 
+    unsigned char* data = nullptr;
+    if(bytes != 0) {
+      data = static_cast<unsigned char*>(malloc(bytes));
+      memcpy(data, src.data(), src.size_in_bytes());
+    }
     return pressio_data(src.dtype(),
         data,
         nullptr,
@@ -217,7 +227,7 @@ struct pressio_data {
   pressio_data& operator=(pressio_data const& rhs) {
     if(this == &rhs) return *this;
     data_dtype = rhs.data_dtype;
-    if(rhs.has_data()) {
+    if(rhs.has_data() && rhs.size_in_bytes() > 0) {
       data_ptr = malloc(rhs.size_in_bytes());
       memcpy(data_ptr, rhs.data_ptr, rhs.size_in_bytes());
     } else {
@@ -234,12 +244,12 @@ struct pressio_data {
    * */
   pressio_data(pressio_data const& rhs): 
     data_dtype(rhs.data_dtype),
-    data_ptr(rhs.has_data()? malloc(rhs.size_in_bytes()) : nullptr),
+    data_ptr((rhs.has_data())? malloc(rhs.size_in_bytes()) : nullptr),
     metadata_ptr(nullptr),
     deleter(pressio_data_libc_free_fn),
     dims(rhs.dims)
   {
-    if(rhs.has_data()) {
+    if(rhs.has_data() && rhs.size_in_bytes() > 0) {
       memcpy(data_ptr, rhs.data_ptr, rhs.size_in_bytes());
     }
   }
@@ -281,7 +291,7 @@ struct pressio_data {
   template <class T>
   pressio_data(std::initializer_list<T> il):
     data_dtype(pressio_dtype_from_type<T>()),
-    data_ptr(malloc(il.size() * sizeof(T))),
+    data_ptr((il.size() == 0)? nullptr:malloc(il.size() * sizeof(T))),
     metadata_ptr(nullptr),
     deleter(pressio_data_libc_free_fn),
     dims({il.size()}) 

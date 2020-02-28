@@ -18,12 +18,34 @@ class zfp_plugin: public libpressio_compressor_plugin {
       //to be serial by default, we need to set it last.  However, we also want the 
       //threads and chunck sizes to be set rather than undefined in the default case so
       //we must set them too
+      zfp_stream_set_accuracy(zfp, 1e-3);
       zfp_stream_set_omp_threads(zfp, 0);
       zfp_stream_set_omp_chunk_size(zfp, 0);
       zfp_stream_set_execution(zfp,  zfp_exec_serial);
     }
     ~zfp_plugin() {
       zfp_stream_close(zfp);
+    }
+    zfp_plugin(zfp_plugin const& rhs): libpressio_compressor_plugin(rhs), zfp(zfp_stream_open(NULL)) {
+      zfp_stream_set_params(zfp, rhs.zfp->minbits, rhs.zfp->maxbits, rhs.zfp->maxprec, rhs.zfp->minexp);
+      zfp_stream_set_omp_threads(zfp, zfp_stream_omp_threads(rhs.zfp));
+      zfp_stream_set_omp_chunk_size(zfp, zfp_stream_omp_chunk_size(rhs.zfp));
+      zfp_stream_set_execution(zfp, zfp_stream_execution(rhs.zfp));
+    }
+    zfp_plugin(zfp_plugin && rhs) noexcept: zfp(std::exchange(rhs.zfp, zfp_stream_open(NULL))) {}
+    zfp_plugin& operator=(zfp_plugin && rhs) noexcept {
+      if(this != &rhs) return *this;
+      zfp = std::exchange(rhs.zfp, zfp_stream_open(NULL));
+      return *this;
+    }
+
+    zfp_plugin& operator=(zfp_plugin const& rhs) {
+      if(this == &rhs) return *this;
+      zfp_stream_set_params(zfp, rhs.zfp->minbits, rhs.zfp->maxbits, rhs.zfp->maxprec, rhs.zfp->minexp);
+      zfp_stream_set_omp_threads(zfp, zfp_stream_omp_threads(rhs.zfp));
+      zfp_stream_set_omp_chunk_size(zfp, zfp_stream_omp_chunk_size(rhs.zfp));
+      zfp_stream_set_execution(zfp, zfp_stream_execution(rhs.zfp));
+      return *this;
     }
 
     struct pressio_options get_options_impl() const override {
@@ -80,7 +102,7 @@ class zfp_plugin: public libpressio_compressor_plugin {
         options.get("zfp:minexp", &zfp->minexp);
       }
 
-      unsigned int execution;
+      int execution;
       if(options.get("zfp:execution", &execution) == pressio_options_key_set) { 
         zfp_stream_set_execution(zfp, (zfp_exec_policy)execution);
       }
@@ -128,6 +150,17 @@ class zfp_plugin: public libpressio_compressor_plugin {
     }
 
     int decompress_impl(const pressio_data *input, struct pressio_data* output) override {
+      //save the exec mode, set it to serial, and reset it at the end of the decompression
+      //if parallel decompression is requested and not supported
+      //
+      //currently only serial supports all modes, and cuda supports fixed rate decompression
+      zfp_exec_policy policy = zfp_stream_execution(zfp);
+      zfp_mode zfp_zmode = zfp_stream_compression_mode(zfp);
+      if(!  (policy == zfp_exec_serial || (zfp_zmode == zfp_mode_fixed_rate && policy == zfp_exec_cuda))) {
+        zfp_stream_set_execution(zfp, zfp_exec_serial);
+      }
+
+
       size_t size;
       void* ptr = pressio_data_ptr(input, &size);
       bitstream* stream = stream_open(ptr, size);
@@ -151,6 +184,9 @@ class zfp_plugin: public libpressio_compressor_plugin {
       int num_bytes = zfp_decompress(zfp, out_field);
       zfp_field_free(out_field);
       stream_close(stream);
+
+      //reset the execution policy
+      zfp_stream_set_execution(zfp, policy);
 
       if(num_bytes == 0) {
         return decompression_failed();
