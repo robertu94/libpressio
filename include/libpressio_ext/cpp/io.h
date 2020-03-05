@@ -161,6 +161,18 @@ struct pressio_io {
    */
   pressio_io()=default;
   /**
+   * copy constructs a io from another pointer
+   */
+  pressio_io(pressio_io const& io): plugin(io->clone()) {}
+  /**
+   * copy assigns a io from another pointer
+   */
+  pressio_io& operator=(pressio_io const& io) {
+    if(&io == this) return *this;
+    plugin = io->clone();
+    return *this;
+  }
+  /**
    * move constructs a io from another pointer
    */
   pressio_io(pressio_io&& io)=default;

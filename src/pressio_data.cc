@@ -1,9 +1,9 @@
-#include <iterator>
 #include <cstdlib>
 #include <vector>
 #include <cstring>
 #include <algorithm>
 #include <numeric>
+#include <iterator>
 #include "pressio_data.h"
 #include "multi_dimensional_iterator.h"
 #include "libpressio_ext/cpp/data.h"
@@ -117,8 +117,9 @@ namespace {
 
   struct cast_fn {
     template <class T, class V>
-    int operator()(T* src_begin, T* src_end, V* dst_begin) {
-      std::copy(src_begin, src_end, dst_begin);
+    int operator()(T* src_begin, T* src_end, V* dst_begin, V*dst_end) {
+      size_t num_elements = std::min(dst_end-dst_begin, src_end-src_begin);
+      std::copy_n(src_begin, num_elements, dst_begin);
       return 0;
     }
 };
@@ -190,6 +191,61 @@ pressio_data pressio_data::select(std::vector<size_t> const& start,
   return output;
 }
 
+namespace {
+  struct transpose_impl {
+    template <class RandomIt1, class RandomIt2>
+    bool operator()(RandomIt1 r1_begin, RandomIt1, RandomIt2 r2_begin, RandomIt2) {
+      std::vector<size_t> iter(dimensions.size(), 0);
+      std::vector<size_t> strides(dimensions.size(), 0);
+      size_t max_idx = std::accumulate(std::begin(dimensions), std::end(dimensions), 1, compat::multiplies{});
+      compat::exclusive_scan(compat::rbegin(iter_max), compat::rend(iter_max), compat::rbegin(strides), 1, compat::multiplies<>{});
+      for (size_t src_idx = 0; src_idx < max_idx; ++src_idx) {
+        size_t dst_idx = compat::transform_reduce(std::begin(iter), std::end(iter), std::begin(strides), 0, compat::plus<>{}, compat::multiplies<>{});
+        r2_begin[src_idx] = r1_begin[dst_idx];
+
+        size_t idx = 0;
+        bool updating = true;
+        while(updating) {
+          ++iter[idx];
+          if(iter[idx] == iter_max[idx]) {
+            iter[idx] = 0;
+            if(++idx ==  iter_max.size()) {
+              updating = false;
+            } else {
+              updating = true;
+            }
+          } else {
+            updating = false;
+          }
+        }
+      }
+      
+      return 0;
+    }
+
+    std::vector<size_t> const iter_max;
+    std::vector<size_t> const dimensions;
+  };
+}
+
+pressio_data pressio_data::transpose(std::vector<size_t> const& axis) const {
+  auto ret = pressio_data::clone(*this);
+  auto const iter_max = [&, this](){
+    std::vector<size_t> pos(dims.size());
+    if(axis.empty()) {
+      std::copy(compat::rbegin(dims), compat::rend(dims), std::begin(pos));
+    } else {
+      for (size_t i = 0; i < dims.size(); ++i) {
+        pos[i] = dims[axis[i]];
+      }
+    }
+    return pos;
+  }();
+  ret.reshape(iter_max);
+  pressio_data_for_each<int>(*this, ret, transpose_impl{iter_max, dimensions()});
+  return ret;
+}
+
 extern "C" {
 
 struct pressio_data* pressio_data_select(
@@ -213,6 +269,16 @@ struct pressio_data* pressio_data_select(
         std::vector<size_t>(count,count+dims),
         std::vector<size_t>(block,block+dims)
         ));
+}
+
+struct pressio_data* pressio_data_transpose(
+    struct pressio_data const* data,
+    const size_t* axis
+    ) {
+  std::vector<size_t> axis_v;
+  if(axis == nullptr) axis_v = {};
+  else axis_v = std::vector<size_t>(axis, axis + data->num_dimensions());
+  return new pressio_data(data->transpose(axis_v));
 }
 
 struct pressio_data* pressio_data_new_clone(const struct pressio_data* src) {
@@ -294,13 +360,10 @@ int pressio_data_reshape(struct pressio_data* data,
   return data->reshape(new_dims);
 }
 
-
-
 pressio_data pressio_data::cast(pressio_dtype const dtype) const {
     pressio_data data = pressio_data::owning(dtype, dimensions());
     pressio_data_for_each<int>(*this, data, cast_fn());
     return data;
 }
-
 
 }

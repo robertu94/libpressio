@@ -151,6 +151,19 @@ struct pressio_data* pressio_data_select(struct pressio_data const* data,
     const size_t* block);
 
 /**
+ * Transposes a data-buffer
+ *
+ * \param[in] data the data to copy from
+ * \param[in] axis the order of the dimensions
+ *            if null is chosen the dimensions are reversed
+ * 
+ * \returns a new pressio data structure containing a transposed copy
+ *          if an error occurs, an new empty structure is returned instead.
+ *
+ */
+struct pressio_data* pressio_data_transpose(struct pressio_data const* data, const size_t* axis);
+
+/**
  * modifies the dimensions of a pressio_data structure inplace.
  *
  * This API does not change the size of the underlying buffer.

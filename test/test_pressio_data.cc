@@ -19,9 +19,44 @@ class PressioDataTests: public ::testing::Test {
     void TearDown() {
     }
 
+    /**
+     * libpressio is column major
+     * size:    2, 3 
+     * strides: 1, 2
+     *
+     * so the data layout is this:
+     * [[ 0, 2, 4],
+     *  [ 1, 3, 5]]
+     */
     const size_t dims[2]  = {2,3};
     std::vector<int> data;
 };
+
+TEST_F(PressioDataTests, Transpose) {
+  auto original = pressio_data_new_nonowning(pressio_int32_dtype, data.data(), 2, dims);
+  auto transposed = pressio_data_transpose(original, nullptr);
+
+  EXPECT_EQ(pressio_data_num_dimensions(transposed), 2);
+  EXPECT_EQ(pressio_data_get_dimension(transposed, 0), 3);
+  EXPECT_EQ(pressio_data_get_dimension(transposed, 1), 2);
+
+  int* begin = (int*)pressio_data_ptr(transposed, nullptr);
+  std::vector<int> actual(begin, begin+6);
+
+  /**
+   * the transposed layout is this
+   *
+   * [[ 0 1
+   *  [ 2 3
+   *  [ 4 5]]
+   * which linearizes to [0 2 4 1 3 5]
+   *
+   */
+  std::vector<int> expected{0, 2, 4, 1, 3, 5};
+  EXPECT_EQ(expected, actual);
+  pressio_data_free(original);
+  pressio_data_free(transposed);
+}
 
 TEST_F(PressioDataTests, MakePressioData) {
   pressio_data* d = pressio_data_new_nonowning(pressio_int32_dtype, data.data(), 2, dims);

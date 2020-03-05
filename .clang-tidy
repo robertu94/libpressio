@@ -1,5 +1,5 @@
 ---
-Checks:          'clang-diagnostic-*,clang-analyzer-*,clang-diagnostic-*,clang-analyzer-*,bugprone-*,-bugprone-macro-parentheses,performance-*,portability-*,security-*,moderize*'
+Checks:          'clang-diagnostic-*,clang-analyzer-*,clang-diagnostic-*,clang-analyzer-*,bugprone-*,-bugprone-macro-parentheses,performance-*,portability-*,security-*,moderize*,-clang-analyzer-optin.portability.UnixAPI'
 WarningsAsErrors: ''
 HeaderFilterRegex: '(\./include.*)|(.*presio.*)'
 AnalyzeTemporaryDtors: false

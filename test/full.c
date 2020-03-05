@@ -14,8 +14,10 @@ void print_all_options(struct pressio_options* options) {
     char const* key = pressio_options_iter_get_key(iter);
     struct pressio_option* option = pressio_options_iter_get_value(iter);
 
-    if(pressio_option_has_value(option)) {
-      switch(pressio_option_get_type(option)) {
+    bool has_value = pressio_option_has_value(option);
+    enum pressio_option_type otype = pressio_option_get_type(option);
+    if(has_value) {
+      switch(otype) {
         case pressio_option_charptr_type:
           printf("%s : \"%s\"\n", key, pressio_option_get_string(option));
           break;
@@ -34,11 +36,15 @@ void print_all_options(struct pressio_options* options) {
         case pressio_option_float_type:
           printf("%s : %f\n", key, pressio_option_get_float(option));
           break;
+        case pressio_option_data_type:
+          printf("%s : pressio_data\n", key);
+          break;
+
         default:
           assert(false && "a cleared option can never have a value");
       } 
     } else {
-      switch(pressio_option_get_type(option)) {
+      switch(otype) {
         case pressio_option_charptr_type:
           printf("%s <string>: null\n", key);
           break;
@@ -181,18 +187,21 @@ int main(int argc, char *argv[])
   struct pressio_compressor* magick_compressor = pressio_get_compressor(library, "magick");
   struct pressio_compressor* blosc_compressor = pressio_get_compressor(library, "blosc");
   struct pressio_compressor* fpzip_compressor = pressio_get_compressor(library, "fpzip");
+  struct pressio_compressor* sample_compressor = pressio_get_compressor(library, "sample");
 
   assert(sz_compressor != NULL);
   assert(zfp_compressor != NULL);
   assert(mgard_compressor != NULL);
   assert(magick_compressor != NULL);
   assert(fpzip_compressor != NULL);
+  assert(sample_compressor != NULL);
 
   printf("sz version: %s\n", pressio_compressor_version(sz_compressor));
   printf("zfp version: %s\n", pressio_compressor_version(zfp_compressor));
   printf("mgard version: %s\n", pressio_compressor_version(mgard_compressor));
   printf("blosc version: %s\n", pressio_compressor_version(blosc_compressor));
   printf("fpzip version: %s\n", pressio_compressor_version(fpzip_compressor));
+  printf("sample version: %s\n", pressio_compressor_version(sample_compressor));
 
   //get the list of configuration options
   printf("getting options\n");
@@ -239,23 +248,36 @@ int main(int argc, char *argv[])
     exit(pressio_compressor_error_code(fpzip_compressor));
   }
 
+  struct pressio_options* sampling_options = pressio_compressor_get_options(sample_compressor);
+  pressio_options_set_string(sampling_options, "sample:mode", "wor");
+  pressio_options_set_double(sampling_options, "sample:rate", .25);
+  pressio_options_set_integer(sampling_options, "sample:seed", 0);
+  if(pressio_compressor_check_options(sample_compressor, sampling_options)) {
+    printf("%s\n", pressio_compressor_error_msg(sample_compressor));
+    exit(pressio_compressor_error_code(sample_compressor));
+  }
+
+
 
 
   struct pressio_options* options_part1 = pressio_options_merge(sz_options, zfp_options);
   struct pressio_options* options_part2 = pressio_options_merge(options_part1, mgard_options);
   struct pressio_options* options_part3 = pressio_options_merge(options_part2, blosc_options);
   struct pressio_options* options_part4 = pressio_options_merge(options_part3, fpzip_options);
-  struct pressio_options* options = pressio_options_merge(options_part3, magick_options);
+  struct pressio_options* options_part5 = pressio_options_merge(options_part4, sampling_options);
+  struct pressio_options* options = pressio_options_merge(options_part5, magick_options);
   pressio_options_free(options_part1);
   pressio_options_free(options_part2);
   pressio_options_free(options_part3);
   pressio_options_free(options_part4);
+  pressio_options_free(options_part5);
   pressio_options_free(sz_options);
   pressio_options_free(zfp_options);
   pressio_options_free(mgard_options);
   pressio_options_free(magick_options);
   pressio_options_free(blosc_options);
   pressio_options_free(fpzip_options);
+  pressio_options_free(sampling_options);
   assert(options != NULL);
 
   //print all the configuration options
@@ -275,6 +297,7 @@ int main(int argc, char *argv[])
   rescale(first_layer);
 
 
+  run_compressor("sampling", sample_compressor, options, input_data);
   run_compressor("sz", sz_compressor, options, input_data);
   run_compressor("zfp", zfp_compressor, options, input_data);
   run_compressor("mgard", mgard_compressor, options, input_data);

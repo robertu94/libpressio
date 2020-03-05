@@ -431,6 +431,14 @@ struct pressio_data {
       return 1;
     }
   }
+
+  /**
+   * Permutes the dimensions of an array
+   *
+   * \param[in] axis by default reverses the axis, otherwise permutes the axes according to the dimensions
+   * \returns the data with its axes permuted
+   */
+  pressio_data transpose(std::vector<size_t> const& axis = {}) const;
   
 
   private:
@@ -538,7 +546,8 @@ namespace {
       return std::forward<Function>(f)(
           static_cast<Type1*>(data.data()),
           static_cast<Type1*>(data.data()) + data.num_elements(),
-          static_cast<Type2*>(data2.data())
+          static_cast<Type2*>(data2.data()),
+          static_cast<Type2*>(data2.data()) + data2.num_elements()
         );
   }
   template <class ReturnType, class Function, class Type1>

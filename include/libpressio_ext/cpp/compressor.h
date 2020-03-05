@@ -19,20 +19,36 @@ class libpressio_compressor_plugin {
   public:
 
   libpressio_compressor_plugin() noexcept;
+  /**
+   * copy construct a compressor plugin by cloning the plugin
+   * \param[in] plugin the plugin to clone
+   */
   libpressio_compressor_plugin(libpressio_compressor_plugin const& plugin):
     error(plugin.error),
     metrics_plugin(plugin.metrics_plugin->clone())
   {}
+  /**
+   * copy assign a compressor plugin by cloning the plugin
+   * \param[in] plugin the plugin to clone
+   */
   libpressio_compressor_plugin& operator=(libpressio_compressor_plugin const& plugin)
   {
     error = plugin.error;
     metrics_plugin = plugin.metrics_plugin->clone();
     return *this;
   }
+  /**
+   * move construct a compressor plugin by cloning the plugin
+   * \param[in] plugin the plugin to clone
+   */
   libpressio_compressor_plugin(libpressio_compressor_plugin&& plugin) noexcept:
     error(std::move(plugin.error)),
     metrics_plugin(std::move(plugin.metrics_plugin))
     {}
+  /**
+   * move assign a compressor plugin by cloning the plugin
+   * \param[in] plugin the plugin to clone
+   */
   libpressio_compressor_plugin& operator=(libpressio_compressor_plugin&& plugin) noexcept
   {
     error = std::move(plugin.error);
@@ -216,13 +232,26 @@ struct pressio_compressor {
    */
   pressio_compressor()=default;
   /**
-   * move constructs a compressor from another pointer
+   * copy constructs a compressor from another pointer by cloning
    */
-  pressio_compressor(pressio_compressor&& compressor)=default;
+  pressio_compressor(pressio_compressor const& compressor):
+    plugin(compressor->clone()) {}
+  /**
+   * copy assigns a compressor from another pointer by cloning
+   */
+  pressio_compressor& operator=(pressio_compressor const& compressor) {
+    if(&compressor == this) return *this;
+    plugin = compressor->clone();
+    return *this;
+  }
   /**
    * move assigns a compressor from another pointer
    */
-  pressio_compressor& operator=(pressio_compressor&& compressor)=default;
+  pressio_compressor& operator=(pressio_compressor&& compressor) noexcept=default;
+  /**
+   * move constructs a compressor from another pointer
+   */
+  pressio_compressor(pressio_compressor&& compressor)=default;
 
   /** \returns true if the plugin is set */
   operator bool() const {

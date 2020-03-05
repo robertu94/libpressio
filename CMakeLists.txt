@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.34.4" LANGUAGES CXX C)
+project(libpressio VERSION "0.35.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -78,6 +78,9 @@ add_library(libpressio
   #plugins
   ./src/plugins/compressors/compressor_base.cc
   ./src/plugins/compressors/noop.cc
+  ./src/plugins/compressors/sampling.cc
+  ./src/plugins/compressors/resize.cc
+  ./src/plugins/compressors/transpose.cc
   ./src/plugins/metrics/composite.cc
   ./src/plugins/metrics/external.cc
   ./src/plugins/metrics/metrics_base.cc
@@ -85,6 +88,7 @@ add_library(libpressio
   ./src/plugins/metrics/time.cc
   ./src/plugins/metrics/error_stat.cc
   ./src/plugins/metrics/pearsons.cc
+  ./src/plugins/metrics/spatial_error.cc
   ./src/plugins/io/posix.cc
   ./src/plugins/io/noop.cc
   ./src/plugins/io/csv.cc
@@ -130,6 +134,12 @@ if(NOT (LIBPRESSIO_COMPAT_HAS_VARIANT OR LIBPRESSIO_COMPAT_HAS_OPTIONAL))
 endif()
 
 find_package(PkgConfig REQUIRED)
+
+option(LIBPRESSIO_HAS_OPENMP "accerate some plugins with OpenMP" OFF)
+if(LIBPRESSIO_HAS_OPENMP)
+  find_package(OpenMP)
+  target_link_libraries(libpressio PRIVATE OpenMP::OpenMP_CXX)
+endif()
 
 option(LIBPRESSIO_HAS_MGARD "build the MGARD plugin" OFF)
 if(LIBPRESSIO_HAS_MGARD)

@@ -29,7 +29,7 @@ namespace {
 
   struct compute_metrics{
     template <class ForwardIt1, class ForwardIt2>
-    error_metrics operator()(ForwardIt1 input_begin, ForwardIt1 input_end, ForwardIt2 input2_begin)
+    error_metrics operator()(ForwardIt1 input_begin, ForwardIt1 input_end, ForwardIt2 input2_begin, ForwardIt2 input2_end)
     {
       using value_type = typename std::iterator_traits<ForwardIt1>::value_type;
       static_assert(std::is_same<typename std::iterator_traits<ForwardIt1>::value_type, value_type>::value, "the iterators must have the same type");
@@ -45,7 +45,7 @@ namespace {
       auto diff_max = diff_min;
       auto error_min = std::abs(double(*input_begin) - double(*input2_begin));
       auto error_max = std::abs(double(diff_min));
-      while(input_begin != input_end) {
+      while(input_begin != input_end && input2_begin != input2_end) {
         auto diff = *input_begin - *input2_begin;
         auto error = std::abs(double(diff));
         auto squared_error = error*error;

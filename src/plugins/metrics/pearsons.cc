@@ -16,7 +16,7 @@ namespace {
   struct compute_metrics{
     template <class ForwardIt1, class ForwardIt2>
     pearson_metrics operator()(ForwardIt1 input_begin, ForwardIt1 input_end,
-                             ForwardIt2 decomp_begin)
+                             ForwardIt2 decomp_begin, ForwardIt2 decomp_end)
     {
       using value_type = typename std::iterator_traits<ForwardIt1>::value_type;
       static_assert(std::is_same<typename std::iterator_traits<ForwardIt1>::value_type, value_type>::value, "the iterators must have the same type");
@@ -28,7 +28,7 @@ namespace {
         //compute means
         auto input_it = input_begin;
         auto decomp_it = decomp_begin;
-        while(input_it != input_end) {
+        while(input_it != input_end && decomp_it != decomp_end) {
           ++n;
           ++input_it;
           ++decomp_it;
@@ -45,7 +45,7 @@ namespace {
         //compute sums
         auto input_it = input_begin;
         auto decomp_it = decomp_begin;
-        while(input_it != input_end) {
+        while(input_it != input_end && decomp_it != decomp_end) {
           double x_xbar = *input_it - input_mean;
           double y_ybar = *decomp_it - decomp_mean;
           x_xbar_squared_sum += x_xbar * x_xbar;
