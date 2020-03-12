@@ -80,11 +80,11 @@ class time_plugin : public libpressio_metrics_plugin {
   struct pressio_options get_metrics_results() const override {
     struct pressio_options opt;
 
-    auto set_or = [&opt](const char* key, timer time) {
+    auto set_or = [&opt, this](const char* key, timer time) {
       if(time) {
-        opt.set(key, time->elapsed());
+        set(opt, key, time->elapsed());
       } else {
-        opt.set_type(key, pressio_option_uint32_type);
+        set_type(opt, key, pressio_option_uint32_type);
       }
     };
 
@@ -99,6 +99,10 @@ class time_plugin : public libpressio_metrics_plugin {
 
   std::unique_ptr<libpressio_metrics_plugin> clone() override {
     return compat::make_unique<time_plugin>(*this);
+  }
+
+  const char* prefix() const override {
+    return "time";
   }
 
   private:

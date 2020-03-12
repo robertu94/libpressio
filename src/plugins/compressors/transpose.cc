@@ -40,27 +40,28 @@ class transpose_meta_compressor_plugin : public libpressio_compressor_plugin
 public:
   struct pressio_options get_options_impl() const override
   {
-    struct pressio_options options;
-    options.set("transpose:compressor", compressor_id);
-    options.set("transpose:axis", vector_to_owning_pressio_data(axis));
+    struct pressio_options options = compressor->get_options();
+    set(options, "transpose:compressor", compressor_id);
+    set(options, "transpose:axis", vector_to_owning_pressio_data(axis));
     return options;
   }
 
   struct pressio_options get_configuration_impl() const override
   {
     struct pressio_options options;
-    options.set("pressio:thread_safe", static_cast<int>(pressio_thread_safety_multiple));
+    set(options, "pressio:thread_safe", static_cast<int>(pressio_thread_safety_multiple));
     return options;
   }
 
   int set_options_impl(struct pressio_options const& options) override
   {
-    if(options.get("resize:compressor", &compressor_id) == pressio_options_key_set) {
+    if(get(options, "transpose:compressor", &compressor_id) == pressio_options_key_set) {
       pressio library;
       compressor = library.get_compressor(compressor_id);
     }
+    compressor->set_options(options);
     pressio_data tmp;
-    if(options.get("resize:axis", &tmp) == pressio_options_key_set) {
+    if(get(options, "transpose:axis", &tmp) == pressio_options_key_set) {
       axis = pressio_data_to_vector<size_t>(tmp);
     }
     return 0;
@@ -88,6 +89,10 @@ public:
   const char* version() const override { return "0.0.1"; }
 
   const char* prefix() const override { return "transpose"; }
+
+  void set_name_impl(std::string const& name) override {
+    compressor->set_name(name + "/" + compressor->prefix());
+  }
 
   std::shared_ptr<libpressio_compressor_plugin> clone() override
   {

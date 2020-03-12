@@ -11,26 +11,13 @@
 #include "pressio_options.h"
 
 libpressio_compressor_plugin::libpressio_compressor_plugin() noexcept :
-  error(),
+  pressio_configurable(),
+  pressio_errorable(),
   metrics_plugin(nullptr)
 {}
 
 libpressio_compressor_plugin::~libpressio_compressor_plugin()=default;
 
-int libpressio_compressor_plugin::major_version() const { return 0; }
-int libpressio_compressor_plugin::minor_version() const { return 0; }
-int libpressio_compressor_plugin::patch_version() const { return 0; }
-int libpressio_compressor_plugin::set_error(int code, std::string const& msg) {
-  error.msg = msg;
-  return error.code = code;
-}
-const char* libpressio_compressor_plugin::error_msg() const {
-  return error.msg.c_str();
-}
-
-int libpressio_compressor_plugin::error_code() const {
-  return error.code;
-}
 
 namespace {
   std::set<std::string> get_keys(struct pressio_options const& options, std::string const& prefix) {
@@ -122,10 +109,10 @@ void libpressio_compressor_plugin::set_metrics(pressio_metrics& plugin) {
 }
 
 struct pressio_options libpressio_compressor_plugin::get_metrics_options() const {
-  return metrics_plugin->get_metrics_options();
+  return metrics_plugin->get_options();
 }
 
 int libpressio_compressor_plugin::set_metrics_options(struct pressio_options const& options) {
-  return metrics_plugin->set_metrics_options(options);
+  return metrics_plugin->set_options(options);
 }
 

@@ -106,45 +106,49 @@ class error_stat_plugin : public libpressio_metrics_plugin {
     struct pressio_options get_metrics_results() const override {
       pressio_options opt;
       if(err_metrics) {
-        opt.set("error_stat:psnr", (*err_metrics).psnr);
-        opt.set("error_stat:mse", (*err_metrics).mse);
-        opt.set("error_stat:rmse", (*err_metrics).rmse);
-        opt.set("error_stat:value_mean", (*err_metrics).value_mean);
-        opt.set("error_stat:value_std", (*err_metrics).value_std);
-        opt.set("error_stat:value_min", (*err_metrics).value_min);
-        opt.set("error_stat:value_max", (*err_metrics).value_max);
-        opt.set("error_stat:value_range", (*err_metrics).value_range);
-        opt.set("error_stat:min_error", (*err_metrics).min_error);
-        opt.set("error_stat:max_error", (*err_metrics).max_error);
-        opt.set("error_stat:min_rel_error", (*err_metrics).min_rel_error);
-        opt.set("error_stat:max_rel_error", (*err_metrics).max_rel_error);
-        opt.set("error_stat:average_difference", (*err_metrics).average_difference);
-        opt.set("error_stat:average_error", (*err_metrics).average_error);
-        opt.set("error_stat:difference_range", (*err_metrics).difference_range);
-        opt.set("error_stat:error_range", (*err_metrics).error_range);
+        set(opt, "error_stat:psnr", (*err_metrics).psnr);
+        set(opt, "error_stat:mse", (*err_metrics).mse);
+        set(opt, "error_stat:rmse", (*err_metrics).rmse);
+        set(opt, "error_stat:value_mean", (*err_metrics).value_mean);
+        set(opt, "error_stat:value_std", (*err_metrics).value_std);
+        set(opt, "error_stat:value_min", (*err_metrics).value_min);
+        set(opt, "error_stat:value_max", (*err_metrics).value_max);
+        set(opt, "error_stat:value_range", (*err_metrics).value_range);
+        set(opt, "error_stat:min_error", (*err_metrics).min_error);
+        set(opt, "error_stat:max_error", (*err_metrics).max_error);
+        set(opt, "error_stat:min_rel_error", (*err_metrics).min_rel_error);
+        set(opt, "error_stat:max_rel_error", (*err_metrics).max_rel_error);
+        set(opt, "error_stat:average_difference", (*err_metrics).average_difference);
+        set(opt, "error_stat:average_error", (*err_metrics).average_error);
+        set(opt, "error_stat:difference_range", (*err_metrics).difference_range);
+        set(opt, "error_stat:error_range", (*err_metrics).error_range);
       } else {
-        opt.set_type("error_stat:psnr", pressio_option_double_type);
-        opt.set_type("error_stat:mse", pressio_option_double_type);
-        opt.set_type("error_stat:rmse", pressio_option_double_type);
-        opt.set_type("error_stat:value_mean", pressio_option_double_type);
-        opt.set_type("error_stat:value_std", pressio_option_double_type);
-        opt.set_type("error_stat:value_min", pressio_option_double_type);
-        opt.set_type("error_stat:value_max", pressio_option_double_type);
-        opt.set_type("error_stat:value_range", pressio_option_double_type);
-        opt.set_type("error_stat:min_error", pressio_option_double_type);
-        opt.set_type("error_stat:max_error", pressio_option_double_type);
-        opt.set_type("error_stat:min_rel_error", pressio_option_double_type);
-        opt.set_type("error_stat:max_rel_error", pressio_option_double_type);
-        opt.set_type("error_stat:average_difference", pressio_option_double_type);
-        opt.set_type("error_stat:average_error", pressio_option_double_type);
-        opt.set_type("error_stat:difference_range", pressio_option_double_type);
-        opt.set_type("error_stat:error_range", pressio_option_double_type);
+        set_type(opt, "error_stat:psnr", pressio_option_double_type);
+        set_type(opt, "error_stat:mse", pressio_option_double_type);
+        set_type(opt, "error_stat:rmse", pressio_option_double_type);
+        set_type(opt, "error_stat:value_mean", pressio_option_double_type);
+        set_type(opt, "error_stat:value_std", pressio_option_double_type);
+        set_type(opt, "error_stat:value_min", pressio_option_double_type);
+        set_type(opt, "error_stat:value_max", pressio_option_double_type);
+        set_type(opt, "error_stat:value_range", pressio_option_double_type);
+        set_type(opt, "error_stat:min_error", pressio_option_double_type);
+        set_type(opt, "error_stat:max_error", pressio_option_double_type);
+        set_type(opt, "error_stat:min_rel_error", pressio_option_double_type);
+        set_type(opt, "error_stat:max_rel_error", pressio_option_double_type);
+        set_type(opt, "error_stat:average_difference", pressio_option_double_type);
+        set_type(opt, "error_stat:average_error", pressio_option_double_type);
+        set_type(opt, "error_stat:difference_range", pressio_option_double_type);
+        set_type(opt, "error_stat:error_range", pressio_option_double_type);
       }
       return opt;
     }
     std::unique_ptr<libpressio_metrics_plugin> clone() override {
       return compat::make_unique<error_stat_plugin>(*this);
     }
+
+  const char* prefix() const override {
+    return "error_stat";
+  }
 
 
   private:

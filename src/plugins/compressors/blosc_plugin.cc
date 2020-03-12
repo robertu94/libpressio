@@ -15,11 +15,11 @@ class blosc_plugin: public libpressio_compressor_plugin {
   public:
     struct pressio_options get_options_impl() const override {
       struct pressio_options options;
-      options.set("blosc:clevel", clevel);
-      options.set("blosc:numinternalthreads", numinternalthreads);
-      options.set("blosc:doshuffle", doshuffle);
-      options.set("blosc:blocksize", blocksize);
-      options.set("blosc:compressor", compressor);
+      set(options, "blosc:clevel", clevel);
+      set(options, "blosc:numinternalthreads", numinternalthreads);
+      set(options, "blosc:doshuffle", doshuffle);
+      set(options, "blosc:blocksize", blocksize);
+      set(options, "blosc:compressor", compressor);
       return options;
     }
 
@@ -30,11 +30,11 @@ class blosc_plugin: public libpressio_compressor_plugin {
     }
 
     int set_options_impl(struct pressio_options const& options) override {
-      options.get("blosc:clevel", &clevel);
-      options.get("blosc:numinternalthreads", &numinternalthreads);
-      options.get("blosc:doshuffle", &doshuffle);
-      options.get("blosc:blocksize", &blocksize);
-      options.get("blosc:compressor", &compressor);
+      get(options, "blosc:clevel", &clevel);
+      get(options, "blosc:numinternalthreads", &numinternalthreads);
+      get(options, "blosc:doshuffle", &doshuffle);
+      get(options, "blosc:blocksize", &blocksize);
+      get(options, "blosc:compressor", &compressor);
 
       return 0;
     }

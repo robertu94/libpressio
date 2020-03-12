@@ -50,18 +50,22 @@ class counting_metric: public libpressio_metrics_plugin {
   //notice how the namespaced matches the name of the plugin that is registered below
   pressio_options get_metrics_results() const override {
     pressio_options opts;
-    opts.set("counts:int8", counts.at(pressio_int8_dtype));
-    opts.set("counts:int16", counts.at(pressio_int16_dtype));
-    opts.set("counts:int32", counts.at(pressio_int32_dtype));
-    opts.set("counts:int64", counts.at(pressio_int64_dtype));
-    opts.set("counts:uint8", counts.at(pressio_uint8_dtype));
-    opts.set("counts:uint16", counts.at(pressio_uint16_dtype));
-    opts.set("counts:uint32", counts.at(pressio_uint32_dtype));
-    opts.set("counts:uint64", counts.at(pressio_uint64_dtype));
-    opts.set("counts:float", counts.at(pressio_float_dtype));
-    opts.set("counts:double", counts.at(pressio_double_dtype));
-    opts.set("counts:byte", counts.at(pressio_byte_dtype));
+    set(opts, "counts:int8", counts.at(pressio_int8_dtype));
+    set(opts, "counts:int16", counts.at(pressio_int16_dtype));
+    set(opts, "counts:int32", counts.at(pressio_int32_dtype));
+    set(opts, "counts:int64", counts.at(pressio_int64_dtype));
+    set(opts, "counts:uint8", counts.at(pressio_uint8_dtype));
+    set(opts, "counts:uint16", counts.at(pressio_uint16_dtype));
+    set(opts, "counts:uint32", counts.at(pressio_uint32_dtype));
+    set(opts, "counts:uint64", counts.at(pressio_uint64_dtype));
+    set(opts, "counts:float", counts.at(pressio_float_dtype));
+    set(opts, "counts:double", counts.at(pressio_double_dtype));
+    set(opts, "counts:byte", counts.at(pressio_byte_dtype));
     return opts;
+  }
+
+  const char* prefix() const {
+    return "counts";
   }
 
   std::map<pressio_dtype, unsigned int> counts;

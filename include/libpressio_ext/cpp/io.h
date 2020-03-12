@@ -2,6 +2,9 @@
 #define PRESSIO_IO_PLUGIN_H
 #include <string>
 #include <memory>
+#include "configurable.h"
+#include "versionable.h"
+#include "errorable.h"
 
 /**
  * \file
@@ -9,12 +12,11 @@
  */
 
 struct pressio_data;
-struct pressio_options;
 
 /**
  * plugin extension base class for io modules
  */
-struct libpressio_io_plugin {
+struct libpressio_io_plugin: public pressio_configurable, public pressio_versionable, public pressio_errorable {
   public:
 
   virtual ~libpressio_io_plugin()=default;
@@ -40,18 +42,18 @@ struct libpressio_io_plugin {
    *
    * \see pressio_io_check_options for semantics this function obeys
    * */
-  int check_options(struct pressio_options const&);
+  int check_options(struct pressio_options const&) override final;
 
   /** sets a set of options for the io_module 
    * \param[in] options to set for configuration of the io_module
    * \see pressio_io_set_options for the semantics this function should obey
    */
-  int set_options(struct pressio_options const& options);
+  int set_options(struct pressio_options const& options) override final;
   /** get the compile time configuration of a io module. Modules should override get_configuration_impl instead
    *
    * \see pressio_io_get_configuration for the semantics this function should obey
    */
-  struct pressio_options get_configuration() const;
+  struct pressio_options get_configuration() const override final;
   /** get a set of options available for the io module. Modules should override get_options_impl instead
    *
    * The io module should set a value if they have been set as default
@@ -59,46 +61,20 @@ struct libpressio_io_plugin {
    *
    * \see pressio_options.h for how to configure options
    */
-  struct pressio_options get_options() const;
+  struct pressio_options get_options() const override final;
 
-  /** get a implementation specific version string for the io module
-   * \see pressio_io_version for the semantics this function should obey
+  /**
+   * \returns the prefered name of the io_module
    */
-  virtual const char* version() const=0;
-  /** get the major version, default version returns 0
-   * \see pressio_io_major_version for the semantics this function should obey
-   */
-  virtual int major_version() const;
-  /** get the minor version, default version returns 0
-   * \see pressio_io_minor_version for the semantics this function should obey
-   */
-  virtual int minor_version() const;
-  /** get the patch version, default version returns 0
-   * \see pressio_io_patch_version for the semantics this function should obey
-   */
-  virtual int patch_version() const;
-  /** get the error message for the last error
-   * \returns an implementation specific c-style error message for the last error
-   */
-  const char* error_msg() const;
-  /** get the error code for the last error
-   * \returns an implementation specific integer error code for the last error, 0 is reserved for no error
-   */
-  int error_code() const;
 
   /**
    * clones an io module 
    * \returns a new reference to an io plugin.
    */
   virtual std::shared_ptr<libpressio_io_plugin> clone()=0;
+
+
   protected:
-  /**
-   * Should be used by implementing plug-ins to provide error codes
-   * \param[in] code a implementation specific code for the last error
-   * \param[in] msg a implementation specific message for the last error
-   * \returns the value passed to code
-   */
-  int set_error(int code, std::string const& msg);
 
   /** checks for extra arguments set for the io module.
    * the default verison just checks for unknown options passed in.
@@ -140,12 +116,7 @@ struct libpressio_io_plugin {
    */
   virtual struct pressio_options get_options_impl() const=0;
 
-
   private:
-  struct {
-    int code;
-    std::string msg;
-  } error;
 };
 
 /**

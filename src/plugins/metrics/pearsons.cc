@@ -86,17 +86,21 @@ public:
   {
     pressio_options opt;
     if (err_metrics) {
-      opt.set("pearson:r", (*err_metrics).r);
-      opt.set("pearson:r2", (*err_metrics).r2);
+      set(opt, "pearson:r", (*err_metrics).r);
+      set(opt, "pearson:r2", (*err_metrics).r2);
     } else {
-      opt.set_type("pearson:r", pressio_option_double_type);
-      opt.set_type("pearson:r2", pressio_option_double_type);
+      set_type(opt, "pearson:r", pressio_option_double_type);
+      set_type(opt, "pearson:r2", pressio_option_double_type);
     }
     return opt;
   }
 
   std::unique_ptr<libpressio_metrics_plugin> clone() override {
     return compat::make_unique<pearsons_plugin>(*this);
+  }
+
+  const char* prefix() const override {
+    return "pearson";
   }
 
 private:

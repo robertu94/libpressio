@@ -3,6 +3,9 @@
 
 #include <memory>
 #include <vector>
+#include "configurable.h"
+#include "versionable.h"
+
 
 struct pressio_options;
 struct pressio_data;
@@ -14,7 +17,7 @@ struct pressio_data;
 /**
  * plugin to collect metrics about compressors
  */
-class libpressio_metrics_plugin {
+class libpressio_metrics_plugin : public pressio_configurable {
   public:
   /**
    * destructor for inheritance
@@ -95,19 +98,10 @@ class libpressio_metrics_plugin {
   virtual struct pressio_options get_metrics_results() const=0;
 
   /**
-   * \returns a pressio_options structure containing the options for the provided metrics plugin
-   */
-  virtual struct pressio_options get_metrics_options() const;
-
-  /**
-   * \param[in] options a pressio_options structure containing the options for the provided metrics plugin
-   */
-  virtual int set_metrics_options(struct pressio_options const& options);
-
-  /**
    * \returns a clone of the metric
    */
   virtual std::unique_ptr<libpressio_metrics_plugin> clone()=0;
+
 };
 
 /**

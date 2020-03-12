@@ -175,6 +175,31 @@ int pressio_compressor_patch_version(struct pressio_compressor const* compressor
 struct pressio_compressor* pressio_compressor_clone(struct pressio_compressor* compressor);
 
 /**
+ * Assign a new name to a compressor.  Names are used to prefix options in meta-compressors.
+ *
+ * sub-compressors will be renamed either by the of the sub-compressors prefix
+ * or by the $prefix:name configuration option
+ *
+ * i.e. for some new_name and a compressor with prefix foo and subcompressors
+ * with prefixs "abc", "def", "ghi" respectively
+ *
+ * - if foo:names = ['one', 'two', 'three'], then the names will be `$new_name/one, $new_name/two $new_name/three
+ * - otherwise the names will be $new_name/abc, $new_name/def, $new_name/ghi
+ *
+ * \param[in] compressor the compressor to get the name of
+ * \param[in] new_name the name to set
+ */
+void pressio_compressor_set_name(struct pressio_compressor* compressor, const char* new_name);
+
+/**
+ * Get the name of a compressor
+ * \param[in] compressor the compressor to get the name of
+ * \returns a string with the compressor name. The string becomes invalid if
+ *          the name is set_name is called.
+ */
+const char* pressio_compressor_get_name(struct pressio_compressor const* compressor);
+
+/**
  * reports the level of thread safety supported by the compressor.
  *
  * Compressors MUST report a thread safety by setting the pressio:thread_safe

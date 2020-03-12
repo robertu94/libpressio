@@ -23,27 +23,27 @@ class fpzip_plugin: public libpressio_compressor_plugin {
 
   struct pressio_options 	get_options_impl () const override {
     struct pressio_options options = pressio_options();
-    options.set("fpzip:has_header", has_header);
-    options.set("fpzip:prec", prec);
+    set(options, "fpzip:has_header", has_header);
+    set(options, "fpzip:prec", prec);
     return options;
   };
 
   struct pressio_options 	get_configuration_impl () const override {
-    struct pressio_options options = pressio_options();
-    pressio_options_set_integer(&options, "pressio:thread_safe", pressio_thread_safety_multiple);
-    pressio_options_set_uinteger(&options, "fpzip:codec_version", fpzip_codec_version);
-    pressio_options_set_uinteger(&options, "fpzip:library_version", fpzip_library_version);
-    pressio_options_set_uinteger(&options, "fpzip:data_model", fpzip_data_model);
+    pressio_options options;
+    set(options, "pressio:thread_safe", (int)pressio_thread_safety_multiple);
+    set(options, "fpzip:codec_version", fpzip_codec_version);
+    set(options, "fpzip:library_version", fpzip_library_version);
+    set(options, "fpzip:data_model", fpzip_data_model);
     return options;
   };
 
   int 	set_options_impl (struct pressio_options const& options) override {
     int tmp;
-    if( options.get("fpzip:has_header", &tmp) != pressio_options_key_set) {
+    if( get(options, "fpzip:has_header", &tmp) != pressio_options_key_set) {
       has_header = tmp != 0;
     }
 
-    options.get("fpzip:prec", &prec);
+    get(options, "fpzip:prec", &prec);
     return 0;
   }
 

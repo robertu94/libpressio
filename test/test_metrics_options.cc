@@ -14,12 +14,12 @@ class hasoptoins_metric : public libpressio_metrics_plugin
 {
 public:
   
-  int set_metrics_options(pressio_options const& options) override {
+  int set_options(pressio_options const& options) override {
     options.get("hasoptions:value", &value);
     return 0;
   }
 
-  pressio_options get_metrics_options() const override {
+  pressio_options get_options() const override {
     pressio_options options;
     options.set("hasoptions:value", value);
     return options;
@@ -30,6 +30,10 @@ public:
   }
   std::unique_ptr<libpressio_metrics_plugin> clone() override {
     return compat::make_unique<hasoptoins_metric>(*this);
+  }
+
+  const char* prefix() const override {
+    return "hasoptions";
   }
 
   int value = 3;

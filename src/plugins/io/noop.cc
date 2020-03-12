@@ -37,6 +37,9 @@ struct noop_io : public libpressio_io_plugin {
   virtual const char* version() const override{
     return "0.0.1";
   }
+  const char* prefix() const override {
+    return "noop";
+  }
   std::shared_ptr<libpressio_io_plugin> clone() override {
     return compat::make_unique<noop_io>(*this);
   }

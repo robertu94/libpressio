@@ -53,22 +53,22 @@ class magick_plugin: public libpressio_compressor_plugin {
 
   struct pressio_options get_configuration_impl() const override {
     struct pressio_options options;
-    options.set( "pressio:thread_safe", static_cast<int>(pressio_thread_safety_multiple));
+    set(options, "pressio:thread_safe", static_cast<int>(pressio_thread_safety_multiple));
     return options;
   }
 
   struct pressio_options get_options_impl() const override {
     struct pressio_options options;
-    options.set("magick:samples_magick", samples_magick);
-    options.set("magick:compressed_magick", compressed_magick);
-    options.set("magick:quality", quality);
+    set(options, "magick:samples_magick", samples_magick);
+    set(options, "magick:compressed_magick", compressed_magick);
+    set(options, "magick:quality", quality);
     return options;
   }
 
   int set_options_impl(struct pressio_options const& options) override {
-    options.get("magick:samples_magick", &samples_magick);
-    options.get("magick:compressed_magick", &compressed_magick);
-    options.get("magick:quality", &quality);
+    get(options, "magick:samples_magick", &samples_magick);
+    get(options, "magick:compressed_magick", &compressed_magick);
+    get(options, "magick:quality", &quality);
     return 0;
   }
 

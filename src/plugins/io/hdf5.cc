@@ -228,14 +228,14 @@ struct hdf5_io: public libpressio_io_plugin {
   }
 
   virtual int set_options_impl(struct pressio_options const& options) override{
-    options.get("io:path", &filename);
-    options.get("hdf5:dataset", &dataset);
+    get(options, "io:path", &filename);
+    get(options, "hdf5:dataset", &dataset);
     return 0;
   }
   virtual struct pressio_options get_options_impl() const override{
     pressio_options opts;
-    opts.set("io:path", filename);
-    opts.set("hdf5:dataset", dataset);
+    set(opts, "io:path", filename);
+    set(opts, "hdf5:dataset", dataset);
     return opts;
   }
 
@@ -244,6 +244,10 @@ struct hdf5_io: public libpressio_io_plugin {
   }
   virtual const char* version() const override{
     return "0.0.1";
+  }
+
+  const char* prefix() const override {
+    return "hdf5";
   }
 
   std::shared_ptr<libpressio_io_plugin> clone() override {

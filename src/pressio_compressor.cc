@@ -68,4 +68,13 @@ struct pressio_compressor* pressio_compressor_clone(struct pressio_compressor* c
   return new pressio_compressor((*compressor)->clone());
 }
 
+void pressio_compressor_set_name(struct pressio_compressor* compressor, const char* new_name) {
+  (*compressor)->set_name(new_name);
+}
+
+
+const char* pressio_compressor_get_name(struct pressio_compressor const* compressor) {
+  return (*compressor)->get_name().c_str();
+}
+
 }

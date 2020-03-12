@@ -10,6 +10,7 @@ struct cmdline_args {
   std::string decompressed;  
   std::vector<size_t> dims;
   pressio_dtype type;
+  bool empty = true;
 };
 
 enum class cmdline {
@@ -28,6 +29,7 @@ cmdline_args parse_args(const int argc, const char* argv[])
 
   //getopt long is a possible alternative for GPL software
   for (int i = 1; i < argc; ++i) {
+    args.empty=false;
     std::string arg = argv[i];
     switch (expected) {
       case cmdline::flag:
@@ -87,28 +89,35 @@ cmdline_args parse_args(const int argc, const char* argv[])
 int main(int argc, const char *argv[])
 {
   auto args = parse_args(argc, argv);   
-  std::cout << "external:api=1\n";
-  std::cout << "dims=" << args.dims.size() << '\n';
+  std::cout << "external:api=3\n";
+  if(!args.empty) {
+    std::cout << "dims=" << args.dims.size() << '\n';
 
-  auto input_buffer = pressio_data_new_owning(args.type, args.dims.size(), args.dims.data());
-  auto input = pressio_io_data_path_read(input_buffer, args.input.c_str());
-  if(input == nullptr) {
-    std::cerr << "failed to read " << args.input << std::endl;
-    exit(1);
+    auto input_buffer = pressio_data_new_owning(args.type, args.dims.size(), args.dims.data());
+    auto input = pressio_io_data_path_read(input_buffer, args.input.c_str());
+    if(input == nullptr) {
+      std::cerr << "failed to read " << args.input << std::endl;
+      exit(1);
+    }
+
+    auto decompressed_buffer = pressio_data_new_owning(args.type, args.dims.size(), args.dims.data());
+    auto output = pressio_io_data_path_read(input_buffer, args.decompressed.c_str());
+    if(output == nullptr) {
+      std::cerr << "failed to read " << args.decompressed << std::endl;
+      exit(1);
+    }
+
+    std::cerr << "testing warning" << std::endl;
+    std::cout << "defaulted2=17.1" << std::endl;
+    
+
+    pressio_data_free(input);
+    pressio_data_free(output);
+  } else {
+    std::cout << "dims=0" << std::endl;
+    std::cout << "defaulted=2.0" << std::endl;
+    std::cout << "defaulted2=3.0" << std::endl;
   }
-
-  auto decompressed_buffer = pressio_data_new_owning(args.type, args.dims.size(), args.dims.data());
-  auto output = pressio_io_data_path_read(input_buffer, args.decompressed.c_str());
-  if(output == nullptr) {
-    std::cerr << "failed to read " << args.decompressed << std::endl;
-    exit(1);
-  }
-
-  std::cerr << "testing warning" << std::endl;
-  
-
-  pressio_data_free(input);
-  pressio_data_free(output);
   std::flush(std::cout);
   return 0;
 }

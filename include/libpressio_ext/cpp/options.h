@@ -27,6 +27,8 @@ using option_type = compat::variant<compat::monostate,
       compat::optional<std::vector<std::string>>,
       compat::optional<pressio_data>
       >;
+
+
 }
 
 /** defines constants to convert between types and pressio_option_*_type */
@@ -56,6 +58,7 @@ struct pressio_option final {
    * \param[in] value the value the option is to hold
    * */
   template<class T, typename = typename std::enable_if<
+    !std::is_same<T, pressio_conversion_safety>::value &&
     !std::is_same<T, pressio_option>::value &&
     !std::is_same<T, const char*>::value &&
     !std::is_same<T, compat::monostate>::value
@@ -274,6 +277,16 @@ struct pressio_options final {
   }
 
   /**
+   * checks the status of a key in a option set with a given name
+   * \returns pressio_options_key_does_not_exist if the key does not exist
+   *          pressio_options_key_exists if the key exists but has no value
+   *          pressio_options_key_set if the key exists and is set
+   */
+  pressio_options_key_status key_status(std::string const& name, std::string const& key) const {
+    return key_status(format_name(name, key));
+  }
+
+  /**
    * sets a key to the specified value
    * \param[in] key the key to use
    * \param[in] value the value to use
@@ -281,6 +294,17 @@ struct pressio_options final {
   void set(std::string const& key,  pressio_option const& value) {
     options[key] = value;
   }
+
+  /**
+   * sets a key to the specified value
+   * \param[in] name the name to use
+   * \param[in] key the key to use
+   * \param[in] value the value to use
+   */
+  void set(std::string const& name, std::string const& key,  pressio_option const& value) {
+    set(format_name(name, key), value);
+  }
+
 
   /**
    * converts value according the conversion safety to the type of the option at the stored key specified and stores the result if the cast succeeds
@@ -301,6 +325,17 @@ struct pressio_options final {
   }
 
   /**
+   * converts value according the conversion safety to the type of the option at the stored key specified and stores the result if the cast succeeds
+   * \param[in] name the name to use
+   * \param[in] key the option key
+   * \param[in] value the option to assign to this option
+   * \param[in] safety the specified safety to use \see pressio_conversion_safety
+   */
+  enum pressio_options_key_status cast_set(std::string const& name, std::string const& key,  pressio_option const& value, enum pressio_conversion_safety safety= pressio_conversion_implicit) {
+    return cast_set(format_name(name, key), value, safety);
+  }
+
+  /**
    * set only the type of the option
    * \param[in] key which option to set
    * \param[in] type the type to set the option to
@@ -310,11 +345,32 @@ struct pressio_options final {
   }
 
   /**
+   * set only the type of the option
+   * \param[in] name the name to use
+   * \param[in] key which option to set
+   * \param[in] type the type to set the option to
+   */
+  void set_type(std::string const& name, std::string const& key, pressio_option_type type) {
+    set_type(format_name(name, key), type);
+  }
+
+  /**
    * \param[in] key which option to get
    * \returns the option at the specified key
    */
   pressio_option const& get(std::string const& key) const {
     return options.at(key);
+  }
+
+  /**
+   * \param[in] name the name to use
+   * \param[in] key which option to get
+   * \returns the option at the specified key
+   */
+  pressio_option const& get(std::string const& name, std::string const& key) const {
+    auto prefix_key = format_name(name, key);
+    if(options.find(prefix_key) != options.end()) return get(prefix_key);
+    return get(key);
   }
 
   /**
@@ -344,6 +400,22 @@ struct pressio_options final {
         //value does not exist
         return pressio_options_key_does_not_exist;
     }
+  }
+
+  /**
+   * gets a key if it is set and stores it into the pointer value
+   * \param[in] name the name to use.  Checks for the named version first, then the unnamed
+   * \param[in] key the option to retrieve
+   * \param[out] value the value that is in the option
+   * \returns pressio_options_key_does_not_exist if the key does not exist
+   *          pressio_options_key_exists if the key exists but has no value
+   *          pressio_options_key_set if the key exists and is set
+   */
+  template <class PointerType>
+  enum pressio_options_key_status get(std::string const& name, std::string const& key, PointerType value) const {
+    auto prefix_key = format_name(name, key);
+    if(options.find(prefix_key) != options.end()) return get(prefix_key, value);
+    else return get(key, value);
   }
 
   /**
@@ -378,6 +450,23 @@ struct pressio_options final {
   }
 
   /**
+   * gets a key if it is set, attepts to cast it the specified type and stores it into the pointer value
+   * \param[in] name the name to use.  Checks for the named version first, then the unnamed
+   * \param[in] key the option to retrieve
+   * \param[out] value the value that is in the option
+   * \param[in] safety the level of conversions to allow \see pressio_conversion_safety
+   * \returns pressio_options_key_does_not_exist if the key does not exist
+   *          pressio_options_key_exists if the key exists but has no value
+   *          pressio_options_key_set if the key exists and is set
+   */
+  template <class PointerType>
+  enum pressio_options_key_status cast(std::string const& name, std::string const& key, PointerType value, enum pressio_conversion_safety safety) const {
+    auto prefix_key = format_name(name, key);
+    if(options.find(prefix_key) != options.end()) return cast(prefix_key, value, safety);
+    return cast(key, value, safety);
+  }
+
+  /**
    * removes all options
    */
   void clear() noexcept {
@@ -404,6 +493,12 @@ struct pressio_options final {
 
 
   private:
+
+  std::string format_name(std::string const& name, std::string const& key) const {
+    if(name == "") return key;
+    else return '/' + name + ':' + key;
+  }
+
   std::map<std::string, pressio_option> options;
 
   public:

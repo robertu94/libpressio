@@ -93,17 +93,17 @@ struct csv_io : public libpressio_io_plugin
   }
 
   virtual int set_options_impl(struct pressio_options const& opts) override{
-    opts.get("io:path", &path);
-    opts.get("csv:headers", &headers);
-    opts.get("csv:skip_rows", &skip_rows);
+    get(opts, "io:path", &path);
+    get(opts, "csv:headers", &headers);
+    get(opts, "csv:skip_rows", &skip_rows);
     return 0;
   }
   virtual struct pressio_options get_options_impl() const override{
-    return {
-      {"io:path", path},
-      {"csv:headers", headers},
-      {"csv:skip_rows", skip_rows},
-    };
+    pressio_options opts;
+    set(opts,  "io:path", path);
+    set(opts, "csv:headers", headers);
+    set(opts, "csv:skip_rows", skip_rows);
+    return opts;
   }
 
   int patch_version() const override{ 
@@ -112,6 +112,10 @@ struct csv_io : public libpressio_io_plugin
 
   virtual const char* version() const override{
     return "0.0.1";
+  }
+
+  const char* prefix() const override {
+    return "csv";
   }
 
   std::shared_ptr<libpressio_io_plugin> clone() override {

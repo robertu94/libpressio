@@ -41,31 +41,30 @@ public:
   struct pressio_options get_options_impl() const override
   {
     struct pressio_options options;
-    options.set("resize:compressor", compressor_id);
-    options.set("resize:compressed_dims", vector_to_owning_pressio_data(compressed_dims));
-    options.set("resize:decompressed_dims", vector_to_owning_pressio_data(decompressed_dims));
+    set(options, "resize:compressor", compressor_id);
+    set(options, "resize:compressed_dims", vector_to_owning_pressio_data(compressed_dims));
+    set(options, "resize:decompressed_dims", vector_to_owning_pressio_data(decompressed_dims));
     return options;
   }
 
   struct pressio_options get_configuration_impl() const override
   {
     struct pressio_options options;
-    options.set("pressio:thread_safe",
-                static_cast<int>(pressio_thread_safety_multiple));
+    set(options, "pressio:thread_safe", static_cast<int>(pressio_thread_safety_multiple));
     return options;
   }
 
   int set_options_impl(struct pressio_options const& options) override
   {
-    if(options.get("resize:compressor", &compressor_id) == pressio_options_key_set) {
+    if(get(options, "resize:compressor", &compressor_id) == pressio_options_key_set) {
       pressio library;
       compressor = library.get_compressor(compressor_id);
     }
     pressio_data tmp;
-    if(options.get("resize:compressed_dims", &tmp) == pressio_options_key_set) {
+    if(get(options, "resize:compressed_dims", &tmp) == pressio_options_key_set) {
       compressed_dims = pressio_data_to_vector<size_t>(tmp);
     }
-    if(options.get("resize:decompressed_dims", &tmp) == pressio_options_key_set) {
+    if(get(options, "resize:decompressed_dims", &tmp) == pressio_options_key_set) {
       decompressed_dims = pressio_data_to_vector<size_t>(tmp);
     }
     return 0;
@@ -94,6 +93,10 @@ public:
   const char* version() const override { return "0.0.1"; }
 
   const char* prefix() const override { return "resize"; }
+
+  void set_name_impl(std::string const& name) override {
+    compressor->set_name(name + "/" + compressor->prefix());
+  }
 
   std::shared_ptr<libpressio_compressor_plugin> clone() override
   {

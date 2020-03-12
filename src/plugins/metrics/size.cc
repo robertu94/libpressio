@@ -22,19 +22,19 @@ class size_plugin : public libpressio_metrics_plugin {
   struct pressio_options get_metrics_results() const override {
     pressio_options opt;
 
-    auto set_or_double = [&opt](const char* key, compat::optional<double> size) {
+    auto set_or_double = [&opt, this](const char* key, compat::optional<double> size) {
       if(size) {
-        opt.set(key, *size);
+        set(opt, key, *size);
       } else {
-        opt.set_type(key, pressio_option_double_type);
+        set_type(opt, key, pressio_option_double_type);
       }
     };
 
-    auto set_or_size_t = [&opt](const char* key, compat::optional<size_t> size) {
+    auto set_or_size_t = [&opt, this](const char* key, compat::optional<size_t> size) {
       if(size) {
-        opt.set(key, static_cast<unsigned int>(*size));
+        set(opt, key, static_cast<unsigned int>(*size));
       } else {
-        opt.set_type(key, pressio_option_uint32_type);
+        set_type(opt, key, pressio_option_uint32_type);
       }
     };
 
@@ -49,6 +49,9 @@ class size_plugin : public libpressio_metrics_plugin {
 
   std::unique_ptr<libpressio_metrics_plugin> clone() override {
     return compat::make_unique<size_plugin>(*this);
+  }
+  const char* prefix() const override {
+    return "size";
   }
 
   private:

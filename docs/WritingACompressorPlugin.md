@@ -30,40 +30,30 @@ This is because the base class is doing some work to provide metrics functionali
 ```cpp
 class log_transform : public libpressio_compressor_plugin {
   public:
-  log_transform(): compressor(nullptr) {}
-  log_transform(pressio_compressor&& comp): compressor(std::move(comp)) {}
-
-
-  //TODO compress and decompress, see below
-
-
   //getting and setting options/configuration
   pressio_options get_options_impl() const override {
     auto options =  compressor.plugin->get_options();
-    options.set("log:compressor", (void*)&compressor);
+    set(options, "log:compressor", compressor_id);
     return options;
   }
   int set_options_impl(pressio_options const& options) override {
-    //if the user hasn't set the compressor yet, fail
-    if(!compressor) return invalid_compressor();
     int rc = check_error(compressor.plugin->set_options(options));
-
-    //try to extract the compressor plugin from the option
-    void* tmp;
-    if(options.get("log:compressor", &tmp) == pressio_options_key_set) {
-      compressor = std::move(*(pressio_compressor*)tmp);
+    std::string tmp;
+    if(get(options, "log:compressor", &tmp) == pressio_options_key_set) {
+      pressio library;
+      if(auto tmp_compressor = library.get_compressor(tmp)) {
+        compressor = std::move(tmp_compressor);
+        compressor_id = std::move(tmp);
+      } else {
+        return set_error(library.err_code(), library.err_msg());
+      }
     }
-
     return rc;
   }
   pressio_options get_configuration_impl() const override {
-    //if the user hasn't set the compressor yet, fail
-    if(!compressor) return pressio_options();
     return compressor.plugin->get_configuration();
   }
   int check_options_impl(pressio_options const& options) override {
-    //if the user hasn't set the compressor yet, fail
-    if(!compressor) return invalid_compressor();
     return check_error(compressor.plugin->check_options(options));
   }
 
@@ -72,36 +62,37 @@ class log_transform : public libpressio_compressor_plugin {
     return "log";
   }
   const char* version() const override {
-    if(!compressor) return "";
-    return compressor.plugin->version();
+    return "0.1.0";
   }
   int major_version() const override {
-    if(!compressor) return -1;
-    return compressor.plugin->major_version();
+    return 0;
   }
   int minor_version() const override {
-    if(!compressor) return -1;
-    return compressor.plugin->minor_version();
+    return 1;
   }
   int patch_version() const override {
-    if(!compressor) return -1;
-    return compressor.plugin->patch_version();
+    return 0;
+  }
+  std::shared_ptr<libpressio_compressor_plugin> clone() override {
+    return compat::make_unique<log_transform>(*this);
   }
 
   private:
+  void set_name_impl(std::string const& new_name) override {
+    compressor->set_name(new_name + "/" + compressor->prefix());
+  }
+
   int check_error(int rc) { 
     if(rc) {
-      set_error(
-          compressor.plugin->error_code(),
-          compressor.plugin->error_msg()
-          );
+      set_error(compressor->error_code(), compressor->error_msg());
     }
     return rc;
   }
-  int invalid_compressor() { return set_error(-1, "compressor must be set"); };
-  pressio_compressor compressor;
-};
+  pressio_compressor compressor = compressor_plugins().build("noop");
+  std::string compressor_id = "noop";
+}
 ```
+
 Now to the harder part, writing compress and decompress.
 
 
@@ -138,19 +129,17 @@ Now, we can write compress and decompress:
 
 
 ```cpp
-  //compress and decompress
-  int compress_impl(pressio_data const* input, pressio_data* output) override {
-    if(!compressor) return invalid_compressor();
-    pressio_data log_input = pressio_data_for_each<pressio_data>(*input, log_fn{input});
-    return check_error(compressor.plugin->compress(&log_input, output));
-  }
+//compress and decompress
+int compress_impl(pressio_data const* input, pressio_data* output) override {
+  pressio_data log_input = pressio_data_for_each<pressio_data>(*input, log_fn{input});
+  return check_error(compressor.plugin->compress(&log_input, output));
+}
 
-  int decompress_impl(pressio_data const* input, pressio_data* output) override {
-    if(!compressor) return invalid_compressor();
-    int rc =  compressor.plugin->decompress(input, output);
-    *output = pressio_data_for_each<pressio_data>(*output, exp_fn{output});
-    return check_error(rc);
-  }
+int decompress_impl(pressio_data const* input, pressio_data* output) override {
+  int rc =  compressor.plugin->decompress(input, output);
+  *output = pressio_data_for_each<pressio_data>(*output, exp_fn{output});
+  return check_error(rc);
+}
 ```
 
 We finally register the library with libpressio:

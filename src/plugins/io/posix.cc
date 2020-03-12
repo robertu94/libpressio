@@ -159,21 +159,21 @@ struct posix_io : public libpressio_io_plugin {
 
   virtual int set_options_impl(struct pressio_options const& options) override{
     std::string path;
-    if(options.get("io:path", &path) == pressio_options_key_set) {
+    if(get(options, "io:path", &path) == pressio_options_key_set) {
       this->path = path;
     } else {
       this->path = {};
     }
 
     void* file_ptr;
-    if(options.get("io:file_pointer", &file_ptr ) == pressio_options_key_set) {
+    if(get(options, "io:file_pointer", &file_ptr ) == pressio_options_key_set) {
       this->file_ptr = (FILE*)file_ptr;
     } else {
       this->file_ptr = {};
     }
 
     int fd;
-    if(options.get("io:file_descriptor", &fd) == pressio_options_key_set) {
+    if(get(options, "io:file_descriptor", &fd) == pressio_options_key_set) {
       this->fd = fd;
     } else {
       this->fd = {};
@@ -183,14 +183,14 @@ struct posix_io : public libpressio_io_plugin {
   virtual struct pressio_options get_options_impl() const override{
     pressio_options opts;
 
-    if(path) opts.set("io:path", *path);
-    else opts.set_type("io:path", pressio_option_charptr_type);
+    if(path) set(opts, "io:path", *path);
+    else set_type(opts, "io:path", pressio_option_charptr_type);
 
-    if(file_ptr) opts.set("io:file_pointer", (void*)*file_ptr);
-    else opts.set_type("io:file_pointer", pressio_option_userptr_type);
+    if(file_ptr) set(opts, "io:file_pointer", (void*)*file_ptr);
+    else set_type(opts, "io:file_pointer", pressio_option_userptr_type);
 
-    if(fd) opts.set("io:file_descriptor", *fd);
-    else opts.set_type("io:file_descriptor", pressio_option_int32_type);
+    if(fd) set(opts, "io:file_descriptor", *fd);
+    else set_type(opts, "io:file_descriptor", pressio_option_int32_type);
 
     return opts;
   }
@@ -200,6 +200,9 @@ struct posix_io : public libpressio_io_plugin {
   }
   virtual const char* version() const override{
     return "0.0.1";
+  }
+  const char* prefix() const override {
+    return "posix";
   }
 
   std::shared_ptr<libpressio_io_plugin> clone() override {

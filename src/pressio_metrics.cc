@@ -13,15 +13,24 @@ struct pressio_options* pressio_metrics_get_results(struct pressio_metrics const
 }
 
 struct pressio_options* pressio_metrics_get_options(struct pressio_metrics const* metrics) {
-  return new pressio_options((*metrics)->get_metrics_options());
+  return new pressio_options((*metrics)->get_options());
 }
 
 int pressio_metrics_set_options(struct pressio_metrics const* metrics, struct pressio_options const* options){
-  return (*metrics)->set_metrics_options(*options);
+  return (*metrics)->set_options(*options);
 }
 
 struct pressio_metrics* pressio_metrics_clone(struct pressio_metrics* metrics) {
   return new pressio_metrics((*metrics)->clone());
+}
+
+void pressio_metrics_set_name(struct pressio_metrics* metrics, const char* new_name) {
+  (*metrics)->set_name(new_name);
+}
+
+
+const char* pressio_metrics_get_name(struct pressio_metrics const* metrics) {
+  return (*metrics)->get_name().c_str();
 }
 
 

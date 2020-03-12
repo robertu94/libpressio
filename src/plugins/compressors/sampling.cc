@@ -15,23 +15,23 @@ class sample_compressor_plugin: public libpressio_compressor_plugin {
   public:
     struct pressio_options get_options_impl() const override {
       struct pressio_options options;
-      options.set("sample:mode", mode);
-      options.set("sample:seed", seed);
-      options.set("sample:rate", rate);
+      set(options, "sample:mode", mode);
+      set(options, "sample:seed", seed);
+      set(options, "sample:rate", rate);
       return options;
     }
 
     struct pressio_options get_configuration_impl() const override {
       struct pressio_options options;
-      options.set("pressio:thread_safe", static_cast<int>(pressio_thread_safety_multiple));
-      options.set("sampling:modes", {"wr", "wor", "decimate"});
+      set(options,"pressio:thread_safe", static_cast<int>(pressio_thread_safety_multiple));
+      set(options, "sampling:modes", {"wr", "wor", "decimate"});
       return options;
     }
 
     int set_options_impl(struct pressio_options const& options) override {
-      options.get("sample:mode", &mode);
-      options.get("sample:seed", &seed);
-      options.get("sample:rate", &rate);
+      get(options, "sample:mode", &mode);
+      get(options, "sample:seed", &seed);
+      get(options, "sample:rate", &rate);
       return 0;
     }
 

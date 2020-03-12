@@ -217,16 +217,16 @@ pressio_option pressio_option::as(const enum pressio_option_type to_type, const 
         try {
         switch(to_type) {
           case pressio_option_double_type:
-            if (allow_special(safety)) return pressio_option(std::stod(s));
+            if (allow_special(safety) && !s.empty()) return pressio_option(std::stod(s));
             else return {};
           case pressio_option_float_type:
-            if (allow_special(safety)) return pressio_option(std::stof(s));
+            if (allow_special(safety) && !s.empty()) return pressio_option(std::stof(s));
             else return {};
           case pressio_option_int32_type:
-            if (allow_special(safety)) return pressio_option(std::stoi(s));
+            if (allow_special(safety) && !s.empty()) return pressio_option(std::stoi(s));
             else return {};
           case pressio_option_uint32_type:
-            if (allow_special(safety)) return pressio_option(static_cast<unsigned int>(std::stoul(s)));
+            if (allow_special(safety) && !s.empty()) return pressio_option(static_cast<unsigned int>(std::stoul(s)));
             else return {};
           case pressio_option_charptr_type:
             return s;

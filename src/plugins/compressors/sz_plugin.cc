@@ -36,32 +36,32 @@ class sz_plugin: public libpressio_compressor_plugin {
 
   struct pressio_options get_options_impl() const override {
     struct pressio_options options;
-    options.set_type("sz:config_file", pressio_option_charptr_type);
-    options.set_type("sz:config_struct", pressio_option_userptr_type);
-    options.set("sz:max_quant_intervals", confparams_cpr->max_quant_intervals);
-    options.set("sz:quantization_intervals", confparams_cpr->quantization_intervals);
-    options.set("sz:max_range_radius", confparams_cpr->maxRangeRadius);
-    options.set("sz:sol_id", confparams_cpr->sol_ID);
-    options.set("sz:lossless_compressor", confparams_cpr->losslessCompressor);
-    options.set("sz:sample_distance", confparams_cpr->sampleDistance);
-    options.set("sz:pred_threshold", confparams_cpr->predThreshold);
-    options.set("sz:sz_mode", confparams_cpr->szMode);
-    options.set("sz:gzip_mode", confparams_cpr->gzipMode);
-    options.set("sz:error_bound_mode", confparams_cpr->errorBoundMode);
-	  options.set("sz:abs_err_bound", confparams_cpr->absErrBound);
-	  options.set("sz:rel_err_bound", confparams_cpr->relBoundRatio);
-	  options.set("sz:psnr_err_bound", confparams_cpr->psnr);
-	  options.set("sz:pw_rel_err_bound", confparams_cpr->pw_relBoundRatio);
-	  options.set("sz:segment_size", confparams_cpr->segment_size);
-	  options.set("sz:pwr_type", confparams_cpr->pwr_type);
-	  options.set("sz:snapshot_cmpr_step", confparams_cpr->snapshotCmprStep);
-	  options.set("sz:accelerate_pw_rel_compression", confparams_cpr->accelerate_pw_rel_compression);
-	  options.set_type("sz:prediction_mode", pressio_option_int32_type);
-	  options.set_type("sz:plus_bits", pressio_option_int32_type);
-	  options.set_type("sz:random_access", pressio_option_int32_type);
-    options.set_type("sz:data_type", pressio_option_double_type);
-    options.set("sz:app", app.c_str());
-    options.set("sz:user_params", user_params);
+    set_type(options, "sz:config_file", pressio_option_charptr_type);
+    set_type(options, "sz:config_struct", pressio_option_userptr_type);
+    set(options, "sz:max_quant_intervals", confparams_cpr->max_quant_intervals);
+    set(options, "sz:quantization_intervals", confparams_cpr->quantization_intervals);
+    set(options, "sz:max_range_radius", confparams_cpr->maxRangeRadius);
+    set(options, "sz:sol_id", confparams_cpr->sol_ID);
+    set(options, "sz:lossless_compressor", confparams_cpr->losslessCompressor);
+    set(options, "sz:sample_distance", confparams_cpr->sampleDistance);
+    set(options, "sz:pred_threshold", confparams_cpr->predThreshold);
+    set(options, "sz:sz_mode", confparams_cpr->szMode);
+    set(options, "sz:gzip_mode", confparams_cpr->gzipMode);
+    set(options, "sz:error_bound_mode", confparams_cpr->errorBoundMode);
+	  set(options, "sz:abs_err_bound", confparams_cpr->absErrBound);
+	  set(options, "sz:rel_err_bound", confparams_cpr->relBoundRatio);
+	  set(options, "sz:psnr_err_bound", confparams_cpr->psnr);
+	  set(options, "sz:pw_rel_err_bound", confparams_cpr->pw_relBoundRatio);
+	  set(options, "sz:segment_size", confparams_cpr->segment_size);
+	  set(options, "sz:pwr_type", confparams_cpr->pwr_type);
+	  set(options, "sz:snapshot_cmpr_step", confparams_cpr->snapshotCmprStep);
+	  set(options, "sz:accelerate_pw_rel_compression", confparams_cpr->accelerate_pw_rel_compression);
+	  set_type(options, "sz:prediction_mode", pressio_option_int32_type);
+	  set_type(options, "sz:plus_bits", pressio_option_int32_type);
+	  set_type(options, "sz:random_access", pressio_option_int32_type);
+    set_type(options, "sz:data_type", pressio_option_double_type);
+    set(options, "sz:app", app.c_str());
+    set(options, "sz:user_params", user_params);
     return options;
   }
 
@@ -69,38 +69,38 @@ class sz_plugin: public libpressio_compressor_plugin {
 
     struct sz_params* sz_param;
     std::string config_file;
-    if(options.get("sz:config_file", &config_file) == pressio_options_key_set) {
+    if(get(options, "sz:config_file", &config_file) == pressio_options_key_set) {
       SZ_Finalize();
       SZ_Init(config_file.c_str());
-    } else if (options.get("sz:config_struct", (void**)&sz_param) == pressio_options_key_set) {
+    } else if (get(options, "sz:config_struct", (void**)&sz_param) == pressio_options_key_set) {
       SZ_Finalize();
       SZ_Init_Params(sz_param);
     }
 
-    options.get("sz:max_quant_intervals", &confparams_cpr->max_quant_intervals);
-    options.get("sz:quantization_intervals", &confparams_cpr->quantization_intervals);
-    options.get("sz:max_range_radius", &confparams_cpr->maxRangeRadius);
-    options.get("sz:sol_id", &confparams_cpr->sol_ID);
-    options.get("sz:lossless_compressor", &confparams_cpr->losslessCompressor);
-    options.get("sz:sample_distance", &confparams_cpr->sampleDistance);
-    options.get("sz:pred_threshold", &confparams_cpr->predThreshold);
-    options.get("sz:sz_mode", &confparams_cpr->szMode);
-    options.get("sz:gzip_mode", &confparams_cpr->gzipMode);
-    options.get("sz:error_bound_mode", &confparams_cpr->errorBoundMode);
-    options.get("sz:abs_err_bound", &confparams_cpr->absErrBound);
-    options.get("sz:rel_err_bound", &confparams_cpr->relBoundRatio);
-    options.get("sz:psnr_err_bound", &confparams_cpr->psnr);
-    options.get("sz:pw_rel_err_bound", &confparams_cpr->pw_relBoundRatio);
-    options.get("sz:segment_size", &confparams_cpr->segment_size);
-    options.get("sz:pwr_type", &confparams_cpr->pwr_type);
-    options.get("sz:snapshot_cmpr_step", &confparams_cpr->snapshotCmprStep);
-    options.get("sz:prediction_mode", &confparams_cpr->predictionMode);
-    options.get("sz:accelerate_pw_rel_compression", &confparams_cpr->accelerate_pw_rel_compression);
-    options.get("sz:plus_bits", &confparams_cpr->plus_bits);
-    options.get("sz:random_access", &confparams_cpr->randomAccess);
-    options.get("sz:data_type", &confparams_cpr->dataType);
-    options.get("sz:app", &app);
-    options.get("sz:user_params", &user_params);
+    get(options, "sz:max_quant_intervals", &confparams_cpr->max_quant_intervals);
+    get(options, "sz:quantization_intervals", &confparams_cpr->quantization_intervals);
+    get(options, "sz:max_range_radius", &confparams_cpr->maxRangeRadius);
+    get(options, "sz:sol_id", &confparams_cpr->sol_ID);
+    get(options, "sz:lossless_compressor", &confparams_cpr->losslessCompressor);
+    get(options, "sz:sample_distance", &confparams_cpr->sampleDistance);
+    get(options, "sz:pred_threshold", &confparams_cpr->predThreshold);
+    get(options, "sz:sz_mode", &confparams_cpr->szMode);
+    get(options, "sz:gzip_mode", &confparams_cpr->gzipMode);
+    get(options, "sz:error_bound_mode", &confparams_cpr->errorBoundMode);
+    get(options, "sz:abs_err_bound", &confparams_cpr->absErrBound);
+    get(options, "sz:rel_err_bound", &confparams_cpr->relBoundRatio);
+    get(options, "sz:psnr_err_bound", &confparams_cpr->psnr);
+    get(options, "sz:pw_rel_err_bound", &confparams_cpr->pw_relBoundRatio);
+    get(options, "sz:segment_size", &confparams_cpr->segment_size);
+    get(options, "sz:pwr_type", &confparams_cpr->pwr_type);
+    get(options, "sz:snapshot_cmpr_step", &confparams_cpr->snapshotCmprStep);
+    get(options, "sz:prediction_mode", &confparams_cpr->predictionMode);
+    get(options, "sz:accelerate_pw_rel_compression", &confparams_cpr->accelerate_pw_rel_compression);
+    get(options, "sz:plus_bits", &confparams_cpr->plus_bits);
+    get(options, "sz:random_access", &confparams_cpr->randomAccess);
+    get(options, "sz:data_type", &confparams_cpr->dataType);
+    get(options, "sz:app", &app);
+    get(options, "sz:user_params", &user_params);
 
     return 0;
   }

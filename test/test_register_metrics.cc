@@ -30,6 +30,10 @@ class counting_metric: public libpressio_metrics_plugin {
     return compat::make_unique<counting_metric>(*this);
   }
 
+  const char* prefix() const override {
+    return "mycounts";
+  }
+
   private:
   void begin_compress(pressio_data const* input, pressio_data const*) override {
     counts[input->dtype()]++;

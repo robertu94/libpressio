@@ -10,17 +10,37 @@ Pull requests for such modules will not be accepted.
 
 ## Configuration Options
 
-`external:command` -- the command to execute,  the options passed by the module will be appended to this string
-`external:io_format` -- the format to write the data to disk.  It can be any format supported by `pressio_supported_io_modules`
+*New in external API 3* if the external metric script requires 2 or more input files, it MUST pass the `external:field_names` option with a length corresponding to the number of input files.
+Additionally, if other arguments taking a array of strings are passed, their length must equal the number of input files or be 0 or be unset.
+If the length is 0 or unset, a default option will be used for each input file.
+If the length is non-zero, the ith option corresponds to the ith file.
 
-Additionally any options passed to this metric will be passed to the IO format module.
 
-## Command line Arguments
+| Option                     |Version Added | Type     | Description                                                                                             |
+|----------------------------|--------------|----------|---------------------------------------------------------------------------------------------------------|
+| `external:command`         | 1            |`char*`   | the command to execute,  the options passed by the module will be appended to this string               |
+| `external:io_format`       | 2            |`char*[]` | the format to write the data to disk.  It can be any format supported by `pressio_supported_io_modules` The ith entry in the list corresponds to the ith input file. |
+| `external:field_names`     | 3            |`char*[]` | the prefix to use for arguments relating to the files.  For example, if the list `["foo"]` is provided, arguments would be like `--foo_dim`.  If this list is empty, The script will be passed arguments of the form `--dim`.|
+| `external:prefix`          | 3            |`char*[]` | the prefix to use for arguments relating to the files. The default is an empty prefix.                  |
+| `external:suffix`          | 3            |`char*[]` | the suffix to use for arguments relating to the files. The default is an empty suffix.                  |
+| `external:work_dir`        | 3            |`char*`   | the path to call the script from, defaults to the current working directory                             |
+
+
+*New in external API 2* "global" IO module options may passed as well.
+
+*New in external API 3* If `external:field_names` is unset and the metrics module is unnamed, the IO module will also be assigned the name `external`.  If `external:field_names` is unset and the metrics module is named, the IO module will be assigned the same name as the external metric module.  If `external:field_names` is set, the IO modules used will be assigned names according the field names.  If the external metric is unnamed, the io module that writes out the `x` field will be assigned the name `x`.  If the external metric is assigned a name, the io module is a assigned the name of the external metric followed by a `/` followed by the field name.  For example, if the external metric name is`imaging_metric`, and the field name is `x`, the io module that writes out the x field will be assigned the name `imaging_metric/x`.
+
+
+## "Well-Known" Command line Arguments
 
 The `external` plugin will provide the following command line arguments to the script.
 These may change from version to version.
 
-`--api` the maximum API version number the external module supports, begins at 1.  The current version is 2
+`--api` the maximum API version number the external module supports, begins at 1.  The current version is 3
+
+**New Requirement in API 3** If the script is called with zero of the following well-known arguments, it MUST output a lists of the known results with default values in-case they are omitted from calls to the script when called with some set of well-known flags.  Scripts MAY return different lists of values when called with defined custom arguments.  See the example below
+
+*New in external API 3* The following arguments will be "prefixed" according to the `external:field_names` argument if it is set. See the table above in "Configuration Options" and example usage below.
 
 `--input` path to a temporary file containing the input data prior to compression. (new in version 2) It will be according to the `external:io_format` option
 
@@ -30,6 +50,9 @@ These may change from version to version.
 
 `--type` type of the input data.  Valid types include: "float", "double", "int8", "int16", "int32", "int64", "uint8", "uint16", "uint32", "uint64", "byte".
 
+## "Custom Defined" Command line Arguments
+
+It **is** guaranteed, that no future arguments will use names beginning with `external` and may be safely used for custom arguments specified by the user.
 
 ### Example Usage
 
@@ -41,16 +64,23 @@ In this case `external:command` is set to `/path/to/script`
 
 In this case `external:command` is set to `/usr/bin/env python myscript.py`
 
-## Expected Return Code
+`/path/to/script --foo_input /tmp/foo_input.f32 --foo_decompressed /tmp/decompressed.f32 --foo_dim 500 --foo_dim 500 --foo_dim 100 --foo_type float`
 
-The external command is expected to return 0 on success, positive values on an error, and negative on warning.
+In this case, `external:command` is set to `/path/to/script` and `external:feild_names` is set to `['foo']`
+
+`/path/to/script --external_custom_arg 3`
+
+In this case, `external:command` is set to `/path/to/script --external_custom_arg 3`. Where `--external_custom_arg` is a script defined custom argument.
+
+**NOTE** the names provided in this example are illustrative only, the real names are generated by `mkstemp`
 
 
-## Expected Standard Output
+## Version 1
+
+### Expected Standard Output
 
 A line `external:api=$version_number\n` where `$version_number` is a positive integer.
 
-### version 1:
 
 After the API line, one or more lines conforming to the following pattern:
 
@@ -75,12 +105,7 @@ ssim=.64
 my_analysis=1.03e-3
 ```
 
-### version 2:
-
-No changes were made to the output format since version 1.
-
-
-## Expected Standard Error
+### Expected Standard Error
 
 
 If the return code is non-zero, a warning or error message SHOULD be printed to stderr.  It SHOULD be a human readable message designed for use in debugging.
@@ -94,7 +119,11 @@ An example output could be:
 foobar analysis only supports being run on 2d data
 ```
 
-## Example 
+### Expected Return Code
+
+The external command is expected to return 0 on success, positive values on an error, and negative on warning.
+
+### Example 
 
 Assume that an external metrics module ran and exited with a return code of 1 generating the output above will generate following keys in an arbitrary order.
 
@@ -109,13 +138,56 @@ external:error_code=0
 external:stderr="foobar analysis only supports being run on 2d data"
 ```
 
+## Version 2
+
+No changes were made to the output format since version 1.
+
+## Version 3
+
+The output from a script has changed to reflect the zero well-known argument case. Otherwise the format is unchanged.
+
+### Expected Standard Output
+
+**New requirement in external API 3** If the script is called with zero well-known arguments, an example output could be:
+
+```
+external:api=1
+auto_cor1=0.0
+auto_cor2=0.0
+auto_cor3=0.0
+ssim=0.0
+my_analysis=0.0
+foobar=2.7
+```
+
+
+### Example 
+
+Assume that an external metrics module ran and exited with a return code of 1 generating the output above will generate following keys in an arbitrary order.
+
+```
+external:results:auto_cor1=.099
+external:results:auto_cor2=.099
+external:results:auto_cor3=.097
+external:results:ssim=.64
+external:results:my_analysis=1.03e-3
+external:results:foobar=2.7
+external:return_code=1
+external:error_code=0
+external:stderr="foobar analysis only supports being run on 2d data"
+```
+
+**Note** that `external:results:foobar` only appears in the zero well-known argument version of the output.
+It is thus presented with its default value.
+
+
 ## Non Guarantees
 
 All of the above arguments MAY not be passed in later versions of the API.
 
 The order of the command line arguments is unspecified and may be passed in any order unless other wise noted (i.e. dimensions are passed in the same order as to one of the `pressio_data_new` functions).  
 
-The `external` plugin may pass additional command line arguments not specified here.
+The `external` plugin may pass additional command line arguments not specified here.  It **is** guaranteed, that no future arguments will use names beginning with `external` and may be safely used for custom arguments specified by the user.
 
 The environment of the script is unspecified.
 

@@ -60,17 +60,17 @@ struct pressio_io* pressio_io_clone(struct pressio_io* io) {
   return new pressio_io((*io)->clone());
 }
 
+void pressio_io_set_name(struct pressio_io* io, const char* new_name) {
+  (*io)->set_name(new_name);
 }
 
-int libpressio_io_plugin::major_version() const {
-  return 0;
+
+const char* pressio_io_get_name(struct pressio_io const* io) {
+  return (*io)->get_name().c_str();
 }
-int libpressio_io_plugin::minor_version() const {
-  return 0;
+
 }
-int libpressio_io_plugin::patch_version() const {
-  return 0;
-}
+
 struct pressio_data* libpressio_io_plugin::read(struct pressio_data* data) {
   return read_impl(data);
 }
@@ -92,15 +92,3 @@ struct pressio_options libpressio_io_plugin::get_options() const {
 int libpressio_io_plugin::check_options_impl(struct pressio_options const&) {
   return 0;
 }
-const char* libpressio_io_plugin::error_msg() const {
-  return error.msg.c_str();
-}
-int libpressio_io_plugin::error_code() const {
-  return error.code;
-}
-int libpressio_io_plugin::set_error(int code, std::string const& msg) {
-  error.code = code;
-  error.msg = msg;
-  return code;
-}
-

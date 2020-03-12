@@ -55,14 +55,14 @@ public:
       pressio_data_for_each<double>(input_data, *output, compute_metrics{threshold});
   }
 
-  struct pressio_options get_metrics_options() const override {
+  struct pressio_options get_options() const override {
     pressio_options opts;
-    opts.set("spatial_error:threshold", threshold);
+    set(opts, "spatial_error:threshold", threshold);
     return opts;
   }
 
-  int set_metrics_options(pressio_options const& options) override {
-    options.get("spatial_error:threshold", &threshold);
+  int set_options(pressio_options const& options) override {
+    get(options, "spatial_error:threshold", &threshold);
     return 0;
   }
 
@@ -70,15 +70,18 @@ public:
   {
     pressio_options opt;
     if (spatial_error) {
-      opt.set("spatial_error:percent", *spatial_error);
+      set(opt, "spatial_error:percent", *spatial_error);
     } else {
-      opt.set_type("spatial_error:percent", pressio_option_double_type);
+      set_type(opt, "spatial_error:percent", pressio_option_double_type);
     }
     return opt;
   }
 
   std::unique_ptr<libpressio_metrics_plugin> clone() override {
     return compat::make_unique<spatial_error_plugin>(*this);
+  }
+  const char* prefix() const override {
+    return "spatial_error";
   }
 
 private:

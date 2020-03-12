@@ -1,0 +1,120 @@
+#ifndef LIBPRESSIO_CONFIGURABLE_H
+#define LIBPRESSIO_CONFIGURABLE_H
+#include <string>
+#include "options.h"
+
+/**
+ * Base interface for configurable objects in libpressio
+ */
+class pressio_configurable {
+  public:
+  virtual ~pressio_configurable()=default;
+  pressio_configurable()=default;
+
+  /** get the prefix used by this compressor for options */
+  virtual const char* prefix() const=0;
+
+  /**
+   * \returns the assigned name for the compressor used in options getting/setting
+   */
+  std::string const& get_name() const {
+    return name;
+  }
+
+  /**
+   * sets the assigned name for the compressor used in options getting/setting
+   * \param[in] new_name the name to be used
+   */
+  void set_name(std::string const& new_name) {
+    this->set_name_impl(new_name);
+    this->name = new_name;
+  }
+
+  /**
+   * Meta-compressors need to know when names are changed so they can update their children
+   *
+   * \param[in] new_name the name to be used
+   */
+  virtual void set_name_impl(std::string const& new_name) {
+    (void)new_name;
+  }
+
+  /** get the compile time configuration of a configurable object
+   *
+   * \see pressio_compressor_get_configuration for the semantics this function should obey
+   */
+  virtual struct pressio_options get_configuration() const;
+
+  /** checks for extra arguments set for the configurable object.
+   *
+   * \see pressio_compressor_check_options for semantics this function obeys
+   * */
+  virtual int check_options(struct pressio_options const&);
+
+  /** get a set of options available for the configurable object.
+   *
+   * The compressor should set a value if they have been set as default
+   * The compressor should set a "reset" value if they are required to be set, but don't have a meaningful default
+   *
+   * \see pressio_compressor_get_options for the semantics this function should obey
+   * \see pressio_options_clear to set a "reset" value
+   * \see pressio_options_set_integer to set an integer value
+   * \see pressio_options_set_double to set an double value
+   * \see pressio_options_set_userptr to set an data value, include an \c include/ext/\<my_plugin\>.h to define the structure used
+   * \see pressio_options_set_string to set a string value
+   */
+  virtual struct pressio_options get_options() const;
+
+  /** sets a set of options for the configurable object 
+   * \param[in] options to set for configuration of the configurable object
+   * \see pressio_compressor_set_options for the semantics this function should obey
+   */
+  virtual int set_options(struct pressio_options const& options);
+
+  protected:
+  /**
+   * helper function to set options according to name prefixes if provided
+   *
+   * \param[in] options the options structure to set
+   * \param[in] key the key to set
+   * \param[in] value the value to set
+   */
+  void set(pressio_options& options, std::string const& key, pressio_option const& value) const {
+    if(name.empty()) options.set(key, value);
+    options.set(name, key, value);
+  }
+
+
+  /**
+   * helper function to set the type of options according to name prefixes if provided
+   *
+   * \param[in] options the options structure to set
+   * \param[in] key the key to set
+   * \param[in] type the type to set
+   */
+  void set_type(pressio_options& options, std::string const& key, pressio_option_type type) const {
+    if(name.empty()) options.set_type(key, type);
+    options.set_type(name, key, type);
+  }
+
+
+  /**
+   * helper function to get the type of options according to name prefixes if provided
+   *
+   * \param[in] options the options structure to set
+   * \param[in] key the key to set
+   * \param[in] value the value to get
+   * \returns if the key was set
+   */
+  template <class PointerType>
+  enum pressio_options_key_status 
+  get(pressio_options const& options, std::string const& key, PointerType value) const {
+    if(name.empty()) return options.get(key, value); 
+    return options.get(name, key, value);
+  }
+
+  private:
+  std::string name;
+};
+
+#endif /* end of include guard: LIBPRESSIO_CONFIGURABLE_H */
