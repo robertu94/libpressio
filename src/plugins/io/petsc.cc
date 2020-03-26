@@ -63,6 +63,7 @@ struct petsc_io : public libpressio_io_plugin {
     PetscInt rows, columns;
     Mat mat = nullptr;
     pressio_data* ret;
+    MatCreate(PETSC_COMM_SELF, &mat);
     MatSetType(mat, MATSEQDENSE);
 
     PetscViewer reader;

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.36.0" LANGUAGES CXX C)
+project(libpressio VERSION "0.37.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -86,6 +86,7 @@ add_library(libpressio
   ./src/plugins/compressors/transpose.cc
   ./src/plugins/metrics/composite.cc
   ./src/plugins/metrics/external.cc
+  ./src/plugins/metrics/external_forkexec.cc
   ./src/plugins/metrics/metrics_base.cc
   ./src/plugins/metrics/size.cc
   ./src/plugins/metrics/time.cc
@@ -252,6 +253,16 @@ if(LIBPRESSIO_HAS_FPZIP)
     )
   target_link_libraries(libpressio PRIVATE fpzip::fpzip)
 
+endif()
+
+option(LIBPRESSIO_HAS_MPI "build MPI spawn external method" OFF)
+if(LIBPRESSIO_HAS_MPI)
+  find_package(MPI COMPONENTS CXX)
+  target_sources(libpressio
+    PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/metrics/external_mpispawn.cc
+    )
+  target_link_libraries(libpressio PRIVATE MPI::MPI_CXX)
 endif()
 
 option(LIBPRESSIO_HAS_PETSC "build the petsc io plugin" OFF)

@@ -1,10 +1,9 @@
 #include <cmath>
+#include <cstdlib>
 #include <string>
 #include <vector>
 #include <utility>
 #include <sstream>
-#include <iterator>
-#include <sys/wait.h>
 #include <unistd.h>
 #include "pressio_data.h"
 #include "pressio_options.h"
@@ -16,107 +15,14 @@
 #include "libpressio_ext/cpp/io.h"
 #include "libpressio_ext/compat/std_compat.h"
 
+#include "external_launch.h"
+
 using namespace std::literals;
 
-namespace {
-    enum extern_proc_error_codes {
-      success=0,
-      pipe_error=1,
-      fork_error=2,
-      exec_error=3,
-      format_error=4
-    };
-    struct extern_proc_results {
-      std::string proc_stdout; //stdout from the command
-      std::string proc_stderr; //stdin from the command
-      int return_code = 0; //the return code from the external process
-      int error_code = success; //used to report errors with run_command
-    };
 
-    extern_proc_results run_command(std::string const& full_command) {
-      extern_proc_results results;
-
-      //create the pipe for stdout
-      int stdout_pipe_fd[2];
-      if(int ec = pipe(stdout_pipe_fd)) {
-        results.return_code = ec;
-        results.error_code = pipe_error;
-        return results;
-      }
-
-      //create the pipe for stderr
-      int stderr_pipe_fd[2];
-      if(int ec = pipe(stderr_pipe_fd)) {
-        results.return_code = ec;
-        results.error_code = pipe_error;
-        return results;
-      }
-
-      //run the program
-      int child = fork();
-      switch (child) {
-        case -1:
-          results.return_code = -1;
-          results.error_code = fork_error;
-          break;
-        case 0:
-          //in the child process
-          {
-          close(0);
-          close(stdout_pipe_fd[0]);
-          close(stderr_pipe_fd[0]);
-          dup2(stdout_pipe_fd[1], 1);
-          dup2(stderr_pipe_fd[1], 2);
-          std::istringstream command_stream(full_command);
-          std::vector<std::string> args_mem(
-              std::istream_iterator<std::string>{command_stream},
-              std::istream_iterator<std::string>());
-          std::vector<char*> args;
-          std::transform(std::begin(args_mem), std::end(args_mem),
-              std::back_inserter(args), [](std::string const& s){return const_cast<char*>(s.c_str());});
-          args.push_back(nullptr);
-          execvp(args.front(), args.data());
-          printf("%s\n", args.front());
-          perror(" failed to exec process");
-          //exit if there was an error
-          exit(-1);
-          break;
-          }
-        default:
-          //in the parent process
-
-          //close the unused parts of pipes
-          close(stdout_pipe_fd[1]);
-          close(stderr_pipe_fd[1]);
-
-          int status = 0;
-          char buffer[2048];
-          std::ostringstream stdout_stream;
-          std::ostringstream stderr_stream;
-          do {
-            //read the stdout[0]
-            int nread;
-            while((nread = read(stdout_pipe_fd[0], buffer, 2048)) > 0) {
-              stdout_stream.write(buffer, nread);
-            }
-            
-            //read the stderr[0]
-            while((nread = read(stderr_pipe_fd[0], buffer, 2048)) > 0) {
-              stderr_stream.write(buffer, nread);
-            }
-
-            //wait for the child to complete
-            waitpid(child, &status, 0);
-          } while (not WIFEXITED(status));
-
-          results.proc_stdout = stdout_stream.str();
-          results.proc_stderr = stderr_stream.str();
-          results.return_code = WEXITSTATUS(status);
-      }
-
-
-      return results;
-    }
+pressio_registry<std::unique_ptr<libpressio_launch_plugin>>& launch_plugins() {
+  static pressio_registry<std::unique_ptr<libpressio_launch_plugin>> registry;
+  return registry;
 }
 
 class external_metric_plugin : public libpressio_metrics_plugin {
@@ -134,13 +40,30 @@ class external_metric_plugin : public libpressio_metrics_plugin {
 
     struct pressio_options get_options() const override {
       auto opt = pressio_options();
+      set(opt, "external:launch_method", launch_method);
       set(opt, "external:command", command);
       set(opt, "external:io_format", io_formats);
+      set(opt, "external:suffix", suffixes);
+      set(opt, "external:prefix", prefixes);
+      set(opt, "external:fieldnames", field_names);
+      set(opt, "external:workdir", workdir);
       return opt;
     }
 
     int set_options(pressio_options const& opt) override {
+      std::string tmp_launch_method;
+      if (get(opt, "external:launch_method", &tmp_launch_method) == pressio_options_key_set) {
+        auto tmp_launcher = launch_plugins().build(tmp_launch_method);
+        if(tmp_launcher) {
+          launcher = std::move(tmp_launcher);
+          launch_method = tmp_launch_method;
+        }
+      }
       get(opt, "external:command", &command);
+      get(opt, "external:suffix", &suffixes);
+      get(opt, "external:prefix", &prefixes);
+      get(opt, "external:fieldnames", &field_names);
+      get(opt, "external:workdir", &workdir);
       if(get(opt,"external:io_format", &io_formats) == pressio_options_key_set) {
         pressio library;
         io_modules.clear();
@@ -160,7 +83,7 @@ class external_metric_plugin : public libpressio_metrics_plugin {
     struct pressio_options get_metrics_results() const override {
       if(results.size() == 0) {
         pressio_options ret;
-        auto default_result = run_command(command);
+        auto default_result = launcher->launch(command, workdir);
         parse_result(default_result, ret);
         return ret;
       }
@@ -297,12 +220,18 @@ class external_metric_plugin : public libpressio_metrics_plugin {
         //write uncompressed data to a temporary file
         std::string input_fd_name = get_or(prefixes, i).value_or("") + ".pressioinXXXXXX"s + get_or(suffixes, i).value_or(""s);
         int input_fd = mkstemps(&input_fd_name[0], get_or(suffixes, i).value_or("").size());
+        char* resolved_input = realpath(input_fd_name.c_str(), nullptr);
+        input_fd_name = resolved_input;
+        free(resolved_input);
         io_modules[i]->set_options({{"io:path", std::string(input_fd_name)}});
         io_modules[i]->write(&input_data[i].get());
 
         //write decompressed data to a temporary file
         std::string output_fd_name = get_or(prefixes, i).value_or(""s) + ".pressiooutXXXXXX"s + get_or(suffixes, i).value_or("");
         int decompressed_fd = mkstemps(&output_fd_name[0], get_or(suffixes,i).value_or(""s).size());
+        char* resolved_output = realpath(output_fd_name.c_str(), nullptr);
+        output_fd_name = resolved_output;
+        free(resolved_output);
         io_modules[i]->set_options({{"io:path", std::string(output_fd_name)}});
         io_modules[i]->write(&decompressed_data[i].get());
         
@@ -312,14 +241,14 @@ class external_metric_plugin : public libpressio_metrics_plugin {
       }
 
       //get the defaults
-      auto default_result = run_command(command);
+      auto default_result = launcher->launch(command, workdir);
       parse_result(default_result, this->defaults);
 
       //build the command
       std::string full_command = build_command(filenames, input_data);
 
       //run the external program
-      auto result = run_command(full_command);
+      auto result = launcher->launch(full_command, workdir);
 
       //parse the output
       size_t api_version =parse_result(result, this->results);
@@ -344,10 +273,12 @@ class external_metric_plugin : public libpressio_metrics_plugin {
 
     pressio_data input_data = pressio_data::empty(pressio_byte_dtype, {});
     std::string command;
-    std::string workdir;
-    std::vector<std::string> field_names;
-    std::vector<std::string> prefixes;
-    std::vector<std::string> suffixes;
+    std::string workdir = ".";
+    std::string launch_method = "forkexec";
+    std::unique_ptr<libpressio_launch_plugin> launcher = launch_plugins().build("forkexec");
+    std::vector<std::string> field_names = {""};
+    std::vector<std::string> prefixes = {""};
+    std::vector<std::string> suffixes = {""};
     std::vector<std::string> io_formats = {"posix"};
     pressio_options results;
     pressio_options defaults;
