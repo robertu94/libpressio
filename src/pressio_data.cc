@@ -3,7 +3,6 @@
 #include <cstring>
 #include <algorithm>
 #include <numeric>
-#include <iterator>
 #include "pressio_data.h"
 #include "multi_dimensional_iterator.h"
 #include "libpressio_ext/cpp/data.h"

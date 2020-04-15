@@ -27,6 +27,7 @@ If the length is non-zero, the ith option corresponds to the ith file.
 | `external:suffix`          | 3            |`char*[]` | the suffix to use for arguments relating to the files. The default is an empty suffix.                  |
 | `external:work_dir`        | 3            |`char*`   | the path to call the script from, defaults to the current working directory                             |
 | `external:launch_method`   | 3            |`char*`   | the method used to launch the worker task.  It can be one of "forkexec" or "mpispawn"                   |
+| `external:config_name`     | 4            |`char*`   | A string passed to the external metric for the "configuration name", by default "external"              |
 
 
 *New in external API 2* "global" IO module options may passed as well.
@@ -39,7 +40,9 @@ If the length is non-zero, the ith option corresponds to the ith file.
 The `external` plugin will provide the following command line arguments to the script.
 These may change from version to version.
 
-`--api` the maximum API version number the external module supports, begins at 1.  The current version is 3
+`--api` the maximum API version number the external module supports, begins at 1.  The current version is 4
+
+*New in external API 4* `--config_name` the value passed to the `external:config_name` option.  The implementation *may* use this value to as a basis to name log files or other auxiliary outputs.
 
 **New Requirement in API 3** If the script is called with zero of the following well-known arguments, it MUST output a lists of the known results with default values in-case they are omitted from calls to the script when called with some set of well-known flags.  Scripts MAY return different lists of values when called with defined custom arguments.  See the example below
 
@@ -209,6 +212,9 @@ external:stderr="foobar analysis only supports being run on 2d data"
 **Note** that `external:results:foobar` only appears in the zero well-known argument version of the output.
 It is thus presented with its default value.
 
+## Version 4
+
+No changes were made to the output format.  The `--config_name` argument was introduced
 
 # "mpispawn" launch method
 
@@ -227,7 +233,7 @@ MPI_Comm_spawn(args.front(), args.data()+1, 1, info, 0,  MPI_COMM_SELF, &child, 
 
 The `mpispawn` launch method does not  support external metrics api versions 1 or 2.
 
-## Version 3
+## Version 3 and 4
 
 Equivelent to `forkexec` with the following exceptions.
 

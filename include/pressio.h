@@ -72,6 +72,10 @@ const char* pressio_features();
  */
 const char* pressio_supported_compressors();
 /**
+ * \returns a string containing all the metrics supported by this version separated by a space
+ */
+const char* pressio_supported_metrics();
+/**
  * \returns the major version of the library
  */
 unsigned int pressio_major_version();

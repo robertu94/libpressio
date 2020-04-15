@@ -68,6 +68,14 @@ Metric                  | Type        | Units  | Description | Activated
 `composite:compression_rate` | double  | kb/s | kilobytes compressed per second | time, size
 `composite:decompression_rate` | double  | kb/s | kilobytes decompressed per second | time, size
 
+Additionally, if the `LIBPRESSIO_HAS_LUA` build configuration is enabled, custom composite metrics may be provided as lua scripts.
+The scripts are passed to the plugin via the `composite:scripts` metric option.
+The scripts are parsed in the order provided and subsequent scripts are given the values of previous scripts.
+Each scripts are allowed to use the `base` and `math` lua standard libraries and are passed the options as a table of doubles called `metrics`.
+Each scripts should return a tuple of `string`, `double` and will be named `composite:$name` and assigned the value provided in the double.
+If a given script errors or fails, the value it provides will not be created.
+
+
 ## External
 
 The metrics supported by external are too complicated to summerize here, [please see its documentation](@ref usingexternalmetric)

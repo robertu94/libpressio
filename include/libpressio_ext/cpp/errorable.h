@@ -3,6 +3,11 @@
 #include <string>
 
 /**
+ * \file
+ * \brief interface for types which can report and have errors
+ */
+
+/**
  * class that indicates that a pressio object handles errors
  */
 class pressio_errorable {

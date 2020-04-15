@@ -4,6 +4,11 @@
 #include "options.h"
 
 /**
+ * \file
+ * \brief interface for configurable types
+ */
+
+/**
  * Base interface for configurable objects in libpressio
  */
 class pressio_configurable {

@@ -1,6 +1,12 @@
 #ifndef LIBPRESSIO_VERSIONABLE_H
 #define LIBPRESSIO_VERSIONABLE_H
 
+/** \file 
+ * \brief interface for versionable types */
+
+/**
+ * interface for objects which have version information in libpressio
+ */
 class pressio_versionable {
   public:
   /** get a implementation specific version string for the io module

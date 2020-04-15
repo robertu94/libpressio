@@ -274,6 +274,20 @@ TEST_F(PressioOptionsTests, SpecialConversions) {
   pressio_options_free(options);
 }
 
+TEST_F(PressioOptionsTests, OptionStrArrayToData) {
+  const char* values[] = {"1.0", "2.1", "3.2"};
+  struct pressio_option* strings = pressio_option_new_strings(values, 3);
+  struct pressio_option* as_data = pressio_option_convert(strings, pressio_option_data_type, pressio_conversion_special);
+  struct pressio_data* data = pressio_option_get_data(as_data);
+
+  EXPECT_EQ(pressio_double_dtype, pressio_data_dtype(data));
+  EXPECT_EQ(1, pressio_data_num_dimensions(data));
+  EXPECT_EQ(3, pressio_data_get_dimension(data, 0));
+
+  pressio_option_free(strings);
+  pressio_data_free(data);
+  pressio_option_free(as_data);
+}
 
 TEST_F(PressioOptionsTests, OptionNewFreeFunction) {
   {

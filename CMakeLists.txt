@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.37.0" LANGUAGES CXX C)
+project(libpressio VERSION "0.38.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -97,6 +97,7 @@ add_library(libpressio
   ./src/plugins/io/noop.cc
   ./src/plugins/io/csv.cc
   ./src/plugins/io/io.cc
+  ./src/plugins/io/select.cc
 
   #public headers
   include/libpressio.h
@@ -257,6 +258,7 @@ endif()
 
 option(LIBPRESSIO_HAS_MPI "build MPI spawn external method" OFF)
 if(LIBPRESSIO_HAS_MPI)
+  set(LIBPRESSIO_FEATURES "${LIBPRESSIO_FEATURES} mpi")
   find_package(MPI COMPONENTS CXX)
   target_sources(libpressio
     PRIVATE
@@ -267,12 +269,21 @@ endif()
 
 option(LIBPRESSIO_HAS_PETSC "build the petsc io plugin" OFF)
 if(LIBPRESSIO_HAS_PETSC)
+  set(LIBPRESSIO_FEATURES "${LIBPRESSIO_FEATURES} petsc")
   pkg_search_module(PETSc IMPORTED_TARGET PETSc)
   target_sources(libpressio
     PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/io/petsc.cc
     )
   target_link_libraries(libpressio PRIVATE PkgConfig::PETSc)
+endif()
+
+option(LIBPRESSIO_HAS_LUA "build multi-objective code" OFF)
+if(LIBPRESSIO_HAS_LUA)
+  set(LIBPRESSIO_FEATURES "${LIBPRESSIO_FEATURES} lua")
+  find_package(sol2 REQUIRED)
+  pkg_search_module(Lua IMPORTED_TARGET lua luajit)
+  target_link_libraries(libpressio PRIVATE PkgConfig::Lua)
 endif()
 
 configure_file(

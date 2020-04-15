@@ -99,6 +99,52 @@ pressio_option_define_type(double, double)
 pressio_option_define_type(string, const char*)
 pressio_option_define_type(userptr, void*)
 
+/**
+  Creates a new pressio_option containing the specified value
+  \param[in] values the value to use to create the object
+  \param[in] size the length of the array
+  \returns a pointer to a new pressio option set to value passed in
+ */
+struct pressio_option* pressio_option_new_strings(const char** values, size_t size);
+
+/** 
+  Gets the value stored in the pressio_option. Calling this with the improper dtype has undefined behavior
+  \param[in] option the option to retrieve a value from
+  \param[out] size the size of the array returned
+  \returns the value contained in the option, the returned value must be freed
+ */
+const char** pressio_option_get_strings(struct pressio_option const* option, size_t* size);
+
+/**
+ Sets the option to an integer value
+ \param[in] option the option to set
+ \param[in] values the value to set
+ \param[in] size the size of the array of values
+ */ \
+void pressio_option_set_strings(struct pressio_option* option, const char** values, size_t size);
+
+/**
+  Creates a new pressio_option containing the specified value
+  \param[in] data the value to use to create the object
+  \returns a pointer to a new pressio option set to value passed in
+ */
+struct pressio_option* pressio_option_new_data(struct pressio_data* data);
+
+/** 
+  Gets the value stored in the pressio_option. Calling this with the improper dtype has undefined behavior
+  \param[in] option the option to retrieve a value from
+  \returns a new owning copy of the value contained in the option
+ */
+struct pressio_data* pressio_option_get_data(struct pressio_option const* option);
+
+/**
+ Sets the option to an integer value
+ \param[in] option the option to set
+ \param[in] value the value to set
+ */
+void pressio_option_set_data(struct pressio_option* option, struct pressio_data* value);
+
+
 #undef pressio_option_define_type
 
 /**

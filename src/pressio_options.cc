@@ -1,6 +1,5 @@
 #include <map>
 #include <algorithm>
-#include <iterator>
 #include <string>
 #include <cstring>
 #include "libpressio_ext/cpp/options.h"
@@ -31,7 +30,7 @@ void pressio_options_set_type(struct pressio_options* options, const char* key, 
   options->set_type(key, type);
 }
 
-enum pressio_options_key_status pressio_options_cast_set(struct pressio_options* options, const char* key, struct pressio_option* option, enum pressio_conversion_safety safety) {
+enum pressio_options_key_status pressio_options_cast_set(struct pressio_options* options, const char* key, struct pressio_option const* option, enum pressio_conversion_safety safety) {
   return options->cast_set(key, *option, safety);
 }
 

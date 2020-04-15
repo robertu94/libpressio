@@ -47,6 +47,7 @@ class external_metric_plugin : public libpressio_metrics_plugin {
       set(opt, "external:prefix", prefixes);
       set(opt, "external:fieldnames", field_names);
       set(opt, "external:workdir", workdir);
+      set(opt, "external:config_name", config_name);
       return opt;
     }
 
@@ -64,6 +65,7 @@ class external_metric_plugin : public libpressio_metrics_plugin {
       get(opt, "external:prefix", &prefixes);
       get(opt, "external:fieldnames", &field_names);
       get(opt, "external:workdir", &workdir);
+      get(opt, "external:config_name", &config_name);
       if(get(opt,"external:io_format", &io_formats) == pressio_options_key_set) {
         pressio library;
         io_modules.clear();
@@ -168,6 +170,7 @@ class external_metric_plugin : public libpressio_metrics_plugin {
       std::ostringstream ss;
       ss << command;
       ss << " --api 3";
+      ss << " --config_name " << config_name;
       auto format_arg = [this](size_t i, std::string const& arg) {
         std::ostringstream ss;
         if(i >= field_names.size() || field_names[i].empty()) {
@@ -275,6 +278,7 @@ class external_metric_plugin : public libpressio_metrics_plugin {
     std::string command;
     std::string workdir = ".";
     std::string launch_method = "forkexec";
+    std::string config_name = "external";
     std::unique_ptr<libpressio_launch_plugin> launcher = launch_plugins().build("forkexec");
     std::vector<std::string> field_names = {""};
     std::vector<std::string> prefixes = {""};

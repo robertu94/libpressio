@@ -125,7 +125,7 @@ void pressio_options_set(struct pressio_options* options, const char* key, struc
  * \param[in] safety what kind of conversions to allow
  * \returns pressio_options_key_set if the lhs is modified, pressio_options_key_exists if the key exists but can't convert, and pressio_options_key_does_not_exist if the key does not exist;
  */
-enum pressio_options_key_status pressio_options_cast_set(struct pressio_options* options, const char* key, struct pressio_option* option, enum pressio_conversion_safety safety);
+enum pressio_options_key_status pressio_options_cast_set(struct pressio_options* options, const char* key, struct pressio_option const* option, enum pressio_conversion_safety safety);
 
 /**
  * Sets pressio_option for the specified key with a generic pressio_options preserving the type of the key in the options structure

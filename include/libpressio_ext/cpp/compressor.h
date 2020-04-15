@@ -2,7 +2,6 @@
 #define LIBPRESSIO_COMPRESSOR_IMPL_H
 #include <string>
 #include <memory>
-#include "options.h"
 #include "metrics.h"
 #include "configurable.h"
 #include "versionable.h"
@@ -185,6 +184,16 @@ class libpressio_compressor_plugin :public pressio_configurable, public pressio_
    * \see pressio_compressor_check_options for semantics this function obeys
    * */
   virtual int check_options_impl(struct pressio_options const&);
+
+  /**
+   * profiling statistics for the particular compressor.  i.e. the number of
+   * bytes used by a particular phase of a compressor, compressor-specific
+   * performance counters. Will be inserted into the metrics returned by the
+   * metrics plugin if possible.  The default returns an empty structure.
+   *
+   * All names returned should be properly prefixed
+   */
+  virtual struct pressio_options get_metrics_results_impl() const;
 
   private:
   pressio_metrics metrics_plugin;

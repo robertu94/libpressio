@@ -32,7 +32,7 @@ namespace {
           out_of_bounds++;
         }
       }
-      return out_of_bounds / static_cast<double>(total_elements);
+      return out_of_bounds / static_cast<double>(total_elements) * 100.0;
     }
 
     double threshold;
@@ -87,7 +87,7 @@ public:
 private:
   pressio_data input_data = pressio_data::empty(pressio_byte_dtype, {});
   compat::optional<double> spatial_error;
-  double threshold = 1e-4;
+  double threshold = .01;
 };
 
 static pressio_register X(metrics_plugins(), "spatial_error", []() {

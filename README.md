@@ -143,6 +143,9 @@ See the [compressor settings page](@ref pressiooptions) for information on how t
 + `magick` -- the ImageMagick image compression/decompression library
 + `fpzip` -- the fpzip floating point lossless compressor
 + `noop` -- a dummy compressor useful performance evaluation, testing, and introspection
++ `sampling` -- a compressor which does naive, with out replacement, and with replacement sampling
++ `transpose` -- a meta-compressor which performs a transpose.
++ `resize` -- a meta-compressor which preforms a reshape operation.
 
 ### Metrics Plugins
 
@@ -150,6 +153,7 @@ See the [metrics results page](@ref metricsresults) for information on what they
 
 + `time` -- time information on each compressor API
 + `error_stat` -- statistics on the difference between the uncompressed and decompressed values that can be computed in one pass in linear time.
++ `spatial_error` -- computes relative spatial error
 + `pearson` -- computes the pearson coefficient of correlation and pearson coefficient of determination.
 + `size` -- information on the size of the compressed and decompressed data
 + `external` -- run an external program to collect some metrics, see [using an external metric for more information](@ref usingexternalmetric)
@@ -159,6 +163,7 @@ See the [metrics results page](@ref metricsresults) for information on what they
 Libpressio unconditionally requires:
 
 + `cmake` version `3.13` or later (3.14 required for python bindings)
++ `pkg-config` version `1.6.3` or later
 + either:
   + `gcc-4.8.5` or later
   + `clang-7.0.0` or later using either `libc++` or `libstdc++`.  Beware that system libraries may need to be recompiled with `libc++` if using `libc++`
@@ -176,11 +181,31 @@ Libpressio additionally optionally requires:
 + `sz` commit `7b7463411f02be4700d13aac6737a6a9662806b4` or later and its dependencies to provide the SZ plugin
 + `zfp` commit `e8edaced12f139ddf16167987ded15e5da1b98da` or later and its dependencies to provide the ZFP plugin
 + `python` 3.4 or later for the python bindings
++ `lua` or `luajit` version 5.1 or later to provide custom composite metrics
++ `sol2` version 3.2.0 or later to provide custom composite metrics
++ `OpenMP` development libraries and headers for your compiler compatible with OpenMP Standard 3 or later to accelerate computation of some metrics.
++ `MPI` development libraries and headers supporting MPI-2 (specifically MPI\_Comm\_spawn using the `workdir` info option) to provide the external metrics `mpispawn` launch method
++ `PETSc` version 3.12.1 or later to provide PETSc binary format IO support
 
-You can also use the provided `Dockerfile`s in `./docker` to get a working libpressio install.  Doing so requires installing `docker` version 17.05 or higher or other build tool that supports this version of Dockerfile syntax or later.
+It is also possible to build and run libpressio via Docker using the docker files in the `docker` directory.  This functionality should be considered deprecated and will be removed in a later release, please you spack instead.
 
+## Installing LibPressio using Spack
 
-## Configuring LibPressio
+LibPressio can be built using [spack](https://github.com/spack/spack/).
+
+```bash
+git clone https://github.com/robertu94/spack_packages robertu94_packages
+spack repo add robertu94_packages
+spack install libpressio
+```
+
+You can substantially reduce install times by not installing ImageMagick and PETSc support.
+
+```
+spack install libpressio~magick~petsc
+```
+
+## Configuring LibPressio Manually
 
 LibPressio uses cmake to configure build options.  See CMake documentation to see how to configure options
 

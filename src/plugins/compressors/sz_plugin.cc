@@ -14,6 +14,29 @@
 #include "pressio_options.h"
 #include "pressio_option.h"
 
+namespace {
+  struct iless {
+    bool operator()(std::string lhs, std::string rhs) const {
+      std::transform(std::begin(lhs), std::end(lhs), std::begin(lhs), [](unsigned char c){return std::tolower(c);});
+      std::transform(std::begin(rhs), std::end(rhs), std::begin(rhs), [](unsigned char c){return std::tolower(c);});
+      return lhs < rhs;
+    }
+  };
+  static std::map<std::string, int, iless> const sz_mode_str_to_code {
+    {"abs", ABS},
+    {"rel", REL},
+    {"vr_rel", REL},
+    {"abs_and_rel", ABS_AND_REL},
+    {"abs_or_rel", ABS_OR_REL},
+    {"psnr", PSNR},
+    {"norm", NORM},
+    {"pw_rel", PW_REL},
+    {"abs_or_pw_rel", ABS_OR_PW_REL},
+    {"abs_and_pw_rel", ABS_AND_PW_REL},
+    {"rel_or_pw_rel", REL_OR_PW_REL},
+    {"rel_and_pw_rel", REL_AND_PW_REL},
+  };
+}
 
 class sz_plugin: public libpressio_compressor_plugin {
   public:
@@ -48,6 +71,7 @@ class sz_plugin: public libpressio_compressor_plugin {
     set(options, "sz:sz_mode", confparams_cpr->szMode);
     set(options, "sz:gzip_mode", confparams_cpr->gzipMode);
     set(options, "sz:error_bound_mode", confparams_cpr->errorBoundMode);
+    set_type(options, "sz:error_bound_mode_str", pressio_option_charptr_type);
 	  set(options, "sz:abs_err_bound", confparams_cpr->absErrBound);
 	  set(options, "sz:rel_err_bound", confparams_cpr->relBoundRatio);
 	  set(options, "sz:psnr_err_bound", confparams_cpr->psnr);
@@ -86,7 +110,16 @@ class sz_plugin: public libpressio_compressor_plugin {
     get(options, "sz:pred_threshold", &confparams_cpr->predThreshold);
     get(options, "sz:sz_mode", &confparams_cpr->szMode);
     get(options, "sz:gzip_mode", &confparams_cpr->gzipMode);
-    get(options, "sz:error_bound_mode", &confparams_cpr->errorBoundMode);
+
+    std::string error_bound_mode_str;
+    if(get(options, "sz:error_bound_mode_str", &error_bound_mode_str) == pressio_options_key_set) {
+      auto key = sz_mode_str_to_code.find(error_bound_mode_str);
+      if(key != sz_mode_str_to_code.end()) {
+        confparams_cpr->errorBoundMode = key->second;
+      }
+    } else { 
+      get(options, "sz:error_bound_mode", &confparams_cpr->errorBoundMode ); 
+    }
     get(options, "sz:abs_err_bound", &confparams_cpr->absErrBound);
     get(options, "sz:rel_err_bound", &confparams_cpr->relBoundRatio);
     get(options, "sz:psnr_err_bound", &confparams_cpr->psnr);

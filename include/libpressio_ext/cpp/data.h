@@ -433,6 +433,41 @@ struct pressio_data {
   }
 
   /**
+   * convert a pressio_data structure into a 1d c++ standard vector.  If the type doesn't match, it will be casted first
+   * \returns the vector containing the data
+   * \see pressio_data::cast
+   */
+  template <class T>
+  std::vector<T> to_vector() const {
+    if(pressio_dtype_from_type<T>() == dtype()) {
+      return std::vector<T>(static_cast<T*>(data()), static_cast<T*>(data()) + num_elements());
+    } else {
+      auto casted = cast(pressio_dtype_from_type<T>());
+      return std::vector<T>(static_cast<T*>(casted.data()), static_cast<T*>(casted.data()) + casted.num_elements());
+    }
+  }
+
+  /**
+   * convert a iterable type into a pressio_data object
+   * \param[in] begin iterator to the beginning of the data
+   * \param[in] end iterator to the end of the data
+   * \returns a new 1d pressio_data object or matching type
+   */
+  template <class ForwardIt>
+  pressio_data(ForwardIt begin, ForwardIt end):
+    data_dtype(pressio_dtype_from_type<typename std::iterator_traits<ForwardIt>::value_type>()),
+    data_ptr(malloc(std::distance(begin, end)*pressio_dtype_size(data_dtype))),
+    metadata_ptr(nullptr),
+    deleter(pressio_data_libc_free_fn),
+    dims({static_cast<size_t>(std::distance(begin, end))})
+  {
+  using out_t = typename std::add_pointer<typename std::decay<
+    typename std::iterator_traits<ForwardIt>::value_type>::type>::type;
+
+    std::copy(begin, end, static_cast<out_t>(data_ptr));
+  }
+
+  /**
    * Permutes the dimensions of an array
    *
    * \param[in] axis by default reverses the axis, otherwise permutes the axes according to the dimensions

@@ -229,6 +229,11 @@ struct pressio_option final {
  */
 struct pressio_options final {
 
+  /** type of the keys for pressio_options, useful for lua */
+  using key_type = std::string;
+  /** type of the mapped_type for pressio_options, useful for lua */
+  using mapped_type = pressio_option;
+
   /** create an empty pressio_options structure */
   pressio_options()=default;
   /** copy a pressio_options structure
@@ -532,6 +537,33 @@ struct pressio_options final {
   /**\returns the number of set and existing options*/
   size_t size() const {
     return options.size();
+  }
+
+  /**
+   * find an element of the container.  if it is not found, return end().  Useful for lua
+   * \param[in] key the key to search for
+   * \returns an iterator to the found key
+   */
+  iterator find(key_type const& key) {
+    return options.find(key);
+  }
+
+  /**
+   * erase a key from the container, useful for lua
+   * \param[in] key the key to search for
+   * \returns the number of elements erased
+   */
+  size_t erase(key_type const& key) {
+    return options.erase(key);
+  }
+
+  /**
+   * insert a new key-value pair into the options, useful for lua
+   * \param[in] value the value to insert
+   * \returns the number of elements erased
+   */
+  auto insert(value_type const& value) -> decltype(options.insert(value)) {
+    return options.insert(value);
   }
 
   /**\returns the number of set options*/

@@ -97,7 +97,14 @@ int libpressio_compressor_plugin::check_options_impl(struct pressio_options cons
 
 
 struct pressio_options libpressio_compressor_plugin::get_metrics_results() const {
-  return metrics_plugin->get_metrics_results();
+  auto metrics_plugin_results = metrics_plugin->get_metrics_results();
+  auto compressor_metrics_results = get_metrics_results_impl();
+
+  for (auto const& metric : compressor_metrics_results) {
+    set(metrics_plugin_results, metric.first, metric.second);
+  }
+
+  return metrics_plugin_results;
 }
 
 struct pressio_metrics libpressio_compressor_plugin::get_metrics() const {
@@ -116,3 +123,6 @@ int libpressio_compressor_plugin::set_metrics_options(struct pressio_options con
   return metrics_plugin->set_options(options);
 }
 
+struct pressio_options libpressio_compressor_plugin::get_metrics_results_impl() const {
+  return {};
+}

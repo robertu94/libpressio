@@ -5,6 +5,11 @@
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/compat/std_compat.h"
+#if LIBPRESSIO_HAS_LUA
+#define SOL_ALL_SAFETIES_ON 1
+#define SOL_PRINT_ERRORS 1
+#include <sol/sol.hpp>
+#endif
 
 using namespace std::literals;
 
@@ -101,6 +106,9 @@ class composite_plugin : public libpressio_metrics_plugin {
       pressio_options_free(tmp);
     }
     set(metrics_options, "composite:names", names);
+#if LIBPRESSIO_HAS_LUA
+    set(metrics_options, "composite:scripts", scripts);
+#endif
     return metrics_options;
   }
 
@@ -110,6 +118,9 @@ class composite_plugin : public libpressio_metrics_plugin {
       rc |= plugin->set_options(options);
     }
     get(options, "composite:names", &names);
+#if LIBPRESSIO_HAS_LUA
+    get(options, "composite:scripts", &scripts);
+#endif
     return rc;
   }
 
@@ -167,10 +178,46 @@ class composite_plugin : public libpressio_metrics_plugin {
       }
     }
 
+#if LIBPRESSIO_HAS_LUA
+    std::map<std::string, double> metrics;
+    for (auto const& o: opt) {
+      auto o_as_double = o.second.as(pressio_option_double_type, pressio_conversion_implicit);
+      if(o_as_double.has_value()) {
+        metrics[o.first] = o_as_double.get_value<double>();
+      }
+    }
+    for (auto const& script : scripts) {
+      try {
+        //create a new state for each object to ensure it is clean
+        sol::state lua;
+        lua.open_libraries(sol::lib::base);
+        lua.open_libraries(sol::lib::math);
+        lua["metrics"] = metrics;
+
+        sol::optional<std::tuple<std::string, sol::optional<double>>> lua_result = lua.safe_script(script);
+        if(lua_result) {
+          auto const& lua_result_v = *lua_result;
+          std::string name = std::string("composite:") + std::get<0>(lua_result_v);
+          if(std::get<1>(lua_result_v)) {
+            set(opt, name, *std::get<1>(lua_result_v));
+            metrics[name] = *std::get<1>(lua_result_v);
+          } else {
+            set_type(opt, name, pressio_option_double_type);
+          }
+        }
+      } catch (sol::error& err) {
+        //swallow errors from sol and do not insert a key
+      }
+    }
+#endif
+
   }
 
   std::vector<std::unique_ptr<libpressio_metrics_plugin>> plugins;
   std::vector<std::string> names;
+#if LIBPRESSIO_HAS_LUA
+  std::vector<std::string> scripts;
+#endif
 };
 
 std::unique_ptr<libpressio_metrics_plugin> make_m_composite(std::vector<std::unique_ptr<libpressio_metrics_plugin>>&& plugins) {

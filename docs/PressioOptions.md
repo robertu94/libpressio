@@ -83,6 +83,7 @@ option                  | type        | description
 `sz:sol_id` | int32 | an internal option used to control compression.
 `sz:sz_mode` | int32 | SZ Mode either `SZ_BEST_COMPRESSION` or `SZ_BEST_SPEED`
 `sz:user_params` | void* | arguments passed to the application specific mode of SZ.  Use in conjunction with `sz:app`
+`sz:error_bound_mode_str` | const char* | a string containing the error bound mode case insensitively, (`ABS`, `REL`, `PW_REL`, etc..)  See sz/defines.h for the mode names
 
 ### ZFP
 
