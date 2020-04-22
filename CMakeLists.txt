@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.38.0" LANGUAGES CXX C)
+project(libpressio VERSION "0.38.1" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -283,7 +283,15 @@ if(LIBPRESSIO_HAS_LUA)
   set(LIBPRESSIO_FEATURES "${LIBPRESSIO_FEATURES} lua")
   find_package(sol2 REQUIRED)
   pkg_search_module(Lua IMPORTED_TARGET lua luajit)
-  target_link_libraries(libpressio PRIVATE PkgConfig::Lua)
+  if(Lua_FOUND)
+    message(INFO "lua from pkgconfig")
+    target_link_libraries(libpressio PRIVATE PkgConfig::Lua)
+  else()
+    message(INFO "lua from cmake")
+    find_package(Lua)
+    target_link_libraries(libpressio PRIVATE ${LUA_LIBRARIES})
+    target_include_directories(libpressio PRIVATE ${LUA_INCLUDE_DIR})
+  endif()
 endif()
 
 configure_file(
