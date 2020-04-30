@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.38.1" LANGUAGES CXX C)
+project(libpressio VERSION "0.38.2" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -309,6 +309,13 @@ if(USE_CLANG_TIDY)
   find_program(CLANG_TIDY clang-tidy)
   set_target_properties(libpressio PROPERTIES CXX_CLANG_TIDY "${CLANG_TIDY}")
   set_target_properties(libpressio PROPERTIES C_CLANG_TIDY "${CLANG_TIDY}")
+endif()
+
+option(USE_INCLUDE_WHAT_YOU_USE "include include-what-you-use warnings in the build log" OFF)
+if(USE_INCLUDE_WHAT_YOU_USE)
+  find_program(INCLUDE_WHAT_YOU_USE include-what-you-use)
+  set_target_properties(libpressio PROPERTIES CXX_INCLUDE_WHAT_YOU_USE "${INCLUDE_WHAT_YOU_USE}")
+  set_target_properties(libpressio PROPERTIES C_INCLUDE_WHAT_YOU_USE "${INCLUDE_WHAT_YOU_USE}")
 endif()
 
 
