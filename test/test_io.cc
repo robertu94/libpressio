@@ -240,6 +240,7 @@ TEST_F(PressioDataIOTests, TestWriteGeneric) {
   });
   EXPECT_EQ(pressio_io_write(io, data), 0);
   pressio_data_free(data);
+  pressio_io_free(io);
   close(tmpwrite_fd);
   unlink(tmpwrite_name.data());
 }
@@ -276,6 +277,7 @@ TEST_F(PressioDataIOTests, TestWriteCSV) {
   });
   EXPECT_EQ(pressio_io_write(io, data), 0);
   pressio_data_free(data);
+  pressio_io_free(io);
   close(tmpwrite_fd);
   unlink(tmpwrite_name.data());
 }
@@ -306,6 +308,7 @@ TEST_F(PressioDataIOTests, TestReadCSV) {
 
   pressio_data_free(data);
   pressio_data_free(read);
+  pressio_io_free(io);
   close(tmpwrite_fd);
   unlink(tmpwrite_name.data());
 }

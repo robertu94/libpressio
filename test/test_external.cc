@@ -1,7 +1,7 @@
 #include <iostream>
 #include <libpressio.h>
 #include <libpressio_ext/cpp/printers.h>
-#include <sz/sz.h>
+#include <sz.h>
 
 #include "make_input_data.h"
 

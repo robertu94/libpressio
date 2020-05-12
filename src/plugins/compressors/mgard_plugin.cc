@@ -243,7 +243,7 @@ class mgard_plugin: public libpressio_compressor_plugin {
     }
 
     return pressio_data::move(
-        dtype,
+        pressio_byte_dtype,
         compressed_bytes,
         std::vector<size_t>{static_cast<size_t>(outsize)},
         pressio_data_libc_free_fn,

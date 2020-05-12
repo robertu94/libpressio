@@ -1,7 +1,7 @@
 #include <cmath>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include <sz/sz.h>
+#include <sz.h>
 
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/compressor.h"

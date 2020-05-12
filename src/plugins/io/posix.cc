@@ -25,9 +25,9 @@ extern "C" {
         //create a new buffer of the appropriate size
         auto dtype = pressio_data_dtype(dims);
         auto dims_v = dims->dimensions();
-        pressio_data_free(dims);
         ret = pressio_data_new_owning(dtype, dims_v.size(), dims_v.data());
       }
+      pressio_data_free(dims);
     } else {
       struct stat statbuf;
       if(fstat(in_filedes, &statbuf)) {

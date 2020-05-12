@@ -1,3 +1,5 @@
+#include <bits/types/FILE.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <vector>
 #include <sstream>
@@ -13,10 +15,12 @@
 
 namespace {
   struct csv_printer {
-    csv_printer(std::ofstream& outfile, size_t rows, size_t columns):
+    csv_printer(std::ofstream& outfile, size_t rows, size_t columns, const char line_delim, const char field_delim):
       rows(rows),
       columns(columns), 
-      outfile(outfile)
+      outfile(outfile),
+      line_delim(line_delim),
+      field_delim(field_delim)
     {}
 
     template<class T>
@@ -26,14 +30,16 @@ namespace {
       for (size_t row = 0; row < rows; ++row) {
         for (size_t col = 0; col < columns; ++col) {
           outfile << begin[row*columns + col];
-          if(col != columns -1) outfile << ',';
-          else outfile << '\n';
+          if(col != columns -1) outfile << field_delim;
+          else outfile << line_delim;
         }
       }
       return 0;
     }
     const size_t rows, columns;
     std::ofstream& outfile;
+    const char line_delim;
+    const char field_delim;
   };
 }
 
@@ -49,11 +55,11 @@ struct csv_io : public libpressio_io_plugin
     }
     size_t sizes[2] = {0,0};
     std::vector<double> builder;
-    for(std::string line; std::getline(in, line); sizes[0]++) {
+    for(std::string line; std::getline(in, line, line_delim.front()); sizes[0]++) {
       if(sizes[0] < skip_rows) continue;
       std::istringstream line_ss(line);
       size_t column = 0;
-      for(std::string value; std::getline(line_ss, value,','); ++column) {
+      for(std::string value; std::getline(line_ss, value,field_delim.front()); ++column) {
         builder.emplace_back(std::stold(value));
       }
       sizes[1] = column;
@@ -77,11 +83,11 @@ struct csv_io : public libpressio_io_plugin
         return invalid_headers();
       }
       for (size_t i = 0; i < headers.size(); ++i) {
-        outfile << headers[i] << ((i == headers.size()-1)? '\n': ',');
+        outfile << headers[i] << ((i == headers.size()-1)? line_delim.front(): field_delim.front());
       }
     }
     size_t rows = pressio_data_get_dimension(data, 0), columns = pressio_data_get_dimension(data, 1);
-    pressio_data_for_each<int>(*data, csv_printer{outfile, rows, columns});
+    pressio_data_for_each<int>(*data, csv_printer{outfile, rows, columns, line_delim.front(), field_delim.front()});
 
     return 0;
   }
@@ -96,6 +102,13 @@ struct csv_io : public libpressio_io_plugin
     get(opts, "io:path", &path);
     get(opts, "csv:headers", &headers);
     get(opts, "csv:skip_rows", &skip_rows);
+    std::string tmp;
+    if(get(opts, "csv:line_delim", &tmp) == pressio_options_key_set && tmp.size() == 1) {
+      line_delim = std::move(tmp);
+    }
+    if(get(opts, "csv:field_delim", &tmp) == pressio_options_key_set && tmp.size() == 1) {
+      field_delim = std::move(tmp);
+    }
     return 0;
   }
   virtual struct pressio_options get_options_impl() const override{
@@ -103,6 +116,8 @@ struct csv_io : public libpressio_io_plugin
     set(opts,  "io:path", path);
     set(opts, "csv:headers", headers);
     set(opts, "csv:skip_rows", skip_rows);
+    set(opts, "csv:line_delim", line_delim);
+    set(opts, "csv:field_delim", field_delim);
     return opts;
   }
 
@@ -128,6 +143,7 @@ struct csv_io : public libpressio_io_plugin
   int bad_path(std::string const& path) { return set_error(3, "bad path " + path);}
   std::string path;
   std::vector<std::string> headers;
+  std::string line_delim = "\n", field_delim = ",";
   unsigned int skip_rows = 0;
 };
 

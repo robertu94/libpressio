@@ -40,7 +40,7 @@ If the length is non-zero, the ith option corresponds to the ith file.
 The `external` plugin will provide the following command line arguments to the script.
 These may change from version to version.
 
-`--api` the maximum API version number the external module supports, begins at 1.  The current version is 4
+`--api` the maximum API version number the external module supports, begins at 1.  The current version is 5
 
 *New in external API 4* `--config_name` the value passed to the `external:config_name` option.  The implementation *may* use this value to as a basis to name log files or other auxiliary outputs.
 
@@ -216,6 +216,10 @@ It is thus presented with its default value.
 
 No changes were made to the output format.  The `--config_name` argument was introduced
 
+# Version 5
+
+No changes were made to the output format.  A double field `external:duration` is now included for external metrics which contains the runtime in seconds.
+
 # "mpispawn" launch method
 
 This method spawns the exernal metric using the `MPI_Comm_spawn` routine with a series of calls similar to the following:
@@ -233,11 +237,12 @@ MPI_Comm_spawn(args.front(), args.data()+1, 1, info, 0,  MPI_COMM_SELF, &child, 
 
 The `mpispawn` launch method does not  support external metrics api versions 1 or 2.
 
-## Version 3 and 4
+## Version 3 - 5
 
 Equivelent to `forkexec` with the following exceptions.
 
 Instead of connecting standard out and standard error, the external script should communicate with the external metric module using a series of MPI calls presented below.
+
 
 ```cpp
 int status_code = 0;    //a status code; see `forkexec` return code

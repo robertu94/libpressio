@@ -1,6 +1,6 @@
 #include <iostream>
 #include <libpressio_ext/cpp/libpressio.h>
-#include <sz/sz.h>
+#include <sz.h>
 
 #include "make_input_data.h"
 

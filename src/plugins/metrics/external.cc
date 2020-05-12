@@ -5,6 +5,8 @@
 #include <utility>
 #include <sstream>
 #include <unistd.h>
+#include <chrono>
+#include <ratio>
 #include "pressio_data.h"
 #include "pressio_options.h"
 #include "libpressio_ext/io/pressio_io.h"
@@ -148,6 +150,7 @@ class external_metric_plugin : public libpressio_metrics_plugin {
       set(results, "external:error_code", (int)format_error);
       set(results, "external:return_code", 0);
       set(results, "external:stderr", "");
+      set(results, "external:runtime", duration);
       return 0;
     }
 
@@ -182,7 +185,7 @@ class external_metric_plugin : public libpressio_metrics_plugin {
       };
       for (size_t i = 0; i < filenames.size(); ++i) {
         auto const& input_path = filenames[i].first;
-        auto const& decomp_path = filenames[i].first;
+        auto const& decomp_path = filenames[i].second;
         auto const& input_data = input_datasets[i].get();
         ss << format_arg(i, "input") << input_path;
         ss << format_arg(i, "decompressed") << decomp_path;
@@ -251,7 +254,10 @@ class external_metric_plugin : public libpressio_metrics_plugin {
       std::string full_command = build_command(filenames, input_data);
 
       //run the external program
+      auto start_time = std::chrono::high_resolution_clock::now();
       auto result = launcher->launch(full_command, workdir);
+      auto end_time = std::chrono::high_resolution_clock::now();
+      duration = std::chrono::duration<double>(end_time - start_time).count();
 
       //parse the output
       size_t api_version =parse_result(result, this->results);
@@ -286,6 +292,7 @@ class external_metric_plugin : public libpressio_metrics_plugin {
     std::vector<std::string> io_formats = {"posix"};
     pressio_options results;
     pressio_options defaults;
+    double duration = 0.0;
     std::vector<pressio_io> io_modules = {std::shared_ptr<libpressio_io_plugin>(io_plugins().build("posix"))};
 
 };

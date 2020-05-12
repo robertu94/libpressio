@@ -46,6 +46,7 @@ endif()
 if(LIBPRESSIO_HAS_SZ)
   add_gtest(test_sz_plugin.cc)
   target_include_directories(test_sz_plugin PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/../include)
+  target_link_libraries(test_sz_plugin SZ)
 
   add_executable(sz_basic sz_basic.c make_input_data.cc)
   target_link_libraries(sz_basic libpressio SZ)

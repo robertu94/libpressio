@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <iterator>
 #include <map>
-#include <sz/sz.h>
+#include <sz.h>
 
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/metrics.h"
