@@ -10,7 +10,7 @@
 ///@cond INTERNAL
 
 //
-// functions in this file are adapted from libc++-v8.0.0 whose license is
+// functions in this file are adapted from libc++-v9.0.0 whose license is
 // reproduced below
 //
 // Copyright (c) 2009-2014 by the contributors listed in CREDITS.TXT
@@ -37,6 +37,7 @@
 #include <functional>
 #include <numeric>
 #include <memory>
+#include <type_traits>
 #include <pressio_version.h>
 
 #ifndef PRESSIO_COMPAT
@@ -229,6 +230,60 @@ template<class T, class U = T>
   using std::conjunction;
 #endif
 
+#if !(LIBPRESSIO_COMPAT_HAS_MIDPOINT)
+
+template <class Type>
+constexpr typename std::enable_if<std::is_integral<Type>::value &&
+                                    !std::is_same<bool, Type>::value &&
+                                    !std::is_null_pointer<Type>::value,
+                                  Type>::type
+midpoint(Type a, Type b) noexcept
+{
+  using Up = std::make_unsigned_t<Type>;
+  constexpr Up bitshift = std::numeric_limits<Up>::digits - 1;
+
+  Up diff = Up(b) - Up(a);
+  Up sign_bit = b < a;
+
+  Up half_diff = (diff / 2) + (sign_bit << bitshift) + (sign_bit & diff);
+
+  return a + half_diff;
+}
+
+template <class TypePtr>
+constexpr typename std::enable_if<
+  std::is_pointer<TypePtr>::value &&
+    std::is_object<typename std::remove_pointer<TypePtr>::type>::value &&
+    !std::is_void<typename std::remove_pointer<TypePtr>::type>::value &&
+    (sizeof(typename std::remove_pointer<TypePtr>::type) > 0),
+  TypePtr>::type
+midpoint(TypePtr a, TypePtr b) noexcept
+{
+  return a + compat::midpoint(ptrdiff_t(0), b - a);
+}
+
+namespace impl {
+  template <typename Floating> constexpr Floating fp_abs(Floating f) { return f >= 0 ? f : -f; }
+} // namespace impl
+
+template <class Floating>
+constexpr typename std::enable_if<std::is_floating_point<Floating>::value,
+                                  Floating>::type
+midpoint(Floating a, Floating b) noexcept
+{
+  constexpr Floating low = std::numeric_limits<Floating>::min() * 2;
+  constexpr Floating high = std::numeric_limits<Floating>::max() / 2;
+  return impl::fp_abs(a) <= high && impl::fp_abs(b) <= high
+           ? // typical case: overflow is impossible
+           (a + b) / 2
+           :                                     // always correctly rounded
+           impl::fp_abs(a) < low ? a + b / 2 :   // not safe to halve a
+             impl::fp_abs(b) < low ? a / 2 + b : // not safe to halve b
+               a / 2 + b / 2;                    // otherwise correctly rounded
+}
+#else
+  using std::midpoint;
+#endif
 
 } // namespace compat
 

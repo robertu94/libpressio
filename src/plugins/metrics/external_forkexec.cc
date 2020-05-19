@@ -34,12 +34,17 @@ extern_proc_results launch(std::string const& full_command, std::string const& w
         case 0:
           //in the child process
           {
-          chdir(workdir.c_str());
-          close(0);
           close(stdout_pipe_fd[0]);
           close(stderr_pipe_fd[0]);
           dup2(stdout_pipe_fd[1], 1);
           dup2(stderr_pipe_fd[1], 2);
+
+          int chdir_status = chdir(workdir.c_str());
+          if(chdir_status == -1) {
+            perror(" failed to change to the specified directory");
+            exit(-2);
+          }
+
           std::istringstream command_stream(full_command);
           std::vector<std::string> args_mem(
               std::istream_iterator<std::string>{command_stream},
@@ -49,9 +54,9 @@ extern_proc_results launch(std::string const& full_command, std::string const& w
               std::back_inserter(args), [](std::string const& s){return const_cast<char*>(s.c_str());});
           args.push_back(nullptr);
           execvp(args.front(), args.data());
-          printf("%s\n", args.front());
-          perror(" failed to exec process");
+          perror("failed to exec process");
           //exit if there was an error
+          printf(" %s\n", args.front());
           exit(-1);
           break;
           }

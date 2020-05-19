@@ -63,6 +63,17 @@ struct pressio_option final {
     !std::is_same<T, const char*>::value &&
     !std::is_same<T, compat::monostate>::value
     >::type>
+  pressio_option(compat::optional<T> const& value): option(value) {}
+
+  /** constructs an option that holds the specified value
+   * \param[in] value the value the option is to hold
+   * */
+  template<class T, typename = typename std::enable_if<
+    !std::is_same<T, pressio_conversion_safety>::value &&
+    !std::is_same<T, pressio_option>::value &&
+    !std::is_same<T, const char*>::value &&
+    !std::is_same<T, compat::monostate>::value
+    >::type>
   pressio_option(T const& value): option(compat::optional<T>(value)) {}
 
   /** specialization for option to reset the type to hold no type or value
@@ -376,6 +387,35 @@ struct pressio_options final {
     auto prefix_key = format_name(name, key);
     if(options.find(prefix_key) != options.end()) return get(prefix_key);
     return get(key);
+  }
+
+  /**
+   * gets a key if it is set and stores it into the pointer value
+   * \param[in] key the option to retrieve
+   * \param[out] value the value that is in the option
+   * \returns pressio_options_key_does_not_exist if the key does not exist
+   *          pressio_options_key_exists if the key exists but has no value
+   *          pressio_options_key_set if the key exists and is set
+   */
+  template <class PointerType>
+  enum pressio_options_key_status get(std::string const& key, compat::optional<PointerType>* value) const {
+    using ValueType = typename std::remove_pointer<PointerType>::type;
+    switch(key_status(key)){
+      case pressio_options_key_set:
+        {
+          auto variant = get(key);
+          if (variant.holds_alternative<ValueType>()) { 
+            *value = variant.get<ValueType>();
+            return pressio_options_key_set;
+          } else {
+            return pressio_options_key_exists;
+          }
+        }
+        break;
+      default:
+        //value does not exist
+        return pressio_options_key_does_not_exist;
+    }
   }
 
   /**

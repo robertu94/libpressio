@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.39.1" LANGUAGES CXX C)
+project(libpressio VERSION "0.40.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -16,7 +16,7 @@ set(default_cxx_standard 17)
 if(NOT LIBPRESSIO_CXX_VERSION)
   set(LIBPRESSIO_CXX_VERSION ${default_cxx_standard} CACHE 
     STRING "Which version of the cxx standard to expect" FORCE)
-  set_property(CACHE LIBPRESSIO_CXX_VERSION PROPERTY STRINGS 11 14 17)
+  set_property(CACHE LIBPRESSIO_CXX_VERSION PROPERTY STRINGS 11 14 17 20)
 endif()
 
 include(CTest)
@@ -59,6 +59,7 @@ check_cpp_standard(variant)
 check_cpp_standard(make_unique)
 check_cpp_standard(conjunction)
 check_cpp_standard(multiplies)
+check_cpp_standard(midpoint)
 
 
 set(LIBPRESSIO_FEATURES "")

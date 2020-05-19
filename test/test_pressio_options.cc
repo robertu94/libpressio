@@ -403,3 +403,14 @@ TEST_F(PressioOptionsTests, Intializer) {
   EXPECT_EQ(opts.get("uint").type(), pressio_option_uint32_type);
   EXPECT_EQ(opts.get("str").type(), pressio_option_charptr_type);
 }
+
+TEST_F(PressioOptionsTests, AssignFromOptional) {
+  compat::optional<int> o{3};
+  compat::optional<int> empty{};
+  pressio_option option_full(o);
+  pressio_option option_empty(empty);
+
+  EXPECT_TRUE(option_full.has_value());
+  EXPECT_EQ(option_full.get_value<int>(), 3);
+  EXPECT_FALSE(option_empty.has_value());
+}
