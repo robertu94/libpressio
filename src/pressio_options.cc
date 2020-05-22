@@ -2,7 +2,9 @@
 #include <algorithm>
 #include <string>
 #include <cstring>
+#include <sstream>
 #include "libpressio_ext/cpp/options.h"
+#include "libpressio_ext/cpp/printers.h"
 #include "libpressio_ext/compat/std_compat.h"
 
 
@@ -170,4 +172,12 @@ struct pressio_options* pressio_options_merge(struct pressio_options const* lhs,
   struct pressio_options* merged = new pressio_options(*lhs);
   std::copy(std::begin(*rhs), std::end(*rhs), std::inserter(*merged, merged->begin()));
   return merged;
+}
+
+char* pressio_options_to_string(struct pressio_options const* options) {
+  if(options == nullptr) return nullptr;
+  std::stringstream ss;
+  ss << *options;
+  auto const& str = ss.str();
+  return strdup(str.c_str());
 }

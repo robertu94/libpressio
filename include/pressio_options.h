@@ -286,7 +286,21 @@ enum pressio_options_key_status pressio_options_cast_strings(struct pressio_opti
 enum pressio_options_key_status pressio_options_as_strings(struct pressio_options \
       const* options, const char* key, size_t* size, char*** values);
 
-
+/**
+ * Create a human readable string for the options passed.
+ *
+ * The format is unspecified and should NOT be parsed. It may change without warning.
+ *
+ * For machine readable formats, please use pressio_options_get_iter()
+ * to iterate over each object and convert each item as a string using
+ * pressio_options_cast_string()/pressio_options_cast_string() or the equivelent C++
+ * routines.
+ *
+ * \param[in] options the options to format as a string
+ * \returns a human readable string designed for debugging output, return nullptr on error. The
+ * returned string should be freed.
+ */
+char* pressio_options_to_string(struct pressio_options const* options);
 
 //undefine the type macro so it is not used by implementations
 #undef pressio_options_define_type
