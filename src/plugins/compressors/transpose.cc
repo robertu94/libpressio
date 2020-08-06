@@ -9,31 +9,7 @@
 #include "pressio_options.h"
 #include "pressio_data.h"
 #include "pressio_compressor.h"
-
-namespace {
-  /**
-   * converts a pressio_data structure to a std::vector of the template type
-   *
-   * \param[in] data the data to convert
-   * \returns a new vector
-   */
-  template <class T>
-  std::vector<T> pressio_data_to_vector(pressio_data const& data) {
-    return std::vector<T>(static_cast<T*>(data.data()), static_cast<T*>(data.data()) + data.num_elements());
-  }
-
-
-  /**
-   * converts a std::vector of template type to a pressio_data structure
-   *
-   * \param[in] vec the data to convert
-   * \returns a pressio_data structure
-   */
-  template <class T>
-  pressio_data vector_to_owning_pressio_data(std::vector<T> const& vec) {
-    return pressio_data::copy(pressio_dtype_from_type<T>(), vec.data(), {vec.size()});
-  }
-}
+#include "libpressio_ext/compat/memory.h"
 
 class transpose_meta_compressor_plugin : public libpressio_compressor_plugin
 {
@@ -41,8 +17,8 @@ public:
   struct pressio_options get_options_impl() const override
   {
     struct pressio_options options = compressor->get_options();
-    set(options, "transpose:compressor", compressor_id);
-    set(options, "transpose:axis", vector_to_owning_pressio_data(axis));
+    set_meta(options, "transpose:compressor", compressor_id, compressor);
+    set(options, "transpose:axis", pressio_data(axis.begin(), axis.end()));
     return options;
   }
 
@@ -55,14 +31,10 @@ public:
 
   int set_options_impl(struct pressio_options const& options) override
   {
-    if(get(options, "transpose:compressor", &compressor_id) == pressio_options_key_set) {
-      pressio library;
-      compressor = library.get_compressor(compressor_id);
-    }
-    compressor->set_options(options);
+    get_meta(options, "transpose:compressor", compressor_plugins(), compressor_id, compressor);
     pressio_data tmp;
     if(get(options, "transpose:axis", &tmp) == pressio_options_key_set) {
-      axis = pressio_data_to_vector<size_t>(tmp);
+      axis = tmp.to_vector<size_t>();
     }
     return 0;
   }
@@ -105,6 +77,6 @@ private:
   std::string compressor_id = "noop";
 };
 
-static pressio_register X(compressor_plugins(), "transpose", [](){ return compat::make_unique<transpose_meta_compressor_plugin>(); });
+static pressio_register compressor_transpose_plugin(compressor_plugins(), "transpose", [](){ return compat::make_unique<transpose_meta_compressor_plugin>(); });
 
 

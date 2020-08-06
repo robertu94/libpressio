@@ -118,6 +118,57 @@ class pressio_configurable {
     return options.get(name, key, value);
   }
 
+  /**
+   * helper function to set on a pressio_options structure the values associated with a meta-object
+   *
+   * \param[in] options the options structure to set
+   * \param[in] key the key for the name of the child meta-object
+   * \param[in] current_id name for the current meta-object
+   * \param[in] current_value value of the current meta-object
+   */
+  template<class Wrapper, class... Args>
+  void
+  set_meta(pressio_options& options, std::string const& key, std::string const& current_id, Wrapper const& current_value, Args&&... args) const {
+    set(options, key, current_id);
+    auto opts = current_value->get_options(std::forward<Args>(args)...);
+    for (auto const& opt : opts) {
+      options.set(opt.first, opt.second);
+    }
+  }
+
+  /**
+   * helper function to get from a pressio_options structure the values associated with a meta-object
+   *
+   *
+   */
+  template <class Registry, class Wrapper>
+  pressio_options_key_status
+  get_meta(pressio_options const& options,
+      std::string const& key,
+      Registry const& registry,
+      std::string& current_id,
+      Wrapper& current_value) {
+    std::string new_id;
+    if(get(options, key, &new_id) == pressio_options_key_set) {
+      if (new_id != current_id) {
+        auto new_value = registry.build(new_id);
+        if(new_value) {
+          current_id = std::move(new_id);
+          current_value = std::move(new_value);
+        } else {
+          return pressio_options_key_does_not_exist;
+        }
+        if(not get_name().empty()) {
+          set_name(get_name());
+        }
+      }
+    }
+    current_value->set_options(options);
+    return pressio_options_key_exists;
+
+  }
+
+
   private:
   std::string name;
 };

@@ -11,6 +11,7 @@
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/io.h"
+#include "libpressio_ext/compat/memory.h"
 
 namespace {
   struct csv_printer {
@@ -146,5 +147,5 @@ struct csv_io : public libpressio_io_plugin
   unsigned int skip_rows = 0;
 };
 
-static pressio_register X(io_plugins(), "csv",
+static pressio_register io_csv_plugin(io_plugins(), "csv",
                           []() { return compat::make_unique<csv_io>(); });

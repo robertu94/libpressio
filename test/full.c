@@ -39,7 +39,17 @@ void print_all_options(struct pressio_options* options) {
         case pressio_option_data_type:
           printf("%s : pressio_data\n", key);
           break;
-
+        case pressio_option_charptr_array_type:
+          printf("%s <char**>: {", key);
+          size_t size;
+          const char** strings = pressio_option_get_strings(option, &size);
+          for (size_t i = 0; i < size; ++i) {
+            printf("%s, ", strings[i]);
+            free((void*)strings[i]);
+          }
+          printf("}\n");
+          free((void*)strings);
+          break;
         default:
           assert(false && "a cleared option can never have a value");
       } 
@@ -220,7 +230,7 @@ int main(int argc, char *argv[])
   }
 
   struct pressio_options* mgard_options = pressio_compressor_get_options(mgard_compressor);
-  pressio_options_set_double(mgard_options, "mgard:s", 8.0);
+  pressio_options_set_double(mgard_options, "mgard:s", 0.5);
   pressio_options_set_double(mgard_options, "mgard:tolerance", .5);
   if(pressio_compressor_check_options(mgard_compressor, mgard_options)) {
     printf("%s\n", pressio_compressor_error_msg(mgard_compressor));

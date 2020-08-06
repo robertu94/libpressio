@@ -3,12 +3,13 @@
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/pressio.h"
 #include "libpressio_ext/cpp/options.h"
-#include "libpressio_ext/compat/std_compat.h"
+#include "libpressio_ext/compat/memory.h"
 
 class size_plugin : public libpressio_metrics_plugin {
   public:
 
     void end_compress(struct pressio_data const* input, pressio_data const* output, int) override {
+      if(!output) return;
       uncompressed_size = pressio_data_get_bytes(input);
       compressed_size = pressio_data_get_bytes(output);
       compression_ratio =  static_cast<double>(*uncompressed_size)/ *compressed_size;
@@ -18,6 +19,34 @@ class size_plugin : public libpressio_metrics_plugin {
     void end_decompress(struct pressio_data const* , pressio_data const* output, int) override {
       decompressed_size = pressio_data_get_bytes(output);
     }
+
+  void end_compress_many(compat::span<const pressio_data* const> const& inputs,
+                                   compat::span<const pressio_data* const> const& outputs, int ) override {
+   
+      if(outputs.empty()) return;
+      uncompressed_size = 0;
+      compressed_size = 0;
+      size_t num_elements = 0;
+      for (auto const& input : inputs) {
+        *uncompressed_size += pressio_data_get_bytes(input);
+        num_elements += pressio_data_num_elements(input);
+      }
+      for (auto const& output : outputs) {
+        *compressed_size += pressio_data_get_bytes(output);
+      }
+
+      compression_ratio =  static_cast<double>(*uncompressed_size)/ *compressed_size;
+      bit_rate = static_cast<double>(*compressed_size * 8 /*bits_per_byte*/)/num_elements;
+  }
+
+
+  void end_decompress_many(compat::span<const pressio_data* const> const& ,
+                                   compat::span<const pressio_data* const> const& outputs, int ) override {
+    decompressed_size = 0;
+    for (auto const& output : outputs) {
+      *decompressed_size += pressio_data_get_bytes(output);
+    }
+  }
 
   struct pressio_options get_metrics_results() const override {
     pressio_options opt;
@@ -63,4 +92,4 @@ class size_plugin : public libpressio_metrics_plugin {
 
 };
 
-static pressio_register X(metrics_plugins(), "size", [](){ return compat::make_unique<size_plugin>(); });
+static pressio_register metrics_size_plugin(metrics_plugins(), "size", [](){ return compat::make_unique<size_plugin>(); });

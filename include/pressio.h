@@ -42,7 +42,7 @@ struct pressio_compressor* pressio_get_compressor(struct pressio* library, const
  * \param[in] num_metrics the number of metrics requested
  * \returns a new pressio_metrics structure
  */
-struct pressio_metrics* pressio_new_metrics(struct pressio* library, const char* metrics[], int num_metrics);
+struct pressio_metrics* pressio_new_metrics(struct pressio* library, const char* const metrics[], int num_metrics);
 
 /**
  * \param[in] library the pointer to the library

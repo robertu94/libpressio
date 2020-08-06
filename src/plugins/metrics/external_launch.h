@@ -3,6 +3,8 @@
 
 
 
+#include "libpressio_ext/cpp/configurable.h"
+#include "libpressio_ext/cpp/errorable.h"
 #include "libpressio_ext/cpp/pressio.h"
 #include <string>
 
@@ -21,7 +23,7 @@ struct extern_proc_results {
   int error_code = success; //used to report errors with run_command
 };
 
-struct libpressio_launch_plugin {
+struct libpressio_launch_plugin: public pressio_configurable, public pressio_errorable {
   virtual ~libpressio_launch_plugin()=default;
   virtual extern_proc_results launch(std::string const&, std::string const&) const =0;
 };

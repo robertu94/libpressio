@@ -14,8 +14,9 @@
 #include "pressio_options.h"
 #include "pressio_option.h"
 #include "pressio_version.h"
+#include "libpressio_ext/compat/memory.h"
 
-namespace {
+namespace magick{
 
 std::mutex magick_init_lock;
 
@@ -47,7 +48,7 @@ class magick_init {
 
 class magick_plugin: public libpressio_compressor_plugin {
   public:
-  magick_plugin(std::shared_ptr<magick_init>&& init): init(init) {
+  magick_plugin(std::shared_ptr<magick::magick_init>&& init): init(init) {
   };
 
 
@@ -289,9 +290,9 @@ class magick_plugin: public libpressio_compressor_plugin {
   unsigned int quality = 100;
   std::string samples_magick = "G";
   std::string compressed_magick = "JPEG";
-  std::shared_ptr<magick_init> init;
+  std::shared_ptr<magick::magick_init> init;
 };
 
-static pressio_register X(compressor_plugins(), "magick", [](){
-    return std::make_shared<magick_plugin>(magick_init::get_library()); 
+static pressio_register comprssor_magick_plugin(compressor_plugins(), "magick", [](){
+    return std::make_shared<magick_plugin>(magick::magick_init::get_library()); 
 });

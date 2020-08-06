@@ -1,3 +1,8 @@
+#ifndef LIBPRESSIO_PRINTERS_H
+#define LIBPRESSIO_PRINTERS_H
+
+
+
 #include <string>
 #include <ostream>
 #include "options.h"
@@ -152,3 +157,4 @@ operator<<(std::basic_ostream<CharT, Traits>& out, enum pressio_dtype type)
       return out << "byte";
   }
 }
+#endif /* end of include guard: LIBPRESSIO_PRINTERS_H */

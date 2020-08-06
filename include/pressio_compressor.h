@@ -1,3 +1,4 @@
+#include "stddef.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -85,7 +86,11 @@ int pressio_compressor_compress(struct pressio_compressor* compressor, const str
  * \param[in,out] output 
  *    when passed in, \c output SHOULD contain the metadata (type, dimentions) for the output of the compression if available.
  *    pressio_data_free will be called the pointer passed in during this function.
- *    when passed out, it will contain an owning pressio_data structure with the result of the decompression.
+ *    when passed out, it will contain either
+ *      1. The same pointer passed in to \c output if the compressor supports
+ *         using a provided buffer for the results of the compression and contains has a buffer.  It is
+ *         recommended the user provide an owning pressio_data structure if passing a pressio_data structure with a buffer.
+ *      2. A new owning pressio_data structure with the results of the compression
  * \returns 0 if successful, positive values on errors, negative values on warnings
  * \see pressio_data_new_empty often used as the pointer passed into \c output
  * \see pressio_data_new_move often used as the pointer passed out of \c output
@@ -252,6 +257,50 @@ enum pressio_thread_safety {
 };
 
 
+/**
+ * compress multiple data buffers in one api call. Underlying implementations may do this in serial or parallel
+ *
+ * \param[in] compressor the compressor object that will perform compression
+ * \param[in] in array of input buffers
+ * \param[in] num_inputs the number of elements of the "in" array
+ * \param[in,out] out array of compressed data buffers
+ *  When passed in, each element of out MAY contain metadata (type, dimentions), and may additionally contain a buffer.
+ *    pressio_data_free will need to be called on the object returned from this buffer.
+ *  When passed out, each elements of out will contain either
+ *      1. The same pointer passed in to \c output if the compressor supports
+ *         using a provided buffer for the results of the compression and contains has a buffer.  It is
+ *         recommended the user provide an owning pressio_data structure if passing a pressio_data structure with a buffer.
+ *      2. A new owning pressio_data structure with the results of the compression
+ * \param[in] num_outputs the number of elements of the "out" array
+ * \returns 0 if successful, 1 if there is an error.  On error, an error message is set in pressio_compressor_error_msg.
+ *
+ */
+int pressio_compressor_compress_many(struct pressio_compressor* compressor,
+    struct pressio_data const* in[], size_t num_inputs,
+    struct pressio_data * out[], size_t num_outputs
+    );
+
+/**
+ * decompress multiple data buffers in one api call.  Underlying implementations may do this in serial or parallel
+ *
+ * \param[in] compressor the compressor object that will perform compression
+ * \param[in] in array of input buffers
+ * \param[in] num_inputs the number of elements of the "in" array
+ * \param[in,out] out array of compressed data buffers
+ *  When passed in, each element of out MAY contain metadata (type, dimentions), and may additionally contain a buffer.
+ *    pressio_data_free will need to be called on the object returned from this buffer.
+ *  When passed out, each elements of out will contain either
+ *      1. The same pointer passed in to \c output if the compressor supports
+ *         using a provided buffer for the results of the compression and contains has a buffer.  It is
+ *         recommended the user provide an owning pressio_data structure if passing a pressio_data structure with a buffer.
+ *      2. A new owning pressio_data structure with the results of the compression
+ * \param[in] num_outputs the number of elements of the "out" array
+ * \returns 0 if successful, 1 if there is an error.  On error, an error message is set in pressio_compressor_error_msg.
+ */
+int pressio_compressor_decompress_many(struct pressio_compressor* compressor,
+    struct pressio_data const* in[], size_t num_inputs,
+    struct pressio_data * out[], size_t num_outputs
+    );
 
 #endif
 

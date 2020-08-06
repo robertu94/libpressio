@@ -5,9 +5,9 @@
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
-#include "libpressio_ext/compat/std_compat.h"
+#include "libpressio_ext/compat/memory.h"
 
-namespace {
+namespace pearson {
   struct pearson_metrics {
     double r;
     double r2;
@@ -78,8 +78,8 @@ public:
   void end_decompress(struct pressio_data const*,
                       struct pressio_data const* output, int) override
   {
-    err_metrics = pressio_data_for_each<pearson_metrics>(input_data, *output,
-                                                       compute_metrics{});
+    err_metrics = pressio_data_for_each<pearson::pearson_metrics>(input_data, *output,
+                                                       pearson::compute_metrics{});
   }
 
   struct pressio_options get_metrics_results() const override
@@ -105,9 +105,9 @@ public:
 
 private:
   pressio_data input_data = pressio_data::empty(pressio_byte_dtype, {});
-  compat::optional<pearson_metrics> err_metrics;
+  compat::optional<pearson::pearson_metrics> err_metrics;
 };
 
-static pressio_register X(metrics_plugins(), "pearson", []() {
+static pressio_register metrics_pearson_plugin(metrics_plugins(), "pearson", []() {
   return compat::make_unique<pearsons_plugin>();
 });

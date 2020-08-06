@@ -9,31 +9,8 @@
 #include "pressio_options.h"
 #include "pressio_data.h"
 #include "pressio_compressor.h"
+#include "libpressio_ext/compat/memory.h"
 
-namespace {
-  /**
-   * converts a pressio_data structure to a std::vector of the template type
-   *
-   * \param[in] data the data to convert
-   * \returns a new vector
-   */
-  template <class T>
-  std::vector<T> pressio_data_to_vector(pressio_data const& data) {
-    return std::vector<T>(static_cast<T*>(data.data()), static_cast<T*>(data.data()) + data.num_elements());
-  }
-
-
-  /**
-   * converts a std::vector of template type to a pressio_data structure
-   *
-   * \param[in] vec the data to convert
-   * \returns a pressio_data structure
-   */
-  template <class T>
-  pressio_data vector_to_owning_pressio_data(std::vector<T> const& vec) {
-    return pressio_data::copy(pressio_dtype_from_type<T>(), vec.data(), {vec.size()});
-  }
-}
 
 class resize_meta_compressor_plugin : public libpressio_compressor_plugin
 {
@@ -41,9 +18,9 @@ public:
   struct pressio_options get_options_impl() const override
   {
     struct pressio_options options;
-    set(options, "resize:compressor", compressor_id);
-    set(options, "resize:compressed_dims", vector_to_owning_pressio_data(compressed_dims));
-    set(options, "resize:decompressed_dims", vector_to_owning_pressio_data(decompressed_dims));
+    set_meta(options, "resize:compressor", compressor_id, compressor);
+    set(options, "resize:compressed_dims", pressio_data(compressed_dims.begin(), compressed_dims.end()));
+    set(options, "resize:decompressed_dims", pressio_data(decompressed_dims.begin(), decompressed_dims.end()));
     return options;
   }
 
@@ -56,16 +33,13 @@ public:
 
   int set_options_impl(struct pressio_options const& options) override
   {
-    if(get(options, "resize:compressor", &compressor_id) == pressio_options_key_set) {
-      pressio library;
-      compressor = library.get_compressor(compressor_id);
-    }
+    get_meta(options, "resize:compressor", compressor_plugins(), compressor_id, compressor);
     pressio_data tmp;
     if(get(options, "resize:compressed_dims", &tmp) == pressio_options_key_set) {
-      compressed_dims = pressio_data_to_vector<size_t>(tmp);
+      compressed_dims = tmp.to_vector<size_t>();
     }
     if(get(options, "resize:decompressed_dims", &tmp) == pressio_options_key_set) {
-      decompressed_dims = pressio_data_to_vector<size_t>(tmp);
+      decompressed_dims = tmp.to_vector<size_t>();
     }
     return 0;
   }
@@ -110,5 +84,5 @@ private:
   std::string compressor_id = "noop";
 };
 
-static pressio_register X(compressor_plugins(), "resize", [](){ return compat::make_unique<resize_meta_compressor_plugin>(); });
+static pressio_register compressor_resize_plugin(compressor_plugins(), "resize", [](){ return compat::make_unique<resize_meta_compressor_plugin>(); });
 

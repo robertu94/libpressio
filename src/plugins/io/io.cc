@@ -69,6 +69,14 @@ const char* pressio_io_get_name(struct pressio_io const* io) {
   return (*io)->get_name().c_str();
 }
 
+int pressio_io_write_many(struct pressio_io* io, const struct pressio_data** data_begin, size_t num_data) {
+  return (*io)->write_many(data_begin, data_begin+num_data);
+}
+
+int pressio_io_read_many(struct pressio_io* io, struct pressio_data** data_begin, size_t num_data) {
+  return (*io)->read_many(data_begin, data_begin+num_data);
+}
+
 }
 
 struct pressio_data* libpressio_io_plugin::read(struct pressio_data* data) {

@@ -76,6 +76,25 @@ void pressio_metrics_set_name(struct pressio_metrics* metrics, const char* new_n
  */
 const char* pressio_metrics_get_name(struct pressio_metrics const* metrics);
 
+/**
+ * Evaluate a metric that operates on a data buffer and return a corresponding options structure
+ *
+ * If the metric does not support being called on data buffers, the returned object is undefined.
+ *
+ * \param[in] metrics the metrics object to invoke
+ * \param[in] uncompressed the data before compression, if nullptr, begin/end_compress will not be called
+ * \param[in] compressed the data after compression, if nullptr, the metrics object MAY choose not to compute some or all metrics, but SHOULD compute as many as possible
+ * \param[in] decompressed  the data after decompression, if nullptr, begin/end_decompress will not be called
+ *
+ * \returns a new pressio_options as if pressio_metrics_get_results was called.
+ */
+struct pressio_options* pressio_metrics_evaluate(
+    struct pressio_metrics* metrics,
+    struct pressio_data const* uncompressed,
+    struct pressio_data const* compressed,
+    struct pressio_data const* decompressed
+    );
+
 #endif
 
 #ifdef __cplusplus

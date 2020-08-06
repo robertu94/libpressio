@@ -4,7 +4,7 @@
 #include "pressio_options.h"
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/options.h"
-#include "libpressio_ext/compat/std_compat.h"
+#include "libpressio_ext/compat/memory.h"
 #if LIBPRESSIO_HAS_LUA
 #define SOL_ALL_SAFETIES_ON 1
 #define SOL_PRINT_ERRORS 1
@@ -82,6 +82,36 @@ class composite_plugin : public libpressio_metrics_plugin {
     for (auto& plugin : plugins) {
       plugin->end_decompress(input, output, rc);
     }
+  }
+
+  void begin_compress_many(compat::span<const pressio_data* const> const& inputs,
+                                   compat::span<const pressio_data* const> const& outputs) override {
+    for (auto& plugin : plugins) {
+      plugin->begin_compress_many(inputs, outputs);
+    }
+  }
+
+  void end_compress_many(compat::span<const pressio_data* const> const& inputs,
+                                   compat::span<const pressio_data* const> const& outputs, int rc) override {
+    for (auto& plugin : plugins) {
+      plugin->end_compress_many(inputs, outputs, rc);
+    }
+   
+  }
+
+  void begin_decompress_many(compat::span<const pressio_data* const> const& inputs,
+                                   compat::span<const pressio_data* const> const& outputs) override {
+    for (auto& plugin : plugins) {
+      plugin->begin_decompress_many(inputs, outputs);
+    }
+  }
+
+  void end_decompress_many(compat::span<const pressio_data* const> const& inputs,
+                                   compat::span<const pressio_data* const> const& outputs, int rc) override {
+    for (auto& plugin : plugins) {
+      plugin->end_decompress_many(inputs, outputs, rc);
+    }
+ 
   }
 
   struct pressio_options get_metrics_results() const override {

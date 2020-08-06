@@ -56,7 +56,7 @@ struct pressio_compressor* pressio_get_compressor(struct pressio* library, const
   else return nullptr;
 }
 
-struct pressio_metrics* pressio_new_metrics(struct pressio* library, const char* metrics_ids[], int num_metrics) {
+struct pressio_metrics* pressio_new_metrics(struct pressio* library, const char* const metrics_ids[], int num_metrics) {
   auto metrics = library->get_metrics(metrics_ids, metrics_ids+num_metrics);
   if (metrics != nullptr) return new pressio_metrics(std::move(metrics));
   else return nullptr;

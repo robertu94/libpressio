@@ -9,6 +9,7 @@
 #include "pressio_options.h"
 #include "pressio_data.h"
 #include "pressio_compressor.h"
+#include "libpressio_ext/compat/memory.h"
 
 
 class sample_compressor_plugin: public libpressio_compressor_plugin {
@@ -24,7 +25,7 @@ class sample_compressor_plugin: public libpressio_compressor_plugin {
     struct pressio_options get_configuration_impl() const override {
       struct pressio_options options;
       set(options,"pressio:thread_safe", static_cast<int>(pressio_thread_safety_multiple));
-      set(options, "sampling:modes", {"wr", "wor", "decimate"});
+      set(options, "sampling:modes", std::vector<std::string>{"wr", "wor", "decimate"});
       return options;
     }
 
@@ -130,6 +131,6 @@ class sample_compressor_plugin: public libpressio_compressor_plugin {
     }
 };
 
-static pressio_register X(compressor_plugins(), "sample", [](){ return compat::make_unique<sample_compressor_plugin>(); });
+static pressio_register compressor_sampling_plugin(compressor_plugins(), "sample", [](){ return compat::make_unique<sample_compressor_plugin>(); });
 
 

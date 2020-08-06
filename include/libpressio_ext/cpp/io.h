@@ -5,6 +5,7 @@
 #include "configurable.h"
 #include "versionable.h"
 #include "errorable.h"
+#include <libpressio_ext/compat/span.h>
 
 /**
  * \file
@@ -31,11 +32,41 @@ struct libpressio_io_plugin: public pressio_configurable, public pressio_version
    */
   struct pressio_data* read(struct pressio_data* data);
 
+  /** reads a multiple pressio_data buffers from some persistent storage. Modules should override read_many_impl instead.
+   * \param[in,out] data_begin contiguous iterator to the beginning of the data objects.  Pointed to objects are replaced with the read data, freeing the input if required.
+   * \param[in,out] data_end contiguous iterator past the end of the data objects. Pointed to objects are replaced with the read data, freeing the output if required.
+   *
+   *
+   * \returns 0 if successful, positive values on errors, negative values on warnings
+   * \see pressio_io_read for the semantics this function should obey
+   * \see read for the value_type the iterator points to
+   */
+  template <class ContigIterator>
+  int read_many(ContigIterator data_begin, ContigIterator data_end) {
+    compat::span<struct pressio_data*> data(data_begin, data_end);
+    return read_many_impl(data);
+  }
+
   /** writes a pressio_data buffer to some persistent storage. Modules should override write_impl instead.
    * \param[in] data data to write
    * \see pressio_io_write for the semantics this function should obey
    */
   int write(struct pressio_data const* data);
+
+  /** writes a multiple pressio_data buffers to some persistent storage. Modules should override write_many_impl instead.
+   * \param[in,out] data_begin contiguous iterator to the beginning of the data objects.
+   * \param[in,out] data_end contiguous iterator past the end of the data objects.
+   *
+   *
+   * \returns 0 if successful, positive values on errors, negative values on warnings
+   * \see pressio_io_read for the semantics this function should obey
+   * \see read for the value_type the iterator points to
+   */
+  template <class ContigIterator>
+  int write_many(ContigIterator data_begin, ContigIterator data_end) {
+    compat::span<const struct pressio_data*> data(data_begin, data_end);
+    return write_many_impl(data);
+  }
 
   /** checks for extra arguments set for the io module. Modules should override check_options_impl instead.
    * the default verison just checks for unknown options passed in.
@@ -95,6 +126,22 @@ struct libpressio_io_plugin: public pressio_configurable, public pressio_version
    */
   virtual int write_impl(struct pressio_data const* data)=0;
 
+  /** reads multiple pressio_data buffers from some persistent storage
+   * \param[in] data data object to populate, or nullptr to allocate it from the file if supported
+   * \see pressio_io_read for the semantics this function should obey
+   */
+  virtual int read_many_impl(compat::span<struct pressio_data*> const&) { 
+    return set_error(1, "read many not supported");
+  }
+
+  /** writes multiple pressio_data buffers to some persistent storage
+   * \param[in] data data to write
+   * \see pressio_io_write for the semantics this function should obey
+   */
+  virtual int write_many_impl(compat::span<struct pressio_data const*> const&) {
+    return set_error(1, "write many not supported");
+  }
+
   /** get the compile time configuration of a io module
    *
    * \see pressio_io_get_configuration for the semantics this function should obey
@@ -123,6 +170,10 @@ struct libpressio_io_plugin: public pressio_configurable, public pressio_version
  * wrapper for the io module to use in C
  */
 struct pressio_io {
+  /**
+   * \param[in] impl a newly constructed io plugin
+   */
+  pressio_io(std::unique_ptr<libpressio_io_plugin>&& impl): plugin(std::forward<std::unique_ptr<libpressio_io_plugin>>(impl)) {}
   /**
    * \param[in] impl a newly constructed io plugin
    */

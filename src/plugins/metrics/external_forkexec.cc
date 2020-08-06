@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <iterator>
 #include <sys/wait.h>
+#include "libpressio_ext/compat/memory.h"
 
 struct external_forkexec: public libpressio_launch_plugin {
 extern_proc_results launch(std::string const& full_command, std::string const& workdir) const override {
@@ -95,6 +96,9 @@ extern_proc_results launch(std::string const& full_command, std::string const& w
 
       return results;
     }
+  const char* prefix() const override {
+    return "forkexec";
+  }
 };
 
-static pressio_register X(launch_plugins(), "forkexec", [](){ return compat::make_unique<external_forkexec>();});
+static pressio_register launch_forkexec_plugin(launch_plugins(), "forkexec", [](){ return compat::make_unique<external_forkexec>();});

@@ -5,10 +5,10 @@
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
-#include "libpressio_ext/compat/std_compat.h"
+#include "libpressio_ext/compat/memory.h"
 
-namespace {
-  struct error_metrics {
+namespace error_stat {
+  struct metrics {
     double psnr;
     double mse;
     double rmse;
@@ -29,7 +29,7 @@ namespace {
 
   struct compute_metrics{
     template <class ForwardIt1, class ForwardIt2>
-    error_metrics operator()(ForwardIt1 input_begin, ForwardIt1 input_end, ForwardIt2 input2_begin, ForwardIt2 input2_end)
+    metrics operator()(ForwardIt1 input_begin, ForwardIt1 input_end, ForwardIt2 input2_begin, ForwardIt2 input2_end)
     {
       using value_type = typename std::iterator_traits<ForwardIt1>::value_type;
       static_assert(std::is_same<typename std::iterator_traits<ForwardIt1>::value_type, value_type>::value, "the iterators must have the same type");
@@ -66,7 +66,7 @@ namespace {
         ++input_begin;
         ++input2_begin;
       }
-      error_metrics m;
+      metrics m;
       m.mse = sum_of_squared_error/num_elements;
       m.rmse = sqrt(m.mse);
       m.average_difference = sum_of_difference/num_elements;
@@ -100,7 +100,7 @@ class error_stat_plugin : public libpressio_metrics_plugin {
       input_data = pressio_data::clone(*input);
     }
     void end_decompress(struct pressio_data const*, struct pressio_data const* output, int ) override {
-      err_metrics = pressio_data_for_each<error_metrics>(input_data, *output, compute_metrics{});      
+      err_metrics = pressio_data_for_each<error_stat::metrics>(input_data, *output, error_stat::compute_metrics{});      
     }
 
     struct pressio_options get_metrics_results() const override {
@@ -153,8 +153,8 @@ class error_stat_plugin : public libpressio_metrics_plugin {
 
   private:
   pressio_data input_data = pressio_data::empty(pressio_byte_dtype, {});
-  compat::optional<error_metrics> err_metrics;
+  compat::optional<error_stat::metrics> err_metrics;
 
 };
 
-static pressio_register X(metrics_plugins(), "error_stat", [](){ return compat::make_unique<error_stat_plugin>(); });
+static pressio_register metrics_error_stat_plugin(metrics_plugins(), "error_stat", [](){ return compat::make_unique<error_stat_plugin>(); });

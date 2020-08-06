@@ -2,6 +2,7 @@
 #include <iterator>
 #include <sstream>
 #include <mpi.h>
+#include "libpressio_ext/compat/memory.h"
 
 struct external_mpispawn: public libpressio_launch_plugin {
 extern_proc_results launch(std::string const& full_command, std::string const& workdir) const override {
@@ -43,6 +44,9 @@ extern_proc_results launch(std::string const& full_command, std::string const& w
       MPI_Info_free(&info);
       return results;
     }
+  const char* prefix() const override {
+    return "mpispawn";
+  }
 };
 
-static pressio_register X(launch_plugins(), "mpispawn", [](){ return compat::make_unique<external_mpispawn>();});
+static pressio_register launch_spawn_plugin(launch_plugins(), "mpispawn", [](){ return compat::make_unique<external_mpispawn>();});

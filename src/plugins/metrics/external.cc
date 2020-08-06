@@ -15,7 +15,7 @@
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
 #include "libpressio_ext/cpp/io.h"
-#include "libpressio_ext/compat/std_compat.h"
+#include "libpressio_ext/compat/memory.h"
 
 #include "external_launch.h"
 
@@ -42,7 +42,7 @@ class external_metric_plugin : public libpressio_metrics_plugin {
 
     struct pressio_options get_options() const override {
       auto opt = pressio_options();
-      set(opt, "external:launch_method", launch_method);
+      set_meta(opt, "external:launch_method", launch_method, launcher);
       set(opt, "external:command", command);
       set(opt, "external:io_format", io_formats);
       set(opt, "external:suffix", suffixes);
@@ -54,6 +54,7 @@ class external_metric_plugin : public libpressio_metrics_plugin {
     }
 
     int set_options(pressio_options const& opt) override {
+      get_meta(opt, "external:launch_method", launch_plugins(), launch_method, launcher);
       std::string tmp_launch_method;
       if (get(opt, "external:launch_method", &tmp_launch_method) == pressio_options_key_set) {
         auto tmp_launcher = launch_plugins().build(tmp_launch_method);
@@ -298,4 +299,4 @@ class external_metric_plugin : public libpressio_metrics_plugin {
 };
 
 
-static pressio_register X(metrics_plugins(), "external", [](){ return compat::make_unique<external_metric_plugin>(); });
+static pressio_register metrics_external_plugin(metrics_plugins(), "external", [](){ return compat::make_unique<external_metric_plugin>(); });

@@ -1,4 +1,4 @@
-FROM fedora:29 as builder
+FROM fedora:32 as builder
 RUN echo "fastestmirror=True">>/etc/dnf/dnf.conf && \
     dnf install -y git swig cmake gcc-c++ zlib-devel libzstd-devel ninja-build hdf5-devel python3-devel python3-numpy ImageMagick-c++-devel blosc-devel && \
     dnf clean all
@@ -51,7 +51,7 @@ RUN cd /src/libpressio && \
     ninja install && \
     CTEST_OUTPUT_ON_FAILURE=1 ctest .
 
-FROM fedora:29
+FROM fedora:32
 RUN echo "fastestmirror=True">>/etc/dnf/dnf.conf && \
     dnf install -y zlib hdf5 libzstd fftw python3-numpy ImageMagick-c++ blosc \
     && \
@@ -60,7 +60,7 @@ COPY --from=builder /usr/lib64/libSZ.so* \
                     /usr/lib64/liblibpressio.so* \
                     /usr/lib64/libzfp.so*  \
                     /usr/lib64/libmgard.so* \
-                    /usr/lib64/fpzip.so* \
+                    /usr/lib64/libfpzip.so* \
                     /usr/lib64/
 COPY --from=builder /usr/include/libpressio \
                     /usr/include/sz \
@@ -69,5 +69,5 @@ COPY --from=builder /usr/include/libpressio \
                     /usr/include/fpzip* \
                     /usr/include/
 COPY --from=builder /usr/bin/sz /usr/bin/
-COPY --from=builder /usr/lib/python3.7/site-packages/*pressio* /usr/lib64/python3.7/site-packages/
+COPY --from=builder /usr/lib/python3.8/site-packages/*pressio* /usr/lib64/python3.7/site-packages/
 

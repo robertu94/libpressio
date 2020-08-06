@@ -14,8 +14,9 @@
 #include <type_traits>
 #include <unistd.h>
 #include <vector>
+#include "libpressio_ext/compat/memory.h"
 
-namespace {
+namespace petsc {
 std::mutex petsc_init_lock;
 
 /** responsible for calling PETScInitalize() and PETScFinalize() if needed;
@@ -55,7 +56,7 @@ public:
 } // namespace
 
 struct petsc_io : public libpressio_io_plugin {
-  petsc_io(std::shared_ptr<petsc_init> &&library) : library(library) {}
+  petsc_io(std::shared_ptr<petsc::petsc_init> &&library) : library(library) {}
 
   virtual struct pressio_data *read_impl(struct pressio_data *data) override {
     size_t sizes[2];
@@ -197,7 +198,7 @@ private:
   std::string matrix_format = MATSEQDENSE;
   std::string viewer_type = PETSCVIEWERBINARY;
   PetscViewerFormat viewer_format = PETSC_VIEWER_DEFAULT;
-  std::shared_ptr<petsc_init> library;
+  std::shared_ptr<petsc::petsc_init> library;
   static const std::map<std::string, PetscViewerFormat> map_name_to_viewer_format;
   static const std::map<PetscViewerFormat, std::string> map_viewer_format_to_name;
 };
@@ -262,6 +263,6 @@ const std::map<std::string, PetscViewerFormat> petsc_io::map_name_to_viewer_form
   return map;
 }();
 
-static pressio_register X(io_plugins(), "petsc", []() {
-  return compat::make_unique<petsc_io>(petsc_init::get_library());
+static pressio_register io_petsc_plugin(io_plugins(), "petsc", []() {
+  return compat::make_unique<petsc_io>(petsc::petsc_init::get_library());
 });

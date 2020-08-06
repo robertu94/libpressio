@@ -1,6 +1,7 @@
 #include "libpressio_ext/cpp/pressio.h"
 #include "libpressio_ext/cpp/io.h"
 #include "pressio_compressor.h"
+#include "libpressio_ext/compat/memory.h"
 
 struct select_io: public libpressio_io_plugin {
   struct pressio_data* read_impl(struct pressio_data* dims) override {
@@ -22,6 +23,7 @@ struct select_io: public libpressio_io_plugin {
 
   int set_options_impl(struct pressio_options const& options) override{
     pressio_data data;
+    get_meta(options, "select:io", io_plugins(), impl_id, impl);
     if(options.get("select:start", &data) == pressio_options_key_set) {
       start = data.to_vector<size_t>();
     }
@@ -39,6 +41,7 @@ struct select_io: public libpressio_io_plugin {
 
   struct pressio_options get_options_impl() const override{
     pressio_options opts;
+    set_meta(opts, "select:io", impl_id, impl);
     set(opts, "select:start", pressio_data(std::begin(start), std::end(start)));
     set(opts, "select:stride", pressio_data(std::begin(stride), std::end(stride)));
     set(opts, "select:size", pressio_data(std::begin(size), std::end(size)));
@@ -66,8 +69,9 @@ struct select_io: public libpressio_io_plugin {
   }
 
   private:
-  pressio_io impl;
+  std::string impl_id = "posix";
+  pressio_io impl = io_plugins().build("posix");
   std::vector<size_t> start{}, stride{}, size{}, block{};
 };
 
-static pressio_register X(io_plugins(), "select", [](){ return compat::make_unique<select_io>(); });
+static pressio_register io_select_plugin(io_plugins(), "select", [](){ return compat::make_unique<select_io>(); });

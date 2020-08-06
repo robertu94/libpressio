@@ -6,7 +6,7 @@
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
-#include "libpressio_ext/compat/std_compat.h"
+#include "libpressio_ext/compat/memory.h"
 
 namespace {
   
@@ -90,6 +90,6 @@ private:
   double threshold = .01;
 };
 
-static pressio_register X(metrics_plugins(), "spatial_error", []() {
+static pressio_register metrics_spatial_error_plugin(metrics_plugins(), "spatial_error", []() {
   return compat::make_unique<spatial_error_plugin>();
 });

@@ -1,6 +1,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <vector>
+#include <errno.h>
 #include "pressio_data.h"
 #include "pressio_compressor.h"
 #include "libpressio_ext/io/posix.h"
@@ -8,6 +9,7 @@
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/io.h"
+#include "libpressio_ext/compat/memory.h"
 
 
 
@@ -219,4 +221,4 @@ struct posix_io : public libpressio_io_plugin {
   compat::optional<int> fd;
 };
 
-static pressio_register X(io_plugins(), "posix", [](){ return compat::make_unique<posix_io>(); });
+static pressio_register io_posix_plugin(io_plugins(), "posix", [](){ return compat::make_unique<posix_io>(); });

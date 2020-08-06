@@ -8,6 +8,7 @@
 #include "pressio_data.h"
 #include "pressio_compressor.h"
 #include "zfp.h"
+#include "libpressio_ext/compat/memory.h"
 
 class zfp_plugin: public libpressio_compressor_plugin {
   public:
@@ -283,4 +284,4 @@ class zfp_plugin: public libpressio_compressor_plugin {
     zfp_stream* zfp;
 };
 
-static pressio_register X(compressor_plugins(), "zfp", [](){ return compat::make_unique<zfp_plugin>(); });
+static pressio_register compressor_zfp_plugin(compressor_plugins(), "zfp", [](){ return compat::make_unique<zfp_plugin>(); });

@@ -97,13 +97,11 @@ int libpressio_compressor_plugin::check_options_impl(struct pressio_options cons
 
 
 struct pressio_options libpressio_compressor_plugin::get_metrics_results() const {
-  auto metrics_plugin_results = metrics_plugin->get_metrics_results();
-  auto compressor_metrics_results = get_metrics_results_impl();
-
-  for (auto const& metric : compressor_metrics_results) {
-    set(metrics_plugin_results, metric.first, metric.second);
+  pressio_options metrics_plugin_results;
+  if(metrics_plugin) {
+    metrics_plugin_results = metrics_plugin->get_metrics_results();
   }
-
+  metrics_plugin_results.copy_from(get_metrics_results_impl());
   return metrics_plugin_results;
 }
 

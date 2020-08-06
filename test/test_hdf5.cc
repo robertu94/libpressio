@@ -1,7 +1,7 @@
 #include <vector>
 #include <numeric>
 #include "libpressio_ext/io/hdf5.h"
-#include "libpressio_ext/compat/std_compat.h"
+#include "libpressio_ext/compat/iterator.h"
 #include "pressio_data.h"
 #include "gtest/gtest.h"
 

@@ -10,6 +10,7 @@
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/printers.h"
 #include "libpressio_ext/cpp/pressio.h"
+#include "libpressio_ext/compat/memory.h"
 
 namespace {
   constexpr int INVALID_TYPE = 8;
@@ -168,4 +169,4 @@ class fpzip_plugin: public libpressio_compressor_plugin {
 
 };
 
-static pressio_register X(compressor_plugins(), "fpzip", [](){ return std::make_shared<fpzip_plugin>(); });
+static pressio_register compressor_fpzip_plugin(compressor_plugins(), "fpzip", [](){ return std::make_shared<fpzip_plugin>(); });

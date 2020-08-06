@@ -7,6 +7,7 @@
 #include "libpressio_ext/cpp/compressor.h"
 #include "libpressio_ext/cpp/pressio.h"
 #include "libpressio_ext/cpp/options.h"
+#include "libpressio_ext/compat/memory.h"
 
 class noop_compressor_plugin: public libpressio_compressor_plugin {
   public:
@@ -55,5 +56,5 @@ class noop_compressor_plugin: public libpressio_compressor_plugin {
   }
 };
 
-static pressio_register X(compressor_plugins(), "noop", [](){ return compat::make_unique<noop_compressor_plugin>();});
+static pressio_register comprssor_noop_plugin(compressor_plugins(), "noop", [](){ return compat::make_unique<noop_compressor_plugin>();});
 

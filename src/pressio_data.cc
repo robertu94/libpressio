@@ -196,7 +196,7 @@ namespace {
     bool operator()(RandomIt1 r1_begin, RandomIt1, RandomIt2 r2_begin, RandomIt2) {
       std::vector<size_t> iter(dimensions.size(), 0);
       std::vector<size_t> strides(dimensions.size(), 0);
-      size_t max_idx = std::accumulate(std::begin(dimensions), std::end(dimensions), 1, compat::multiplies{});
+      size_t max_idx = std::accumulate(std::begin(dimensions), std::end(dimensions), 1, compat::multiplies<>{});
       compat::exclusive_scan(compat::rbegin(iter_max), compat::rend(iter_max), compat::rbegin(strides), 1, compat::multiplies<>{});
       for (size_t src_idx = 0; src_idx < max_idx; ++src_idx) {
         size_t dst_idx = compat::transform_reduce(std::begin(iter), std::end(iter), std::begin(strides), 0, compat::plus<>{}, compat::multiplies<>{});

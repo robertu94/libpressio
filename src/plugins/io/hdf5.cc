@@ -12,6 +12,7 @@
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/io.h"
+#include "libpressio_ext/compat/memory.h"
 
 namespace {
   compat::optional<pressio_dtype> h5t_to_pressio(hid_t h5type) {
@@ -259,4 +260,4 @@ struct hdf5_io: public libpressio_io_plugin {
   std::string dataset;
 };
 
-static pressio_register X(io_plugins(), "hdf5", [](){ return compat::make_unique<hdf5_io>(); });
+static pressio_register io_hdf5_plugin(io_plugins(), "hdf5", [](){ return compat::make_unique<hdf5_io>(); });

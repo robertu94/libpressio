@@ -13,6 +13,7 @@
 #include "pressio_compressor.h"
 #include "pressio_options.h"
 #include "pressio_option.h"
+#include "libpressio_ext/compat/memory.h"
 
 namespace {
   struct iless {
@@ -243,4 +244,4 @@ std::unique_ptr<libpressio_compressor_plugin> make_c_sz() {
   return compat::make_unique<sz_plugin>();
 }
 
-static pressio_register X(compressor_plugins(), "sz", [](){ static auto sz = std::make_shared<sz_plugin>(); return sz; });
+static pressio_register compressor_sz_plugin(compressor_plugins(), "sz", [](){ static auto sz = std::make_shared<sz_plugin>(); return sz; });

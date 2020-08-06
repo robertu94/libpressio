@@ -127,7 +127,7 @@ int pressio_io_patch_version(struct pressio_io const* io);
  * \param[in] io the io module to clone
  * \returns a new reference to an io module
  */
-struct presio_io* pressio_io_clone(struct pressio_io* io);
+struct pressio_io* pressio_io_clone(struct pressio_io* io);
 
 /**
  * Assign a new name to a io.  Names are used to prefix options in meta-ios.
@@ -153,6 +153,24 @@ void pressio_io_set_name(struct pressio_io* io, const char* new_name);
  *          the name is set_name is called.
  */
 const char* pressio_io_get_name(struct pressio_io const* io);
+
+/**
+ * write multiple buffers
+ *
+ * \param[in] io the io to use to write
+ * \param[in] data_begin pointer to an array of data objects
+ * \param[in] num_data the number of buffers to write
+ */
+int pressio_io_write_many(struct pressio_io* io, const struct pressio_data** data_begin, size_t num_data);
+
+/**
+ * read multiple buffers
+ *
+ * \param[in] io the io to use to read
+ * \param[in,out] data_begin pointer to an array of data objects, these can be nullptr on input and are replaced with the read data
+ * \param[in] num_data the number of buffers to write
+ */
+int pressio_io_read_many(struct pressio_io* io, struct pressio_data** data_begin, size_t num_data);
 
 #endif /* end of include guard: PRESSIO_IO_H */
 

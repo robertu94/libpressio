@@ -1,7 +1,9 @@
 #include <string>
+#include <sstream>
+#include <stdexcept>
 #include "pressio_option.h"
 #include "libpressio_ext/cpp/options.h"
-#include "libpressio_ext/cpp/options.h"
+#include "libpressio_ext/cpp/printers.h"
 #include "libpressio_ext/compat/std_compat.h"
 
 
@@ -57,9 +59,9 @@ struct pressio_option* pressio_option_new_strings(const char** values, size_t si
 const char** pressio_option_get_strings(struct pressio_option const* option, size_t* size) {
   auto const& value = option->get_value<std::vector<std::string>>();
   *size = value.size();
-  const char** ret = new const char*[value.size()];
+  auto ret = (const char**) malloc(sizeof(const char*)*value.size());
   for (size_t i = 0; i < *size; ++i) {
-    ret[i] = value[i].c_str();
+    ret[i] = strdup(value[i].c_str());
   }
   return ret;
 }
@@ -108,6 +110,9 @@ namespace {
 }
 
 pressio_option pressio_option::as(const enum pressio_option_type to_type, const enum pressio_conversion_safety safety) const {
+  if(not has_value()) {
+    return {};
+  }
   switch(type())
   {
     case pressio_option_double_type:
@@ -357,6 +362,14 @@ struct pressio_option* pressio_option_convert(struct pressio_option const* optio
   auto const& value = option->as(type, safety);
   if(value.has_value()) return new pressio_option(value);
   else return nullptr;
+}
+
+char* pressio_option_to_string(struct pressio_option const* option) {
+  std::stringstream ss;
+  ss << *option;
+  auto const& str = ss.str();
+  return strdup(str.c_str());
+
 }
 
 }

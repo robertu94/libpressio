@@ -9,7 +9,9 @@
 #include "pressio_options.h"
 #include "pressio_option.h"
 #include "libpressio_ext/cpp/data.h"
-#include "libpressio_ext/compat/std_compat.h"
+#include "libpressio_ext/compat/optional.h"
+#include "libpressio_ext/compat/variant.h"
+#include <algorithm>
 
 /**
  * \file
@@ -518,11 +520,16 @@ struct pressio_options final {
     options.clear();
   }
 
+  void copy_from(pressio_options const& o) {
+    insert(o.begin(), o.end());
+  }
+
 
   /**
    * type of the returned iterator
    */
   using iterator = std::map<std::string, pressio_option>::iterator;
+  using const_iterator = std::map<std::string, pressio_option>::const_iterator;
 
   /**
    * type of the values in the map
@@ -532,8 +539,13 @@ struct pressio_options final {
   /**
    * function to insert new values into the map
    */
-  iterator insert(iterator it, value_type const& value) {
+  iterator insert(const_iterator it, value_type const& value) {
     return options.insert(it, value);
+  }
+
+  template <class InputIt>
+  void insert(InputIt begin, InputIt end){
+    options.insert(begin, end);
   }
 
 

@@ -181,7 +181,7 @@ Libpressio additionally optionally requires:
 + `sz` commit `7b7463411f02be4700d13aac6737a6a9662806b4` or later and its dependencies to provide the SZ plugin
 + `zfp` commit `e8edaced12f139ddf16167987ded15e5da1b98da` or later and its dependencies to provide the ZFP plugin
 + `python` 3.4 or later for the python bindings
-+ `lua` or `luajit` version 5.1 or later to provide custom composite metrics
++ `lua` or `luajit` version 5.1 or later to provide custom composite metrics.  NOTE compiling with Lua support requires c++17 or later (i.e. gcc 7 or later, and clang 3.9 or later; see Sol2 for current requirements).
 + `sol2` version 3.2.0 or later to provide custom composite metrics
 + `OpenMP` development libraries and headers for your compiler compatible with OpenMP Standard 3 or later to accelerate computation of some metrics.
 + `MPI` development libraries and headers supporting MPI-2 (specifically MPI\_Comm\_spawn using the `workdir` info option) to provide the external metrics `mpispawn` launch method

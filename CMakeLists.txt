@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.40.1" LANGUAGES CXX C)
+project(libpressio VERSION "0.41.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -60,6 +60,11 @@ check_cpp_standard(make_unique)
 check_cpp_standard(conjunction)
 check_cpp_standard(multiplies)
 check_cpp_standard(midpoint)
+check_cpp_standard(nth_element)
+check_cpp_standard(span)
+check_cpp_standard(void_t)
+check_cpp_standard(negation)
+check_cpp_standard(clamp)
 
 
 set(LIBPRESSIO_FEATURES "")
@@ -79,12 +84,17 @@ add_library(libpressio
   ./src/pressio_options.cc
   ./src/pressio_options_iter.cc
 
+  #compat implementation
+  ./src/compat/span.cc
+
   #plugins
   ./src/plugins/compressors/compressor_base.cc
   ./src/plugins/compressors/noop.cc
   ./src/plugins/compressors/sampling.cc
   ./src/plugins/compressors/resize.cc
   ./src/plugins/compressors/transpose.cc
+  ./src/plugins/metrics/ks_test.cc
+  ./src/plugins/metrics/kth_error.cc
   ./src/plugins/metrics/composite.cc
   ./src/plugins/metrics/external.cc
   ./src/plugins/metrics/external_forkexec.cc
@@ -94,11 +104,14 @@ add_library(libpressio
   ./src/plugins/metrics/error_stat.cc
   ./src/plugins/metrics/pearsons.cc
   ./src/plugins/metrics/spatial_error.cc
+  ./src/plugins/metrics/kl_divergance.cc
+  ./src/plugins/metrics/printer.cc
   ./src/plugins/io/posix.cc
   ./src/plugins/io/noop.cc
   ./src/plugins/io/csv.cc
   ./src/plugins/io/io.cc
   ./src/plugins/io/select.cc
+  ./src/plugins/io/empty.cc
 
   #public headers
   include/libpressio.h
@@ -268,6 +281,19 @@ if(LIBPRESSIO_HAS_MPI)
   target_link_libraries(libpressio PRIVATE MPI::MPI_CXX)
 endif()
 
+#ftk support is not stable yet
+#option(LIBPRESSIO_HAS_FTK "build the FTK metrics modules" OFF)
+#if(LIBPRESSIO_HAS_FTK)
+#  find_package(FTK)
+#  target_sources(
+#    libpressio
+#    PRIVATE
+#    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/metrics/ftk_critical_points.cc
+#    )
+#  target_include_directories(libpressio PRIVATE ${FTK_INCLUDE_DIRS})
+#endif()
+
+
 option(LIBPRESSIO_HAS_PETSC "build the petsc io plugin" OFF)
 if(LIBPRESSIO_HAS_PETSC)
   set(LIBPRESSIO_FEATURES "${LIBPRESSIO_FEATURES} petsc")
@@ -293,6 +319,20 @@ if(LIBPRESSIO_HAS_LUA)
     target_link_libraries(libpressio PRIVATE ${LUA_LIBRARIES})
     target_include_directories(libpressio PRIVATE ${LUA_INCLUDE_DIR})
   endif()
+endif()
+
+option(LIBPRESSIO_HAS_LIBDISTRIBUTED "build plugins based on distributed work queues" OFF)
+if(LIBPRESSIO_HAS_LIBDISTRIBUTED)
+  set(LIBPRESSIO_FEATURES "${LIBPRESSIO_FEATURES} distributed")
+  find_package(LibDistributed)
+  target_link_libraries(libpressio PRIVATE LibDistributed::libdistributed)
+  target_sources(libpressio
+    PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/many_dependent.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/many_independent.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/serializable.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/pressio_distributed_manager.cc
+    )
 endif()
 
 configure_file(
@@ -343,9 +383,9 @@ endif()
 option(BUILD_DOCS "build the documetation" OFF)
 if(BUILD_DOCS)
   find_package(Doxygen REQUIRED dot)
-  set(DOXYGEN_GENERATE_HTML YES)
   set(DOXYGEN_MAN_LINKS YES)
   set(DOXYGEN_GENERATE_MAN YES)
+  set(DOXYGEN_GENERATE_HTML YES)
   set(DOXYGEN_EXTRACT_LOCAL_METHODS YES)
   set(DOXYGEN_EXTRACT_STATIC YES)
   set(DOXYGEN_MACRO_EXPANSION YES)

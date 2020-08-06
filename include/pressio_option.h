@@ -163,6 +163,22 @@ struct pressio_option* pressio_option_convert_implicit(struct pressio_option con
  */
 struct pressio_option* pressio_option_convert(struct pressio_option const* option, enum pressio_option_type type, enum pressio_conversion_safety safety);
 
+
+/**
+ * Create a human readable string for the option passed.
+ *
+ * The format is unspecified and should NOT be parsed. It may change without warning.
+ *
+ * For machine readable formats, please use the accessor methods
+ * pressio_options_cast_string()/pressio_options_cast_string() or the equivelent C++
+ * routines.
+ *
+ * \param[in] option the option to format as a string
+ * \returns a human readable string designed for debugging output, return nullptr on error. The
+ * returned string should be freed.
+ */
+char* pressio_option_to_string(struct pressio_option const* option);
+
 #endif
 
 #ifdef __cplusplus

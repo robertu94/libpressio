@@ -5,6 +5,7 @@
 #include <vector>
 #include "configurable.h"
 #include "versionable.h"
+#include <libpressio_ext/compat/span.h>
 
 
 struct pressio_options;
@@ -91,6 +92,30 @@ class libpressio_metrics_plugin : public pressio_configurable {
    * \param [in] rc the return value from the underlying compressor decompress command
    */
   virtual void end_decompress(struct pressio_data const* input, pressio_data const* output, int rc);
+
+  /**
+   * called at the beginning of compress_many
+   */
+  virtual void begin_compress_many(compat::span<const pressio_data* const> const& inputs,
+                                   compat::span<const pressio_data* const> const& outputs);
+
+  /**
+   * called at the end of compress_many
+   */
+  virtual void end_compress_many(compat::span<const pressio_data* const> const& inputs,
+                                   compat::span<const pressio_data* const> const& outputs, int rc);
+
+  /**
+   * called at the beginning of decompress_many
+   */
+  virtual void begin_decompress_many(compat::span<const pressio_data* const> const& inputs,
+                                   compat::span<const pressio_data* const> const& outputs);
+
+  /**
+   * called at the end of decompress_many
+   */
+  virtual void end_decompress_many(compat::span<const pressio_data* const> const& inputs,
+                                   compat::span<const pressio_data* const> const& outputs, int rc);
 
   /**
    * \returns a pressio_options structure containing the metrics returned by the provided metrics plugin

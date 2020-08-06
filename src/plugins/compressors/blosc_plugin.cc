@@ -9,6 +9,7 @@
 #include "pressio_options.h"
 #include "pressio_data.h"
 #include "pressio_compressor.h"
+#include "libpressio_ext/compat/memory.h"
 
 
 class blosc_plugin: public libpressio_compressor_plugin {
@@ -137,5 +138,5 @@ class blosc_plugin: public libpressio_compressor_plugin {
     
 };
 
-static pressio_register X(compressor_plugins(), "blosc", [](){ return compat::make_unique<blosc_plugin>(); });
+static pressio_register compressor_blosc_plugin(compressor_plugins(), "blosc", [](){ return compat::make_unique<blosc_plugin>(); });
 

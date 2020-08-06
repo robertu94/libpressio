@@ -17,6 +17,7 @@
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/printers.h"
 #include "libpressio_ext/cpp/pressio.h"
+#include "libpressio_ext/compat/memory.h"
 
 namespace {
 enum class mgard_compression_function
@@ -458,4 +459,4 @@ class mgard_plugin: public libpressio_compressor_plugin {
   pressio_option qoi_float;
   pressio_option norm_of_qoi;
 };
-static pressio_register X(compressor_plugins(), "mgard", [](){ return compat::make_unique<mgard_plugin>(); });
+static pressio_register compressor_mgard_plugin(compressor_plugins(), "mgard", [](){ return compat::make_unique<mgard_plugin>(); });
