@@ -1,10 +1,11 @@
 #include <algorithm>
 #include <cmath>
+#include <ftk/ftk_config.hh>
 #include <ftk/external/diy/mpi.hpp>
 #include <ftk/filters/critical_point_tracker_regular.hh>
 #include <ftk/filters/filter.hh>
 #include <ftk/ftk_config.hh>
-#include <ftk/hypermesh/lattice.hh>
+#include <ftk/mesh/lattice.hh>
 #include <ftk/ndarray.hh>
 #include <ftk/numeric/vector_assignment.hh>
 #include <glob.h>
@@ -35,25 +36,27 @@ struct pressio_ftk_critical_point_tracker: public Tracker {
   //inherit constructors from the parent class
   using Tracker::Tracker;
 
-  
-  pressio_data get_critical_points() const {
+  pressio_data pressio_get_critical_points() const {
     size_t num_points = 0;
+    // HG: I have added a get_critical_points() function to obtain all discrete critical points from trackers
+    const auto ftk_critical_points = this->get_critical_points(); 
     std::vector<double> critical_points;
-    for (auto const& point : this->discrete_critical_points) {
+    for (auto const& point : ftk_critical_points) {
       critical_points.insert(
           critical_points.end(),
-          std::begin(point.second.x),
-          std::end(point.second.x)
+          std::begin(point.x),
+          std::end(point.x)
           );
       num_points++;
     }
     //get the extent of the array used for critical_point_t which is stored as the mapped_type of discrete_critical_points
-    constexpr size_t extent = std::extent<
-      decltype(
-          std::declval<
-            typename decltype(this->discrete_critical_points)::mapped_type
-          >().x)
-      >::value;
+    /*constexpr*/ const size_t extent = ftk_critical_points.size(); 
+    // std::extent<
+    //   decltype(
+    //       std::declval<
+    //         typename decltype(this->discrete_critical_points)::mapped_type
+    //       >().x)
+    //   >::value;
 
     return pressio_data::copy(
           pressio_double_dtype,
@@ -67,18 +70,18 @@ struct pressio_ftk_critical_point_tracker: public Tracker {
     return this->connected_components.size();
   }
 
-  void set_comm(diy::mpi::communicator const& comm) {
-    this->comm = comm;
-  }
+  // HG: set_communicator() and set_number_threads() are available in tracker classes
+  // void set_comm(diy::mpi::communicator const& comm) {
+  //   this->comm = comm;
+  // }
 
-
-  void set_nthreads(int nthreads) {
-#if DIY_NO_MPI
-    this->nthreads = nthreads;
-#else
-    (void)nthreads;
-#endif
-  }
+  // void set_nthreads(int nthreads) {
+//#if DIY_NO_MPI
+//     this->nthreads = nthreads;
+// #else
+//     (void)nthreads;
+// #endif
+// }
 
 
 };
@@ -89,7 +92,7 @@ struct run_ftk_tracker {
     std::vector<size_t> origin(global_dims.size(), 0);
 
 
-    tracker.set_comm(comm);
+    tracker.set_communicator(comm);
     tracker.use_accelerator(accelerator);
     tracker.set_domain(ftk::lattice(domain_latice_start, domain_latice_sizes));
     tracker.set_array_domain(ftk::lattice(origin, global_dims));
@@ -112,7 +115,7 @@ struct run_ftk_tracker {
     tracker.advance_timestep();
     tracker.finalize();
 
-    return {tracker.get_critical_points(), tracker.num_critial_points()};
+    return {tracker.pressio_get_critical_points(), tracker.num_critial_points()};
 
   }
 
@@ -120,6 +123,7 @@ struct run_ftk_tracker {
   pressio_ftk_result operator()(T const* begin, T const* end) const {
     std::vector<double> converted(begin, end);
 
+#if 0 // HG: I have obsoleted arguments in tracker classes
     std::vector<std::string> args_s;
     args_s.emplace_back("--nthreads");
     args_s.emplace_back(std::to_string(nthreads));
@@ -127,6 +131,7 @@ struct run_ftk_tracker {
     args_s.emplace_back("cuda");
     std::vector<const char*> argv;
     std::transform(std::begin(args_s), std::end(args_s), std::back_inserter(argv), [](std::string const& s) {return s.c_str();});
+#endif
     if(global_dims.size() == 2) {
       auto tracker = pressio_ftk_critical_point_tracker<ftk::critical_point_tracker_2d_regular>();
       return run_tracker(tracker, converted.data());
@@ -211,7 +216,7 @@ public:
 
 private:
   pressio_ftk_result uncomp_results,decomp_results;
-  std::vector<uint64_t> global_dims, domain_latice_start, domain_latice_sizes;
+  std::vector<size_t/*uint64_t*/> global_dims, domain_latice_start, domain_latice_sizes;
   pressio_ftk_field_type field_type;
   size_t nthreads;
   int accelerator = ftk::FTK_XL_NONE;

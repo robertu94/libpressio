@@ -282,16 +282,16 @@ if(LIBPRESSIO_HAS_MPI)
 endif()
 
 #ftk support is not stable yet
-#option(LIBPRESSIO_HAS_FTK "build the FTK metrics modules" OFF)
-#if(LIBPRESSIO_HAS_FTK)
-#  find_package(FTK)
-#  target_sources(
-#    libpressio
-#    PRIVATE
-#    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/metrics/ftk_critical_points.cc
-#    )
-#  target_include_directories(libpressio PRIVATE ${FTK_INCLUDE_DIRS})
-#endif()
+option(LIBPRESSIO_HAS_FTK "build the FTK metrics modules" OFF)
+if(LIBPRESSIO_HAS_FTK)
+  find_package(FTK)
+  target_sources(
+    libpressio
+    PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/metrics/ftk_critical_points.cc
+    )
+  target_include_directories(libpressio PRIVATE ${FTK_INCLUDE_DIRS})
+endif()
 
 
 option(LIBPRESSIO_HAS_PETSC "build the petsc io plugin" OFF)
