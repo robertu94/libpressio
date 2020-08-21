@@ -166,11 +166,13 @@ TEST(ExternalPlugin, TestNames) {
       );
   std::vector<std::string> expected_names{
     "/log_example:log:compressor",
+    "/log_example:log:metric",
     "/log_example/sample:sample:seed",
     "/log_example/sample:sample:rate",
-    "/log_example/sample:sample:mode"
+    "/log_example/sample:sample:mode",
+    "/log_example/sample:sample:metric"
   };
-  EXPECT_THAT(expected_names, ::testing::IsSupersetOf(actual_names));
+  EXPECT_THAT(actual_names, ::testing::IsSupersetOf(expected_names));
 
 
   log_compressor->set_name("log_example2");
@@ -186,12 +188,12 @@ TEST(ExternalPlugin, TestNames) {
     std::transform(
         std::begin(options),
         std::end(options),
-        std::back_inserter(actual_names),
+        std::back_inserter(actual_names2),
         [](std::pair<std::string, pressio_option> const& item){
           return item.first;
         }
         );
   }
-  EXPECT_THAT(expected_names2, ::testing::IsSupersetOf(actual_names2));
+  EXPECT_THAT(actual_names2, ::testing::IsSupersetOf(expected_names2));
 }
 

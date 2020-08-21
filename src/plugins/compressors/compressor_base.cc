@@ -7,13 +7,15 @@
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/options.h"
 
+#include "libpressio_ext/cpp/pressio.h"
 #include "pressio_options_iter.h"
 #include "pressio_options.h"
 
 libpressio_compressor_plugin::libpressio_compressor_plugin() noexcept :
   pressio_configurable(),
   pressio_errorable(),
-  metrics_plugin(nullptr)
+  metrics_plugin(metrics_plugins().build("noop")),
+  metrics_id("noop")
 {}
 
 libpressio_compressor_plugin::~libpressio_compressor_plugin()=default;
@@ -67,13 +69,16 @@ struct pressio_options libpressio_compressor_plugin::get_configuration() const {
 
 struct pressio_options libpressio_compressor_plugin::get_options() const {
   if(metrics_plugin) metrics_plugin->begin_get_options();
-  auto ret = get_options_impl();
-  if(metrics_plugin) metrics_plugin->end_get_options(&ret);
-  return ret;
+  pressio_options opts;
+  set_meta(opts, get_metrics_key_name(), metrics_id, metrics_plugin);
+  opts.copy_from(get_options_impl());
+  if(metrics_plugin) metrics_plugin->end_get_options(&opts);
+  return opts;
 }
 
 int libpressio_compressor_plugin::set_options(struct pressio_options const& options) {
   if(metrics_plugin) metrics_plugin->begin_set_options(options);
+  get_meta(options, get_metrics_key_name(), metrics_plugins(), metrics_id, metrics_plugin);
   auto ret = set_options_impl(options);
   if(metrics_plugin) metrics_plugin->end_set_options(options, ret);
   return ret;
@@ -111,6 +116,14 @@ struct pressio_metrics libpressio_compressor_plugin::get_metrics() const {
 
 void libpressio_compressor_plugin::set_metrics(pressio_metrics& plugin) {
   metrics_plugin = plugin;
+  if(plugin) {
+    metrics_id = metrics_plugin->prefix();
+    if(not get_name().empty()) {
+      metrics_plugin->set_name(get_name() + "/" + metrics_plugin->prefix());
+    }
+  } else {
+    metrics_id = "";
+  }
 }
 
 struct pressio_options libpressio_compressor_plugin::get_metrics_options() const {

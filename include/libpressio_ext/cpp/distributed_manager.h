@@ -33,7 +33,9 @@ class pressio_distributed_manager: public pressio_configurable, public pressio_e
   pressio_distributed_manager(unsigned int max_ranks_per_worker = 1, unsigned int max_masters = 1):
     groups(*distributed_build_groups(distributed_world_size(), 1, 0, 0)),
     max_masters(max_masters),
-    max_ranks_per_worker(max_ranks_per_worker)
+    max_ranks_per_worker(max_ranks_per_worker),
+    n_workers(0),
+    n_masters(0)
   {}
 
   template <class TaskRandomIt, class MasterFn, class WorkerFn>
@@ -75,10 +77,10 @@ class pressio_distributed_manager: public pressio_configurable, public pressio_e
     pressio_options opts;
     set(opts, "distributed:mpi_comm", (void*)comm);
     if(max_masters > 1 || max_masters == 0) {
-      set_type(opts, "distributed:n_masters", pressio_option_uint32_type);
+      set(opts, "distributed:n_masters", n_masters);
     }
     if(max_ranks_per_worker > 1 || max_ranks_per_worker == 0) {
-      set_type(opts, "distributed:n_worker_groups", pressio_option_uint32_type);
+      set(opts, "distributed:n_worker_groups", n_workers);
       if(max_masters > 1 || max_masters == 0) {
         set(opts, "distributed:groups", pressio_data(groups.begin(), groups.end()));
       }
@@ -92,27 +94,29 @@ class pressio_distributed_manager: public pressio_configurable, public pressio_e
     MPI_Comm_size(comm, &size);
 
     pressio_data groups_data;
-    unsigned int n_workers, n_masters;
     auto workers_set = get(options, "distributed:n_worker_groups", &n_workers);
     auto masters_set = get(options, "distributed:n_masters", &n_masters);
-    if(get(options, "distributed:groups", &groups_data)) {
+    if(get(options, "distributed:groups", &groups_data) == pressio_options_key_set) {
       groups = groups_data.to_vector<size_t>();
+      n_workers = compat::nullopt;
+      n_masters = compat::nullopt;
+
     } else if(workers_set == pressio_options_key_set && masters_set == pressio_options_key_set) {
       n_masters = 1;
-      n_workers = size - n_masters;
-      auto tmp = distributed_build_groups(size, n_workers, n_masters, root);
+      n_workers = size - *n_masters;
+      auto tmp = distributed_build_groups(size, *n_workers, *n_masters, root);
       if(tmp) {
         groups = std::move(*tmp);
       }
     } else if (workers_set == pressio_options_key_set) {
       n_masters = 1;
-      auto tmp =  distributed_build_groups(size, n_workers, n_masters, root);
+      auto tmp =  distributed_build_groups(size, *n_workers, *n_masters, root);
       if(tmp) {
         groups = std::move(*tmp);
       }
     } else if (masters_set == pressio_options_key_set) {
-      n_workers = size - n_masters;
-      auto tmp = distributed_build_groups(size, n_workers, n_masters, root);
+      n_workers = size - *n_masters;
+      auto tmp = distributed_build_groups(size, *n_workers, *n_masters, root);
       if(tmp){
         groups = std::move(*tmp);
       }
@@ -128,5 +132,6 @@ class pressio_distributed_manager: public pressio_configurable, public pressio_e
   unsigned int root = 0;
   unsigned int max_masters = 1;
   unsigned int max_ranks_per_worker = 1;
+  compat::optional<unsigned int> n_workers, n_masters;
 };
 #endif /* end of include guard: LIBPRESIO_DISTRIBUTED_MANAGER_H */

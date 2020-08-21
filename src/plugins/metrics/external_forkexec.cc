@@ -54,10 +54,16 @@ extern_proc_results launch(std::string const& full_command, std::string const& w
           std::transform(std::begin(args_mem), std::end(args_mem),
               std::back_inserter(args), [](std::string const& s){return const_cast<char*>(s.c_str());});
           args.push_back(nullptr);
-          execvp(args.front(), args.data());
-          perror("failed to exec process");
-          //exit if there was an error
-          printf(" %s\n", args.front());
+          if(args.front() != nullptr) {
+            execvp(args.front(), args.data());
+            fprintf(stdout, "external:api=5");
+            perror("failed to exec process");
+            //exit if there was an error
+            fprintf(stderr, " %s\n", args.front());
+          } else {
+            fprintf(stdout, "external:api=5");
+            fprintf(stderr, "no process set");
+          }
           exit(-1);
           break;
           }

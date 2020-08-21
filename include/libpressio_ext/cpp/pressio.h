@@ -169,7 +169,7 @@ struct pressio {
    */
   template <class ForwardIt>
   std::unique_ptr<libpressio_metrics_plugin> get_metrics(ForwardIt first, ForwardIt last) {
-    std::vector<std::unique_ptr<libpressio_metrics_plugin>> plugins;
+    std::vector<pressio_metrics> plugins;
 
     for (auto metric = first; metric != last; ++metric) {
       plugins.emplace_back(metrics_plugins().build(*metric));

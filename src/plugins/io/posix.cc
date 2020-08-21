@@ -38,8 +38,12 @@ extern "C" {
       size_t size = static_cast<size_t>(statbuf.st_size); 
       ret = pressio_data_new_owning(pressio_byte_dtype, 1, &size);
     }
-    size_t bytes_read = read(in_filedes, pressio_data_ptr(ret, nullptr), pressio_data_get_bytes(ret));
-    if(bytes_read != pressio_data_get_bytes(ret)) {
+               size_t total_read = 0;
+               size_t bytes_read = 0;
+               while((bytes_read = read(in_filedes, ((uint8_t*)pressio_data_ptr(ret, nullptr))+total_read, pressio_data_get_bytes(ret) - total_read)) > 0) {
+                               total_read += bytes_read;
+               }
+    if(total_read != pressio_data_get_bytes(ret)) {
       pressio_data_free(ret);
       return nullptr;
     } else  {
@@ -67,18 +71,16 @@ extern "C" {
 
   size_t pressio_io_data_fwrite(struct pressio_data const* data, FILE* out_file) {
 
-    return fwrite(pressio_data_ptr(data, nullptr),
-        pressio_dtype_size(pressio_data_dtype(data)),
-        pressio_data_num_elements(data),
-        out_file
-        ) * pressio_dtype_size(pressio_data_dtype(data));
+    return pressio_io_data_write(data, fileno(out_file));
   }
 
   size_t pressio_io_data_write(struct pressio_data const* data, int out_filedes) {
-    return write(out_filedes,
-        pressio_data_ptr(data, nullptr),
-        pressio_data_get_bytes(data)
-        );
+    size_t total_written = 0;
+    size_t bytes_written = 0;
+    while((bytes_written = write(out_filedes, ((uint8_t*)pressio_data_ptr(data, nullptr)) + total_written, pressio_data_get_bytes(data) - total_written)) > 0) {
+      total_written += bytes_written;
+    }
+    return total_written;
   }
 
   size_t pressio_io_data_path_write(struct pressio_data const* data, const char* path) {

@@ -7,13 +7,13 @@ compat::optional<std::vector<size_t>> distributed_build_groups(const unsigned in
   if(size <= 1) return std::vector<size_t>{0};
 
   //if the user tries to allocate more processes than exist report an error
-  if(size > n_workers_groups + n_masters) return {};
+  if(size < (n_workers_groups + n_masters)) return {};
 
   //if the user ties to allocate all processes as
   if(n_workers_groups == size || n_masters == size) return {};
 
   //root must be a valid rank
-  assert(root < size);
+  if(root >= size) return {};
 
 
   //the zero rank is guaranteed the code below to be a master prior to the swap below

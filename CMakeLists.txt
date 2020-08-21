@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.41.0" LANGUAGES CXX C)
+project(libpressio VERSION "0.42.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -103,9 +103,9 @@ add_library(libpressio
   ./src/plugins/metrics/time.cc
   ./src/plugins/metrics/error_stat.cc
   ./src/plugins/metrics/pearsons.cc
-  ./src/plugins/metrics/spatial_error.cc
   ./src/plugins/metrics/kl_divergance.cc
   ./src/plugins/metrics/printer.cc
+  ./src/plugins/metrics/noop.cc
   ./src/plugins/io/posix.cc
   ./src/plugins/io/noop.cc
   ./src/plugins/io/csv.cc
@@ -125,6 +125,7 @@ add_library(libpressio
   include/libpressio_ext/cpp/options.h
   include/libpressio_ext/cpp/pressio.h
   include/libpressio_ext/cpp/printers.h
+  include/libpressio_ext/cpp/subgroup_manager.h
   include/libpressio_ext/cpp/io.h
   include/libpressio_ext/io/posix.h
   include/libpressio_ext/io/pressio_io.h
@@ -161,6 +162,10 @@ option(LIBPRESSIO_HAS_OPENMP "accerate some plugins with OpenMP" OFF)
 if(LIBPRESSIO_HAS_OPENMP)
   find_package(OpenMP)
   target_link_libraries(libpressio PRIVATE OpenMP::OpenMP_CXX)
+  target_sources(libpressio
+    PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/metrics/spatial_error.cc
+    )
 endif()
 
 option(LIBPRESSIO_HAS_MGARD "build the MGARD plugin" OFF)
@@ -332,6 +337,8 @@ if(LIBPRESSIO_HAS_LIBDISTRIBUTED)
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/many_independent.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/src/serializable.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/src/pressio_distributed_manager.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/libpressio_ext/cpp/distributed_manager.h
+
     )
 endif()
 

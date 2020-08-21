@@ -184,6 +184,13 @@ class libpressio_compressor_plugin :public pressio_configurable, public pressio_
   virtual std::shared_ptr<libpressio_compressor_plugin> clone()=0;
 
 
+  /**
+   * sets the name of the metrics plugin
+   */
+  void set_name(std::string const& new_name) override final {
+    pressio_configurable::set_name(new_name);
+    metrics_plugin->set_name(new_name + "/" + metrics_plugin->prefix());
+  }
 
 
   protected:
@@ -260,6 +267,7 @@ class libpressio_compressor_plugin :public pressio_configurable, public pressio_
 
   private:
   pressio_metrics metrics_plugin;
+  std::string metrics_id;
 };
 
 /**

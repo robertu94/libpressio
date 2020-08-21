@@ -1,6 +1,7 @@
 #include <vector>
 #include <memory>
 #include <functional>
+#include "libpressio_ext/cpp/pressio.h"
 #include "pressio_options.h"
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/options.h"
@@ -15,15 +16,23 @@ using namespace std::literals;
 
 class composite_plugin : public libpressio_metrics_plugin {
   public:
-  composite_plugin(std::vector<std::unique_ptr<libpressio_metrics_plugin>>&& plugins) :
+  composite_plugin(std::vector<pressio_metrics>&& plugins) :
     plugins(std::move(plugins))
     {
-      std::transform(std::begin(plugins),
-          std::end(plugins),
+      std::transform(std::begin(this->plugins),
+          std::end(this->plugins),
           std::back_inserter(names),
           std::mem_fn(&libpressio_metrics_plugin::prefix)
           );
+      std::transform(std::begin(this->plugins),
+          std::end(this->plugins),
+          std::back_inserter(plugins_ids),
+          std::mem_fn(&libpressio_metrics_plugin::prefix)
+          );
     }
+
+  composite_plugin():
+    composite_plugin(std::vector<pressio_metrics>{}) {}
   void begin_check_options(struct pressio_options const* options) override {
     for (auto& plugin : plugins) {
       plugin->begin_check_options(options);
@@ -129,12 +138,7 @@ class composite_plugin : public libpressio_metrics_plugin {
 
   struct pressio_options get_options() const override {
     struct pressio_options metrics_options;
-    for (auto const& plugin : plugins) {
-      pressio_options plugin_options = plugin->get_options();
-      auto tmp = pressio_options_merge(&metrics_options, &plugin_options);
-      metrics_options = std::move(*tmp);
-      pressio_options_free(tmp);
-    }
+    set_meta_many(metrics_options, "composite:plugins", plugins_ids, plugins);
     set(metrics_options, "composite:names", names);
 #if LIBPRESSIO_HAS_LUA
     set(metrics_options, "composite:scripts", scripts);
@@ -144,10 +148,11 @@ class composite_plugin : public libpressio_metrics_plugin {
 
   int set_options(pressio_options const& options) override {
     int rc = 0;
+    get(options, "composite:names", &names);
+    get_meta_many(options, "composite:plugins", metrics_plugins(), plugins_ids, plugins);
     for (auto const& plugin : plugins) {
       rc |= plugin->set_options(options);
     }
-    get(options, "composite:names", &names);
 #if LIBPRESSIO_HAS_LUA
     get(options, "composite:scripts", &scripts);
 #endif
@@ -155,7 +160,7 @@ class composite_plugin : public libpressio_metrics_plugin {
   }
 
   std::unique_ptr<libpressio_metrics_plugin> clone() override {
-    std::vector<std::unique_ptr<libpressio_metrics_plugin>> cloned;
+    std::vector<pressio_metrics> cloned;
     for (auto& plugin : plugins) {
       cloned.emplace_back(plugin->clone());
     }
@@ -168,7 +173,7 @@ class composite_plugin : public libpressio_metrics_plugin {
 
   protected:
   void set_name_impl(std::string const& name) override {
-    for (size_t i = 0; i < plugins.size(); ++i) {
+    for (size_t i = 0; i < std::min(plugins.size(), names.size()); ++i) {
       plugins[i]->set_name(name + "/" + names[i]);
     }
   };
@@ -243,13 +248,17 @@ class composite_plugin : public libpressio_metrics_plugin {
 
   }
 
-  std::vector<std::unique_ptr<libpressio_metrics_plugin>> plugins;
+  std::vector<pressio_metrics> plugins;
   std::vector<std::string> names;
+  std::vector<std::string> plugins_ids;
 #if LIBPRESSIO_HAS_LUA
   std::vector<std::string> scripts;
 #endif
 };
 
-std::unique_ptr<libpressio_metrics_plugin> make_m_composite(std::vector<std::unique_ptr<libpressio_metrics_plugin>>&& plugins) {
+static pressio_register metrics_composite_plugin(metrics_plugins(), "composite", [](){ return compat::make_unique<composite_plugin>(); });
+
+
+std::unique_ptr<libpressio_metrics_plugin> make_m_composite(std::vector<pressio_metrics>&& plugins) {
   return compat::make_unique<composite_plugin>(std::move(plugins));
 }

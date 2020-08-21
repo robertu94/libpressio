@@ -1,6 +1,7 @@
 #ifndef LIBPRESSIO_CONFIGURABLE_H
 #define LIBPRESSIO_CONFIGURABLE_H
 #include <string>
+#include <utility>
 #include "options.h"
 
 /**
@@ -30,7 +31,7 @@ class pressio_configurable {
    * sets the assigned name for the compressor used in options getting/setting
    * \param[in] new_name the name to be used
    */
-  void set_name(std::string const& new_name) {
+  virtual void set_name(std::string const& new_name) {
     this->set_name_impl(new_name);
     this->name = new_name;
   }
@@ -125,20 +126,41 @@ class pressio_configurable {
    * \param[in] key the key for the name of the child meta-object
    * \param[in] current_id name for the current meta-object
    * \param[in] current_value value of the current meta-object
+   * \param[in] args the remaining args needed for some meta modules
    */
   template<class Wrapper, class... Args>
   void
   set_meta(pressio_options& options, std::string const& key, std::string const& current_id, Wrapper const& current_value, Args&&... args) const {
     set(options, key, current_id);
-    auto opts = current_value->get_options(std::forward<Args>(args)...);
-    for (auto const& opt : opts) {
-      options.set(opt.first, opt.second);
+    options.copy_from(current_value->get_options(std::forward<Args>(args)...));
+  }
+
+  /**
+   * helper function to set on a pressio_options structure the values associated with a collection of meta-objects
+   *
+   * \param[in] options the options structure to set
+   * \param[in] key the key for the name of the child meta-object
+   * \param[in] current_ids name for the current meta-object
+   * \param[in] current_values value of the current meta-object
+   * \param[in] args the remaining args needed for some meta modules
+   */
+  template<class Wrapper, class... Args>
+  void
+  set_meta_many(pressio_options& options, std::string const& key, std::vector<std::string> const& current_ids, std::vector<Wrapper> const& current_values, Args&&... args) const {
+    set(options, key, current_ids);
+    for (auto const& wrapper : current_values) {
+      options.copy_from(wrapper->get_options(std::forward<Args>(args)...));
     }
   }
 
   /**
    * helper function to get from a pressio_options structure the values associated with a meta-object
    *
+   * \param[in] options the options to set
+   * \param[in] key the meta-key to query
+   * \param[in] registry the registry to construct new values from
+   * \param[in] current_id the id of the current module
+   * \param[in] current_value the wrapper for the current module
    *
    */
   template <class Registry, class Wrapper>
@@ -165,11 +187,58 @@ class pressio_configurable {
     }
     current_value->set_options(options);
     return pressio_options_key_exists;
+  }
 
+  /**
+   * helper function to get from a pressio_options structure the values associated with multiple meta-objects
+   *
+   * \param[in] options the options to set
+   * \param[in] key the meta-key to query
+   * \param[in] registry the registry to construct new values from
+   * \param[in] current_ids the id of the current module
+   * \param[in] current_values the wrapper for the current module
+   *
+   */
+  template <class Registry, class Wrapper>
+  pressio_options_key_status
+  get_meta_many(pressio_options const& options,
+      std::string const& key,
+      Registry const& registry,
+      std::vector<std::string>& current_ids,
+      std::vector<Wrapper>& current_values) {
+    std::vector<std::string> new_ids;
+    if(get(options, key, &new_ids) == pressio_options_key_set) {
+      if (new_ids != current_ids) {
+        std::vector<Wrapper> new_values;
+        bool all_built = true;
+        for (auto const& new_id : new_ids) {
+          new_values.emplace_back(registry.build(new_id));
+          all_built &= new_values.back();
+          if(not all_built) break;
+        }
+        if(all_built) {
+          current_ids = std::move(new_ids);
+          current_values = std::move(new_values);
+        } else {
+          return pressio_options_key_does_not_exist;
+        }
+        if(not get_name().empty()) {
+          set_name(get_name());
+        }
+      }
+    }
+    for (auto& current_value : current_values) {
+      current_value->set_options(options);
+    }
+    return pressio_options_key_exists;
   }
 
 
-  private:
+  protected:
+  std::string get_metrics_key_name() const {
+    return std::string(prefix()) + ":metric";
+  }
+
   std::string name;
 };
 

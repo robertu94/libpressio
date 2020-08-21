@@ -100,3 +100,6 @@ struct pressio_options libpressio_io_plugin::get_options() const {
 int libpressio_io_plugin::check_options_impl(struct pressio_options const&) {
   return 0;
 }
+void libpressio_io_plugin::set_name(std::string const& new_name) {
+  pressio_configurable::set_name(new_name);
+}

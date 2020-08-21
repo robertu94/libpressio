@@ -43,8 +43,8 @@ class external_metric_plugin : public libpressio_metrics_plugin {
     struct pressio_options get_options() const override {
       auto opt = pressio_options();
       set_meta(opt, "external:launch_method", launch_method, launcher);
+      set_meta_many(opt, "external:io_format", io_formats, io_modules);
       set(opt, "external:command", command);
-      set(opt, "external:io_format", io_formats);
       set(opt, "external:suffix", suffixes);
       set(opt, "external:prefix", prefixes);
       set(opt, "external:fieldnames", field_names);
@@ -55,33 +55,13 @@ class external_metric_plugin : public libpressio_metrics_plugin {
 
     int set_options(pressio_options const& opt) override {
       get_meta(opt, "external:launch_method", launch_plugins(), launch_method, launcher);
-      std::string tmp_launch_method;
-      if (get(opt, "external:launch_method", &tmp_launch_method) == pressio_options_key_set) {
-        auto tmp_launcher = launch_plugins().build(tmp_launch_method);
-        if(tmp_launcher) {
-          launcher = std::move(tmp_launcher);
-          launch_method = tmp_launch_method;
-        }
-      }
       get(opt, "external:command", &command);
       get(opt, "external:suffix", &suffixes);
       get(opt, "external:prefix", &prefixes);
       get(opt, "external:fieldnames", &field_names);
       get(opt, "external:workdir", &workdir);
       get(opt, "external:config_name", &config_name);
-      if(get(opt,"external:io_format", &io_formats) == pressio_options_key_set) {
-        pressio library;
-        io_modules.clear();
-        std::transform(std::begin(io_formats),
-                       std::end(io_formats),
-                       std::back_inserter(io_modules),
-                       [&library,&opt](std::string const& format) {
-                       auto io_module =  library.get_io(format); 
-                       io_module->set_options(opt);
-                       return io_module;
-                       }
-            );
-      }
+      get_meta_many(opt, "external:io_format", io_plugins(), io_formats, io_modules);
       return 0;
     }
 
@@ -93,6 +73,13 @@ class external_metric_plugin : public libpressio_metrics_plugin {
         return ret;
       }
       return results;
+    }
+
+    void set_name_impl(std::string const& new_name) override {
+      for (size_t i = 0; i < std::min(io_modules.size(), field_names.size()); ++i) {
+        io_modules[i]->set_name(new_name + "/" + field_names[i]);
+      }
+      launcher->set_name(new_name + "/" + launcher->prefix());
     }
 
     std::unique_ptr<libpressio_metrics_plugin> clone() override {
@@ -140,6 +127,8 @@ class external_metric_plugin : public libpressio_metrics_plugin {
           case 1:
           case 2:
           case 3:
+          case 4:
+          case 5:
             parse_v1(stdout_stream, proc_results, results);
             return api_version;
           default:
@@ -150,7 +139,7 @@ class external_metric_plugin : public libpressio_metrics_plugin {
       results.clear();
       set(results, "external:error_code", (int)format_error);
       set(results, "external:return_code", 0);
-      set(results, "external:stderr", "");
+      set(results, "external:stderr", proc_results.proc_stderr);
       set(results, "external:runtime", duration);
       return 0;
     }
@@ -173,7 +162,7 @@ class external_metric_plugin : public libpressio_metrics_plugin {
     std::string build_command(std::vector<std::pair<std::string,std::string>> const& filenames, std::vector<std::reference_wrapper<const pressio_data>> const& input_datasets) const {
       std::ostringstream ss;
       ss << command;
-      ss << " --api 3";
+      ss << " --api 5";
       ss << " --config_name " << config_name;
       auto format_arg = [this](size_t i, std::string const& arg) {
         std::ostringstream ss;

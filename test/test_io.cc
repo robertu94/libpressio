@@ -35,6 +35,7 @@ class PressioDataIOTests: public ::testing::Test {
 
 TEST_F(PressioDataIOTests, TestReadNullptr) {
   auto data = pressio_io_data_read(nullptr, tmp_fd);
+  ASSERT_NE(data, nullptr);
   EXPECT_EQ(pressio_data_get_bytes(data), sizeof(int)*6);
   EXPECT_EQ(pressio_data_dtype(data), pressio_byte_dtype);
   pressio_data_free(data);

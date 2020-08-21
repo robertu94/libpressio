@@ -66,6 +66,10 @@ public:
     compressor->set_name(name + "/" + compressor->prefix());
   }
 
+  pressio_options get_metrics_results_impl() const override {
+    return compressor->get_metrics_results();
+  }
+
   std::shared_ptr<libpressio_compressor_plugin> clone() override
   {
     return compat::make_unique<transpose_meta_compressor_plugin>(*this);

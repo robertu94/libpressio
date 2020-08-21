@@ -118,6 +118,11 @@ class libpressio_metrics_plugin : public pressio_configurable {
                                    compat::span<const pressio_data* const> const& outputs, int rc);
 
   /**
+   * prohibit overriding set_name from child classes, override set_name_impl instead
+   */
+  void set_name(std::string const& new_name) override final;
+
+  /**
    * \returns a pressio_options structure containing the metrics returned by the provided metrics plugin
    */
   virtual struct pressio_options get_metrics_results() const=0;
@@ -171,7 +176,7 @@ struct pressio_metrics {
 /**
  * returns a composite metrics plugin from a vector of metrics_plugins
  */
-std::unique_ptr<libpressio_metrics_plugin> make_m_composite(std::vector<std::unique_ptr<libpressio_metrics_plugin>>&& plugins); 
+std::unique_ptr<libpressio_metrics_plugin> make_m_composite(std::vector<pressio_metrics>&& plugins); 
 
 
 #endif

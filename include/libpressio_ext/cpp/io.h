@@ -104,6 +104,13 @@ struct libpressio_io_plugin: public pressio_configurable, public pressio_version
    */
   virtual std::shared_ptr<libpressio_io_plugin> clone()=0;
 
+  /**
+   * prevent child classes from overriding set_name, override set_name_impl instead
+   *
+   * \param [in] new_name the new name to assign
+   */
+  void set_name(std::string const& new_name) final;
+
 
   protected:
 
