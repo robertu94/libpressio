@@ -92,7 +92,7 @@ ZFP is an error bounded lossy compressor that uses a transform which is similar 
 option                  | type        | description
 ------------------------|-------------|------------
 `zfp:accuracy` | double | Write-only, absolute error tolerance for fixed-accuracy mode
-`zfp:dims` | int32 | Write-only, the dimensionality of the input data, used in fixed-rate mode
+`zfp:dims` | uint32 | Write-only, the dimensionality of the input data, used in fixed-rate mode
 `zfp:execution` | int32 | which execution mode to use
 `zfp:maxbits` | uint32 |  maximum number of bits to store per block
 `zfp:maxprec` | uint32 | maximum number of bit planes to store

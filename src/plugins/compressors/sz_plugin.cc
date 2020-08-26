@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <iterator>
 #include <memory>
 #include <sstream>
 #include <cstdlib>
@@ -15,6 +17,12 @@
 #include "pressio_option.h"
 #include "libpressio_ext/compat/memory.h"
 
+#define PRESSIO_SZ_VERSION_GREATEREQ(major, minor, build, revision) \
+   (SZ_VER_MAJOR > major || \
+   (SZ_VER_MAJOR == major && SZ_VER_MINOR > minor) ||                                  \
+   (SZ_VER_MAJOR == major && SZ_VER_MINOR == minor && SZ_VER_BUILD > build) || \
+   (SZ_VER_MAJOR == major && SZ_VER_MINOR == minor && SZ_VER_BUILD == build && SZ_VER_REVISION >= revision))
+
 namespace {
   struct iless {
     bool operator()(std::string lhs, std::string rhs) const {
@@ -30,7 +38,9 @@ namespace {
     {"abs_and_rel", ABS_AND_REL},
     {"abs_or_rel", ABS_OR_REL},
     {"psnr", PSNR},
+#if PRESSIO_SZ_VERSION_GREATEREQ(2,1,8,3)
     {"norm", NORM},
+#endif
     {"pw_rel", PW_REL},
     {"abs_or_pw_rel", ABS_OR_PW_REL},
     {"abs_and_pw_rel", ABS_AND_PW_REL},
@@ -54,7 +64,15 @@ class sz_plugin: public libpressio_compressor_plugin {
 
   struct pressio_options get_configuration_impl() const override {
     struct pressio_options options;
-    pressio_options_set_integer(&options, "pressio:thread_safe", pressio_thread_safety_serialized);
+    set(options, "pressio:thread_safe", (unsigned int)pressio_thread_safety_serialized);
+
+    std::vector<std::string> vs;
+    std::transform(
+        std::begin(sz_mode_str_to_code),
+        std::end(sz_mode_str_to_code),
+        std::back_inserter(vs),
+        [](typename decltype(sz_mode_str_to_code)::const_reference m){ return m.first; });
+    set(options, "sz:error_bound_mode_str", vs);
     return options;
   }
 
@@ -62,9 +80,11 @@ class sz_plugin: public libpressio_compressor_plugin {
     struct pressio_options options;
     set_type(options, "sz:config_file", pressio_option_charptr_type);
     set_type(options, "sz:config_struct", pressio_option_userptr_type);
+#if PRESSIO_SZ_VERSION_GREATEREQ(2,1,9,0)
+    set(options, "sz:protect_value_range", confparams_cpr->protectValueRange);
+#endif
     set(options, "sz:max_quant_intervals", confparams_cpr->max_quant_intervals);
     set(options, "sz:quantization_intervals", confparams_cpr->quantization_intervals);
-    set(options, "sz:max_range_radius", confparams_cpr->maxRangeRadius);
     set(options, "sz:sol_id", confparams_cpr->sol_ID);
     set(options, "sz:lossless_compressor", confparams_cpr->losslessCompressor);
     set(options, "sz:sample_distance", confparams_cpr->sampleDistance);
@@ -78,12 +98,9 @@ class sz_plugin: public libpressio_compressor_plugin {
 	  set(options, "sz:psnr_err_bound", confparams_cpr->psnr);
 	  set(options, "sz:pw_rel_err_bound", confparams_cpr->pw_relBoundRatio);
 	  set(options, "sz:segment_size", confparams_cpr->segment_size);
-	  set(options, "sz:pwr_type", confparams_cpr->pwr_type);
 	  set(options, "sz:snapshot_cmpr_step", confparams_cpr->snapshotCmprStep);
 	  set(options, "sz:accelerate_pw_rel_compression", confparams_cpr->accelerate_pw_rel_compression);
 	  set_type(options, "sz:prediction_mode", pressio_option_int32_type);
-	  set_type(options, "sz:plus_bits", pressio_option_int32_type);
-	  set_type(options, "sz:random_access", pressio_option_int32_type);
     set_type(options, "sz:data_type", pressio_option_double_type);
     set(options, "sz:app", app.c_str());
     set(options, "sz:user_params", user_params);
@@ -102,9 +119,11 @@ class sz_plugin: public libpressio_compressor_plugin {
       SZ_Init_Params(sz_param);
     }
 
+#if PRESSIO_SZ_VERSION_GREATEREQ(2,1,9,0)
+    get(options, "sz:protect_value_range", &confparams_cpr->protectValueRange);
+#endif
     get(options, "sz:max_quant_intervals", &confparams_cpr->max_quant_intervals);
     get(options, "sz:quantization_intervals", &confparams_cpr->quantization_intervals);
-    get(options, "sz:max_range_radius", &confparams_cpr->maxRangeRadius);
     get(options, "sz:sol_id", &confparams_cpr->sol_ID);
     get(options, "sz:lossless_compressor", &confparams_cpr->losslessCompressor);
     get(options, "sz:sample_distance", &confparams_cpr->sampleDistance);
@@ -126,12 +145,9 @@ class sz_plugin: public libpressio_compressor_plugin {
     get(options, "sz:psnr_err_bound", &confparams_cpr->psnr);
     get(options, "sz:pw_rel_err_bound", &confparams_cpr->pw_relBoundRatio);
     get(options, "sz:segment_size", &confparams_cpr->segment_size);
-    get(options, "sz:pwr_type", &confparams_cpr->pwr_type);
     get(options, "sz:snapshot_cmpr_step", &confparams_cpr->snapshotCmprStep);
     get(options, "sz:prediction_mode", &confparams_cpr->predictionMode);
     get(options, "sz:accelerate_pw_rel_compression", &confparams_cpr->accelerate_pw_rel_compression);
-    get(options, "sz:plus_bits", &confparams_cpr->plus_bits);
-    get(options, "sz:random_access", &confparams_cpr->randomAccess);
     get(options, "sz:data_type", &confparams_cpr->dataType);
     get(options, "sz:app", &app);
     get(options, "sz:user_params", &user_params);
