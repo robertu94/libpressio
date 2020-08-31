@@ -157,6 +157,7 @@ class external_metric_plugin : public libpressio_metrics_plugin {
       set(results, "external:stderr", input.proc_stderr);
       set(results, "external:return_code", input.return_code);
       set(results, "external:error_code", input.return_code);
+      set(results, "external:runtime", duration);
     }
 
     std::string build_command(std::vector<std::pair<std::string,std::string>> const& filenames, std::vector<std::reference_wrapper<const pressio_data>> const& input_datasets) const {
