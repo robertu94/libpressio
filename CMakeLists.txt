@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.42.2" LANGUAGES CXX C)
+project(libpressio VERSION "0.43.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -198,7 +198,7 @@ if(LIBPRESSIO_HAS_SZ)
   find_package(SZ REQUIRED)
   find_package(ZLIB REQUIRED)
   pkg_search_module(ZSTD IMPORTED_TARGET GLOBAL libzstd)
-  pkg_search_module(FFTW3 IMPORTED_TARGET GLOBAL fftw3)
+  pkg_search_module(FFTW3 QUIET IMPORTED_TARGET GLOBAL fftw3)
   target_sources(libpressio
     PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/sz_plugin.cc
@@ -286,17 +286,16 @@ if(LIBPRESSIO_HAS_MPI)
   target_link_libraries(libpressio PRIVATE MPI::MPI_CXX)
 endif()
 
-#ftk support is not stable yet
-#option(LIBPRESSIO_HAS_FTK "build the FTK metrics modules" OFF)
-#if(LIBPRESSIO_HAS_FTK)
-#  find_package(FTK)
-#  target_sources(
-#    libpressio
-#    PRIVATE
-#    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/metrics/ftk_critical_points.cc
-#    )
-#  target_include_directories(libpressio PRIVATE ${FTK_INCLUDE_DIRS})
-#endif()
+option(LIBPRESSIO_HAS_FTK "build the FTK metrics modules" OFF)
+if(LIBPRESSIO_HAS_FTK)
+  find_package(FTK)
+  target_sources(
+    libpressio
+    PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/metrics/ftk_critical_points.cc
+    )
+  target_include_directories(libpressio PRIVATE ${FTK_INCLUDE_DIRS})
+endif()
 
 
 option(LIBPRESSIO_HAS_PETSC "build the petsc io plugin" OFF)
