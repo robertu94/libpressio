@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.43.0" LANGUAGES CXX C)
+project(libpressio VERSION "0.44.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -65,6 +65,7 @@ check_cpp_standard(span)
 check_cpp_standard(void_t)
 check_cpp_standard(negation)
 check_cpp_standard(clamp)
+check_cpp_standard(string_view)
 
 
 set(LIBPRESSIO_FEATURES "")
@@ -173,6 +174,8 @@ if(LIBPRESSIO_HAS_MGARD)
   set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} mgard")
   find_package(mgard REQUIRED)
   check_include_file_cxx(mgard_api_float.h LIBPRESSIO_MGARD_NEED_FLOAT_HEADER
+    -I $<TARGET_PROPERTY:mgard::mgard,INTERFACE_INCLUDE_DIRECTORIES>)
+  check_include_file_cxx(MGARDConfig.h LIBPRESSIO_MGARD_HAS_CONFIG_HEADER
     -I $<TARGET_PROPERTY:mgard::mgard,INTERFACE_INCLUDE_DIRECTORIES>)
   target_sources(libpressio
     PRIVATE

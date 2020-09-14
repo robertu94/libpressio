@@ -32,22 +32,12 @@ class log_transform : public libpressio_compressor_plugin {
   public:
   //getting and setting options/configuration
   pressio_options get_options_impl() const override {
-    auto options =  compressor.plugin->get_options();
-    set(options, "log:compressor", compressor_id);
+    pressio_options options;
+    set_meta(options, "log:compressor", compressor_id, compressor);
     return options;
   }
   int set_options_impl(pressio_options const& options) override {
-    int rc = check_error(compressor.plugin->set_options(options));
-    std::string tmp;
-    if(get(options, "log:compressor", &tmp) == pressio_options_key_set) {
-      pressio library;
-      if(auto tmp_compressor = library.get_compressor(tmp)) {
-        compressor = std::move(tmp_compressor);
-        compressor_id = std::move(tmp);
-      } else {
-        return set_error(library.err_code(), library.err_msg());
-      }
-    }
+    get_meta(options, "log:compressor", compressor_plugins(), compressor_id, compressor)
     return rc;
   }
   pressio_options get_configuration_impl() const override {

@@ -401,13 +401,12 @@ struct pressio_options final {
    */
   template <class PointerType>
   enum pressio_options_key_status get(std::string const& key, compat::optional<PointerType>* value) const {
-    using ValueType = typename std::remove_pointer<PointerType>::type;
     switch(key_status(key)){
       case pressio_options_key_set:
         {
           auto variant = get(key);
-          if (variant.holds_alternative<ValueType>()) { 
-            *value = variant.get<ValueType>();
+          if (variant.holds_alternative<PointerType>()) { 
+            *value = variant.get<PointerType>();
             return pressio_options_key_set;
           } else {
             return pressio_options_key_exists;
