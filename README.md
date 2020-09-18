@@ -191,18 +191,31 @@ It is also possible to build and run libpressio via Docker using the docker file
 
 ## Installing LibPressio using Spack
 
-LibPressio can be built using [spack](https://github.com/spack/spack/).
+LibPressio can be built using [spack](https://github.com/spack/spack/).  This example will install libpressio with only the SZ plugin.
 
 ```bash
 git clone https://github.com/robertu94/spack_packages robertu94_packages
 spack repo add robertu94_packages
-spack install libpressio
+spack install libpressio+sz
 ```
 
-You can substantially reduce install times by not installing ImageMagick and PETSc support.
+You can see the other available versions by calling `spack info libpressio`
 
-```
-spack install libpressio~magick~petsc
+
+## Doing a development build with spack
+
+
+```bash
+#this is only required if it hasn't been done before
+git clone https://github.com/robertu94/spack_packages robertu94_packages
+spack repo add robertu94_packages
+
+git clone https://github.com/robertu94/libpressio
+cd  libpressio
+#make sure it builds first
+spack dev-build libpressio@master
+#make your changes
+spack dev-build libpressio@master
 ```
 
 ## Configuring LibPressio Manually

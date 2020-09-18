@@ -244,6 +244,13 @@ class mgard_plugin: public libpressio_compressor_plugin {
    }
 
   public:
+
+   pressio_options get_metrics_impl() const {
+     pressio_options opts;
+     set(opts, "mgard:norm_of_qoi", norm_of_qoi);
+     return opts;
+   };
+
   int	major_version () const override {
     return MGARD_VERSION_MAJOR;
   }
