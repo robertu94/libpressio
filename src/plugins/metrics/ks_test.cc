@@ -194,8 +194,8 @@ kolmogorov(double x)
         pdf = D;
     }
     pdf = std::max(0.0, pdf);
-    cdf = std::clamp(cdf, 0.0, 1.0);
-    sf = std::clamp(sf, 0.0, 1.0);
+    cdf = compat::clamp(cdf, 0.0, 1.0);
+    sf = compat::clamp(sf, 0.0, 1.0);
     return {sf, cdf, pdf};
 }
 

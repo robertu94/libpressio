@@ -67,6 +67,13 @@ namespace compat {
 #else
   using std::conjunction;
 #endif
+
+#if !(LIBPRESSIO_COMPAT_HAS_IS_NULL_POINTER)
+  template< class T >
+  struct is_null_pointer : std::is_same<std::nullptr_t, typename std::remove_cv<T>::type> {};
+#else
+  using std::is_null_pointer;
+#endif
 }
 
 #endif /* end of include guard: LIBPRESSIO_COMPAT_TYPE_TRAITS_H */

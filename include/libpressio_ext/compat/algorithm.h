@@ -47,7 +47,9 @@ namespace compat {
 template<class T>
 constexpr const T& clamp( const T& v, const T& low, const T& hi )
 {
+#if __cplusplus >= 201703L
     assert( !(hi < low) );
+#endif
     return (v < low) ? low : (hi < v) ? hi : v;
 }
 
@@ -61,7 +63,9 @@ constexpr const T& clamp( const T& v, const T& low, const T& hi )
 template<class T, class Compare>
 constexpr const T& clamp( const T& v, const T& low, const T& high, Compare comp )
 {
+#if __cplusplus >= 201703L
     assert( !comp(high, low) );
+#endif
     return comp(v, low) ? low : comp(high, v) ? high : v;
 }
 #else

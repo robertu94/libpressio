@@ -10,6 +10,7 @@
 #include "compressor.h"
 #include "metrics.h"
 #include "io.h"
+#include "libpressio_ext/compat/language.h"
 
 /**
  * a type that registers constructor functions
@@ -154,7 +155,7 @@ struct pressio {
   {
     auto io_module = io_plugins().build(io_module_id);
     if (io_module)
-      return io_module;
+      return RVO_MOVE(io_module);
     else {
       set_error(1, std::string("invalid io_plugin id ") + io_module_id);
       return nullptr;

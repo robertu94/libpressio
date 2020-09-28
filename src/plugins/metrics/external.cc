@@ -16,10 +16,10 @@
 #include "libpressio_ext/cpp/pressio.h"
 #include "libpressio_ext/cpp/io.h"
 #include "libpressio_ext/compat/memory.h"
+#include "libpressio_ext/compat/language.h"
 
 #include "external_launch.h"
 
-using namespace std::literals;
 
 
 pressio_registry<std::unique_ptr<libpressio_launch_plugin>>& launch_plugins() {
@@ -95,7 +95,7 @@ class external_metric_plugin : public libpressio_metrics_plugin {
           std::mem_fn(&libpressio_io_plugin::clone)
           );
 
-      return cloned;
+      return RVO_MOVE(cloned);
     }
 
     const char* prefix() const override {
@@ -215,7 +215,7 @@ class external_metric_plugin : public libpressio_metrics_plugin {
 
       for (size_t i = 0; i < io_modules.size(); ++i) {
         //write uncompressed data to a temporary file
-        std::string input_fd_name = get_or(prefixes, i).value_or("") + ".pressioinXXXXXX"s + get_or(suffixes, i).value_or(""s);
+        std::string input_fd_name = get_or(prefixes, i).value_or("") + std::string(".pressioinXXXXXX") + get_or(suffixes, i).value_or("");
         int input_fd = mkstemps(&input_fd_name[0], get_or(suffixes, i).value_or("").size());
         char* resolved_input = realpath(input_fd_name.c_str(), nullptr);
         input_fd_name = resolved_input;
@@ -224,8 +224,8 @@ class external_metric_plugin : public libpressio_metrics_plugin {
         io_modules[i]->write(&input_data[i].get());
 
         //write decompressed data to a temporary file
-        std::string output_fd_name = get_or(prefixes, i).value_or(""s) + ".pressiooutXXXXXX"s + get_or(suffixes, i).value_or("");
-        int decompressed_fd = mkstemps(&output_fd_name[0], get_or(suffixes,i).value_or(""s).size());
+        std::string output_fd_name = get_or(prefixes, i).value_or("") + std::string(".pressiooutXXXXXX") + get_or(suffixes, i).value_or("");
+        int decompressed_fd = mkstemps(&output_fd_name[0], get_or(suffixes,i).value_or("").size());
         char* resolved_output = realpath(output_fd_name.c_str(), nullptr);
         output_fd_name = resolved_output;
         free(resolved_output);

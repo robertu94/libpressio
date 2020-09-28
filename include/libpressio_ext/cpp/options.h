@@ -13,6 +13,8 @@
 #include "libpressio_ext/compat/string_view.h"
 #include "libpressio_ext/compat/optional.h"
 #include "libpressio_ext/compat/variant.h"
+#include "libpressio_ext/compat/functional.h"
+#include "libpressio_ext/compat/language.h"
 #include <algorithm>
 
 /**
@@ -260,7 +262,7 @@ struct pressio_options final {
    *
    * \param[in] rhs the structure to move from
    * */
-  pressio_options(pressio_options && rhs) noexcept=default;
+  pressio_options(pressio_options && rhs) DEFAULTED_NOEXCEPT =default;
   /** copy a pressio_options structure
    *
    * \param[in] rhs the structure to copy from
@@ -270,7 +272,7 @@ struct pressio_options final {
    *
    * \param[in] rhs the structure to move from
    * */
-  pressio_options& operator=(pressio_options && rhs) noexcept=default;
+  pressio_options& operator=(pressio_options && rhs) DEFAULTED_NOEXCEPT =default;
 
   /**
    * create a literal pressio_options structure from a std::initializer_list
@@ -561,7 +563,7 @@ struct pressio_options final {
     else return '/' + name + ':' + key;
   }
 
-  std::map<std::string, pressio_option, std::less<>> options;
+  std::map<std::string, pressio_option, compat::less<>> options;
 
 
   public:

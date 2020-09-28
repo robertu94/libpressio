@@ -275,7 +275,7 @@ class mgard_plugin: public libpressio_compressor_plugin {
   }
 
   std::shared_ptr<libpressio_compressor_plugin> clone() override {
-    return std::make_unique<mgard_plugin>(*this);
+    return compat::make_unique<mgard_plugin>(*this);
   }
 
 
@@ -484,10 +484,10 @@ class mgard_plugin: public libpressio_compressor_plugin {
    * \returns which mgard function should be used for compression
    */
   mgard_compression_function select_compression_function(pressio_dtype type) const {
-    if(tolerance.has_value() && !s.has_value() && !(qoi_typed_v(type).has_value() || qoi_typed(type).has_value()) && !norm_of_qoi.has_value()) return mgard_compression_function::tol;
-    else if(tolerance.has_value() && s.has_value() && !(qoi_typed_v(type).has_value() || qoi_typed(type).has_value()) && !norm_of_qoi.has_value()) return mgard_compression_function::tol_s;
-    else if(tolerance.has_value() && s.has_value() && (qoi_typed(type).has_value() || qoi_typed_v(type).has_value())) return mgard_compression_function::tol_qoi_s;
-    else if(tolerance.has_value() && s.has_value() && norm_of_qoi.has_value()) return mgard_compression_function::tol_normqoi_s;
+    if(tolerance && !s && !(qoi_typed_v(type) || qoi_typed(type)) && !norm_of_qoi) return mgard_compression_function::tol;
+    else if(tolerance && s && !(qoi_typed_v(type) || qoi_typed(type)) && !norm_of_qoi) return mgard_compression_function::tol_s;
+    else if(tolerance && s && (qoi_typed(type) || qoi_typed_v(type))) return mgard_compression_function::tol_qoi_s;
+    else if(tolerance && s && norm_of_qoi) return mgard_compression_function::tol_normqoi_s;
     else return mgard_compression_function::invalid;
   }
 
@@ -496,7 +496,7 @@ class mgard_plugin: public libpressio_compressor_plugin {
    * \returns which mgard function should be used for compression
    */
   mgard_decompression_function select_decompression_function() const {
-    if(s.has_value()) return mgard_decompression_function::s;
+    if(s) return mgard_decompression_function::s;
     else return mgard_decompression_function::no_s;
   }
 
@@ -610,13 +610,13 @@ class mgard_plugin: public libpressio_compressor_plugin {
   int missing_configuration() {
     std::stringstream ss;
     ss << "invalid combination of parameters";
-    if(tolerance.has_value())
+    if(tolerance)
       ss << "tolerance, ";
-    if(s.has_value())
+    if(s)
       ss << "s, ";
-    if(qoi_float.has_value())
+    if(qoi_float)
       ss << "qoi_float, ";
-    if(qoi_double.has_value())
+    if(qoi_double)
       ss << "qoi_double, ";
     return set_error(1, ss.str());
   }

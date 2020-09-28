@@ -2,6 +2,7 @@
 #include <sstream>
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/printers.h"
+#include "libpressio_ext/compat/string_view.h"
 #include "pressio_option.h"
 #include "pressio_data.h"
 #include "pressio_options.h"
@@ -416,50 +417,50 @@ TEST_F(PressioOptionsTests, AssignFromOptional) {
 }
 
 TEST(SubTreeParsing, SearchPathOnlySlash) {
-  std::string_view examplar {"/"};
-  std::vector<std::string_view> search_order{""};
+  compat::string_view examplar {"/"};
+  std::vector<compat::string_view> search_order{""};
   EXPECT_EQ(search_order, pressio_options::search(examplar));
 }
 
 TEST(SubTreeParsing, SearchPathOnlySlashes) {
-  std::string_view examplar {"//"};
-  std::vector<std::string_view> search_order{""};
+  compat::string_view examplar {"//"};
+  std::vector<compat::string_view> search_order{""};
   EXPECT_EQ(search_order, pressio_options::search(examplar));
 }
 
 
 TEST(SubTreeParsing, SearchPathOneElement) {
-  std::string_view examplar {"foo"};
-  std::vector<std::string_view> search_order{"foo", ""};
+  compat::string_view examplar {"foo"};
+  std::vector<compat::string_view> search_order{"foo", ""};
   EXPECT_EQ(search_order, pressio_options::search(examplar));
 }
 
 TEST(SubTreeParsing, SearchPathWithoutEitherSlash) {
-  std::string_view examplar {"foo/bar/sue"};
-  std::vector<std::string_view> search_order{"foo/bar/sue", "foo/bar", "foo", ""};
+  compat::string_view examplar {"foo/bar/sue"};
+  std::vector<compat::string_view> search_order{"foo/bar/sue", "foo/bar", "foo", ""};
   EXPECT_EQ(search_order, pressio_options::search(examplar));
 }
 
 TEST(SubTreeParsing, SearchPathWithLeadingSlash) {
-  std::string_view examplar {"/foo/bar/sue"};
-  std::vector<std::string_view> search_order{"foo/bar/sue", "foo/bar", "foo", ""};
+  compat::string_view examplar {"/foo/bar/sue"};
+  std::vector<compat::string_view> search_order{"foo/bar/sue", "foo/bar", "foo", ""};
   EXPECT_EQ(search_order, pressio_options::search(examplar));
 }
 
 TEST(SubTreeParsing, SearchPathWithTrainingSlash) {
-  std::string_view examplar {"foo/bar/sue/"};
-  std::vector<std::string_view> search_order{"foo/bar/sue", "foo/bar", "foo", ""};
+  compat::string_view examplar {"foo/bar/sue/"};
+  std::vector<compat::string_view> search_order{"foo/bar/sue", "foo/bar", "foo", ""};
   EXPECT_EQ(search_order, pressio_options::search(examplar));
 }
 
 TEST(SubTreeParsing, SearchPathWitBothSlashs) {
-  std::string_view examplar {"/foo/bar/sue/"};
-  std::vector<std::string_view> search_order{"foo/bar/sue", "foo/bar", "foo", ""};
+  compat::string_view examplar {"/foo/bar/sue/"};
+  std::vector<compat::string_view> search_order{"foo/bar/sue", "foo/bar", "foo", ""};
   EXPECT_EQ(search_order, pressio_options::search(examplar));
 }
 
 TEST(SubTreeParsing, EmptySearchPath) {
-  std::string_view examplar {""};
-  std::vector<std::string_view> search_order{""};
+  compat::string_view examplar {""};
+  std::vector<compat::string_view> search_order{""};
   EXPECT_EQ(search_order, pressio_options::search(examplar));
 }

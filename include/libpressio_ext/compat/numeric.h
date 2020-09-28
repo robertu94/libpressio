@@ -5,11 +5,11 @@
 #ifndef LIBPRESSIO_COMPAT_NUMERIC_H
 #define LIBPRESSIO_COMPAT_NUMERIC_H
 #include <pressio_version.h>
-#include <type_traits>
 #include <limits>
 #include <cstddef>
 #include <numeric>
 #include "functional.h"
+#include "type_traits.h"
 
 namespace compat {
 #if !(LIBPRESSIO_COMPAT_HAS_MIDPOINT)
@@ -22,11 +22,11 @@ namespace compat {
 template <class Type>
 constexpr typename std::enable_if<std::is_integral<Type>::value &&
                                     !std::is_same<bool, Type>::value &&
-                                    !std::is_null_pointer<Type>::value,
+                                    !compat::is_null_pointer<Type>::value,
                                   Type>::type
 midpoint(Type a, Type b) noexcept
 {
-  using Up = std::make_unsigned_t<Type>;
+  using Up = typename std::make_unsigned<Type>::type;
   constexpr Up bitshift = std::numeric_limits<Up>::digits - 1;
 
   Up diff = Up(b) - Up(a);

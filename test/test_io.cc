@@ -1,5 +1,6 @@
 #include <vector>
 #include <numeric>
+#include <cstddef>
 #include "libpressio_ext/io/pressio_io.h"
 #include "libpressio_ext/io/posix.h"
 #include "libpressio_ext/cpp/io.h"

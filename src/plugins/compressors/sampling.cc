@@ -81,9 +81,9 @@ class sample_compressor_plugin: public libpressio_compressor_plugin {
       unsigned char* output_ptr = static_cast<unsigned char*>(output->data());
       unsigned char* input_ptr = static_cast<unsigned char*>(input->data());
       size_t row_size = std::accumulate(
-          std::next(std::rbegin(dims)),
-          std::rend(dims),
-          1ul, std::multiplies<>{}
+          std::next(compat::rbegin(dims)),
+          compat::rend(dims),
+          1ul, compat::multiplies<>{}
           ) * pressio_dtype_size(input->dtype());
 
       for (auto row : rows_to_sample) {

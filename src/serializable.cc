@@ -197,28 +197,28 @@ namespace serializer {
           {
           int value;
           ret |= comm::recv(value, source, tag, comm, s);
-          option = std::move(value);
+          option = value;
           }
           break;
         case pressio_option_uint32_type:
           {
           unsigned int value;
           ret |= comm::recv(value, source, tag, comm, s);
-          option = std::move(value);
+          option = value;
           }
           break;
         case pressio_option_float_type:
           {
           float value;
           ret |= comm::recv(value, source, tag, comm, s);
-          option = std::move(value);
+          option = value;
           }
           break;
         case pressio_option_double_type:
           {
           double value;
           ret |= comm::recv(value, source, tag, comm, s);
-          option = std::move(value);
+          option = value;
           }
           break;
         case pressio_option_charptr_type:
@@ -326,22 +326,22 @@ namespace serializer {
         case pressio_option_int32_type: {
           int value;
           ret |= comm::bcast(value, root, comm);
-          option = std::move(value);
+          option = value;
         } break;
         case pressio_option_uint32_type: {
           unsigned int value;
           ret |= comm::bcast(value, root, comm);
-          option = std::move(value);
+          option = value;
         } break;
         case pressio_option_float_type: {
           float value;
           ret |= comm::bcast(value, root, comm);
-          option = std::move(value);
+          option = value;
         } break;
         case pressio_option_double_type: {
           double value;
           ret |= comm::bcast(value, root, comm);
-          option = std::move(value);
+          option = value;
         } break;
         case pressio_option_charptr_type: {
           std::string value;

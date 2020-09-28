@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.46.0" LANGUAGES CXX C)
+project(libpressio VERSION "0.46.1" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -66,6 +66,7 @@ check_cpp_standard(void_t)
 check_cpp_standard(negation)
 check_cpp_standard(clamp)
 check_cpp_standard(string_view)
+check_cpp_standard(is_null_pointer)
 
 
 set(LIBPRESSIO_FEATURES "")
@@ -87,6 +88,7 @@ add_library(libpressio
 
   #compat implementation
   ./src/compat/span.cc
+  ./src/compat/optional.cc
 
   #plugins
   ./src/plugins/compressors/compressor_base.cc

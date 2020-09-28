@@ -111,7 +111,7 @@ class  span {
 public:
 //  constants and types
     using element_type           = Type;
-    using value_type             = std::remove_cv_t<Type>;
+    using value_type             = typename std::remove_cv<Type>::type;
     using size_type              = size_t;
     using difference_type        = ptrdiff_t;
     using pointer                = Type *;
@@ -128,19 +128,41 @@ public:
 // [span.cons], span constructors, copy, assignment, and destructor
 // 1
      constexpr span() noexcept : span_data{nullptr}
-    { static_assert(Extent == 0, "Can't default construct a statically sized span with size > 0"); }
+    { 
+#if __cplusplus >= 201703L
+      static_assert(Extent == 0, "Can't default construct a statically sized span with size > 0"); 
+#endif
+    }
 
 // 9
     constexpr span           (const span&) noexcept = default;
     constexpr span& operator=(const span&) noexcept = default;
 
 // 2
-     constexpr span(pointer ptr, size_type count) : span_data{ptr}
-        { (void)count; assert(Extent == count && "size mismatch in span's constructor (ptr, len)"); }
+     constexpr span(pointer ptr, size_type
+#if __cplusplus >= 201703L
+         count
+#endif
+         ) : span_data{ptr}
+        {
+#if __cplusplus >= 201703L
+          (void)count; assert(Extent == count && "size mismatch in span's constructor (ptr, len)"); 
+#endif
+        }
 // 3
-     constexpr span(pointer first, pointer last) : span_data{first} {
+     constexpr span(pointer 
+#if __cplusplus >= 201703L
+         first
+#endif
+         , pointer
+#if __cplusplus >= 201703L
+         last
+#endif
+         ) : span_data{first} {
+#if __cplusplus >= 201703L
        (void)last;
        assert(Extent == std::distance(first, last) && "size mismatch in span's constructor (ptr, ptr)");
+#endif
      }
 
 // 4
@@ -165,7 +187,10 @@ public:
                         std::is_convertible<typename std::add_pointer<OtherElementType>, typename std::add_pointer<element_type>::type >::value,
                         std::nullptr_t>::type = nullptr) noexcept
          : span_data{other.data()} {
+
+#if __cplusplus >= 201703L
        assert(Extent == other.size() && "size mismatch in span's constructor (other span)");
+#endif
      }
 
 //  ~span() noexcept = default;
@@ -174,7 +199,9 @@ public:
     
     constexpr span<element_type, Count> first() const noexcept
     {
+#if __cplusplus >= 201703L
         static_assert(Count <= Extent, "Count out of range in span::first()");
+#endif
         return {data(), Count};
     }
 
@@ -182,21 +209,27 @@ public:
     
     constexpr span<element_type, Count> last() const noexcept
     {
+#if __cplusplus >= 201703L
         static_assert(Count <= Extent, "Count out of range in span::last()");
+#endif
         return {data() + size() - Count, Count};
     }
 
     
     constexpr span<element_type, compat_dynamic_extent> first(size_type count) const noexcept
     {
+#if __cplusplus >= 201703L
         assert(count <= size() && "Count out of range in span::first(count)");
+#endif
         return {data(), count};
     }
 
     
     constexpr span<element_type, compat_dynamic_extent> last(size_type count) const noexcept
     {
+#if __cplusplus >= 201703L
         assert(count <= size() && "Count out of range in span::last(count)");
+#endif
         return {data() + size() - count, count};
     }
 
@@ -205,7 +238,9 @@ public:
     constexpr auto subspan() const noexcept
         -> span<element_type, Count != compat_dynamic_extent ? Count : Extent - _Offset>
     {
+#if __cplusplus >= 201703L
         static_assert(_Offset <= Extent, "Offset out of range in span::subspan()");
+#endif
         return {data() + _Offset, Count == compat_dynamic_extent ? size() - _Offset : Count};
     }
 
@@ -214,12 +249,11 @@ public:
     constexpr span<element_type, compat_dynamic_extent>
        subspan(size_type offset, size_type count = compat_dynamic_extent) const noexcept
     {
+#if __cplusplus >= 201703L
         assert(offset <= size() && "Offset out of range in span::subspan(offset, count)");
         assert(count  <= size() || count == compat_dynamic_extent && "Count out of range in span::subspan(offset, count)");
-        if (count == compat_dynamic_extent)
-            return {data() + offset, size() - offset};
-        assert(offset <= size() - count && "count + offset out of range in span::subspan(offset, count)");
-        return {data() + offset, count};
+#endif
+        return (count == compat_dynamic_extent) ?  span{data() + offset, size() - offset} : span{data() + offset, count};
     }
 
      constexpr size_type size()       const noexcept { return Extent; }
@@ -227,19 +261,25 @@ public:
      constexpr bool empty()           const noexcept { return Extent == 0; }
 
      constexpr reference operator[](size_type idx) const noexcept {
+#if __cplusplus >= 201703L
        assert(idx >= 0 && idx < size() && "span<T,N>[] index out of bounds");
+#endif
        return span_data[idx];
      }
 
      constexpr reference front() const noexcept
     {
+#if __cplusplus >= 201703L
         static_assert(Extent > 0, "span<T,N>[].front() on empty span");
+#endif
         return span_data[0];
     }
 
      constexpr reference back() const noexcept
     {
+#if __cplusplus >= 201703L
         static_assert(Extent > 0, "span<T,N>[].back() on empty span");
+#endif
         return span_data[size()-1];
     }
 
@@ -284,7 +324,7 @@ private:
 public:
 //  constants and types
     using element_type           = Type;
-    using value_type             = std::remove_cv_t<Type>;
+    using value_type             = typename std::remove_cv<Type>::type;
     using size_type              = size_t;
     using difference_type        = ptrdiff_t;
     using pointer                = Type *;
@@ -301,8 +341,15 @@ public:
 // [span.cons], span constructors, copy, assignment, and destructor
      constexpr span() noexcept : span_data{nullptr}, span_size{0} {}
 
-    constexpr span           (const span&) noexcept = default;
-    constexpr span& operator=(const span&) noexcept = default;
+#if __cplusplus >= 201703L
+    constexpr
+#endif
+      span           (const span&) noexcept = default;
+
+#if __cplusplus >= 201703L
+    constexpr
+#endif
+      span& operator=(const span&) noexcept = default;
 
      constexpr span(pointer ptr, size_type count) : span_data{ptr}, span_size{count} {}
      constexpr span(pointer first, pointer last) : span_data{first}, span_size{static_cast<size_t>(std::distance(first, last))} {}
@@ -339,28 +386,36 @@ public:
     template <size_t Count>
     constexpr span<element_type, Count> first() const noexcept
     {
+#if __cplusplus >= 201703L
         assert(Count <= size() && "Count out of range in span::first()");
+#endif
         return {data(), Count};
     }
 
     template <size_t Count>
     constexpr span<element_type, Count> last() const noexcept
     {
+#if __cplusplus >= 201703L
         assert(Count <= size() && "Count out of range in span::last()");
+#endif
         return {data() + size() - Count, Count};
     }
 
     
     constexpr span<element_type, compat_dynamic_extent> first(size_type count) const noexcept
     {
+#if __cplusplus >= 201703L
         assert(count <= size() && "Count out of range in span::first(count)");
+#endif
         return {data(), count};
     }
 
     
     constexpr span<element_type, compat_dynamic_extent> last (size_type count) const noexcept
     {
+#if __cplusplus >= 201703L
         assert(count <= size() && "Count out of range in span::last(count)");
+#endif
         return {data() + size() - count, count};
     }
 
@@ -368,8 +423,10 @@ public:
     
     constexpr span<Type, compat_dynamic_extent> subspan() const noexcept
     {
+#if __cplusplus >= 201703L
         assert(_Offset <= size() && "Offset out of range in span::subspan()");
         assert(Count == compat_dynamic_extent || _Offset + Count <= size() && "Count out of range in span::subspan()");
+#endif
         return {data() + _Offset, Count == compat_dynamic_extent ? size() - _Offset : Count};
     }
 
@@ -377,12 +434,11 @@ public:
     
     subspan(size_type offset, size_type count = compat_dynamic_extent) const noexcept
     {
+#if __cplusplus >= 201703L
         assert(offset <= size() && "Offset out of range in span::subspan(offset, count)");
         assert((count  <= size() || count == compat_dynamic_extent) && "count out of range in span::subspan(offset, count)");
-        if (count == compat_dynamic_extent)
-            return {data() + offset, size() - offset};
-        assert(offset <= size() - count && "Offset + count out of range in span::subspan(offset, count)");
-        return {data() + offset, count};
+#endif
+        return (count == compat_dynamic_extent)?  span{data() + offset, size() - offset} : span{data() + offset, count};
     }
 
      constexpr size_type size()       const noexcept { return span_size; }
@@ -391,19 +447,25 @@ public:
 
      constexpr reference operator[](size_type idx) const noexcept
     {
+#if __cplusplus >= 201703L
         assert(idx >= 0 && idx < size() && "span<T>[] index out of bounds");
+#endif
         return span_data[idx];
     }
 
      constexpr reference front() const noexcept
     {
+#if __cplusplus >= 201703L
         assert(!empty() && "span<T>[].front() on empty span");
+#endif
         return span_data[0];
     }
 
      constexpr reference back() const noexcept
     {
+#if __cplusplus >= 201703L
         assert(!empty() && "span<T>[].back() on empty span");
+#endif
         return span_data[size()-1];
     }
 

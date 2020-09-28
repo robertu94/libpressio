@@ -9,6 +9,7 @@
 
 #if !(LIBPRESSIO_COMPAT_HAS_OPTIONAL)
 #include <boost/optional.hpp>
+#include <boost/none.hpp>
 #else
 #include <optional>
 #endif
@@ -16,6 +17,7 @@
 namespace compat {
 #if (!LIBPRESSIO_COMPAT_HAS_OPTIONAL)
   using boost::optional;
+  extern const boost::none_t& nullopt;
 #else
   using std::optional;
   using std::nullopt;

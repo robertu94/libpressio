@@ -183,8 +183,8 @@ char* pressio_options_to_string(struct pressio_options const* options) {
 }
 
 
-std::vector<std::string_view> pressio_options::search(std::string_view const& value) {
-  std::vector<std::string_view> order;
+std::vector<compat::string_view> pressio_options::search(compat::string_view const& value) {
+  std::vector<compat::string_view> order;
   //normalize the string
   auto size = value.size();
   const unsigned int has_leading_slash = !value.empty() && value.front() == '/';

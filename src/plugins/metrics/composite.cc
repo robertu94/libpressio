@@ -6,13 +6,12 @@
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/compat/memory.h"
+#include "libpressio_ext/compat/string_view.h"
 #if LIBPRESSIO_HAS_LUA
 #define SOL_ALL_SAFETIES_ON 1
 #define SOL_PRINT_ERRORS 1
 #include <sol/sol.hpp>
 #endif
-
-using namespace std::literals;
 
 class composite_plugin : public libpressio_metrics_plugin {
   public:
@@ -184,9 +183,9 @@ class composite_plugin : public libpressio_metrics_plugin {
     std::string time_name;
     std::string size_name;
     for (size_t i = 0; i < plugins.size(); ++i) {
-      if(plugins[i]->prefix() == "time"s) {
+      if(compat::string_view(plugins[i]->prefix()) == "time") {
         time_name = plugins[i]->get_name();
-      } else if(plugins[i]->prefix() == "size"s) {
+      } else if(compat::string_view(plugins[i]->prefix()) == "size") {
         size_name = plugins[i]->get_name();
       }
     }
