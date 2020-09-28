@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.46.1" LANGUAGES CXX C)
+project(libpressio VERSION "0.46.2" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -27,7 +27,6 @@ option(BUILD_SHARED_LIBS "build libpressio as a shared library" ON)
 
 include(GNUInstallDirs)
 include(CheckCXXCompilerFlag)
-include(CheckIncludeFileCXX)
 
 check_cxx_compiler_flag("-fno-omit-frame-pointer" HAVE_NO_OMIT_FRAME_POINTER)
 set(NO_OMIT_FRAME_POINTER_FLAG "")
@@ -175,10 +174,8 @@ option(LIBPRESSIO_HAS_MGARD "build the MGARD plugin" OFF)
 if(LIBPRESSIO_HAS_MGARD)
   set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} mgard")
   find_package(mgard REQUIRED)
-  check_include_file_cxx(mgard_api_float.h LIBPRESSIO_MGARD_NEED_FLOAT_HEADER
-    -I $<TARGET_PROPERTY:mgard::mgard,INTERFACE_INCLUDE_DIRECTORIES>)
-  check_include_file_cxx(MGARDConfig.h LIBPRESSIO_MGARD_HAS_CONFIG_HEADER
-    -I $<TARGET_PROPERTY:mgard::mgard,INTERFACE_INCLUDE_DIRECTORIES>)
+  find_file(LIBPRESSIO_MGARD_NEED_FLOAT_HEADER mgard_api_float.h)
+  find_file(LIBPRESSIO_MGARD_HAS_CONFIG_HEADER MGARDConfig.h)
   target_sources(libpressio
     PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/mgard_plugin.cc
