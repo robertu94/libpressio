@@ -85,9 +85,10 @@ class pressio_configurable {
    * \param[in] key the key to set
    * \param[in] value the value to set
    */
-  void set(pressio_options& options, std::string const& key, pressio_option const& value) const {
+  template <class StringType>
+  void set(pressio_options& options, StringType const& key, pressio_option const& value) const {
     if(name.empty()) options.set(key, value);
-    options.set(name, key, value);
+    else options.set(name, key, value);
   }
 
 
@@ -98,9 +99,10 @@ class pressio_configurable {
    * \param[in] key the key to set
    * \param[in] type the type to set
    */
-  void set_type(pressio_options& options, std::string const& key, pressio_option_type type) const {
+  template <class StringType>
+  void set_type(pressio_options& options, StringType const& key, pressio_option_type type) const {
     if(name.empty()) options.set_type(key, type);
-    options.set_type(name, key, type);
+    else options.set_type(name, key, type);
   }
 
 
@@ -112,11 +114,11 @@ class pressio_configurable {
    * \param[in] value the value to get
    * \returns if the key was set
    */
-  template <class PointerType>
+  template <class StringType, class PointerType>
   enum pressio_options_key_status 
-  get(pressio_options const& options, std::string const& key, PointerType value) const {
-    if(name.empty()) return options.get(key, value); 
-    return options.get(name, key, value);
+  get(pressio_options const& options, StringType && key, PointerType value) const {
+    if(name.empty()) return options.get(std::forward<StringType>(key), value); 
+    return options.get(name, std::forward<StringType>(key), value);
   }
 
   /**
@@ -128,10 +130,10 @@ class pressio_configurable {
    * \param[in] current_value value of the current meta-object
    * \param[in] args the remaining args needed for some meta modules
    */
-  template<class Wrapper, class... Args>
+  template<class StringType, class Wrapper, class... Args>
   void
-  set_meta(pressio_options& options, std::string const& key, std::string const& current_id, Wrapper const& current_value, Args&&... args) const {
-    set(options, key, current_id);
+  set_meta(pressio_options& options, StringType&& key, std::string const& current_id, Wrapper const& current_value, Args&&... args) const {
+    set(options, std::forward<StringType>(key), current_id);
     options.copy_from(current_value->get_options(std::forward<Args>(args)...));
   }
 
@@ -144,10 +146,10 @@ class pressio_configurable {
    * \param[in] current_values value of the current meta-object
    * \param[in] args the remaining args needed for some meta modules
    */
-  template<class Wrapper, class... Args>
+  template<class StringType, class Wrapper, class... Args>
   void
-  set_meta_many(pressio_options& options, std::string const& key, std::vector<std::string> const& current_ids, std::vector<Wrapper> const& current_values, Args&&... args) const {
-    set(options, key, current_ids);
+  set_meta_many(pressio_options& options, StringType&& key, std::vector<std::string> const& current_ids, std::vector<Wrapper> const& current_values, Args&&... args) const {
+    set(options, std::forward<StringType>(key), current_ids);
     for (auto const& wrapper : current_values) {
       options.copy_from(wrapper->get_options(std::forward<Args>(args)...));
     }
@@ -163,15 +165,15 @@ class pressio_configurable {
    * \param[in] current_value the wrapper for the current module
    *
    */
-  template <class Registry, class Wrapper>
+  template <class StringType, class Registry, class Wrapper>
   pressio_options_key_status
   get_meta(pressio_options const& options,
-      std::string const& key,
+      StringType && key,
       Registry const& registry,
       std::string& current_id,
       Wrapper& current_value) {
     std::string new_id;
-    if(get(options, key, &new_id) == pressio_options_key_set) {
+    if(get(options, std::forward<StringType>(key), &new_id) == pressio_options_key_set) {
       if (new_id != current_id) {
         auto new_value = registry.build(new_id);
         if(new_value) {
@@ -199,15 +201,15 @@ class pressio_configurable {
    * \param[in] current_values the wrapper for the current module
    *
    */
-  template <class Registry, class Wrapper>
+  template <class StringType, class Registry, class Wrapper>
   pressio_options_key_status
   get_meta_many(pressio_options const& options,
-      std::string const& key,
+      StringType && key,
       Registry const& registry,
       std::vector<std::string>& current_ids,
       std::vector<Wrapper>& current_values) {
     std::vector<std::string> new_ids;
-    if(get(options, key, &new_ids) == pressio_options_key_set) {
+    if(get(options, std::forward<StringType>(key), &new_ids) == pressio_options_key_set) {
       if (new_ids != current_ids) {
         std::vector<Wrapper> new_values;
         bool all_built = true;

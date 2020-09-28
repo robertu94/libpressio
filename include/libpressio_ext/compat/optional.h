@@ -17,7 +17,6 @@ namespace compat {
 #if (!LIBPRESSIO_COMPAT_HAS_OPTIONAL)
   using boost::optional;
 #else
-#include<optional>
   using std::optional;
   using std::nullopt;
 #endif

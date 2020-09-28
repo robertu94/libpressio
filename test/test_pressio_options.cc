@@ -414,3 +414,52 @@ TEST_F(PressioOptionsTests, AssignFromOptional) {
   EXPECT_EQ(option_full.get_value<int>(), 3);
   EXPECT_FALSE(option_empty.has_value());
 }
+
+TEST(SubTreeParsing, SearchPathOnlySlash) {
+  std::string_view examplar {"/"};
+  std::vector<std::string_view> search_order{""};
+  EXPECT_EQ(search_order, pressio_options::search(examplar));
+}
+
+TEST(SubTreeParsing, SearchPathOnlySlashes) {
+  std::string_view examplar {"//"};
+  std::vector<std::string_view> search_order{""};
+  EXPECT_EQ(search_order, pressio_options::search(examplar));
+}
+
+
+TEST(SubTreeParsing, SearchPathOneElement) {
+  std::string_view examplar {"foo"};
+  std::vector<std::string_view> search_order{"foo", ""};
+  EXPECT_EQ(search_order, pressio_options::search(examplar));
+}
+
+TEST(SubTreeParsing, SearchPathWithoutEitherSlash) {
+  std::string_view examplar {"foo/bar/sue"};
+  std::vector<std::string_view> search_order{"foo/bar/sue", "foo/bar", "foo", ""};
+  EXPECT_EQ(search_order, pressio_options::search(examplar));
+}
+
+TEST(SubTreeParsing, SearchPathWithLeadingSlash) {
+  std::string_view examplar {"/foo/bar/sue"};
+  std::vector<std::string_view> search_order{"foo/bar/sue", "foo/bar", "foo", ""};
+  EXPECT_EQ(search_order, pressio_options::search(examplar));
+}
+
+TEST(SubTreeParsing, SearchPathWithTrainingSlash) {
+  std::string_view examplar {"foo/bar/sue/"};
+  std::vector<std::string_view> search_order{"foo/bar/sue", "foo/bar", "foo", ""};
+  EXPECT_EQ(search_order, pressio_options::search(examplar));
+}
+
+TEST(SubTreeParsing, SearchPathWitBothSlashs) {
+  std::string_view examplar {"/foo/bar/sue/"};
+  std::vector<std::string_view> search_order{"foo/bar/sue", "foo/bar", "foo", ""};
+  EXPECT_EQ(search_order, pressio_options::search(examplar));
+}
+
+TEST(SubTreeParsing, EmptySearchPath) {
+  std::string_view examplar {""};
+  std::vector<std::string_view> search_order{""};
+  EXPECT_EQ(search_order, pressio_options::search(examplar));
+}

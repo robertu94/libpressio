@@ -11,6 +11,27 @@
 namespace compat {
 #if !(LIBPRESSIO_COMPAT_HAS_MULITPLIES)
 /**
+ * functor that provides less
+ */
+template <class T = void>
+struct less
+{
+  /**
+   * preforms the evaluation
+   * \param u first operand
+   * \param v second operand
+   */
+  template <class U, class V>
+  constexpr auto operator()(U&& u, V&& v) const
+    noexcept(noexcept(std::forward<U>(u) < std::forward<V>(v)))
+      -> decltype(std::forward<U>(u) < std::forward<V>(v))
+  {
+    return std::forward<U>(u) < std::forward<V>(v);
+  }
+  using is_transparent = void;
+};
+
+/**
  * fuctor that provides multiply
  */
 template <class T = void>
@@ -75,6 +96,7 @@ struct minus
 using std::multiplies;
 using std::plus;
 using std::minus;
+using std::less;
 #endif
 }
 

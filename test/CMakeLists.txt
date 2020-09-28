@@ -107,4 +107,9 @@ if(BUILD_PYTHON_WRAPPER AND LIBPRESSIO_HAS_SZ)
     ${CMAKE_CURRENT_SOURCE_DIR}/test_python.py
     ${CMAKE_BINARY_DIR}/swig
   )
+  add_test(test_python_io_wrapper 
+    ${Python3_EXECUTABLE}
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_pythonio.py
+    ${CMAKE_BINARY_DIR}/swig
+  )
 endif()

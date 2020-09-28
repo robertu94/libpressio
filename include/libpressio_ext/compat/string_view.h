@@ -2,15 +2,15 @@
  * \file
  * \brief back ports of `<optional>`
  */
-#ifndef LIBPRESSIO_COMPAT_OPTIONAL_H
-#define LIBPRESSIO_COMPAT_OPTIONAL_H
+#ifndef LIBPRESSIO_COMPAT_STRING_VIEW_H
+#define LIBPRESSIO_COMPAT_STRING_VIEW_H
 #include <pressio_version.h>
 
 
 #if !(LIBPRESSIO_COMPAT_HAS_STRING_VIEW)
 #include <boost/utility/string_view.hpp>
 #else
-#include <optional>
+#include <string_view>
 #endif
 
 namespace compat {
@@ -23,4 +23,4 @@ namespace compat {
 }
 
 
-#endif /* end of include guard: LIBPRESSIO_COMPAT_OPTIONAL_H */
+#endif /* end of include guard: LIBPRESSIO_COMPAT_STRING_VIEW_H */
