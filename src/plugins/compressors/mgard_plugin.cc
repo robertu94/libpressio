@@ -11,6 +11,15 @@
 #endif
 #if LIBPRESSIO_MGARD_HAS_CONFIG_HEADER
 #include <MGARDConfig.h>
+#ifndef MGARD_VERSION_MINOR
+#define MGARD_VERSION_MINOR 0
+#endif
+#ifndef MGARD_VERSION_PATCH
+#define MGARD_VERSION_PATCH 0
+#endif
+#ifndef MGARD_VERSION_TWEAK
+#define MGARD_VERSION_TWEAK 0
+#endif
 #else
 //earliest supported version of mgard is 0.0.0.2, but didn't have the version header
 #define MGARD_VERSION_STR   "0.0.0.2"
