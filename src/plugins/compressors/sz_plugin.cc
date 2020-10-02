@@ -5,6 +5,9 @@
 #include <cstdlib>
 
 #include <sz/sz.h>
+#if HAVE_WRITESTATS
+#include <sz/sz_stats.h>
+#endif
 
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/compressor.h"
@@ -65,6 +68,27 @@ class sz_plugin: public libpressio_compressor_plugin {
   struct pressio_options get_configuration_impl() const override {
     struct pressio_options options;
     set(options, "pressio:thread_safe", (unsigned int)pressio_thread_safety_serialized);
+#ifdef HAVE_RANDOMACCESS
+    set(options, "sz:random_access_enabled", 1u);
+#else
+    set(options, "sz:random_access_enabled", 0u);
+#endif
+#ifdef HAVE_TIMECMPR
+    set(options, "sz:timecmpr", 1u);
+#else
+    set(options, "sz:timecmpr", 0u);
+#endif
+#ifdef HAVE_PASTRI
+    set(options, "sz:pastri", 1u);
+#else
+    set(options, "sz:pastri", 0u);
+#endif
+#ifdef HAVE_WRITESTATS
+    set(options, "sz:write_stats", 1u);
+#else
+    set(options, "sz:write_stats", 0u);
+#endif
+
 
     std::vector<std::string> vs;
     std::transform(
@@ -226,6 +250,26 @@ class sz_plugin: public libpressio_compressor_plugin {
 
   const char* prefix() const override {
     return "sz";
+  }
+
+  pressio_options get_metrics_results_impl() const override {
+    pressio_options sz_metrics;
+#if HAVE_WRITESTATS
+    set(sz_metrics, "sz:use_mean", sz_stat.use_mean);
+    set(sz_metrics, "sz:block_size", (unsigned int)sz_stat.blockSize);
+    set(sz_metrics, "sz:lorenzo_blocks", (unsigned int)sz_stat.lorenzoBlocks);
+    set(sz_metrics, "sz:regression_blocks", (unsigned int)sz_stat.regressionBlocks);
+    set(sz_metrics, "sz:total_blocks", (unsigned int)sz_stat.totalBlocks);
+    set(sz_metrics, "sz:huffman_tree_size", (unsigned int)sz_stat.huffmanTreeSize);
+    set(sz_metrics, "sz:huffman_coding_size", (unsigned int)sz_stat.huffmanCodingSize);
+    set(sz_metrics, "sz:huffman_node_count", (unsigned int)sz_stat.huffmanNodeCount);
+    set(sz_metrics, "sz:unpredict_count", (unsigned int)sz_stat.unpredictCount);
+
+    set(sz_metrics, "sz:lorenzo_percent", sz_stat.lorenzoPercent);
+    set(sz_metrics, "sz:regression_percent", sz_stat.lorenzoPercent);
+    set(sz_metrics, "sz:huffman_compression_ratio", sz_stat.huffmanCompressionRatio);
+#endif
+    return sz_metrics;
   }
 
   std::shared_ptr<libpressio_compressor_plugin> clone() override {

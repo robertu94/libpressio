@@ -315,6 +315,10 @@ Unstable means:
 
 Additionally, the performance of functions, memory usage patterns may change for both stable and unstable code with the increase of the patch version.
 
+## Code Contribution
+
+Please refer to [CONTRIBUTORS.md](CONTRIBUTORS.md).
+
 ## Bug Reports
 
 Please files bugs to the Github Issues page on the CODARCode libpressio repository.

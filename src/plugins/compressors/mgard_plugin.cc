@@ -1,6 +1,7 @@
 #include <cassert>
 #include <memory>
 #include <sstream>
+#include <chrono>
 #include "libpressio_ext/compat/optional.h"
 #include "pressio_version.h"
 
@@ -254,9 +255,12 @@ class mgard_plugin: public libpressio_compressor_plugin {
 
   public:
 
-   pressio_options get_metrics_impl() const {
+   pressio_options get_metrics_results_impl() const override {
      pressio_options opts;
+#if PRESSIO_MGARD_VERSION_GREATEREQ(0,0,0,3)
      set(opts, "mgard:norm_of_qoi", norm_of_qoi);
+     set(opts, "mgard:norm_time", training_time);
+#endif
      return opts;
    };
 
@@ -378,6 +382,7 @@ class mgard_plugin: public libpressio_compressor_plugin {
           pressio_mgard_metrics_data data;
           old_dims = dims;
 
+          auto begin = std::chrono::high_resolution_clock::now();
           if(qoi_typed_v(dtype)) {
           //recompute the norm_of_qoi if needed
             data.metric = qoi_metric_name;
@@ -401,6 +406,9 @@ class mgard_plugin: public libpressio_compressor_plugin {
             set_error(5, "invalid configuration");
             return pressio_data();
           }
+          auto end = std::chrono::high_resolution_clock::now();
+          training_time = std::chrono::duration_cast<std::chrono::milliseconds>(end-begin).count();
+          
         }
         //fallthrough
       case mgard_compression_function::tol_normqoi_s:
@@ -661,6 +669,7 @@ class mgard_plugin: public libpressio_compressor_plugin {
   bool recompute_metric = true;
   std::vector<int> old_dims;
   std::string qoi_metric_name;
+  compat::optional<unsigned int> training_time;
 #endif
   compat::optional<double> tolerance;
   compat::optional<double> s;

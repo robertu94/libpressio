@@ -31,7 +31,7 @@ class pressio_distributed_manager: public pressio_configurable, public pressio_e
   public:
   static size_t unlimited;
   pressio_distributed_manager(unsigned int max_ranks_per_worker = 1, unsigned int max_masters = 1):
-    groups(*distributed_build_groups(distributed_world_size(), 1, 0, 0)),
+    groups(*distributed_build_groups(distributed_world_size(), 0, 0, 0)),
     max_masters(max_masters),
     max_ranks_per_worker(max_ranks_per_worker),
     n_workers(0),

@@ -79,3 +79,31 @@ If a given script errors or fails, the value it provides will not be created.
 ## External
 
 The metrics supported by external are too complicated to summerize here, [please see its documentation](@ref usingexternalmetric)
+
+## SZ
+
+These are the metrics reported by the SZ compressor.  Requires the `BUILD_STATS` cmake option for SZ to be enabled.
+
+Metric                  | Type        | Units  | Description
+------------------------|-------------|--------|-------
+sz:block_size  | uint32 |elements |  size of a block in SZ
+sz:huffman_coding_size  | uint32 | bytes| the size of codes in the huffman tree
+sz:huffman_compression_ratio  | float | |  the compression ratio due to just the huffman tree
+sz:huffman_node_count  | uint32 |nodes | the number of nodes in the huffman tree
+sz:huffman_tree_size  | uint32 |bytes | the size of the huffman tree
+sz:lorenzo_blocks  | uint32 | elements |  the number of blocks that used the lorenzo predictor
+sz:lorenzo_percent  | float | |  the percentage of blocks that use the lorenzo predictor
+sz:regression_blocks  | uint32 | elements |  the number of blocks that used the regression predictor
+sz:regression_percent  | float | | the percentage of blocks that used the regression predictor
+sz:total_blocks  | uint32 | elements |  the total number of blocks processed
+sz:unpredict_count  | uint32 | elements |  the number of unpredictable blocks
+sz:use_mean  | int32 | | true/false if the mean was used
+
+## MGARD
+
+These are the metrics reported by the MGARD compressor.
+
+Metric                  | Type        | Units  | Description
+------------------------|-------------|--------|-------
+mgard:norm_of_qoi  | double | | the norm computed in QOI mode
+mgard:norm_time  | uint32 | ms | the time required to compute the norm in QOI mode

@@ -77,7 +77,7 @@ TEST_F(PressioDataTests, Printers) {
   pressio_data* d = pressio_data_new_nonowning(pressio_int32_dtype, data.data(), 2, dims);
   std::stringstream ss;
   ss << *d;
-  EXPECT_THAT(ss.str(), testing::StrEq("data{ type=int32_t dims={2, 3, } has_data=true}"));
+  EXPECT_THAT(ss.str(), testing::StrEq("data{ type=int32_t dims={2, 3, } has_data=[0, 1, 2, 3, 4, 5, ]}"));
   pressio_data_free(d);
 }
 

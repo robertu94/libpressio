@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.46.3" LANGUAGES CXX C)
+project(libpressio VERSION "0.47.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -401,6 +401,7 @@ if(BUILD_DOCS)
   doxygen_add_docs(
     docs
     ${PROJECT_SOURCE_DIR}/README.md
+    ${PROJECT_SOURCE_DIR}/CONTRIBUTORS.md
     ${PROJECT_SOURCE_DIR}/docs
     ${PROJECT_SOURCE_DIR}/include
     COMMENT "Generate Documenation"

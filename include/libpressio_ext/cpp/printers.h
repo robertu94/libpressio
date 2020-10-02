@@ -3,6 +3,7 @@
 
 
 
+#include <iterator>
 #include <string>
 #include <ostream>
 #include "options.h"
@@ -12,6 +13,23 @@
 /** \file 
  *  \brief C++ stream compatible IO functions
  *  */
+
+template <class CharT = char, class Traits = std::char_traits<CharT>>
+struct print_elements_helper{
+  template <class T>
+  int operator()(T const* begin,  T const* end) {
+    out << '[';
+    std::copy( begin, end, std::ostream_iterator<T>(out, ", "));
+    out << ']';
+    return 0;
+  }
+  std::basic_ostream<CharT, Traits>& out;
+};
+
+template <class CharT = char, class Traits = std::char_traits<CharT>>
+print_elements_helper<CharT, Traits> print_elements(std::basic_ostream<CharT, Traits> &out) {
+  return print_elements_helper<CharT, Traits>{out};
+}
 
 /**
  * human readable debugging IO function for pressio_data, the format is unspecified
@@ -27,7 +45,15 @@ operator<<(std::basic_ostream<CharT, Traits>& out, pressio_data const& data) {
   for (auto const& dim : data.dimensions()) {
     out << dim << ", ";  
   }
-  return out << "} has_data=" << std::boolalpha << data.has_data() << "}";
+  out << "} has_data=" ;
+  if(data.has_data() &&  data.num_elements() < 10 ) {
+    pressio_data_for_each<int>(data, print_elements(out));
+    out << '}';
+  } else {
+    out << std::boolalpha << data.has_data() << "}";
+  }
+
+  return out;
 }
 
 /**
