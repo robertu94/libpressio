@@ -2,6 +2,20 @@
 
 ## Compressors
 
+### bit grooming
+
+
+
+option                  | type        | description
+------------------------|-------------|------------
+`bit_grooming:bgMode` | int32 | the mode parameter of bit grooming: BITGROOM, BITSHAVE and BITSET.
+`bit_grooming:errorControlMode` | int32 | the error control mode of bit grooming: BG_NSD or BG_DSD. BG_NSD stands for number of significant number. BG_DSD stands for number of significant decimal number.
+`bit_grooming:nsd` | int32 | If you set BG_NSD in the error control mode, please set this parameter.
+`bit_grooming:dsd` | int32 | If you set BG_DSD in the error control mode, please set this parameter.
+
+
+
+
 ### BLOSC
 
 BLOSC is a collection of lossless compressors optimized to transfer data more quickly than a direct memory fetch can preform.  More information on BLOSC can be found on its [project homepage](https://blosc.org/pages/blosc-in-depth/)
@@ -13,6 +27,16 @@ option                  | type        | description
 `blosc:compressor` | char* | a compressor name corresponding to a blosc compressor codec
 `blosc:doshuffle` | int32 | what if any kind of pre-bit shuffling to preform
 `blosc:numinternalthreads` | int32 | number of threads used internally by the library
+
+
+### digit rounding
+
+
+
+option                  | type        | description
+------------------------|-------------|------------
+`digit_rounding:prec` | int32 | the prec parameter of digit rounding
+
 
 ### fpzip
 
