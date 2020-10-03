@@ -10,14 +10,18 @@
 #include "pressio_compressor.h"
 #include "libpressio_ext/compat/memory.h"
 
-class bg_plugin: public libpressio_compressor_plugin {
+#define VERSION_PATCH 3
+#define INVALID_TYPE -1
+
+
+class bit_grooming_plugin: public libpressio_compressor_plugin {
   public:
     struct pressio_options get_options_impl() const override {
       struct pressio_options options;
-      set(options, "bg:bgMode", bgMode_libpressio);
-      set(options, "bg:errorControlMode", errorControlMode_libpressio);
-      set(options, "bg:nsd", nsd_libpressio);
-      set(options, "bg:dsd", dsd_libpressio);
+      set(options, "bit_grooming:bgMode", bgMode_libpressio);
+      set(options, "bit_grooming:errorControlMode", errorControlMode_libpressio);
+      set(options, "bit_grooming:nsd", nsd_libpressio);  //number of significant digits
+      set(options, "bit_grooming:dsd", dsd_libpressio);  //number of significant decimal digits
       return options;
     }
 
@@ -28,20 +32,20 @@ class bg_plugin: public libpressio_compressor_plugin {
     }
 
     int set_options_impl(struct pressio_options const& options) override {
-      get(options, "bg:bgMode", &bgMode_libpressio);
-      get(options, "bg:errorControlMode", &errorControlMode_libpressio);
-      get(options, "bg:nsd", &nsd_libpressio);
-      get(options, "bg:dsd", &dsd_libpressio);
+      get(options, "bit_grooming:bgMode", &bgMode_libpressio);
+      get(options, "bit_grooming:errorControlMode", &errorControlMode_libpressio);
+      get(options, "bit_grooming:nsd", &nsd_libpressio);  //number of significant digits
+      get(options, "bit_grooming:dsd", &dsd_libpressio);  //number of significant decimal digits
       return 0;
     }
 
     int compress_impl(const pressio_data *input, struct pressio_data* output) override {
       int type = libpressio_type_to_bg_type(pressio_data_dtype(input));
-      if(type == -1) {
-         return set_error(2, "Invalid data type");
+      if(type == INVALID_TYPE) {
+         return INVALID_TYPE;
       }
 
-      size_t nbEle = static_cast<size_t>(pressio_data_num_elements(input));
+      size_t nbEle = pressio_data_num_elements(input);
       unsigned long outSize;
       void* data = pressio_data_ptr(input, nullptr);
       unsigned char* compressed_data;
@@ -49,10 +53,9 @@ class bg_plugin: public libpressio_compressor_plugin {
 
       compressed_data = BG_compress_args(type, data, &outSize, bgMode_libpressio, errorControlMode_libpressio, nsd_libpressio, dsd_libpressio, nbEle);
 
-      //that means the compressor is complaining about the parameter
       if(compressed_data == NULL)
       {
-        return set_error(2, "Error when bg is compressing the data");
+        return set_error(2, "Error when bit grooming is compressing the data");
       }
 
       *output = pressio_data::move(pressio_byte_dtype, compressed_data, 1, &outSize, pressio_data_libc_free_fn, nullptr);
@@ -61,11 +64,11 @@ class bg_plugin: public libpressio_compressor_plugin {
 
     int decompress_impl(const pressio_data *input, struct pressio_data* output) override {
       int type = libpressio_type_to_bg_type(pressio_data_dtype(output));
-      if(type == -1) {
-         set_error(2, "Invalid data type");
+      if(type == INVALID_TYPE) {
+         return INVALID_TYPE;
       }
       unsigned char* bytes = (unsigned char*)pressio_data_ptr(input, nullptr);
-      size_t nbEle = static_cast<size_t>(pressio_data_num_elements(output));
+      size_t nbEle = pressio_data_num_elements(output);
       size_t byteLength = pressio_data_get_bytes(input);
 
       void* decompressed_data = BG_decompress(type, bytes, byteLength, nbEle);
@@ -76,16 +79,16 @@ class bg_plugin: public libpressio_compressor_plugin {
 
     
     int major_version() const override {
-      return 0;
+      return BG_VER_MAJOR;
     }
     int minor_version() const override {
-      return 0;
+      return BG_VER_MINOR;
     }
     int patch_version() const override {
-      return 0;
+      return VERSION_PATCH;
     }
     int revision_version () const { 
-      return 1;
+      return BG_VER_REVISION;
     }
 
     const char* version() const override {
@@ -94,16 +97,13 @@ class bg_plugin: public libpressio_compressor_plugin {
 
 
     const char* prefix() const override {
-      return "bg";
+      return "bit_grooming";
     }
 
     std::shared_ptr<libpressio_compressor_plugin> clone() override {
-      return compressor_plugins().build("bg");
+      return compat::make_unique<bit_grooming_plugin>(*this);
     }
   private:
-    int internal_error(int rc) { std::stringstream ss; ss << "interal error " << rc; return set_error(1, ss.str()); }
-    int reshape_error() { return set_error(2, "failed to reshape array after compression"); }
-
     int libpressio_type_to_bg_type(pressio_dtype type)
     {
       if(type == pressio_float_dtype)
@@ -116,7 +116,8 @@ class bg_plugin: public libpressio_compressor_plugin {
       }
       else
       {
-        return -1;
+        set_error(2, "Invalid data type")
+        return INVALID_TYPE;
       }
     }
 
@@ -124,5 +125,5 @@ class bg_plugin: public libpressio_compressor_plugin {
     
 };
 
-static pressio_register compressor_bg_plugin(compressor_plugins(), "bg", [](){ static auto bg = std::make_shared<bg_plugin>(); return bg; });
+static pressio_register compressor_bit_grooming_plugin(compressor_plugins(), "Bit Grooming", [](){ static auto bg = std::make_shared<bit_grooming_plugin>(); return bg; });
 

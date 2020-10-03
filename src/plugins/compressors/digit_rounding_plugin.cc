@@ -10,6 +10,9 @@
 #include "pressio_compressor.h"
 #include "libpressio_ext/compat/memory.h"
 
+#define VERSION_PATCH 3;
+#define INVALID_TYPE -1
+
 class digit_rounding_plugin: public libpressio_compressor_plugin {
   public:
       struct pressio_options get_options_impl() const override {
@@ -32,11 +35,11 @@ class digit_rounding_plugin: public libpressio_compressor_plugin {
 
     int compress_impl(const pressio_data *input, struct pressio_data* output) override {
       int type = libpressio_type_to_dr_type(pressio_data_dtype(input));
-      if(type == -1) {
-         return -1;
+      if(type == INVALID_TYPE) {
+         return INVALID_TYPE;
       }
 
-      size_t nbEle = static_cast<size_t>(pressio_data_num_elements(input));
+      size_t nbEle = pressio_data_num_elements(input);
       unsigned long outSize;
       void* data = pressio_data_ptr(input, nullptr);
       unsigned char* compressed_data = dround_compress_libpressio(type, data, nbEle, &outSize);
@@ -47,11 +50,11 @@ class digit_rounding_plugin: public libpressio_compressor_plugin {
 
     int decompress_impl(const pressio_data *input, struct pressio_data* output) override {
       int type = libpressio_type_to_dr_type(pressio_data_dtype(output));
-      if(type == -1) {
-         return -1;
+      if(type == INVALID_TYPE) {
+         return INVALID_TYPE;
       }
       void* bytes = pressio_data_ptr(input, nullptr);
-      size_t nbEle = static_cast<size_t>(pressio_data_num_elements(output));
+      size_t nbEle = pressio_data_num_elements(output);
       size_t outSize = input -> size_in_bytes();
       void* decompressed_data = dround_decompress(type, (unsigned char*)bytes, nbEle, static_cast<unsigned long>(outSize));
       *output = pressio_data::move(pressio_data_dtype(output), decompressed_data, 1, &nbEle, pressio_data_libc_free_fn, nullptr);
@@ -61,16 +64,16 @@ class digit_rounding_plugin: public libpressio_compressor_plugin {
 
     
     int major_version() const override {
-      return 0;
+      return DROUND_VER_MAJOR;
     }
     int minor_version() const override {
-      return 0;
+      return DROUND_VER_MINOR;
     }
     int patch_version() const override {
-      return 0;
+      return VERSION_PATCH;
     }
     int revision_version () const { 
-      return 1;
+      return DROUND_VER_REVISION;
     }
 
     const char* version() const override {
@@ -83,12 +86,9 @@ class digit_rounding_plugin: public libpressio_compressor_plugin {
     }
 
     std::shared_ptr<libpressio_compressor_plugin> clone() override {
-      return compressor_plugins().build("digit_rounding");
+      return compat::make_unique<digit_rounding_plugin>(*this);
     }
   private:
-    int internal_error(int rc) { std::stringstream ss; ss << "interal error " << rc; return set_error(1, ss.str()); }
-    int reshape_error() { return set_error(2, "failed to reshape array after compression"); }
-
     int libpressio_type_to_dr_type(pressio_dtype type)
     {
       if(type == pressio_float_dtype)
@@ -101,7 +101,8 @@ class digit_rounding_plugin: public libpressio_compressor_plugin {
       }
       else
       {
-        return -1;
+        set_error(2, "Invalid data type")
+        return INVALID_TYPE;
       }
     }
 

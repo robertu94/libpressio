@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.42.1" LANGUAGES CXX C)
+project(libpressio VERSION "0.47.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -27,13 +27,13 @@ option(BUILD_SHARED_LIBS "build libpressio as a shared library" ON)
 
 include(GNUInstallDirs)
 include(CheckCXXCompilerFlag)
-include(CheckIncludeFileCXX)
 
 check_cxx_compiler_flag("-fno-omit-frame-pointer" HAVE_NO_OMIT_FRAME_POINTER)
 set(NO_OMIT_FRAME_POINTER_FLAG "")
 if(HAVE_NO_OMIT_FRAME_POINTER)
   set(NO_OMIT_FRAME_POINTER_FLAG "-fno-omit-frame-pointer")
 endif()
+
 
 #check for c++17 features
 function(check_cpp_standard api)
@@ -64,6 +64,8 @@ check_cpp_standard(span)
 check_cpp_standard(void_t)
 check_cpp_standard(negation)
 check_cpp_standard(clamp)
+check_cpp_standard(string_view)
+check_cpp_standard(is_null_pointer)
 
 
 set(LIBPRESSIO_FEATURES "")
@@ -85,6 +87,7 @@ add_library(libpressio
 
   #compat implementation
   ./src/compat/span.cc
+  ./src/compat/optional.cc
 
   #plugins
   ./src/plugins/compressors/compressor_base.cc
@@ -167,8 +170,8 @@ if(LIBPRESSIO_HAS_OPENMP)
     )
 endif()
 
-option(LIBPRESSIO_HAS_DR "build the DR plugin" OFF)
-if(LIBPRESSIO_HAS_DR)
+option(LIBPRESSIO_HAS_DIGIT_ROUNDING "build the DIGIT ROUNDING plugin" OFF)
+if(LIBPRESSIO_HAS_DIGIT_ROUNDING)
   set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} DR")
   find_package(dround REQUIRED)
   find_package(zlib REQUIRED)
@@ -176,12 +179,11 @@ if(LIBPRESSIO_HAS_DR)
     PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/digit_rounding_plugin.cc
     )
-  target_link_libraries(libpressio PRIVATE dround)
-  target_link_libraries(libpressio PRIVATE zlib)
+  target_link_libraries(libpressio PRIVATE dround zlib)
 endif()
 
-option(LIBPRESSIO_HAS_BG "build the BG plugin" OFF)
-if(LIBPRESSIO_HAS_BG)
+option(LIBPRESSIO_HAS_BIT_GROOMING "build the BIT GROOMING plugin" OFF)
+if(LIBPRESSIO_HAS_BIT_GROOMING)
   set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} BG")
   find_package(bg REQUIRED)
   find_package(zlib REQUIRED)
@@ -189,16 +191,15 @@ if(LIBPRESSIO_HAS_BG)
     PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/bg_plugin.cc
     )
-  target_link_libraries(libpressio PRIVATE bg)
-  target_link_libraries(libpressio PRIVATE zlib)
+  target_link_libraries(libpressio PRIVATE bg zlib)
 endif()
 
 option(LIBPRESSIO_HAS_MGARD "build the MGARD plugin" OFF)
 if(LIBPRESSIO_HAS_MGARD)
   set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} mgard")
   find_package(mgard REQUIRED)
-  check_include_file_cxx(mgard_api_float.h LIBPRESSIO_MGARD_NEED_FLOAT_HEADER
-    -I $<TARGET_PROPERTY:mgard::mgard,INTERFACE_INCLUDE_DIRECTORIES>)
+  find_file(LIBPRESSIO_MGARD_NEED_FLOAT_HEADER mgard_api_float.h)
+  find_file(LIBPRESSIO_MGARD_HAS_CONFIG_HEADER MGARDConfig.h)
   target_sources(libpressio
     PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/mgard_plugin.cc
@@ -223,35 +224,13 @@ if(LIBPRESSIO_HAS_SZ)
   find_package(SZ REQUIRED)
   find_package(ZLIB REQUIRED)
   pkg_search_module(ZSTD IMPORTED_TARGET GLOBAL libzstd)
-  pkg_search_module(FFTW3 IMPORTED_TARGET GLOBAL fftw3)
+  pkg_search_module(FFTW3 QUIET IMPORTED_TARGET GLOBAL fftw3)
   target_sources(libpressio
     PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/sz_plugin.cc
     )
   target_link_libraries(libpressio PRIVATE SZ)
 endif()
-
-# option(LIBPRESSIO_HAS_DR "build the DR plugin" OFF)
-# if(LIBPRESSIO_HAS_DR)
-#   set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} DR")
-#   find_library(DR_LIBRARIES dround)
-#   find_library(ZLIB_LIBRARIES zlib)
-#   find_file(DR_INCLUDE_FILE libdround.h)
-#   find_file(ZLIB_INCLUDE_FILE callZlib.h)
-#   if(NOT DR_LIBRARIES)
-#     message(FATAL_ERROR "Failed to find digit rounding and it was enabled")
-#   endif()
-#   get_filename_component(DR_INCLUDE_DIRS ${DR_INCLUDE_FILE} DIRECTORY)
-#   get_filename_component(ZLIB_INCLUDE_DIRS ${ZLIB_INCLUDE_FILE} DIRECTORY)
-#   target_sources(libpressio
-#     PRIVATE
-#       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/digit_rounding_plugin.cc
-#     )
-#   target_link_libraries(libpressio PRIVATE ${DR_LIBRARIES})
-#   target_link_libraries(libpressio PRIVATE ${ZLIB_LIBRARIES})
-#   target_include_directories(libpressio PRIVATE ${DR_INCLUDE_DIRS})
-#   target_include_directories(libpressio PRIVATE ${ZLIB_INCLUDE_DIRS})
-# endif()
 
 option(LIBPRESSIO_HAS_BLOSC "build the BLOSC plugin" OFF)
 if(LIBPRESSIO_HAS_BLOSC)
@@ -333,17 +312,16 @@ if(LIBPRESSIO_HAS_MPI)
   target_link_libraries(libpressio PRIVATE MPI::MPI_CXX)
 endif()
 
-#ftk support is not stable yet
-#option(LIBPRESSIO_HAS_FTK "build the FTK metrics modules" OFF)
-#if(LIBPRESSIO_HAS_FTK)
-#  find_package(FTK)
-#  target_sources(
-#    libpressio
-#    PRIVATE
-#    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/metrics/ftk_critical_points.cc
-#    )
-#  target_include_directories(libpressio PRIVATE ${FTK_INCLUDE_DIRS})
-#endif()
+option(LIBPRESSIO_HAS_FTK "build the FTK metrics modules" OFF)
+if(LIBPRESSIO_HAS_FTK)
+  find_package(FTK)
+  target_sources(
+    libpressio
+    PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/metrics/ftk_critical_points.cc
+    )
+  target_include_directories(libpressio PRIVATE ${FTK_INCLUDE_DIRS})
+endif()
 
 
 option(LIBPRESSIO_HAS_PETSC "build the petsc io plugin" OFF)
@@ -447,6 +425,7 @@ if(BUILD_DOCS)
   doxygen_add_docs(
     docs
     ${PROJECT_SOURCE_DIR}/README.md
+    ${PROJECT_SOURCE_DIR}/CONTRIBUTORS.md
     ${PROJECT_SOURCE_DIR}/docs
     ${PROJECT_SOURCE_DIR}/include
     COMMENT "Generate Documenation"
