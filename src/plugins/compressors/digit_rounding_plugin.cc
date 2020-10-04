@@ -10,11 +10,15 @@
 #include "pressio_compressor.h"
 #include "libpressio_ext/compat/memory.h"
 
-#define VERSION_PATCH 3;
 #define INVALID_TYPE -1
 
 class digit_rounding_plugin: public libpressio_compressor_plugin {
   public:
+      digit_rounding_plugin() {
+      std::stringstream ss;
+      ss << digit_rounding_plugin::major_version() << "." << digit_rounding_plugin::minor_version() << "." << digit_rounding_plugin::patch_version() << "." << digit_rounding_plugin::revision_version();
+      dround_version = ss.str();
+    };
       struct pressio_options get_options_impl() const override {
       struct pressio_options options;
       set(options, "digit_rounding:prec", prec_user_defined);
@@ -70,14 +74,14 @@ class digit_rounding_plugin: public libpressio_compressor_plugin {
       return DROUND_VER_MINOR;
     }
     int patch_version() const override {
-      return VERSION_PATCH;
+      return DROUND_VER_BUILD;
     }
     int revision_version () const { 
       return DROUND_VER_REVISION;
     }
 
     const char* version() const override {
-      return "0.0.1"; 
+      return dround_version.c_str(); 
     }
 
 
@@ -89,6 +93,7 @@ class digit_rounding_plugin: public libpressio_compressor_plugin {
       return compat::make_unique<digit_rounding_plugin>(*this);
     }
   private:
+    std::string dround_version;
     int libpressio_type_to_dr_type(pressio_dtype type)
     {
       if(type == pressio_float_dtype)
@@ -110,5 +115,4 @@ class digit_rounding_plugin: public libpressio_compressor_plugin {
     
 };
 
-static pressio_register compressor_digit_rounding_plugin(compressor_plugins(), "digit_rounding", [](){ static auto dr = std::make_shared<digit_rounding_plugin>(); return dr; });
-
+static pressio_register compressor_digit_rounding_plugin(compressor_plugins(), "digit_rounding", [](){return compat::make_unique<digit_rounding_plugin>(); });

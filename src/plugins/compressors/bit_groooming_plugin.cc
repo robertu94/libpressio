@@ -10,18 +10,22 @@
 #include "pressio_compressor.h"
 #include "libpressio_ext/compat/memory.h"
 
-#define VERSION_PATCH 3
 #define INVALID_TYPE -1
 
 
 class bit_grooming_plugin: public libpressio_compressor_plugin {
   public:
+    bit_grooming_plugin() {
+      std::stringstream ss;
+      ss << bit_grooming_plugin::major_version() << "." << bit_grooming_plugin::minor_version() << "." << bit_grooming_plugin::patch_version() << "." << bit_grooming_plugin::revision_version();
+      bg_version = ss.str();
+    };
     struct pressio_options get_options_impl() const override {
       struct pressio_options options;
-      set(options, "bit_grooming:bgMode", bgMode_libpressio);
-      set(options, "bit_grooming:errorControlMode", errorControlMode_libpressio);
-      set(options, "bit_grooming:nsd", nsd_libpressio);  //number of significant digits
-      set(options, "bit_grooming:dsd", dsd_libpressio);  //number of significant decimal digits
+      set(options, "bit_grooming:mode", bgMode_libpressio);
+      set(options, "bit_grooming:error_control_mode", errorControlMode_libpressio);
+      set(options, "bit_grooming:n_sig_digits", nsd_libpressio);  //number of significant digits
+      set(options, "bit_grooming:n_sig_decimals", dsd_libpressio);  //number of significant decimal digits
       return options;
     }
 
@@ -32,10 +36,10 @@ class bit_grooming_plugin: public libpressio_compressor_plugin {
     }
 
     int set_options_impl(struct pressio_options const& options) override {
-      get(options, "bit_grooming:bgMode", &bgMode_libpressio);
-      get(options, "bit_grooming:errorControlMode", &errorControlMode_libpressio);
-      get(options, "bit_grooming:nsd", &nsd_libpressio);  //number of significant digits
-      get(options, "bit_grooming:dsd", &dsd_libpressio);  //number of significant decimal digits
+      get(options, "bit_grooming:mode", &bgMode_libpressio);
+      get(options, "bit_grooming:error_control_mode", &errorControlMode_libpressio);
+      get(options, "bit_grooming:n_sig_digits", &nsd_libpressio);  //number of significant digits
+      get(options, "bit_grooming:n_sig_decimals", &dsd_libpressio);  //number of significant decimal digits
       return 0;
     }
 
@@ -85,14 +89,14 @@ class bit_grooming_plugin: public libpressio_compressor_plugin {
       return BG_VER_MINOR;
     }
     int patch_version() const override {
-      return VERSION_PATCH;
+      return BG_VER_BUILD;
     }
     int revision_version () const { 
       return BG_VER_REVISION;
     }
 
     const char* version() const override {
-      return "0.0.1"; 
+      return bg_version.c_str(); 
     }
 
 
@@ -104,6 +108,7 @@ class bit_grooming_plugin: public libpressio_compressor_plugin {
       return compat::make_unique<bit_grooming_plugin>(*this);
     }
   private:
+    std::string bg_version;
     int libpressio_type_to_bg_type(pressio_dtype type)
     {
       if(type == pressio_float_dtype)
@@ -125,5 +130,4 @@ class bit_grooming_plugin: public libpressio_compressor_plugin {
     
 };
 
-static pressio_register compressor_bit_grooming_plugin(compressor_plugins(), "Bit Grooming", [](){ static auto bg = std::make_shared<bit_grooming_plugin>(); return bg; });
-
+static pressio_register compressor_bit_grooming_plugin(compressor_plugins(), "bit_grooming", [](){return compat::make_unique<bit_grooming_plugin>(); });

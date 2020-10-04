@@ -8,10 +8,10 @@
 
 option                  | type        | description
 ------------------------|-------------|------------
-`bit_grooming:bgMode` | int32 | the mode parameter of bit grooming: BITGROOM, BITSHAVE and BITSET.
-`bit_grooming:errorControlMode` | int32 | the error control mode of bit grooming: BG_NSD or BG_DSD. BG_NSD stands for number of significant number. BG_DSD stands for number of significant decimal number.
-`bit_grooming:nsd` | int32 | If you set BG_NSD in the error control mode, please set this parameter.
-`bit_grooming:dsd` | int32 | If you set BG_DSD in the error control mode, please set this parameter.
+`bit_grooming:mode` | int32 | the mode parameter of bit grooming: BITGROOM, BITSHAVE and BITSET.
+`bit_grooming:error_control_mode` | int32 | the error control mode of bit grooming: BG_NSD or BG_DSD. BG_NSD stands for number of significant number. BG_DSD stands for number of significant decimal number.
+`bit_grooming:n_sig_digits` | int32 | If you set BG_NSD in the error control mode, please set this parameter.
+`bit_grooming:n_sig_decimals` | int32 | If you set BG_DSD in the error control mode, please set this parameter.
 
 
 
