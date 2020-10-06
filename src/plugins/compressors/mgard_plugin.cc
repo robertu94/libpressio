@@ -1,7 +1,9 @@
 #include <cassert>
+#include <exception>
 #include <memory>
 #include <sstream>
 #include <chrono>
+#include <stdexcept>
 #include "libpressio_ext/compat/optional.h"
 #include "pressio_version.h"
 
@@ -213,6 +215,7 @@ class mgard_plugin: public libpressio_compressor_plugin {
       } 
     }
     //mgard destroys the input so we must copy it here to prevent the real input from being destroyed
+    try {
     auto type = pressio_data_dtype(input); 
     auto input_copy = pressio_data::clone(*input);
     switch(type) {
@@ -225,6 +228,9 @@ class mgard_plugin: public libpressio_compressor_plugin {
       default:
         return invalid_type(type);
     }
+    } catch (std::exception const& e) {
+      return set_error(7, e.what());
+    }
   };
 
   
@@ -236,6 +242,7 @@ class mgard_plugin: public libpressio_compressor_plugin {
         return rc;
       } 
      }
+    try {
     auto input_copy = pressio_data::clone(*input);
     auto type = pressio_data_dtype(output); 
     switch(type) {
@@ -247,6 +254,9 @@ class mgard_plugin: public libpressio_compressor_plugin {
           return 0;
       default:
         return invalid_type(type);
+    }
+    } catch (std::exception const& e) {
+      return set_error(7, e.what());
     }
 
 

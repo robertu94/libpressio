@@ -127,6 +127,9 @@ class sz_plugin: public libpressio_compressor_plugin {
 	  set_type(options, "sz:prediction_mode", pressio_option_int32_type);
     set_type(options, "sz:data_type", pressio_option_double_type);
     set(options, "sz:app", app.c_str());
+#ifdef HAVE_RANDOMACCESS
+    set(options, "sz:random_access", confparams_cpr->randomAccess);
+#endif
     set(options, "sz:user_params", user_params);
     return options;
   }
@@ -174,6 +177,9 @@ class sz_plugin: public libpressio_compressor_plugin {
     get(options, "sz:accelerate_pw_rel_compression", &confparams_cpr->accelerate_pw_rel_compression);
     get(options, "sz:data_type", &confparams_cpr->dataType);
     get(options, "sz:app", &app);
+#ifdef HAVE_RANDOMACCESS
+    get(options, "sz:random_access", &confparams_cpr->randomAccess);
+#endif
     get(options, "sz:user_params", &user_params);
 
     return 0;

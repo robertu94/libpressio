@@ -57,8 +57,13 @@ class pressio_distributed_manager: public pressio_configurable, public pressio_e
   }
 
   template <class T>
-  int bcast(T& t, int bcast_root=0) {
+  int bcast(T& t, int bcast_root) {
     return distributed::comm::bcast(t, bcast_root, comm);
+  }
+
+  template <class T>
+  int bcast(T& t) {
+    return distributed::comm::bcast(t, root, comm);
   }
 
   int comm_size() const {

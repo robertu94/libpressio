@@ -135,6 +135,7 @@ class libpressio_compressor_plugin :public pressio_configurable, public pressio_
   template <class InputRandomAccessIterator, class OutputRandomAccessIterator>
   int compress_many(InputRandomAccessIterator in_begin, InputRandomAccessIterator in_end,
                     OutputRandomAccessIterator out_begin, OutputRandomAccessIterator out_end) {
+    set_error(0, "");
     compat::span<const pressio_data* const> inputs(in_begin, in_end);
     compat::span<pressio_data*> outputs(out_begin, out_end);
     if(metrics_plugin) metrics_plugin->begin_compress_many(inputs, outputs);
@@ -152,6 +153,7 @@ class libpressio_compressor_plugin :public pressio_configurable, public pressio_
   template <class InputRandomAccessIterator, class OutputRandomAccessIterator>
   int decompress_many(InputRandomAccessIterator in_begin, InputRandomAccessIterator in_end,
                       OutputRandomAccessIterator out_begin, OutputRandomAccessIterator out_end) {
+    set_error(0, "");
     compat::span<const pressio_data* const> inputs(in_begin, in_end);
     compat::span<pressio_data*> outputs(out_begin, out_end);
     if(metrics_plugin) metrics_plugin->begin_decompress_many(inputs, outputs);

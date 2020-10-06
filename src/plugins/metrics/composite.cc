@@ -159,11 +159,7 @@ class composite_plugin : public libpressio_metrics_plugin {
   }
 
   std::unique_ptr<libpressio_metrics_plugin> clone() override {
-    std::vector<pressio_metrics> cloned;
-    for (auto& plugin : plugins) {
-      cloned.emplace_back(plugin->clone());
-    }
-    return compat::make_unique<composite_plugin>(std::move(cloned));
+    return compat::make_unique<composite_plugin>(*this);
   }
 
   const char* prefix() const override {

@@ -33,6 +33,7 @@ namespace {
 }
 
 int libpressio_compressor_plugin::check_options(struct pressio_options const& options) {
+  set_error(0, "");
 
   if(metrics_plugin) metrics_plugin->begin_check_options(&options);
 
@@ -80,6 +81,7 @@ struct pressio_options libpressio_compressor_plugin::get_options() const {
 }
 
 int libpressio_compressor_plugin::set_options(struct pressio_options const& options) {
+  set_error(0, "");
   if(metrics_plugin) metrics_plugin->begin_set_options(options);
   get_meta(options, get_metrics_key_name(), metrics_plugins(), metrics_id, metrics_plugin);
   auto ret = set_options_impl(options);
@@ -88,6 +90,7 @@ int libpressio_compressor_plugin::set_options(struct pressio_options const& opti
 }
 
 int libpressio_compressor_plugin::compress(const pressio_data *input, struct pressio_data* output) {
+  set_error(0, "");
   if(metrics_plugin) metrics_plugin->begin_compress(input, output);
   auto ret = compress_impl(input, output);
   if(metrics_plugin) metrics_plugin->end_compress(input, output, ret);
@@ -95,6 +98,7 @@ int libpressio_compressor_plugin::compress(const pressio_data *input, struct pre
 }
 
 int libpressio_compressor_plugin::decompress(const pressio_data *input, struct pressio_data* output) {
+  set_error(0, "");
   if(metrics_plugin) metrics_plugin->begin_decompress(input, output);
   auto ret = decompress_impl(input, output);
   if(metrics_plugin) metrics_plugin->end_decompress(input, output, ret);
@@ -134,6 +138,7 @@ struct pressio_options libpressio_compressor_plugin::get_metrics_options() const
 }
 
 int libpressio_compressor_plugin::set_metrics_options(struct pressio_options const& options) {
+  set_error(0, "");
   return metrics_plugin->set_options(options);
 }
 
