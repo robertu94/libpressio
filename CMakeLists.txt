@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.48.0" LANGUAGES CXX C)
+project(libpressio VERSION "0.49.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -168,6 +168,30 @@ if(LIBPRESSIO_HAS_OPENMP)
     PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/metrics/spatial_error.cc
     )
+endif()
+
+option(LIBPRESSIO_HAS_DIGIT_ROUNDING "build the DIGIT ROUNDING plugin" OFF)
+if(LIBPRESSIO_HAS_DIGIT_ROUNDING)
+  set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} DR")
+  find_package(dround REQUIRED)
+  find_package(ZLIB REQUIRED)
+  target_sources(libpressio
+    PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/digit_rounding_plugin.cc
+    )
+  target_link_libraries(libpressio PRIVATE dround ZLIB::ZLIB)
+endif()
+
+option(LIBPRESSIO_HAS_BIT_GROOMING "build the BIT GROOMING plugin" OFF)
+if(LIBPRESSIO_HAS_BIT_GROOMING)
+  set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} BG")
+  find_package(bg REQUIRED)
+  find_package(ZLIB REQUIRED)
+  target_sources(libpressio
+    PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/bit_groooming_plugin.cc
+    )
+  target_link_libraries(libpressio PRIVATE bg ZLIB::ZLIB)
 endif()
 
 option(LIBPRESSIO_HAS_MGARD "build the MGARD plugin" OFF)
