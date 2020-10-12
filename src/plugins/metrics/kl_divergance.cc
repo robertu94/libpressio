@@ -62,8 +62,8 @@ public:
   {
     pressio_options opt;
     if (err_metrics) {
-      set(opt, "kl_divergenc:q_p", (*err_metrics).q_p);
-      set(opt, "kl_divergenc:p_q", (*err_metrics).p_q);
+      set(opt, "kl_divergence:q_p", (*err_metrics).q_p);
+      set(opt, "kl_divergence:p_q", (*err_metrics).p_q);
     } else {
       set_type(opt, "kl_divergence:q_p", pressio_option_double_type);
       set_type(opt, "kl_divergence:p_q", pressio_option_double_type);

@@ -18,8 +18,6 @@ namespace pearson {
     pearson_metrics operator()(ForwardIt1 input_begin, ForwardIt1 input_end,
                              ForwardIt2 decomp_begin, ForwardIt2 decomp_end)
     {
-      using value_type = typename std::iterator_traits<ForwardIt1>::value_type;
-      static_assert(std::is_same<typename std::iterator_traits<ForwardIt1>::value_type, value_type>::value, "the iterators must have the same type");
       double input_sum = 0;
       double decomp_sum = 0;
       size_t n = 0;
@@ -29,14 +27,16 @@ namespace pearson {
         auto input_it = input_begin;
         auto decomp_it = decomp_begin;
         while(input_it != input_end && decomp_it != decomp_end) {
+          input_sum += *input_it;
+          decomp_sum += *decomp_it;
           ++n;
           ++input_it;
           ++decomp_it;
         }
       }
 
-      double input_mean = input_sum / n;
-      double decomp_mean = decomp_sum / n;
+      double input_mean = input_sum / static_cast<double>(n);
+      double decomp_mean = decomp_sum / static_cast<double>(n);
       double x_xbar_squared_sum = 0;
       double y_ybar_squared_sum = 0;
       double x_xbar_y_ybar = 0;
@@ -48,10 +48,9 @@ namespace pearson {
         while(input_it != input_end && decomp_it != decomp_end) {
           double x_xbar = *input_it - input_mean;
           double y_ybar = *decomp_it - decomp_mean;
-          x_xbar_squared_sum += x_xbar * x_xbar;
-          y_ybar_squared_sum += y_ybar * y_ybar;
-          x_xbar_y_ybar += x_xbar * y_ybar;
-          ++n;
+          x_xbar_squared_sum += (x_xbar * x_xbar);
+          y_ybar_squared_sum += (y_ybar * y_ybar);
+          x_xbar_y_ybar += (x_xbar * y_ybar);
           ++input_it;
           ++decomp_it;
         }
