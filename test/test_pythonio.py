@@ -9,7 +9,6 @@ import numpy as np
 np.random.seed(0)
 
 import pressio
-import pressio_sz as sz
 
 library = pressio.instance()
 compressor = pressio.get_compressor(library, b"sz")
@@ -17,7 +16,7 @@ sz_options = pressio.compressor_get_options(compressor)
 metrics_ids = pressio.vector_string([b'time',b'size'])
 metrics = pressio.new_metrics(library, metrics_ids)
 
-pressio.options_set_integer(sz_options, b"sz:error_bound_mode", sz.ABS);
+pressio.options_set_string(sz_options, b"sz:error_bound_mode_str", b'abs');
 pressio.options_set_double(sz_options, b"sz:abs_err_bound", 0.5);
 
 pressio.compressor_check_options(compressor, sz_options)

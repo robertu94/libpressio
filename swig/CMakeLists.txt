@@ -27,15 +27,5 @@ if(SWIG_FOUND AND PYTHON3_FOUND)
 
 
   build_pressio_swig_module(pressio.i)
-
-  if(LIBPRESSIO_HAS_SZ)
-    build_pressio_swig_module(pressio_sz.i)
-  endif()
-
-  if(LIBPRESSIO_HAS_ZFP)
-    build_pressio_swig_module(pressio_zfp.i)
-  endif()
-
-
 endif()
 
