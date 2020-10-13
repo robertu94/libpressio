@@ -146,6 +146,10 @@ See the [compressor settings page](@ref pressiooptions) for information on how t
 + `sampling` -- a compressor which does naive, with out replacement, and with replacement sampling
 + `transpose` -- a meta-compressor which performs a transpose.
 + `resize` -- a meta-compressor which preforms a reshape operation.
++ `bit_grooming` a compressor which implements big grooming
++ `digit_rounding` a compressor which implements digit_rounding
++ `many_dependent` - a meta-compressor which runs many dependent tasks in parallel
++ `many_independent` - a meta-compressor which runs many independent tasks in parallel
 
 ### Metrics Plugins
 
@@ -156,7 +160,13 @@ See the [metrics results page](@ref metricsresults) for information on what they
 + `spatial_error` -- computes relative spatial error
 + `pearson` -- computes the pearson coefficient of correlation and pearson coefficient of determination.
 + `size` -- information on the size of the compressed and decompressed data
++ `ftk_critical_points` -- an experimental metrics plugin which finds critical points using FTK
++ `kl_divergance` -- computes the kl divergence a metric used to evaluate ML/AI models
++ `ks_test` -- computes the p value and test statistic for a KS test
++ `kth_error` -- returns the kth largest value in the dataset
 + `external` -- run an external program to collect some metrics, see [using an external metric for more information](@ref usingexternalmetric)
++ `printer` -- prints out the sequence of calls made to a libpressio compressor
++ `spatial_error` -- records the percentage of elements that exceed a configurable threshold
 
 ## Dependencies
 
@@ -173,18 +183,22 @@ Libpressio additionally optionally requires:
 + `Doxygen` version 1.8.15 or later to generate documentation
 + `HDF5` version 1.10.0 or later for HDF5 data support
 + `ImageMagick` version 6.9.7 or later for ImageMagick image support.  Version 7 or later supports additional data types.
++ `biggroomingZ` version 2.1.9 or later for bit grooming support
 + `blosc` version 1.14.2 for lossless compressor support via blosc
 + `boost` version 1.53 to compile on a c++14 or earlier compiler
++ `digitroundingZ` version 2.1.9 or later for digit rounding support
 + `fpzip` version 1.3 for fpzip support
 + `numpy` version `1.14.5` or later and its dependencies to provide the python bindings
 + `swig` version 3.0.12 or later for python support
 + `sz` commit `7b7463411f02be4700d13aac6737a6a9662806b4` or later and its dependencies to provide the SZ plugin
 + `zfp` commit `e8edaced12f139ddf16167987ded15e5da1b98da` or later and its dependencies to provide the ZFP plugin
++ `libdistributed` the latest version released at the time of a particular Libpressio release
 + `python` 3.4 or later for the python bindings
 + `lua` or `luajit` version 5.1 or later to provide custom composite metrics.  NOTE compiling with Lua support requires c++17 or later (i.e. gcc 7 or later, and clang 3.9 or later; see Sol2 for current requirements).
 + `sol2` version 3.2.0 or later to provide custom composite metrics
 + `OpenMP` development libraries and headers for your compiler compatible with OpenMP Standard 3 or later to accelerate computation of some metrics.
 + `MPI` development libraries and headers supporting MPI-2 (specifically MPI\_Comm\_spawn using the `workdir` info option) to provide the external metrics `mpispawn` launch method
++ `mgard` we endevor to supprt the development version, but is known to work with commit `b67a0ac963587f190e106cc3c0b30773a9455f7a`
 + `PETSc` version 3.12.1 or later to provide PETSc binary format IO support
 
 It is also possible to build and run libpressio via Docker using the docker files in the `docker` directory.  This functionality should be considered deprecated and will be removed in a later release, please you spack instead.
@@ -301,6 +315,10 @@ As of version 1.0.0, LibPressio will follow the following API stability guidelin
 + The functions defined in files in `./include` excluding files in the `./include/libpressio_ext/` or its subdirectories may be considered to be stable.  Furthermore, all files in this set are C compatible.
 + The functions defined in files in `./include/libpressio_ext/` are to be considered unstable.
 + The functions and modules defined in the python bindings are unstable.
++ Any functions listed above, in `docs/MetricResults.md` or in `docs/MetricResults.md` as experimental are unstable
++ Any configurable that has a key `pressio:stability` with a value of `experimental` or `unstable` are unstable.  Modules that are experimental may crash or have other severe deficiencies, modules that are unstable generally will not crash, but may have options changed according to the unstable API garunetees.
++ Any configurable that has a key `pressio:stability` with a value of `stable` conforms to the LibPressio stability garunetees
++ Any configurable that has the key `pressio:stability` with a value of `external` indicates that options/configuration returned by this module are controlled by version of the external library that it depends upon and may change at any time without changing the LibPressio version number.
 
 Stable means:
 
@@ -308,10 +326,12 @@ Stable means:
 + APIs may gain additional overloads for C++ compatible interfaces with an increase in the minor version number.
 + An API may change the number or type of parameters with an increase in the major version number.
 + An API may be removed with the change of the major version number
++ New options/configuration names may appear with a increase in the minor version number
++ Existing options/configuration names may be removed or changed with an increase in the major version number
 
 Unstable means:
 
-+ The API may change for any reason with the increase of the minor version number
++ The API or options/configuration may change for any reason with the increase of the minor version number
 
 Additionally, the performance of functions, memory usage patterns may change for both stable and unstable code with the increase of the patch version.
 

@@ -63,9 +63,16 @@ void cdf(ForwardItItems items_begin, ForwardItItems items_end,
 
 template <class RandomIt1, class RandomIt2>
 double ks_test_d(
-      RandomIt1 data1_begin, RandomIt1 data1_end,
-      RandomIt2 data2_begin, RandomIt2 data2_end) {
+      RandomIt1 data1_begin_p, RandomIt1 data1_end_p,
+      RandomIt2 data2_begin_p, RandomIt2 data2_end_p) {
 
+    std::vector<typename std::iterator_traits<RandomIt1>::value_type> data1(data1_begin_p, data1_end_p);
+    std::vector<typename std::iterator_traits<RandomIt2>::value_type> data2(data2_begin_p, data2_end_p);
+
+    auto data1_begin = data1.begin();
+    auto data1_end = data1.end();
+    auto data2_begin = data2.begin();
+    auto data2_end = data2.end();
 
     //ensure precondition of sorted inputs
     std::sort(data1_begin, data1_end);
@@ -209,8 +216,8 @@ kolmogorov(double x)
 
   struct ks_test {
     template <class RandomIt1, class RandomIt2>
-    KSTestResult operator()(RandomIt1* input_begin, RandomIt1 * input_end,
-                         RandomIt2* output_begin, RandomIt2 * output_end)
+    KSTestResult operator()(RandomIt1 const* input_begin, RandomIt1 const* input_end,
+                         RandomIt2 const* output_begin, RandomIt2 const* output_end)
     {
     const auto n1 = std::distance(input_begin, input_end);
     const auto n2 = std::distance(output_begin, output_end);

@@ -59,6 +59,41 @@ Metric                  | Type        | Units  | Description
 `time:set_options` | uint32  | ms | time to set options
 
 
+## KL Divergence
+
+A metric used to evaluate ML/AI models
+
+
+Metric                  | Type        | Units  | Description
+------------------------|-------------|--------|-------
+kl_divergance:p_q | double  | | divergence of the decompressed data given the uncompressed data
+kl_divergance:q_p | double | | divergence of the uncompressed data given the decompressed data
+
+## KS Test
+
+Computes a two sample Kolmogorov–Smirnov test between the decompressed and uncompressed data.
+
+
+Metric                  | Type        | Units  | Description
+------------------------|-------------|--------|-------
+ks_test:d | double  | | test statistic for the KS test
+ks_test:pvalue | double  | | p-value for the test statistic
+
+
+
+## Kth Error
+
+Computes a two sample Kolmogorov–Smirnov test between the decompressed and uncompressed data.
+
+
+Metric                  | Type        | Units  | Description
+------------------------|-------------|--------|-------
+kth_error:kth_error | double  | | the kth largest error value
+
+Options                  | Type        | Units  | Description
+------------------------|-------------|--------|-------
+kth_error:k | double  | | the kth largest error represented as a faction between 0 and 1.
+
 ## Composite
 
 The composite metric is special in that it is not activated explicitly, but when other metrics are enabled.  If all the metrics in the activated column are activated, this metric will have a value.
@@ -79,6 +114,30 @@ If a given script errors or fails, the value it provides will not be created.
 ## External
 
 The metrics supported by external are too complicated to summerize here, [please see its documentation](@ref usingexternalmetric)
+
+
+## Printer
+
+Records the sequence of calls made to a compressor
+
+Metric                  | Type        | Units  | Description 
+------------------------|-------------|--------|--------
+`printer:log` | `const char*[]`  |  | list of calls made to libpressio
+
+
+## Spatial Error
+
+Computes the percentage of points who's error exceed a configurable threshold.
+
+Metric                  | Type        | Units  | Description
+------------------------|-------------|--------|-------
+spatial_error:percent | double  | | the percent of errors that exceed the threshold from 0 to 100%
+
+Options                  | Type        | Units  | Description
+------------------------|-------------|--------|-------
+spatial_error:threshold | double  | | the threshold for the size of errors to be counted
+
+
 
 ## SZ
 
