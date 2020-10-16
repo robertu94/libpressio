@@ -74,7 +74,6 @@ class fpzip_plugin: public libpressio_compressor_plugin {
     fpz->type = type;
     fpz->prec = prec;
 
-    fpzip_write_to_buffer(output->data(), output->size_in_bytes());
     if(has_header) {
       if(!fpzip_write_header(fpz)) {
         return fpzip_error();

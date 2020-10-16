@@ -141,17 +141,21 @@ struct pressio_metrics {
 
   /** construct a metrics wrapper*/
   pressio_metrics(std::unique_ptr<libpressio_metrics_plugin>&& metrics): plugin(std::move(metrics)) {}
+  pressio_metrics(std::shared_ptr<libpressio_metrics_plugin>&& metrics): plugin(std::move(metrics)) {}
 
   /** allow default construction*/
   pressio_metrics()=default;
   /**
-   * move construct a metric from another pointer
+   * copy construct a metric from another pointer
    */
-  pressio_metrics(pressio_metrics const& metrics)=default;
+  pressio_metrics(pressio_metrics const& metrics): plugin(metrics->clone()) {}
   /**
    * move assigns a metric from another pointer
    */
-  pressio_metrics& operator=(pressio_metrics const& metrics)=default;
+  pressio_metrics& operator=(pressio_metrics const& metrics) {
+    plugin = metrics->clone();
+    return *this;
+  }
   /**
    * move construct a metric from another pointer
    */

@@ -137,7 +137,8 @@ void run_compressor(const char* compressor_name,
   printf("%s\n configuration\n", compressor_name);
   //configure metrics
   const char* metrics[] = {"time", "size", "error_stat"};
-  struct pressio_metrics* metrics_plugin = pressio_new_metrics(pressio_instance(), metrics, 3);
+  struct pressio* library = pressio_instance();
+  struct pressio_metrics* metrics_plugin = pressio_new_metrics(library, metrics, 3);
   pressio_compressor_set_metrics(compressor, metrics_plugin);
 
   pressio_compressor_set_options(compressor, options);
@@ -170,6 +171,7 @@ void run_compressor(const char* compressor_name,
   pressio_data_free(compressed_data);
   pressio_options_free(metrics_results);
   pressio_metrics_free(metrics_plugin);
+  pressio_release(library);
 
 
   printf("done %s\n", compressor_name);
@@ -325,6 +327,8 @@ int main(int argc, char *argv[])
   pressio_compressor_release(mgard_compressor);
   pressio_compressor_release(magick_compressor);
   pressio_compressor_release(blosc_compressor);
+  pressio_compressor_release(fpzip_compressor);
+  pressio_compressor_release(sample_compressor);
   pressio_release(library);
 
   return 0;

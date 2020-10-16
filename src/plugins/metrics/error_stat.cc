@@ -74,8 +74,8 @@ namespace error_stat {
 
       m.value_min = value_min;
       m.value_max = value_max;
-      m.value_mean = sum/num_elements;
-      m.value_std = sum_of_values_squared - (sum*sum)/(num_elements);
+      m.value_mean = sum/static_cast<double>(num_elements);
+      m.value_std = std::sqrt((sum_of_values_squared - ((sum*sum)/static_cast<double>(num_elements))) / static_cast<double>(num_elements));
       m.value_range = value_max-value_min;
 
       m.difference_range = diff_max - diff_min;

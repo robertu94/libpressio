@@ -16,6 +16,7 @@ python bindings for pressio
 #include "pressio_options_iter.h"
 #include "pressio_data.h"
 #include "libpressio_ext/io/pressio_io.h"
+#include "libpressio_ext/io/posix.h"
 #include "pypressio.h"
 %}
 
@@ -160,3 +161,4 @@ def io_data_to_numpy(ptr):
 %include "pressio_options.h"
 %include "pressio_options_iter.h"
 %include "libpressio_ext/io/pressio_io.h"
+%include "libpressio_ext/io/posix.h"

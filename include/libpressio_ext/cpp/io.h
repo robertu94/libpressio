@@ -43,6 +43,7 @@ struct libpressio_io_plugin: public pressio_configurable, public pressio_version
    */
   template <class ContigIterator>
   int read_many(ContigIterator data_begin, ContigIterator data_end) {
+    set_error(0, "");
     compat::span<struct pressio_data*> data(data_begin, data_end);
     return read_many_impl(data);
   }
@@ -64,6 +65,7 @@ struct libpressio_io_plugin: public pressio_configurable, public pressio_version
    */
   template <class ContigIterator>
   int write_many(ContigIterator data_begin, ContigIterator data_end) {
+    set_error(0, "");
     compat::span<const struct pressio_data*> data(data_begin, data_end);
     return write_many_impl(data);
   }

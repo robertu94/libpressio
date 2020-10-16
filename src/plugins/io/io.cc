@@ -80,15 +80,19 @@ int pressio_io_read_many(struct pressio_io* io, struct pressio_data** data_begin
 }
 
 struct pressio_data* libpressio_io_plugin::read(struct pressio_data* data) {
+  set_error(0, "");
   return read_impl(data);
 }
 int libpressio_io_plugin::write(struct pressio_data const* data) {
+  set_error(0, "");
   return write_impl(data);
 }
 int libpressio_io_plugin::check_options(struct pressio_options const& options) {
+  set_error(0, "");
   return check_options_impl(options);
 }
 int libpressio_io_plugin::set_options(struct pressio_options const& options) {
+  set_error(0, "");
   return set_options_impl(options);
 }
 struct pressio_options libpressio_io_plugin::get_configuration() const {

@@ -229,6 +229,7 @@ struct pressio_data {
     if(this == &rhs) return *this;
     data_dtype = rhs.data_dtype;
     if(rhs.has_data() && rhs.size_in_bytes() > 0) {
+      if(deleter != nullptr) deleter(data_ptr, metadata_ptr);
       data_ptr = malloc(rhs.size_in_bytes());
       memcpy(data_ptr, rhs.data_ptr, rhs.size_in_bytes());
     } else {
