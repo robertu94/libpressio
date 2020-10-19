@@ -8,17 +8,20 @@
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
 #include "libpressio_ext/compat/memory.h"
+#include "libpressio_ext/compat/numeric.h"
 
 namespace region_of_interest {
   struct region_of_interest_metrics {
-    compat::optional<double> avg;
-    compat::optional<double> sum;
+    compat::optional<double> input_avg;
+    compat::optional<double> input_sum;
+    compat::optional<double> decomp_avg;
+    compat::optional<double> decomp_sum;
   };
 
   struct compute_metrics{
     template <class RandomIt1, class RandomIt2>
     region_of_interest_metrics operator()(RandomIt1 input_begin, RandomIt1 ,
-                             RandomIt2 , RandomIt2 )
+                             RandomIt2 decomp_begin, RandomIt2 )
     {
       region_of_interest_metrics m;
       if (start.empty()) {
@@ -28,13 +31,19 @@ namespace region_of_interest {
         end = input_dims;
       }
 
-      double sum = 0;
-      size_t n = 0;
+      double input_sum = 0, decomp_sum = 0;
+      const size_t n = compat::transform_reduce(
+          std::begin(start), std::end(start),
+          std::begin(end),
+          uint64_t{0},
+          [](uint64_t start, uint64_t stop){ return stop-start; },
+          compat::plus<>{}
+          );
       switch (input_dims.size()) {
         case 1:
           for (uint64_t i = start[0]; i < end[0]; ++i) {
-            sum += input_begin[i];
-            n++;
+            input_sum += input_begin[i];
+            decomp_sum += decomp_begin[i];
           }
           break;
         case 2:
@@ -43,8 +52,8 @@ namespace region_of_interest {
           for (uint64_t i = start[0]; i < end[0]; ++i) {
             for (uint64_t j = start[1]; j < end[1]; ++j) {
               auto idx = j + stride * i;
-              sum += input_begin[idx];
-              n++;
+              input_sum += input_begin[idx];
+              decomp_sum += decomp_begin[idx];
             }
           }
           }
@@ -57,8 +66,8 @@ namespace region_of_interest {
             for (uint64_t j = start[1]; j < end[1]; ++j) {
               for (uint64_t k = start[2]; k < end[2]; ++k) {
                 auto idx =k + j*stride + i*stride2;
-                sum += input_begin[idx];
-                n++;
+                input_sum += input_begin[idx];
+                decomp_sum += decomp_begin[idx];
               }
             }
           }
@@ -67,8 +76,10 @@ namespace region_of_interest {
         default:
           throw std::runtime_error("region of interest currently only supports dims 1-3");
       }
-      m.avg = sum/static_cast<double>(n);
-      m.sum = sum;
+      m.input_avg = input_sum/static_cast<double>(n);
+      m.input_sum = input_sum;
+      m.decomp_avg = decomp_sum/static_cast<double>(n);
+      m.decomp_sum = decomp_sum;
       return m;
     }
 
@@ -96,8 +107,10 @@ public:
   struct pressio_options get_metrics_results() const override
   {
     pressio_options opt;
-    set(opt, "region_of_interest:average", err_metrics.avg);
-    set(opt, "region_of_interest:sum", err_metrics.sum);
+    set(opt, "region_of_interest:input_average", err_metrics.input_avg);
+    set(opt, "region_of_interest:input_sum", err_metrics.input_sum);
+    set(opt, "region_of_interest:decomp_average", err_metrics.decomp_avg);
+    set(opt, "region_of_interest:decomp_sum", err_metrics.decomp_sum);
     return opt;
   }
 
