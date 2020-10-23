@@ -131,6 +131,19 @@ __pressio_to_numpy = {
   _pressio.uint64_dtype : _pressio_io_data_to_numpy_uint64_t,
   _pressio.int64_dtype : _pressio_io_data_to_numpy_int64_t,
 }
+__pressio_to_np_dtype = {
+  _pressio.float_dtype : numpy.float32,
+  _pressio.double_dtype : numpy.double,
+  _pressio.uint8_dtype : numpy.uint8,
+  _pressio.int8_dtype : numpy.int8,
+  _pressio.uint16_dtype : numpy.uint16,
+  _pressio.int16_dtype : numpy.int16,
+  _pressio.uint32_dtype : numpy.uint32,
+  _pressio.int32_dtype : numpy.int32,
+  _pressio.uint64_dtype : numpy.uint64,
+  _pressio.int64_dtype : numpy.int64,
+}
+
 
 def io_data_from_numpy(array):
   length = len(array.shape)
@@ -140,8 +153,9 @@ def io_data_from_numpy(array):
 def io_data_to_numpy(ptr):
   num_dims = data_num_dimensions(ptr)
   dtype = data_dtype(ptr)
+  np_dtype = __pressio_to_np_dtype[dtype]
   dims = [data_get_dimension(ptr, i) for i in range(num_dims)]
-  return numpy.reshape(__pressio_to_numpy[dtype](ptr), dims)
+  return numpy.reshape(__pressio_to_numpy[dtype](ptr), dims).astype(np_dtype)
 
 
 %}
