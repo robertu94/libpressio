@@ -313,7 +313,7 @@ struct pressio_data {
    * \returns true if the structure has has data
    */
   bool has_data() const {
-    return data_ptr != nullptr;
+    return data_ptr != nullptr && size_in_bytes() > 0;
   }
   
   /**

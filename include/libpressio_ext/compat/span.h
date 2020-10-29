@@ -233,15 +233,15 @@ public:
         return {data() + size() - count, count};
     }
 
-    template <size_t _Offset, size_t Count = compat_dynamic_extent>
+    template <size_t Offset, size_t Count = compat_dynamic_extent>
     
     constexpr auto subspan() const noexcept
-        -> span<element_type, Count != compat_dynamic_extent ? Count : Extent - _Offset>
+        -> span<element_type, Count != compat_dynamic_extent ? Count : Extent - Offset>
     {
 #if __cplusplus >= 201703L
-        static_assert(_Offset <= Extent, "Offset out of range in span::subspan()");
+        static_assert(Offset <= Extent, "Offset out of range in span::subspan()");
 #endif
-        return {data() + _Offset, Count == compat_dynamic_extent ? size() - _Offset : Count};
+        return {data() + Offset, Count == compat_dynamic_extent ? size() - Offset : Count};
     }
 
 
@@ -419,15 +419,15 @@ public:
         return {data() + size() - count, count};
     }
 
-    template <size_t _Offset, size_t Count = compat_dynamic_extent>
+    template <size_t Offset, size_t Count = compat_dynamic_extent>
     
     constexpr span<Type, compat_dynamic_extent> subspan() const noexcept
     {
 #if __cplusplus >= 201703L
-        assert(_Offset <= size() && "Offset out of range in span::subspan()");
-        assert(Count == compat_dynamic_extent || _Offset + Count <= size() && "Count out of range in span::subspan()");
+        assert(Offset <= size() && "Offset out of range in span::subspan()");
+        assert(Count == compat_dynamic_extent || Offset + Count <= size() && "Count out of range in span::subspan()");
 #endif
-        return {data() + _Offset, Count == compat_dynamic_extent ? size() - _Offset : Count};
+        return {data() + Offset, Count == compat_dynamic_extent ? size() - Offset : Count};
     }
 
     constexpr span<element_type, compat_dynamic_extent>

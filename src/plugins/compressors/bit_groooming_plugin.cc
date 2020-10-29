@@ -170,7 +170,7 @@ class bit_grooming_plugin: public libpressio_compressor_plugin {
       }
       else if(type == pressio_double_dtype)
       {
-        return BG_FLOAT;
+        return BG_DOUBLE;
       }
       else
       {

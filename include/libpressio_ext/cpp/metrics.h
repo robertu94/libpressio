@@ -153,6 +153,7 @@ struct pressio_metrics {
    * move assigns a metric from another pointer
    */
   pressio_metrics& operator=(pressio_metrics const& metrics) {
+    if(&metrics == this) return *this;
     plugin = metrics->clone();
     return *this;
   }

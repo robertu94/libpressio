@@ -33,8 +33,8 @@ namespace kl_divergence{
       std::for_each( decomp_begin, decomp_end, [&q_counts,&X](value_type q) { q_counts[q] += 1; X.insert(q);});
 
       for (auto const& x : X) {
-        m.p_q += p_counts[x] / p_size * std::log((p_counts[x] * q_size)/ (q_counts[x]* p_size));
-        m.q_p += q_counts[x] / q_size * std::log((q_counts[x] * p_size)/ (p_counts[x]* q_size));
+        m.p_q += static_cast<double>(p_counts[x]) / static_cast<double>(p_size) * std::log((p_counts[x] * q_size)/ (static_cast<double>(q_counts[x])* p_size));
+        m.q_p += static_cast<double>(q_counts[x]) / static_cast<double>(q_size) * std::log((q_counts[x] * p_size)/ (static_cast<double>(p_counts[x])* q_size));
         
       }
 

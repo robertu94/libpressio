@@ -200,7 +200,11 @@ namespace {
       compat::exclusive_scan(compat::rbegin(iter_max), compat::rend(iter_max), compat::rbegin(strides), 1, compat::multiplies<>{});
       for (size_t src_idx = 0; src_idx < max_idx; ++src_idx) {
         size_t dst_idx = compat::transform_reduce(std::begin(iter), std::end(iter), std::begin(strides), 0, compat::plus<>{}, compat::multiplies<>{});
-        r2_begin[src_idx] = r1_begin[dst_idx];
+        //clang-tidy treats this line as bugprone conversion since
+        //it can cause unintended behavior in switch-case statements 
+        //matching against character codes.  Since we aren't doing
+        //that here, ignore this warning.
+        r2_begin[src_idx] = r1_begin[dst_idx]; //NOLINT
 
         size_t idx = 0;
         bool updating = true;
