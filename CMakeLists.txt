@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.50.5" LANGUAGES CXX C)
+project(libpressio VERSION "0.51.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -141,6 +141,19 @@ add_library(libpressio
   include/pressio_options.h
   include/pressio_options_iter.h
   )
+
+
+option(LIBPRESSIO_INTERPROCEDURAL_OPTIMIZATION "Use interprocedural optimization (LTO)" OFF)
+if(LIBPRESSIO_INTERPROCEDURAL_OPTIMIZATION)
+  cmake_policy(CMP0069 NEW)
+  include(CheckIPOSupported)
+  check_ipo_supported(RESULT IPO_SUPPORTED OUTPUT IPO_ERR_MSG LANGUAGES CXX)
+  if(IPO_SUPPORTED)
+    set_target_properties(libpressio PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
+  else()
+    message(ERROR "IPO was not supported: ${IPO_ERR_MSG}")
+  endif()
+endif()
 
 target_include_directories(libpressio
   PUBLIC 

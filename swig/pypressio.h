@@ -47,12 +47,33 @@ _pressio_io_data_from_numpy_4d(T* data, size_t r1, size_t r2, size_t r3, size_t 
 }
 
 template <class T>
-std::vector<T> _pressio_io_data_to_numpy(pressio_data* ptr) {
-  T* data = static_cast<T*>(pressio_data_ptr(ptr, nullptr));
-  return std::vector<T>(
-      data,
-      data + pressio_data_num_elements(ptr)
-      );
+void _pressio_io_data_to_numpy_1d(pressio_data* ptr, T** ptr_argout, long int*r1) {
+  *r1 = ptr->get_dimension(0);
+  *ptr_argout = static_cast<T*>(pressio_data_copy(ptr, nullptr));
+}
+
+template <class T>
+void _pressio_io_data_to_numpy_2d(pressio_data* ptr, T** ptr_argout, long int*r1, long int* r2) {
+  *r1 = ptr->get_dimension(0);
+  *r2 = ptr->get_dimension(1);
+  *ptr_argout = static_cast<T*>(pressio_data_copy(ptr, nullptr));
+}
+
+template <class T>
+void _pressio_io_data_to_numpy_3d(pressio_data* ptr, T** ptr_argout, long int*r1, long int* r2, long int* r3) {
+  *r1 = ptr->get_dimension(0);
+  *r2 = ptr->get_dimension(1);
+  *r3 = ptr->get_dimension(2);
+  *ptr_argout = static_cast<T*>(pressio_data_copy(ptr, nullptr));
+}
+
+template <class T>
+void _pressio_io_data_to_numpy_4d(pressio_data* ptr, T** ptr_argout, long int*r1, long int* r2, long int* r3, long int* r4) {
+  *r1 = ptr->get_dimension(0);
+  *r2 = ptr->get_dimension(1);
+  *r3 = ptr->get_dimension(2);
+  *r4 = ptr->get_dimension(3);
+  *ptr_argout = static_cast<T*>(pressio_data_copy(ptr, nullptr));
 }
 
 
