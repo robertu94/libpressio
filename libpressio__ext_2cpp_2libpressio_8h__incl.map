@@ -1,0 +1,27 @@
+<map id="include/libpressio_ext/cpp/libpressio.h" name="include/libpressio_ext/cpp/libpressio.h">
+<area shape="rect" id="node2" href="$compressor_8h.html" title="an extension header for adding compressor plugins to libpressio " alt="" coords="1737,169,1847,196"/>
+<area shape="rect" id="node5" href="$metrics_8h.html" title="an extension header for adding metrics plugins to libpressio " alt="" coords="1672,244,1755,271"/>
+<area shape="rect" id="node9" href="$options_8h.html" title="C++ pressio_options and pressio_option interfaces. " alt="" coords="1261,408,1344,435"/>
+<area shape="rect" id="node18" href="$data_8h.html" title="C++ pressio_data interface. " alt="" coords="537,483,677,524"/>
+<area shape="rect" id="node47" href="$libpressio__ext_2cpp_2pressio_8h.html" title="C++ interface to the compressor loader. " alt="" coords="1518,95,1599,121"/>
+<area shape="rect" id="node49" href="$printers_8h.html" title="C++ stream compatible IO functions. " alt="" coords="1209,326,1293,353"/>
+<area shape="rect" id="node7" href="$configurable_8h.html" title="interface for configurable types " alt="" coords="1723,326,1837,353"/>
+<area shape="rect" id="node37" href="$versionable_8h.html" title="interface for versionable types " alt="" coords="1862,326,1973,353"/>
+<area shape="rect" id="node38" href="$span_8h.html" title="back ports of &lt;span&gt; " alt="" coords="2189,319,2355,360"/>
+<area shape="rect" id="node46" href="$errorable_8h.html" title="interface for types which can report and have errors " alt="" coords="2048,326,2141,353"/>
+<area shape="rect" id="node13" href="$pressio__options_8h.html" title="A set of options for a compressor. " alt="" coords="523,579,659,606"/>
+<area shape="rect" id="node16" href="$pressio__option_8h.html" title="A single option value for a compressor. " alt="" coords="862,490,991,517"/>
+<area shape="rect" id="node29" href="$string__view_8h.html" title="back ports of &lt;optional&gt; " alt="" coords="1778,483,1945,524"/>
+<area shape="rect" id="node31" href="$optional_8h.html" title="back ports of &lt;optional&gt; " alt="" coords="1061,661,1227,703"/>
+<area shape="rect" id="node32" href="$variant_8h.html" title="back ports of &lt;variant&gt; " alt="" coords="1990,661,2157,703"/>
+<area shape="rect" id="node33" href="$functional_8h.html" title="back ports of &lt;functional&gt; " alt="" coords="1410,483,1577,524"/>
+<area shape="rect" id="node35" href="$language_8h_source.html" title="libpressio_ext/compat\l/language.h" alt="" coords="1219,483,1386,524"/>
+<area shape="rect" id="node14" href="$pressio__dtype_8h.html" title="Information on types used by libpressio. " alt="" coords="371,669,496,695"/>
+<area shape="rect" id="node22" href="$pressio__data_8h.html" title="an abstraction for a contagious memory region of a specified type " alt="" coords="683,579,800,606"/>
+<area shape="rect" id="node23" href="$dtype_8h.html" title="C++ interface to data types. " alt="" coords="15,572,155,613"/>
+<area shape="rect" id="node28" href="$utility_8h.html" title="back ports of &lt;utility&gt; " alt="" coords="875,572,1042,613"/>
+<area shape="rect" id="node24" href="$type__traits_8h.html" title="back ports of &lt;type_traits&gt; " alt="" coords="2451,661,2618,703"/>
+<area shape="rect" id="node43" href="$iterator_8h.html" title="back ports of &lt;iterator&gt; " alt="" coords="1790,408,1871,435"/>
+<area shape="rect" id="node45" href="$cstddef_8h.html" title="back ports of &lt;cstddef&gt; " alt="" coords="2346,669,2427,695"/>
+<area shape="rect" id="node48" href="$io_8h.html" title="C++ interface to read and write files. " alt="" coords="1894,244,1941,271"/>
+</map>

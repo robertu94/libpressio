@@ -1,0 +1,16 @@
+<map id="include/libpressio_ext/cpp/printers.h" name="include/libpressio_ext/cpp/printers.h">
+<area shape="rect" id="node5" href="$options_8h.html" title="C++ pressio_options and pressio_option interfaces. " alt="" coords="1024,95,1107,121"/>
+<area shape="rect" id="node12" href="$pressio__dtype_8h.html" title="Information on types used by libpressio. " alt="" coords="1679,355,1804,382"/>
+<area shape="rect" id="node16" href="$data_8h.html" title="C++ pressio_data interface. " alt="" coords="1577,169,1717,211"/>
+<area shape="rect" id="node11" href="$pressio__options_8h.html" title="A set of options for a compressor. " alt="" coords="1475,266,1611,293"/>
+<area shape="rect" id="node14" href="$pressio__option_8h.html" title="A single option value for a compressor. " alt="" coords="1239,177,1369,203"/>
+<area shape="rect" id="node27" href="$string__view_8h.html" title="back ports of &lt;optional&gt; " alt="" coords="605,169,771,211"/>
+<area shape="rect" id="node29" href="$optional_8h.html" title="back ports of &lt;optional&gt; " alt="" coords="414,169,581,211"/>
+<area shape="rect" id="node32" href="$variant_8h.html" title="back ports of &lt;variant&gt; " alt="" coords="89,169,255,211"/>
+<area shape="rect" id="node34" href="$functional_8h.html" title="back ports of &lt;functional&gt; " alt="" coords="801,259,967,300"/>
+<area shape="rect" id="node36" href="$language_8h_source.html" title="libpressio_ext/compat\l/language.h" alt="" coords="922,169,1089,211"/>
+<area shape="rect" id="node20" href="$pressio__data_8h.html" title="an abstraction for a contagious memory region of a specified type " alt="" coords="1635,266,1752,293"/>
+<area shape="rect" id="node21" href="$dtype_8h.html" title="C++ interface to data types. " alt="" coords="2170,259,2310,300"/>
+<area shape="rect" id="node26" href="$utility_8h.html" title="back ports of &lt;utility&gt; " alt="" coords="1233,259,1399,300"/>
+<area shape="rect" id="node22" href="$type__traits_8h.html" title="back ports of &lt;type_traits&gt; " alt="" coords="1877,348,2043,389"/>
+</map>

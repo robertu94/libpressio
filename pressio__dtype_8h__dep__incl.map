@@ -1,0 +1,19 @@
+<map id="include/pressio_dtype.h" name="include/pressio_dtype.h">
+<area shape="rect" id="node2" href="$pressio__options_8h.html" title="A set of options for a compressor. " alt="" coords="798,87,985,114"/>
+<area shape="rect" id="node14" href="$printers_8h.html" title="C++ stream compatible IO functions. " alt="" coords="5,348,148,389"/>
+<area shape="rect" id="node15" href="$pressio__data_8h.html" title="an abstraction for a contagious memory region of a specified type " alt="" coords="1009,87,1177,114"/>
+<area shape="rect" id="node17" href="$dtype_8h.html" title="C++ interface to data types. " alt="" coords="601,80,737,121"/>
+<area shape="rect" id="node18" href="$serializable_8h.html" title="serializers for LibDistributed " alt="" coords="1231,541,1399,583"/>
+<area shape="rect" id="node3" href="$libpressio_8h.html" title="A convenience header for libpressio for use in downstream applications. " alt="" coords="907,266,1055,293"/>
+<area shape="rect" id="node4" href="$pressio__option_8h.html" title="A single option value for a compressor. " alt="" coords="773,177,953,203"/>
+<area shape="rect" id="node5" href="$options_8h.html" title="C++ pressio_options and pressio_option interfaces. " alt="" coords="574,259,715,300"/>
+<area shape="rect" id="node11" href="$subgroup__manager_8h_source.html" title="include/libpressio\l_ext/cpp/subgroup_manager.h" alt="" coords="733,720,951,761"/>
+<area shape="rect" id="node12" href="$distributed__manager_8h.html" title="a helper class and functions for using libdistributed with libpressio " alt="" coords="767,437,917,493"/>
+<area shape="rect" id="node6" href="$configurable_8h.html" title="interface for configurable types " alt="" coords="455,348,629,389"/>
+<area shape="rect" id="node9" href="$libpressio__ext_2cpp_2libpressio_8h.html" title="convenience header for the c++ interface " alt="" coords="184,720,340,761"/>
+<area shape="rect" id="node7" href="$metrics_8h.html" title="an extension header for adding metrics plugins to libpressio " alt="" coords="447,445,589,486"/>
+<area shape="rect" id="node8" href="$compressor_8h.html" title="an extension header for adding compressor plugins to libpressio " alt="" coords="325,541,493,583"/>
+<area shape="rect" id="node13" href="$io_8h.html" title="C++ interface to read and write files. " alt="" coords="567,541,703,583"/>
+<area shape="rect" id="node10" href="$libpressio__ext_2cpp_2pressio_8h.html" title="C++ interface to the compressor loader. " alt="" coords="460,631,600,672"/>
+<area shape="rect" id="node16" href="$data_8h.html" title="C++ pressio_data interface. " alt="" coords="562,169,698,211"/>
+</map>
