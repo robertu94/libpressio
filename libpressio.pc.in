@@ -6,4 +6,4 @@ Description: An abstraction between different pressio compressors
 Version: @PROJECT_VERSION@
 Cflags: -I${includedir}
 Libs: -L${libdir} -llibpressio
-
+Requires: std_compat

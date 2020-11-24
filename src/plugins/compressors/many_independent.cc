@@ -1,5 +1,5 @@
 #include "libdistributed/libdistributed_work_queue.h"
-#include "libpressio_ext/compat/memory.h"
+#include "std_compat/memory.h"
 #include "libpressio_ext/cpp/compressor.h"
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/options.h"

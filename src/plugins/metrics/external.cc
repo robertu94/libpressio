@@ -15,8 +15,8 @@
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
 #include "libpressio_ext/cpp/io.h"
-#include "libpressio_ext/compat/memory.h"
-#include "libpressio_ext/compat/language.h"
+#include "std_compat/memory.h"
+#include "std_compat/language.h"
 
 #include "external_launch.h"
 

@@ -1,7 +1,7 @@
 #include "libpressio_ext/cpp/pressio.h"
 #include "libpressio_ext/cpp/io.h"
 #include "pressio_compressor.h"
-#include "libpressio_ext/compat/memory.h"
+#include "std_compat/memory.h"
 
 struct select_io: public libpressio_io_plugin {
   struct pressio_data* read_impl(struct pressio_data* dims) override {

@@ -3,7 +3,7 @@
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
-#include "libpressio_ext/compat/memory.h"
+#include "std_compat/memory.h"
 
 using std::chrono::high_resolution_clock;
 using std::chrono::time_point;

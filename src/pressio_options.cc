@@ -5,7 +5,7 @@
 #include <sstream>
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/printers.h"
-#include "libpressio_ext/compat/std_compat.h"
+#include "std_compat/std_compat.h"
 
 
 void pressio_options_free(struct pressio_options* options) {

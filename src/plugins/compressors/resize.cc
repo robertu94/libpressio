@@ -9,7 +9,7 @@
 #include "pressio_options.h"
 #include "pressio_data.h"
 #include "pressio_compressor.h"
-#include "libpressio_ext/compat/memory.h"
+#include "std_compat/memory.h"
 
 
 class resize_meta_compressor_plugin : public libpressio_compressor_plugin

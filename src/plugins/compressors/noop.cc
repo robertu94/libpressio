@@ -7,7 +7,7 @@
 #include "libpressio_ext/cpp/compressor.h"
 #include "libpressio_ext/cpp/pressio.h"
 #include "libpressio_ext/cpp/options.h"
-#include "libpressio_ext/compat/memory.h"
+#include "std_compat/memory.h"
 
 class noop_compressor_plugin: public libpressio_compressor_plugin {
   public:

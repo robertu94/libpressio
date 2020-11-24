@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.51.0" LANGUAGES CXX C)
+project(libpressio VERSION "0.52.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -12,12 +12,6 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     "MinSizeRel" "RelWithDebInfo")
 endif()
 
-set(default_cxx_standard 17)
-if(NOT LIBPRESSIO_CXX_VERSION)
-  set(LIBPRESSIO_CXX_VERSION ${default_cxx_standard} CACHE 
-    STRING "Which version of the cxx standard to expect" FORCE)
-  set_property(CACHE LIBPRESSIO_CXX_VERSION PROPERTY STRINGS 11 14 17 20)
-endif()
 
 include(CTest)
 
@@ -33,39 +27,6 @@ set(NO_OMIT_FRAME_POINTER_FLAG "")
 if(HAVE_NO_OMIT_FRAME_POINTER)
   set(NO_OMIT_FRAME_POINTER_FLAG "-fno-omit-frame-pointer")
 endif()
-
-
-#check for c++17 features
-function(check_cpp_standard api)
-  string(TOUPPER "${api}" HEADER_SUFFIX)
-  try_compile(
-    COMPILED
-    ${CMAKE_BINARY_DIR}
-    SOURCES "${CMAKE_SOURCE_DIR}/checks/${api}.cc" 
-    CXX_STANDARD ${LIBPRESSIO_CXX_VERSION}
-    CXX_STANDARD_REQUIRED ON
-  )
-  message(STATUS "Checking for ${api}: ${COMPILED}")
-  set(LIBPRESSIO_COMPAT_HAS_${HEADER_SUFFIX} ${COMPILED} PARENT_SCOPE)
-endfunction()
-
-check_cpp_standard(transform_reduce)
-check_cpp_standard(exclusive_scan)
-check_cpp_standard(exchange)
-check_cpp_standard(rbeginend)
-check_cpp_standard(optional)
-check_cpp_standard(variant)
-check_cpp_standard(make_unique)
-check_cpp_standard(conjunction)
-check_cpp_standard(multiplies)
-check_cpp_standard(midpoint)
-check_cpp_standard(nth_element)
-check_cpp_standard(span)
-check_cpp_standard(void_t)
-check_cpp_standard(negation)
-check_cpp_standard(clamp)
-check_cpp_standard(string_view)
-check_cpp_standard(is_null_pointer)
 
 
 set(LIBPRESSIO_FEATURES "")
@@ -84,10 +45,6 @@ add_library(libpressio
   ./src/pressio_option.cc
   ./src/pressio_options.cc
   ./src/pressio_options_iter.cc
-
-  #compat implementation
-  ./src/compat/span.cc
-  ./src/compat/optional.cc
 
   #plugins
   ./src/plugins/compressors/compressor_base.cc
@@ -165,14 +122,11 @@ target_compile_options(libpressio PRIVATE
   $<$<CONFIG:Debug>: -Wall -Werror -Wextra -Wpedantic>
   $<$<CONFIG:RelWithDebInfo>: ${NO_OMIT_FRAME_POINTER_FLAG}>
   )
-target_compile_features(libpressio PUBLIC cxx_std_${LIBPRESSIO_CXX_VERSION})
 
-if(NOT (LIBPRESSIO_COMPAT_HAS_VARIANT OR LIBPRESSIO_COMPAT_HAS_OPTIONAL))
-  find_package(Boost COMPONENTS REQUIRED)
-  target_link_libraries(libpressio PUBLIC Boost::boost)
-endif()
 
 find_package(PkgConfig REQUIRED)
+find_package(std_compat REQUIRED)
+target_link_libraries(libpressio PUBLIC std_compat::std_compat)
 
 option(LIBPRESSIO_HAS_OPENMP "accerate some plugins with OpenMP" OFF)
 if(LIBPRESSIO_HAS_OPENMP)

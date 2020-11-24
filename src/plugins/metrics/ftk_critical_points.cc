@@ -17,7 +17,7 @@
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
-#include "libpressio_ext/compat/memory.h"
+#include "std_compat/memory.h"
 #include <ftk/filters/critical_point_tracker_2d_regular.hh>
 #include <ftk/filters/critical_point_tracker_3d_regular.hh>
 #include <string>

@@ -8,10 +8,10 @@
 #include <stdexcept>
 #include <algorithm>
 #include <numeric>
-#include "libpressio_ext/compat/functional.h"
-#include "libpressio_ext/compat/type_traits.h"
-#include "libpressio_ext/compat/numeric.h"
-#include "libpressio_ext/compat/iterator.h"
+#include "std_compat/functional.h"
+#include "std_compat/type_traits.h"
+#include "std_compat/numeric.h"
+#include "std_compat/iterator.h"
 
 namespace {
   template <class Type> 

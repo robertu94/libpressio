@@ -1,7 +1,7 @@
 #ifndef LIBPRESSIO_DTYPE_CPP
 #define LIBPRESSIO_DTYPE_CPP
 #include <pressio_dtype.h>
-#include <libpressio_ext/compat/type_traits.h>
+#include <std_compat/type_traits.h>
 #include <cstdint>
 #include <stdint.h>
 

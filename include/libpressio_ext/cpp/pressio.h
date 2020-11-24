@@ -10,7 +10,7 @@
 #include "compressor.h"
 #include "metrics.h"
 #include "io.h"
-#include "libpressio_ext/compat/language.h"
+#include "std_compat/language.h"
 
 /**
  * a type that registers constructor functions

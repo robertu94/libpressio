@@ -13,12 +13,12 @@
 #include "libpressio_ext/cpp/compressor.h"
 #include "libpressio_ext/cpp/pressio.h"
 #include "libpressio_ext/cpp/options.h"
-#include "libpressio_ext/compat/std_compat.h"
+#include "std_compat/std_compat.h"
 #include "pressio_data.h"
 #include "pressio_compressor.h"
 #include "pressio_options.h"
 #include "pressio_option.h"
-#include "libpressio_ext/compat/memory.h"
+#include "std_compat/memory.h"
 
 #define PRESSIO_SZ_VERSION_GREATEREQ(major, minor, build, revision) \
    (SZ_VER_MAJOR > major || \

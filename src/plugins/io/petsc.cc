@@ -14,7 +14,7 @@
 #include <type_traits>
 #include <unistd.h>
 #include <vector>
-#include "libpressio_ext/compat/memory.h"
+#include "std_compat/memory.h"
 
 namespace petsc {
 std::mutex petsc_init_lock;

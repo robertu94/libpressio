@@ -8,7 +8,7 @@
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/io.h"
-#include "libpressio_ext/compat/memory.h"
+#include "std_compat/memory.h"
 
 struct noop_io : public libpressio_io_plugin {
   virtual struct pressio_data* read_impl(struct pressio_data* data) override {

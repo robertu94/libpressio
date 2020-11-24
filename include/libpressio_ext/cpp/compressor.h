@@ -6,7 +6,7 @@
 #include "configurable.h"
 #include "versionable.h"
 #include "errorable.h"
-#include <libpressio_ext/compat/span.h>
+#include <std_compat/span.h>
 
 /*!\file 
  * \brief an extension header for adding compressor plugins to libpressio

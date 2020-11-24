@@ -2,7 +2,7 @@
 #include <sstream>
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/printers.h"
-#include "libpressio_ext/compat/string_view.h"
+#include "std_compat/string_view.h"
 #include "pressio_option.h"
 #include "pressio_data.h"
 #include "pressio_options.h"

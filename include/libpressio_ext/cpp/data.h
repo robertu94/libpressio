@@ -10,7 +10,7 @@
 #include <utility>
 #include "pressio_data.h"
 #include "libpressio_ext/cpp/dtype.h"
-#include "libpressio_ext/compat/utility.h"
+#include "std_compat/utility.h"
 
 /**
  * \file

@@ -7,8 +7,8 @@
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
-#include "libpressio_ext/compat/memory.h"
-#include "libpressio_ext/compat/algorithm.h"
+#include "std_compat/memory.h"
+#include "std_compat/algorithm.h"
 
 namespace {
   struct kth_error{

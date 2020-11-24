@@ -7,8 +7,8 @@
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
-#include "libpressio_ext/compat/memory.h"
-#include "libpressio_ext/compat/numeric.h"
+#include "std_compat/memory.h"
+#include "std_compat/numeric.h"
 
 namespace region_of_interest {
   struct region_of_interest_metrics {

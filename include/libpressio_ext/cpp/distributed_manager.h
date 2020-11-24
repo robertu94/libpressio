@@ -3,7 +3,7 @@
 #include <mpi.h>
 #include <libdistributed/libdistributed_work_queue.h>
 #include <libdistributed/libdistributed_work_queue_options.h>
-#include <libpressio_ext/compat/optional.h>
+#include <std_compat/optional.h>
 #include <utility>
 #include <cassert>
 #include "configurable.h"

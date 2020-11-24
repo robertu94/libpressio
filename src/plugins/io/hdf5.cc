@@ -13,13 +13,13 @@
 #include <vector>
 #include <string>
 #include <pressio_compressor.h>
-#include <libpressio_ext/compat/std_compat.h>
+#include <std_compat/std_compat.h>
 #include "libpressio_ext/io/posix.h"
 #include "libpressio_ext/cpp/pressio.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/io.h"
-#include "libpressio_ext/compat/memory.h"
+#include "std_compat/memory.h"
 
 namespace {
   compat::optional<pressio_dtype> h5t_to_pressio(hid_t h5type) {

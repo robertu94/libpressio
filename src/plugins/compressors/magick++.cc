@@ -14,7 +14,7 @@
 #include "pressio_options.h"
 #include "pressio_option.h"
 #include "pressio_version.h"
-#include "libpressio_ext/compat/memory.h"
+#include "std_compat/memory.h"
 
 namespace magick{
 

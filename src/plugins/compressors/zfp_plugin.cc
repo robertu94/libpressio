@@ -8,7 +8,7 @@
 #include "pressio_data.h"
 #include "pressio_compressor.h"
 #include "zfp.h"
-#include "libpressio_ext/compat/memory.h"
+#include "std_compat/memory.h"
 
 class zfp_plugin: public libpressio_compressor_plugin {
   public:

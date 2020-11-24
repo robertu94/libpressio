@@ -3,7 +3,7 @@
 #include "libpressio_ext/io/hdf5.h"
 #include "libpressio_ext/cpp/io.h"
 #include "libpressio_ext/cpp/pressio.h"
-#include "libpressio_ext/compat/iterator.h"
+#include "std_compat/iterator.h"
 #include "pressio_data.h"
 #include "gtest/gtest.h"
 

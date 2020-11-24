@@ -2,7 +2,7 @@
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
-#include "libpressio_ext/compat/memory.h"
+#include "std_compat/memory.h"
 
 class printer_plugin : public libpressio_metrics_plugin {
 public:

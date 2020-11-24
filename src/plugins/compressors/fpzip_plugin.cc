@@ -10,7 +10,7 @@
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/printers.h"
 #include "libpressio_ext/cpp/pressio.h"
-#include "libpressio_ext/compat/memory.h"
+#include "std_compat/memory.h"
 
 namespace {
   constexpr int INVALID_TYPE = 8;

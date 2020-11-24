@@ -10,11 +10,11 @@
 #include "pressio_options.h"
 #include "pressio_option.h"
 #include "libpressio_ext/cpp/data.h"
-#include "libpressio_ext/compat/string_view.h"
-#include "libpressio_ext/compat/optional.h"
-#include "libpressio_ext/compat/variant.h"
-#include "libpressio_ext/compat/functional.h"
-#include "libpressio_ext/compat/language.h"
+#include "std_compat/string_view.h"
+#include "std_compat/optional.h"
+#include "std_compat/variant.h"
+#include "std_compat/functional.h"
+#include "std_compat/language.h"
 #include <algorithm>
 
 /**

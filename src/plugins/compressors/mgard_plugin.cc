@@ -4,7 +4,7 @@
 #include <sstream>
 #include <chrono>
 #include <stdexcept>
-#include "libpressio_ext/compat/optional.h"
+#include "std_compat/optional.h"
 #include "pressio_version.h"
 
 //some older version of mgard need a float header in addition to the api header
@@ -53,7 +53,7 @@
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/printers.h"
 #include "libpressio_ext/cpp/pressio.h"
-#include "libpressio_ext/compat/memory.h"
+#include "std_compat/memory.h"
 
 struct pressio_mgard_metrics_data {
   std::string metric;

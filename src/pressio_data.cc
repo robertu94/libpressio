@@ -6,7 +6,7 @@
 #include "pressio_data.h"
 #include "multi_dimensional_iterator.h"
 #include "libpressio_ext/cpp/data.h"
-#include "libpressio_ext/compat/std_compat.h"
+#include "std_compat/std_compat.h"
 
 
 void pressio_data_libc_free_fn(void* data, void*) {

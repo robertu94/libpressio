@@ -5,8 +5,9 @@
 #include "pressio_options.h"
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/options.h"
-#include "libpressio_ext/compat/memory.h"
-#include "libpressio_ext/compat/string_view.h"
+#include "std_compat/memory.h"
+#include "std_compat/string_view.h"
+#include "pressio_version.h"
 #if LIBPRESSIO_HAS_LUA
 #define SOL_ALL_SAFETIES_ON 1
 #define SOL_PRINT_ERRORS 1

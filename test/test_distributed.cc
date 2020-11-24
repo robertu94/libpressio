@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <cstdint>
+#include <ostream>
 #include <libpressio_ext/cpp/distributed_manager.h>
 
 using ret_type = compat::optional<std::vector<size_t>>;
@@ -30,6 +31,20 @@ std::set<size_t> worker_groups(std::vector<size_t> const& w){
 template<class Container, class Value>
 bool element_of(Value&& v, Container && c) {
   return std::find(std::begin(c), std::end(c), std::forward<Value>(v)) != std::end(c);
+}
+
+namespace boost {
+void PrintTo(::compat::optional<std::vector<size_t>> const& result, std::ostream* out) {
+  if(result) {
+    *out << '{';
+    for (auto const& i : *result) {
+      *out << i << ", ";
+    }
+    *out << '}';
+  } else {
+    *out << "empty";
+  }
+}
 }
 
 TEST(DistributedParams, InvalidRoot) {

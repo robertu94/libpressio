@@ -11,7 +11,7 @@
 #include "pressio_options.h"
 #include "pressio_data.h"
 #include "pressio_compressor.h"
-#include "libpressio_ext/compat/memory.h"
+#include "std_compat/memory.h"
 #include "libdistributed/libdistributed_work_queue.h"
 #include "libpressio_ext/cpp/serializable.h"
 #include "libpressio_ext/cpp/distributed_manager.h"
