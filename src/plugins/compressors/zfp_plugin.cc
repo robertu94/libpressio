@@ -9,6 +9,7 @@
 #include "pressio_compressor.h"
 #include "zfp.h"
 #include "std_compat/memory.h"
+#include "std_compat/utility.h"
 
 class zfp_plugin: public libpressio_compressor_plugin {
   public:
@@ -33,10 +34,10 @@ class zfp_plugin: public libpressio_compressor_plugin {
       zfp_stream_set_omp_chunk_size(zfp, zfp_stream_omp_chunk_size(rhs.zfp));
       zfp_stream_set_execution(zfp, zfp_stream_execution(rhs.zfp));
     }
-    zfp_plugin(zfp_plugin && rhs) noexcept: zfp(std::exchange(rhs.zfp, zfp_stream_open(NULL))) {}
+    zfp_plugin(zfp_plugin && rhs) noexcept: zfp(compat::exchange(rhs.zfp, zfp_stream_open(NULL))) {}
     zfp_plugin& operator=(zfp_plugin && rhs) noexcept {
       if(this != &rhs) return *this;
-      zfp = std::exchange(rhs.zfp, zfp_stream_open(NULL));
+      zfp = compat::exchange(rhs.zfp, zfp_stream_open(NULL));
       return *this;
     }
 
