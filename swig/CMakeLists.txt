@@ -5,6 +5,7 @@ if(SWIG_FOUND AND PYTHON3_FOUND)
   include(UseSWIG)
 
 
+  set(CMAKE_SWIG_FLAGS "-doxygen")
   function(build_pressio_swig_module)
     get_filename_component(filelibname ${ARGV0} NAME_WE)
     set_property(SOURCE ${ARGV0} PROPERTY CPLUSPLUS ON)

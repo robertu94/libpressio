@@ -42,16 +42,26 @@ import_array();
 
 %include "pypressio.h"
 
+%numpy_typemaps(signed char       , NPY_BYTE     , size_t)
+%numpy_typemaps(unsigned char     , NPY_UBYTE    , size_t)
+%numpy_typemaps(short             , NPY_SHORT    , size_t)
+%numpy_typemaps(unsigned short    , NPY_USHORT   , size_t)
+%numpy_typemaps(int               , NPY_INT      , size_t)
+%numpy_typemaps(unsigned int      , NPY_UINT     , size_t)
+%numpy_typemaps(long              , NPY_LONG     , size_t)
+%numpy_typemaps(unsigned long     , NPY_ULONG    , size_t)
+%numpy_typemaps(long long         , NPY_LONGLONG , size_t)
+%numpy_typemaps(unsigned long long, NPY_ULONGLONG, size_t)
 %numpy_typemaps(float             , NPY_FLOAT    , size_t)
 %numpy_typemaps(double            , NPY_DOUBLE   , size_t)
-%numpy_typemaps(int8_t            , NPY_INT8     , size_t)
-%numpy_typemaps(int16_t           , NPY_INT16    , size_t)
-%numpy_typemaps(int32_t           , NPY_INT32    , size_t)
-%numpy_typemaps(int64_t           , NPY_INT64    , size_t)
-%numpy_typemaps(uint8_t           , NPY_UINT8    , size_t)
-%numpy_typemaps(uint16_t          , NPY_UINT16   , size_t)
-%numpy_typemaps(uint32_t          , NPY_UINT32   , size_t)
-%numpy_typemaps(uint64_t          , NPY_UINT64   , size_t)
+%numpy_typemaps(std::int8_t            , NPY_INT8     , size_t)
+%numpy_typemaps(std::int16_t           , NPY_INT16    , size_t)
+%numpy_typemaps(std::int32_t           , NPY_INT32    , size_t)
+%numpy_typemaps(std::int64_t           , NPY_INT64    , size_t)
+%numpy_typemaps(std::uint8_t           , NPY_UINT8    , size_t)
+%numpy_typemaps(std::uint16_t          , NPY_UINT16   , size_t)
+%numpy_typemaps(std::uint32_t          , NPY_UINT32   , size_t)
+%numpy_typemaps(std::uint64_t          , NPY_UINT64   , size_t)
 %numpy_typemaps(float             , NPY_FLOAT    , long int)
 %numpy_typemaps(double            , NPY_DOUBLE   , long int)
 %numpy_typemaps(int8_t            , NPY_INT8     , long int)
@@ -62,8 +72,18 @@ import_array();
 %numpy_typemaps(uint16_t          , NPY_UINT16   , long int)
 %numpy_typemaps(uint32_t          , NPY_UINT32   , long int)
 %numpy_typemaps(uint64_t          , NPY_UINT64   , long int)
+%numpy_typemaps(signed char       , NPY_BYTE     , long int)
+%numpy_typemaps(unsigned char     , NPY_UBYTE    , long int)
+%numpy_typemaps(short             , NPY_SHORT    , long int)
+%numpy_typemaps(unsigned short    , NPY_USHORT   , long int)
+%numpy_typemaps(int               , NPY_INT      , long int)
+%numpy_typemaps(unsigned int      , NPY_UINT     , long int)
+%numpy_typemaps(long              , NPY_LONG     , long int)
+%numpy_typemaps(unsigned long     , NPY_ULONG    , long int)
+%numpy_typemaps(long long         , NPY_LONGLONG , long int)
+%numpy_typemaps(unsigned long long, NPY_ULONGLONG, long int)
 
-%define pressio_numpy_type(type)
+%define pressio_numpy_type(type, name)
 
   %apply (type* INPLACE_ARRAY1, size_t DIM1 ) {( type * data, size_t r1)};
   %apply (type* INPLACE_ARRAY2, size_t DIM1, size_t DIM2 ) { ( type * data, size_t r1, size_t r2)};
@@ -74,28 +94,28 @@ import_array();
   %apply (type** ARGOUTVIEWM_ARRAY3, long int* DIM1, long int* DIM2, long int* DIM3) {( type** ptr_argout, long int* r1, long int* r2, long int* r3)};
   %apply (type** ARGOUTVIEWM_ARRAY4, long int* DIM1, long int* DIM2, long int* DIM3, long int* DIM4) {( type** ptr_argout, long int* r1, long int* r2, long int* r3, long int* r4)};
 namespace std {
-  %template( vector_ ## type ) vector< type >;
+  %template( vector_ ## name ) vector< type >;
 }
-  %template( _pressio_io_data_to_numpy_1d_ ## type ) _pressio_io_data_to_numpy_1d< type >;
-  %template( _pressio_io_data_to_numpy_2d_ ## type ) _pressio_io_data_to_numpy_2d< type >;
-  %template( _pressio_io_data_to_numpy_3d_ ## type ) _pressio_io_data_to_numpy_3d< type >;
-  %template( _pressio_io_data_to_numpy_4d_ ## type ) _pressio_io_data_to_numpy_4d< type >;
-  %template( _pressio_io_data_from_numpy_1d_ ## type ) _pressio_io_data_from_numpy_1d< type >;
-  %template( _pressio_io_data_from_numpy_2d_ ## type ) _pressio_io_data_from_numpy_2d< type >;
-  %template( _pressio_io_data_from_numpy_3d_ ## type ) _pressio_io_data_from_numpy_3d< type >;
-  %template( _pressio_io_data_from_numpy_4d_ ## type ) _pressio_io_data_from_numpy_4d< type >;
+  %template( _pressio_io_data_to_numpy_1d_ ## name ) _pressio_io_data_to_numpy_1d< type >;
+  %template( _pressio_io_data_to_numpy_2d_ ## name ) _pressio_io_data_to_numpy_2d< type >;
+  %template( _pressio_io_data_to_numpy_3d_ ## name ) _pressio_io_data_to_numpy_3d< type >;
+  %template( _pressio_io_data_to_numpy_4d_ ## name ) _pressio_io_data_to_numpy_4d< type >;
+  %template( _pressio_io_data_from_numpy_1d_ ## name ) _pressio_io_data_from_numpy_1d< type >;
+  %template( _pressio_io_data_from_numpy_2d_ ## name ) _pressio_io_data_from_numpy_2d< type >;
+  %template( _pressio_io_data_from_numpy_3d_ ## name ) _pressio_io_data_from_numpy_3d< type >;
+  %template( _pressio_io_data_from_numpy_4d_ ## name ) _pressio_io_data_from_numpy_4d< type >;
 %enddef
 
-pressio_numpy_type(float);
-pressio_numpy_type(double);
-pressio_numpy_type(uint8_t);
-pressio_numpy_type(uint16_t);
-pressio_numpy_type(uint32_t);
-pressio_numpy_type(uint64_t);
-pressio_numpy_type(int8_t);
-pressio_numpy_type(int16_t);
-pressio_numpy_type(int32_t);
-pressio_numpy_type(int64_t);
+pressio_numpy_type(float, float);
+pressio_numpy_type(double, double);
+pressio_numpy_type(unsigned char, uint8_t);
+pressio_numpy_type(unsigned short, uint16_t);
+pressio_numpy_type(unsigned int, uint32_t);
+pressio_numpy_type(unsigned long int, uint64_t);
+pressio_numpy_type(signed char, int8_t);
+pressio_numpy_type(short, int16_t);
+pressio_numpy_type(int, int32_t);
+pressio_numpy_type(long int, int64_t);
 
 namespace std { 
   %template() vector<size_t>;
@@ -219,7 +239,6 @@ def io_data_to_numpy(ptr):
 
 %}
 
-%feature("autodoc", 3);
 %include "pressio.h"
 %include "pressio_compressor.h"
 %ignore pressio_data_new_nonowning;

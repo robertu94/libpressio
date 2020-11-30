@@ -112,4 +112,9 @@ if(BUILD_PYTHON_WRAPPER AND LIBPRESSIO_HAS_SZ)
     ${CMAKE_CURRENT_SOURCE_DIR}/test_pythonio.py
     ${CMAKE_BINARY_DIR}/swig
   )
+  add_test(test_python_numpy_conversions
+    ${Python3_EXECUTABLE}
+    ${CMAKE_CURRENT_SOURCE_DIR}/from_numpy.py
+    ${CMAKE_BINARY_DIR}/swig
+  )
 endif()
