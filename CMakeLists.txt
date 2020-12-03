@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.52.2" LANGUAGES CXX C)
+project(libpressio VERSION "0.53.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -119,10 +119,14 @@ target_include_directories(libpressio
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/libpressio>
   )
 target_compile_options(libpressio PRIVATE 
-  $<$<CONFIG:Debug>: -Wall -Werror -Wextra -Wpedantic>
+  $<$<CONFIG:Debug>: -Wall -Wextra -Wpedantic>
   $<$<CONFIG:RelWithDebInfo>: ${NO_OMIT_FRAME_POINTER_FLAG}>
   )
 
+option(LIBPRESSIO_TREAT_WARNINGS_AS_ERRORS "treat compiler warnings as errors" OFF)
+if(LIBPRESSIO_TREAT_WARNINGS_AS_ERRORS)
+  target_compile_options(libpressio PRIVATE -Werror)
+endif()
 
 find_package(PkgConfig REQUIRED)
 find_package(std_compat REQUIRED)

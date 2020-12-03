@@ -10,6 +10,7 @@ extern "C" {
 #define LIBPRESSIO_OPTIONS_H
 #include "pressio_dtype.h"
 #include "stddef.h"
+#include "stdint.h"
 
 /*! \file  
  *  \brief A set of options for a compressor
@@ -34,13 +35,13 @@ enum  pressio_options_key_status{
 
 /** level of safety to require for conversions*/
 enum pressio_conversion_safety {
-  /** conversions that are implicitly convertible without compiler warnings in
-   * C++
+  /** conversions that are implicitly convertible without a narrowing conversion
+   *  see also [dcl.init.list] in the C++ standard
    */
   pressio_conversion_implicit=0,
 
-  /** all of the above, and conversions that are explicitly convertible with a
-   * cast in C++
+  /** all of the above, and conversions that are explicitly convertible with an
+   * explicit cast in C++, see also std::is_convertable
    */
   pressio_conversion_explicit=1,
 
@@ -60,7 +61,13 @@ enum pressio_option_type {
   /** option is a non-owning pointer to a arbitrary data */pressio_option_userptr_type=5,
   /** option is a non-owning pointer to a arbitrary data */pressio_option_unset_type=6,
   /** option is an array of c-style strings */pressio_option_charptr_array_type=7,
-  /** option is a pressio_data structure */pressio_option_data_type=8
+  /** option is a pressio_data structure */pressio_option_data_type=8,
+  /** option is a 8 bit unsigned integer */pressio_option_uint8_type=9,
+  /** option is a 8 bit signed integer */pressio_option_int8_type=10,
+  /** option is a 16 bit unsigned integer */pressio_option_uint16_type=11,
+  /** option is a 16 bit signed integer */pressio_option_int16_type=12,
+  /** option is a 64 bit unsigned integer */pressio_option_uint64_type=13,
+  /** option is a 64 bit signed integer */pressio_option_int64_type=14,
 };
 
 
@@ -231,8 +238,8 @@ size_t pressio_options_num_set(struct pressio_options const* options);
   pressio_options_define_type_cast(name, type) \
   pressio_options_define_type_as(name, type) 
 
-pressio_options_define_type(uinteger, unsigned int)
-pressio_options_define_type(integer, int)
+pressio_options_define_type(uinteger, uint32_t)
+pressio_options_define_type(integer, int32_t)
 pressio_options_define_type(float, float)
 pressio_options_define_type(double, double)
 pressio_options_define_type(userptr, void*)

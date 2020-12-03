@@ -110,7 +110,7 @@ namespace serializer {
 
   int serializer<pressio_dtype>::send(pressio_dtype const& dtype, int dest, int tag, MPI_Comm comm) {
     int ret = 0;
-    ret |= comm::send((int)dtype, dest, tag, comm);
+    ret |= comm::send((int32_t)dtype, dest, tag, comm);
     return ret;
   }
 
@@ -125,19 +125,55 @@ namespace serializer {
     int ret = 0;
     pressio_option_type type = option.type(); 
     bool has_value = option.has_value();
-    ret |= comm::send((int)type, dest, tag, comm);
-    ret |= comm::send((int)has_value, dest, tag, comm);
+    ret |= comm::send((int32_t)type, dest, tag, comm);
+    ret |= comm::send((int32_t)has_value, dest, tag, comm);
     if(has_value) {
       switch(type) {
+        case pressio_option_int8_type:
+          {
+          auto value = option.get_value<int8_t>();
+          ret |= comm::send(value, dest, tag, comm);
+          }
+          break;
+        case pressio_option_uint8_type:
+          {
+          auto value = option.get_value<uint8_t>();
+          ret |= comm::send(value, dest, tag, comm);
+          }
+          break;
+        case pressio_option_int16_type:
+          {
+          auto value = option.get_value<int16_t>();
+          ret |= comm::send(value, dest, tag, comm);
+          }
+          break;
+        case pressio_option_uint16_type:
+          {
+          auto value = option.get_value<uint16_t>();
+          ret |= comm::send(value, dest, tag, comm);
+          }
+          break;
         case pressio_option_int32_type:
           {
-          auto value = option.get_value<int>();
+          auto value = option.get_value<int32_t>();
           ret |= comm::send(value, dest, tag, comm);
           }
           break;
         case pressio_option_uint32_type:
           {
-          auto value = option.get_value<unsigned int>();
+          auto value = option.get_value<uint32_t>();
+          ret |= comm::send(value, dest, tag, comm);
+          }
+          break;
+        case pressio_option_int64_type:
+          {
+          auto value = option.get_value<int64_t>();
+          ret |= comm::send(value, dest, tag, comm);
+          }
+          break;
+        case pressio_option_uint64_type:
+          {
+          auto value = option.get_value<uint64_t>();
           ret |= comm::send(value, dest, tag, comm);
           }
           break;
@@ -268,18 +304,42 @@ namespace serializer {
     if (rank == root) {
       // sending
       type = option.type();
-      int type_i = (int)type;
+      int32_t type_i = (int32_t)type;
       has_value = option.has_value();
       ret |= comm::bcast(type_i, root, comm);
       ret |= comm::bcast(has_value, root, comm);
       if (has_value) {
         switch (type) {
+        case pressio_option_int8_type: {
+          auto value = option.get_value<int8_t>();
+          ret |= comm::bcast(value, root, comm);
+        } break;
+        case pressio_option_uint8_type: {
+          auto value = option.get_value<uint8_t>();
+          ret |= comm::bcast(value, root, comm);
+        } break;
+        case pressio_option_int16_type: {
+          auto value = option.get_value<int16_t>();
+          ret |= comm::bcast(value, root, comm);
+        } break;
+        case pressio_option_uint16_type: {
+          auto value = option.get_value<uint16_t>();
+          ret |= comm::bcast(value, root, comm);
+        } break;
         case pressio_option_int32_type: {
-          auto value = option.get_value<int>();
+          auto value = option.get_value<int32_t>();
           ret |= comm::bcast(value, root, comm);
         } break;
         case pressio_option_uint32_type: {
-          auto value = option.get_value<unsigned int>();
+          auto value = option.get_value<uint32_t>();
+          ret |= comm::bcast(value, root, comm);
+        } break;
+        case pressio_option_int64_type: {
+          auto value = option.get_value<int64_t>();
+          ret |= comm::bcast(value, root, comm);
+        } break;
+        case pressio_option_uint64_type: {
+          auto value = option.get_value<uint64_t>();
           ret |= comm::bcast(value, root, comm);
         } break;
         case pressio_option_float_type: {
@@ -323,13 +383,43 @@ namespace serializer {
 
       if (has_value) {
         switch (type) {
+        case pressio_option_int8_type: {
+          int8_t value;
+          ret |= comm::bcast(value, root, comm);
+          option = value;
+        } break;
+        case pressio_option_uint8_type: {
+          uint8_t value;
+          ret |= comm::bcast(value, root, comm);
+          option = value;
+        } break;
+        case pressio_option_int16_type: {
+          int16_t value;
+          ret |= comm::bcast(value, root, comm);
+          option = value;
+        } break;
+        case pressio_option_uint16_type: {
+          uint16_t value;
+          ret |= comm::bcast(value, root, comm);
+          option = value;
+        } break;
         case pressio_option_int32_type: {
-          int value;
+          int32_t value;
           ret |= comm::bcast(value, root, comm);
           option = value;
         } break;
         case pressio_option_uint32_type: {
-          unsigned int value;
+          uint32_t value;
+          ret |= comm::bcast(value, root, comm);
+          option = value;
+        } break;
+        case pressio_option_int64_type: {
+          int64_t value;
+          ret |= comm::bcast(value, root, comm);
+          option = value;
+        } break;
+        case pressio_option_uint64_type: {
+          uint64_t value;
           ret |= comm::bcast(value, root, comm);
           option = value;
         } break;

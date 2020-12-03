@@ -8,7 +8,7 @@
 #include "make_input_data.h"
 
 
-int main(int argc, char *argv[])
+int main()
 {
   struct pressio* library = pressio_instance();
   struct pressio_compressor* compressor = pressio_get_compressor(library, "magick");

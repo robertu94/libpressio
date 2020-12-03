@@ -6,6 +6,7 @@
 #include <iterator>
 #include <string>
 #include <ostream>
+#include <zfp/types.h>
 #include "options.h"
 #include "data.h"
 #include "pressio_dtype.h"
@@ -66,10 +67,22 @@ std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& out, enum pressio_option_type type) {
     switch(type)
     {
+      case pressio_option_int8_type:
+        return out << "int8";
+      case pressio_option_uint8_type:
+        return out << "uint8";
+      case pressio_option_int16_type:
+        return out << "int16";
+      case pressio_option_uint16_type:
+        return out << "uint16";
       case pressio_option_int32_type:
         return out << "int32";
       case pressio_option_uint32_type:
         return out << "uint32";
+      case pressio_option_int64_type:
+        return out << "int64";
+      case pressio_option_uint64_type:
+        return out << "uint64";
       case pressio_option_float_type:
         return out << "float";
       case pressio_option_double_type:
@@ -101,10 +114,22 @@ operator<<(std::basic_ostream<CharT, Traits>& out, pressio_option const& option)
   if (option.has_value()) {
     switch(type)
     {
+      case pressio_option_int8_type:
+        return out << option.get_value<int8_t>();
+      case pressio_option_uint8_type:
+        return out << option.get_value<uint8_t>();
+      case pressio_option_int16_type:
+        return out << option.get_value<int16_t>();
+      case pressio_option_uint16_type:
+        return out << option.get_value<uint16_t>();
       case pressio_option_int32_type:
-        return out << option.get_value<int>();
+        return out << option.get_value<int32_t>();
       case pressio_option_uint32_type:
-        return out << option.get_value<unsigned int>();
+        return out << option.get_value<uint32_t>();
+      case pressio_option_int64_type:
+        return out << option.get_value<int64_t>();
+      case pressio_option_uint64_type:
+        return out << option.get_value<uint64_t>();
       case pressio_option_float_type:
         return out << option.get_value<float>();
       case pressio_option_double_type:

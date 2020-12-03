@@ -11,6 +11,7 @@ extern "C" {
  */
 #define PRESSIO_OPTION
 #include <stdbool.h>
+#include <stdint.h>
 #include "pressio_options.h"
 
 
@@ -92,8 +93,14 @@ enum pressio_options_key_status pressio_option_as_set(struct pressio_option* lhs
    */ \
   void pressio_option_set_##name(struct pressio_option* option, type value);
 
-pressio_option_define_type(uinteger, unsigned int)
-pressio_option_define_type(integer, int)
+pressio_option_define_type(uinteger8, uint8_t)
+pressio_option_define_type(integer8, int8_t)
+pressio_option_define_type(uinteger16, uint16_t)
+pressio_option_define_type(integer16, int16_t)
+pressio_option_define_type(uinteger, uint32_t)
+pressio_option_define_type(integer, int32_t)
+pressio_option_define_type(uinteger64, uint64_t)
+pressio_option_define_type(integer64, int64_t)
 pressio_option_define_type(float, float)
 pressio_option_define_type(double, double)
 pressio_option_define_type(string, const char*)

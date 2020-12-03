@@ -4,7 +4,7 @@
 
 #include "make_input_data.h"
 
-int main(int argc, char *argv[])
+int main()
 {
   pressio library;
   auto compressor = library.get_compressor("sz");

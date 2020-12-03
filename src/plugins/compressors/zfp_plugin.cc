@@ -56,7 +56,7 @@ class zfp_plugin: public libpressio_compressor_plugin {
       set(options, "zfp:maxbits", zfp->maxbits);
       set(options, "zfp:maxprec", zfp->maxprec);
       set(options, "zfp:minexp", zfp->minexp);
-      set(options, "zfp:execution", static_cast<int>(zfp_stream_execution(zfp)));
+      set(options, "zfp:execution", static_cast<int32_t>(zfp_stream_execution(zfp)));
       set(options, "zfp:omp_threads", zfp_stream_omp_threads(zfp));
       set(options, "zfp:omp_chunk_size", zfp_stream_omp_chunk_size(zfp));
       set_type(options, "zfp:precision", pressio_option_uint32_type);
@@ -71,7 +71,7 @@ class zfp_plugin: public libpressio_compressor_plugin {
 
     struct pressio_options get_configuration_impl() const override {
       struct pressio_options options;
-      pressio_options_set_integer(&options, "pressio:thread_safe", pressio_thread_safety_multiple);
+      set(options, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
       return options;
     }
 

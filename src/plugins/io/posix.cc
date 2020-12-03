@@ -157,7 +157,7 @@ struct posix_io : public libpressio_io_plugin {
   }
   virtual struct pressio_options get_configuration_impl() const override{
     return {
-      {"pressio:thread_safe",  static_cast<int>(pressio_thread_safety_single)}
+      {"pressio:thread_safe",  static_cast<int32_t>(pressio_thread_safety_single)}
     };
   }
 

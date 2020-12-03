@@ -126,7 +126,7 @@ class mgard_plugin: public libpressio_compressor_plugin {
 
   struct pressio_options get_configuration_impl() const override {
     struct pressio_options options;
-    pressio_options_set_integer(&options, "pressio:thread_safe", pressio_thread_safety_single);
+    set(options, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_single));
     return options;
   }
 
@@ -473,7 +473,7 @@ class mgard_plugin: public libpressio_compressor_plugin {
             quantizer,
 #endif
             static_cast<unsigned char*>(input_data.data()),
-            static_cast<int>(input_data.size_in_bytes()),
+            static_cast<int32_t>(input_data.size_in_bytes()),
             dims.at(0),
             dims.at(1),
             dims.at(2),
@@ -487,7 +487,7 @@ class mgard_plugin: public libpressio_compressor_plugin {
             quantizer,
 #endif
             static_cast<unsigned char*>(input_data.data()),
-            static_cast<int>(input_data.size_in_bytes()),
+            static_cast<int32_t>(input_data.size_in_bytes()),
             dims.at(0),
             dims.at(1),
             dims.at(2)

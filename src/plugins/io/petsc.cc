@@ -147,7 +147,7 @@ struct petsc_io : public libpressio_io_plugin {
     return 0;
   }
   virtual struct pressio_options get_configuration_impl() const override {
-    return {{"pressio:thread_safe", static_cast<int>(pressio_thread_safety_single)}};
+    return {{"pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_single)}};
   }
 
   virtual int set_options_impl(struct pressio_options const &opts) override {

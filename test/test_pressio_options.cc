@@ -143,20 +143,20 @@ TEST_F(PressioOptionsTests, IterateKeys) {
         EXPECT_EQ(pressio_option_get_integer(value), 1);
         keys_set++;
         break;
-      case pressio_option_uint32_type:
-        FAIL();
-        break;
       case pressio_option_userptr_type:
         EXPECT_THAT(key, ::testing::StrEq("data"));
         EXPECT_EQ(pressio_option_get_userptr(value), &data);
         keys_set++;
         break;
+      case pressio_option_int8_type:
+      case pressio_option_uint8_type:
+      case pressio_option_int16_type:
+      case pressio_option_uint16_type:
+      case pressio_option_uint32_type:
+      case pressio_option_int64_type:
+      case pressio_option_uint64_type:
       case pressio_option_unset_type:
-        FAIL();
-        break;
       case pressio_option_charptr_array_type:
-        FAIL();
-        break;
       case pressio_option_data_type:
         FAIL();
         break;
@@ -177,8 +177,9 @@ TEST_F(PressioOptionsTests, Conversions ) {
 
   //test implicit conversions
   op = pressio_options_get(o, "int");
-  converted = pressio_option_convert_implicit(op, pressio_option_double_type);
-  EXPECT_EQ(pressio_option_get_double(converted), 1.0);
+  converted = pressio_option_convert_implicit(op, pressio_option_int64_type);
+  ASSERT_NE(converted, nullptr);
+  EXPECT_EQ(pressio_option_get_integer64(converted), 1ll);
   pressio_option_free(converted);
   pressio_option_free(op);
 
@@ -206,13 +207,13 @@ TEST_F(PressioOptionsTests, OptionConversions ) {
 
   //test implicit conversions
   double d = 9.2;
-  if(pressio_options_as_double(o, "int", &d) == pressio_options_key_set) {
+  if(pressio_options_cast_double(o, "int", pressio_conversion_explicit, &d) == pressio_options_key_set) {
     EXPECT_EQ(d, 1.0);
   } else {
-    FAIL() << "conversion from int->double should have succeeded implicitly";
+    FAIL() << "conversion from int->double should have succeeded explicitly";
   }
 
-  for (auto level : {pressio_conversion_implicit, pressio_conversion_explicit, pressio_conversion_special}) {
+  for (auto level : {pressio_conversion_explicit, pressio_conversion_special}) {
     d = 9.2;
     if(pressio_options_cast_double(o, "int", level, &d) == pressio_options_key_set) {
       EXPECT_EQ(d, 1.0);

@@ -212,7 +212,7 @@ class composite_plugin : public libpressio_metrics_plugin {
 #if LIBPRESSIO_HAS_LUA
     std::map<std::string, double> metrics;
     for (auto const& o: opt) {
-      auto o_as_double = o.second.as(pressio_option_double_type, pressio_conversion_implicit);
+      auto o_as_double = o.second.as(pressio_option_double_type, pressio_conversion_explicit);
       if(o_as_double.has_value()) {
         metrics[o.first] = o_as_double.get_value<double>();
       }

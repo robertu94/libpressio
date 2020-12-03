@@ -137,7 +137,7 @@ class external_metric_plugin : public libpressio_metrics_plugin {
       } catch(...) {} //swallow all errors and set error information
 
       results.clear();
-      set(results, "external:error_code", (int)format_error);
+      set(results, "external:error_code", static_cast<int32_t>(format_error));
       set(results, "external:return_code", 0);
       set(results, "external:stderr", proc_results.proc_stderr);
       set(results, "external:runtime", duration);

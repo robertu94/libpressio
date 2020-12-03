@@ -1,6 +1,7 @@
 #ifndef PRESSIO_OPTIONS_CPP
 #define PRESSIO_OPTIONS_CPP
 
+#include <cwchar>
 #include <string>
 #include <map>
 #include <type_traits>
@@ -24,8 +25,14 @@
 
 namespace {
 using option_type = compat::variant<compat::monostate,
-      compat::optional<int>,
-      compat::optional<unsigned int>,
+      compat::optional<int8_t>,
+      compat::optional<uint8_t>,
+      compat::optional<int16_t>,
+      compat::optional<uint16_t>,
+      compat::optional<int32_t>,
+      compat::optional<uint32_t>,
+      compat::optional<int64_t>,
+      compat::optional<uint64_t>,
       compat::optional<float>,
       compat::optional<double>,
       compat::optional<std::string>,
@@ -40,8 +47,15 @@ using option_type = compat::variant<compat::monostate,
 /** defines constants to convert between types and pressio_option_*_type */
 template <class T>
 constexpr enum pressio_option_type pressio_type_to_enum() {
-  return std::is_same<T, int>() ? pressio_option_int32_type :
-    std::is_same<T,unsigned int>() ? pressio_option_uint32_type :
+  return 
+    std::is_same<T, int8_t>() ? pressio_option_int8_type :
+    std::is_same<T,uint8_t>() ? pressio_option_uint8_type :
+    std::is_same<T, int16_t>() ? pressio_option_int16_type :
+    std::is_same<T,uint16_t>() ? pressio_option_uint16_type :
+    std::is_same<T, int32_t>() ? pressio_option_int32_type :
+    std::is_same<T,uint32_t>() ? pressio_option_uint32_type :
+    std::is_same<T, int64_t>() ? pressio_option_int64_type :
+    std::is_same<T,uint64_t>() ? pressio_option_uint64_type :
     std::is_same<T,float>() ? pressio_option_float_type :
     std::is_same<T,double>() ? pressio_option_double_type :
     std::is_same<T,std::string>() ? pressio_option_charptr_type :
@@ -152,10 +166,22 @@ struct pressio_option final {
     else {
       switch(type())
       {
+        case pressio_option_int8_type:
+          return (bool)get<int8_t>();
+        case pressio_option_uint8_type:
+          return (bool)get<uint8_t>();
+        case pressio_option_int16_type:
+          return (bool)get<int16_t>();
+        case pressio_option_uint16_type:
+          return (bool)get<uint16_t>();
         case pressio_option_int32_type:
-          return (bool)get<int>();
+          return (bool)get<int32_t>();
         case pressio_option_uint32_type:
-          return (bool)get<unsigned int>();
+          return (bool)get<uint32_t>();
+        case pressio_option_int64_type:
+          return (bool)get<int64_t>();
+        case pressio_option_uint64_type:
+          return (bool)get<uint64_t>();
         case pressio_option_float_type:
           return (bool)get<float>();
         case pressio_option_double_type:
@@ -197,11 +223,29 @@ struct pressio_option final {
       case pressio_option_userptr_type:
         option = compat::optional<void*>();
         break;
+      case pressio_option_int8_type:
+        option = compat::optional<int8_t>();
+        break;
+      case pressio_option_uint8_type:
+        option = compat::optional<uint8_t>();
+        break;
+      case pressio_option_int16_type:
+        option = compat::optional<int16_t>();
+        break;
+      case pressio_option_uint16_type:
+        option = compat::optional<uint16_t>();
+        break;
       case pressio_option_int32_type:
-        option = compat::optional<int>();
+        option = compat::optional<int32_t>();
         break;
       case pressio_option_uint32_type:
-        option = compat::optional<unsigned int>();
+        option = compat::optional<uint32_t>();
+        break;
+      case pressio_option_int64_type:
+        option = compat::optional<int64_t>();
+        break;
+      case pressio_option_uint64_type:
+        option = compat::optional<uint64_t>();
         break;
       case pressio_option_float_type:
         option = compat::optional<float>();

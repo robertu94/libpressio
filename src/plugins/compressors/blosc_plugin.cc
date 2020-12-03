@@ -26,7 +26,7 @@ class blosc_plugin: public libpressio_compressor_plugin {
 
     struct pressio_options get_configuration_impl() const override {
       struct pressio_options options;
-      options.set("pressio:thread_safe", static_cast<int>(pressio_thread_safety_multiple));
+      options.set("pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
       return options;
     }
 
