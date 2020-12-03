@@ -6,7 +6,6 @@
 #include <iterator>
 #include <string>
 #include <ostream>
-#include <zfp/types.h>
 #include "options.h"
 #include "data.h"
 #include "pressio_dtype.h"
