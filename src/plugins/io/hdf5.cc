@@ -66,15 +66,19 @@ namespace {
     }
   }
 
+
   bool hdf_path_exists(hid_t file, std::string const& path) {
     if(path == std::string("") or path == std::string("/")) return true;
     else {
       //check for parent path
       auto last_slash_pos = path.find_last_of('/');
-      if(last_slash_pos != std::string::npos)
+      if(last_slash_pos == 0) {
+        return H5Lexists(file, path.c_str(), H5P_DEFAULT);
+      }
+      else if(last_slash_pos != std::string::npos)
       {
         //recurse to check for parent
-        auto parent = path.substr(0, last_slash_pos - 1);
+        auto parent = path.substr(0, last_slash_pos);
         if (not hdf_path_exists(file, parent)) return false;
       } 
 
