@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.53.2" LANGUAGES CXX C)
+project(libpressio VERSION "0.54.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -21,6 +21,7 @@ option(BUILD_SHARED_LIBS "build libpressio as a shared library" ON)
 
 include(GNUInstallDirs)
 include(CheckCXXCompilerFlag)
+include(CMakeDependentOption)
 
 check_cxx_compiler_flag("-fno-omit-frame-pointer" HAVE_NO_OMIT_FRAME_POINTER)
 set(NO_OMIT_FRAME_POINTER_FLAG "")
@@ -274,6 +275,7 @@ if(LIBPRESSIO_HAS_FPZIP)
 endif()
 
 option(LIBPRESSIO_HAS_MPI "build MPI spawn external method" OFF)
+cmake_dependent_option(LIBPRESSIO_HAS_MPI4PY "build mpi support for the python binding" OFF "LIBPRESSIO_HAS_MPI" OFF)
 if(LIBPRESSIO_HAS_MPI)
   set(LIBPRESSIO_FEATURES "${LIBPRESSIO_FEATURES} mpi")
   find_package(MPI COMPONENTS CXX)

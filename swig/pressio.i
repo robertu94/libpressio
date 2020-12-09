@@ -27,19 +27,31 @@ import_array();
 %}
 
 
+%include "pressio_version.h"
 %include "pybuffer.i"
 %pybuffer_string(const char* compressor_id)
+%pybuffer_binary(const char* buffer, size_t buffer_size)
 
 
 %include <std_string.i>
 %include <std_vector.i>
 %include <cpointer.i>
 
-%pointer_functions(int, int32)
-%pointer_functions(unsigned int, uint32)
+%pointer_functions(int8_t, int8)
+%pointer_functions(uint8_t, uint8)
+%pointer_functions(int16_t, int16)
+%pointer_functions(uint16_t, uint16)
+%pointer_functions(int32_t, int32)
+%pointer_functions(uint32_t, uint32)
+%pointer_functions(int64_t, int64)
+%pointer_functions(uint64_t, uint64)
 %pointer_functions(double, double)
 %pointer_functions(float, float)
 
+#if LIBPRESSIO_HAS_MPI4PY
+%include "mpi4py/mpi4py.i"
+%mpi4py_typemap(Comm, MPI_Comm)
+#endif
 %include "pypressio.h"
 
 %numpy_typemaps(signed char       , NPY_BYTE     , size_t)
@@ -212,9 +224,6 @@ __pressio_to_numpy = {
 }
 __pressio_to_np_dtype = {
   _pressio.float_dtype : numpy.float32,
-}
-__pressio_to_np_dtype = {
-  _pressio.float_dtype : numpy.float32,
   _pressio.double_dtype : numpy.double,
   _pressio.uint8_dtype : numpy.uint8,
   _pressio.int8_dtype : numpy.int8,
@@ -249,6 +258,7 @@ def io_data_to_numpy(ptr):
 %include "pressio_data.h"
 %include "pressio_dtype.h"
 %include "pressio_metrics.h"
+%ignore pressio_option_new_strings;
 %include "pressio_option.h"
 %include "pressio_options.h"
 %include "pressio_options_iter.h"

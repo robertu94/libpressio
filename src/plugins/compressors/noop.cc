@@ -29,10 +29,25 @@ class noop_compressor_plugin: public libpressio_compressor_plugin {
     return 0;
   }
 
+  int compress_many_impl(compat::span<const pressio_data *const> const& input, compat::span<pressio_data*>& output) override {
+    for (size_t i = 0; i < std::min(input.size(), output.size()); ++i) {
+      *output[i] = pressio_data::clone(*input[i]);
+    }
+    return 0;
+  }
+
   int decompress_impl(const pressio_data *input, struct pressio_data* output) override {
     *output = pressio_data::clone(*input);
     return 0;
   }
+
+  int decompress_many_impl(compat::span<const pressio_data *const> const& input, compat::span<pressio_data*>& output) override {
+    for (size_t i = 0; i < std::min(input.size(), output.size()); ++i) {
+      *output[i] = pressio_data::clone(*input[i]);
+    }
+    return 0;
+  }
+
 
   int major_version() const override {
     return 0;

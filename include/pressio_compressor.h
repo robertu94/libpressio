@@ -276,7 +276,7 @@ enum pressio_thread_safety {
  *
  */
 int pressio_compressor_compress_many(struct pressio_compressor* compressor,
-    struct pressio_data const* in[], size_t num_inputs,
+    struct pressio_data const*const in[], size_t num_inputs,
     struct pressio_data * out[], size_t num_outputs
     );
 
@@ -298,7 +298,7 @@ int pressio_compressor_compress_many(struct pressio_compressor* compressor,
  * \returns 0 if successful, 1 if there is an error.  On error, an error message is set in pressio_compressor_error_msg.
  */
 int pressio_compressor_decompress_many(struct pressio_compressor* compressor,
-    struct pressio_data const* in[], size_t num_inputs,
+    struct pressio_data const*const in[], size_t num_inputs,
     struct pressio_data * out[], size_t num_outputs
     );
 

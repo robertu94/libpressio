@@ -3,12 +3,37 @@
 #include "libpressio_ext/io/hdf5.h"
 #include "libpressio_ext/cpp/io.h"
 #include "libpressio_ext/cpp/pressio.h"
+#include "pressio_version.h"
 #include "std_compat/iterator.h"
 #include "pressio_data.h"
 #include "gtest/gtest.h"
+#include <H5public.h>
+#if H5_HAVE_PARALLEL
+#include <mpi.h>
+static int did_init_mpi = 0;
+#endif
 
 class PressioIOHDFTests: public ::testing::Test {
 
+#if H5_HAVE_PARALLEL
+  public:
+  static void SetUpTestSuite() {
+    MPI_Initialized(&did_init_mpi);
+    if(!did_init_mpi) {
+      //According to at least MPI 2.0, chapter 8.7, conforming implementations must allow
+      //nullptr to be passed to MPI_Init
+      MPI_Init(nullptr, nullptr);
+      did_init_mpi = true;
+    }
+  }
+  static void TearDownTestSuite() {
+    if(did_init_mpi) {
+      MPI_Finalize();
+    }
+  }
+#endif
+
+  private:
   void SetUp() override {
     tmp_fd = mkstemps(test_file, 3);
   }

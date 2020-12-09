@@ -78,14 +78,14 @@ const char* pressio_compressor_get_name(struct pressio_compressor const* compres
 }
 
 int pressio_compressor_compress_many(struct pressio_compressor* compressor,
-    struct pressio_data const* in[], size_t num_inputs,
+    struct pressio_data const* const in[], size_t num_inputs,
     struct pressio_data * out[], size_t num_outputs
     ) {
   return (*compressor)->compress_many(in, in+num_inputs, out, out+num_outputs);
 }
 
 int pressio_compressor_decompress_many(struct pressio_compressor* compressor,
-    struct pressio_data const* in[], size_t num_inputs,
+    struct pressio_data const* const in[], size_t num_inputs,
     struct pressio_data * out[], size_t num_outputs
     ) {
   return (*compressor)->decompress_many(in, in+num_inputs, out, out+num_outputs);

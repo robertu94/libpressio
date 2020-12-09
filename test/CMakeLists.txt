@@ -41,6 +41,9 @@ add_gtest(test_io.cc)
 
 if(LIBPRESSIO_HAS_HDF)
   add_gtest(test_hdf5.cc)
+  if(LIBPRESSIO_HAS_MPI)
+    target_link_libraries(test_hdf5 PRIVATE MPI::MPI_CXX)
+  endif()
 endif()
 
 if(LIBPRESSIO_HAS_SZ)
@@ -61,10 +64,16 @@ if(LIBPRESSIO_HAS_SZ)
   add_test(metrics_test metrics)
 
   add_executable(test_external_helper test_external_helper.cc)
+  add_executable(test_external_helper_multi_file test_external_helper_multi_file.cc)
   add_executable(test_external test_external.cc make_input_data.cc)
+  add_executable(test_external_multi_file test_external_multi_file.cc)
   target_link_libraries(test_external PRIVATE libpressio SZ)
+  target_link_libraries(test_external_multi_file PRIVATE libpressio SZ)
   target_link_libraries(test_external_helper PRIVATE libpressio SZ)
+  target_link_libraries(test_external_helper_multi_file PRIVATE libpressio SZ)
   add_test(test_external test_external ${CMAKE_CURRENT_BINARY_DIR}/test_external_helper)
+  add_test(test_external_multi_file test_external_multi_file
+    ${CMAKE_CURRENT_BINARY_DIR}/test_external_helper_multi_file)
 
   add_gtest(test_register_metrics.cc make_input_data.cc)
   target_link_libraries(test_register_metrics PRIVATE SZ)

@@ -352,6 +352,10 @@ pressio_option pressio_option::as(const enum pressio_option_type to_type, const 
       if(to_type == pressio_option_userptr_type) return get_value<void*>();
       else return {};
     //don't allow conversions from pressio_option_data_type for now
+    case pressio_option_data_type:
+      if(to_type == pressio_option_data_type) {
+        return get_value<pressio_data>();
+      } else return {};
     default:
       return {};
   }

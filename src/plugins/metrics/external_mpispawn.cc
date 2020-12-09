@@ -1,5 +1,6 @@
 #include "external_launch.h"
 #include <iterator>
+#include <memory>
 #include <sstream>
 #include <mpi.h>
 #include "std_compat/memory.h"
@@ -47,6 +48,11 @@ extern_proc_results launch(std::string const& full_command, std::string const& w
   const char* prefix() const override {
     return "mpispawn";
   }
+
+  std::unique_ptr<libpressio_launch_plugin> clone() const override {
+    return compat::make_unique<external_mpispawn>(*this);
+  }
+
 };
 
 static pressio_register launch_spawn_plugin(launch_plugins(), "mpispawn", [](){ return compat::make_unique<external_mpispawn>();});

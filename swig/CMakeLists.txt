@@ -19,6 +19,18 @@ if(SWIG_FOUND AND PYTHON3_FOUND)
     set_property(TARGET ${filelibname} PROPERTY SWIG_COMPILE_DEFINITIONS "SWIGWORDSIZE64")
     target_link_libraries(${filelibname} PUBLIC SZ libpressio Python3::Python Python3::NumPy)
     target_include_directories(${filelibname} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+    if(LIBPRESSIO_HAS_MPI4PY)
+      execute_process(
+        COMMAND ${Python3_EXECUTABLE} -c "import mpi4py; print(mpi4py.get_include())" 
+        OUTPUT_VARIABLE MPI4PY_SWIG_DIR 
+        RESULT_VARIABLE MPI4PY_FOUND 
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+      )
+      if(NOT ${MPI4PY_FOUND} EQUAL "0")
+        message(FATAL_ERROR "Could not locate mpi4py")
+      endif()
+      target_include_directories(${filelibname} PRIVATE ${MPI4PY_SWIG_DIR})
+    endif()
     get_property(swig_generated_module TARGET ${filelibname} PROPERTY SWIG_SUPPORT_FILES)
 
     install(TARGETS ${filelibname} DESTINATION ${Python3_SITELIB})

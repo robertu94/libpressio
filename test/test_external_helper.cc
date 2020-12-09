@@ -10,6 +10,7 @@ struct cmdline_args {
   std::string decompressed;  
   std::vector<size_t> dims;
   pressio_dtype type;
+  std::string config_name;
   bool empty = true;
 };
 
@@ -19,7 +20,8 @@ enum class cmdline {
   input,
   decompressed,
   dim,
-  type
+  type,
+  config_name
 };
 
 cmdline_args parse_args(const int argc, const char* argv[])
@@ -39,6 +41,7 @@ cmdline_args parse_args(const int argc, const char* argv[])
           else if(arg == "--decompressed") expected = cmdline::decompressed;
           else if(arg == "--dim") expected = cmdline::dim;
           else if(arg == "--type") expected = cmdline::type;
+          else if(arg == "--config_name") expected = cmdline::config_name;
           else {
             std::cerr << "Unexpected flag: " << arg << std::endl;
             exit(1);
@@ -80,6 +83,10 @@ cmdline_args parse_args(const int argc, const char* argv[])
         }
         expected = cmdline::flag;
         break;
+      case cmdline::config_name:
+        args.config_name = arg;
+        expected = cmdline::flag;
+        break;
     }
   }
 
@@ -88,8 +95,16 @@ cmdline_args parse_args(const int argc, const char* argv[])
 
 int main(int argc, const char *argv[])
 {
-  auto args = parse_args(argc, argv);   
   std::cout << "external:api=3\n";
+  std::cerr << std::endl;
+  
+  for (int i = 0; i < argc; ++i) {
+    std::cerr << "argv[" << i << "] " << argv[i] << std::endl;
+  }
+
+  std::cerr << std::endl;
+
+  auto args = parse_args(argc, argv);   
   if(!args.empty) {
     std::cout << "dims=" << args.dims.size() << '\n';
 
@@ -118,6 +133,7 @@ int main(int argc, const char *argv[])
     std::cout << "defaulted=2.0" << std::endl;
     std::cout << "defaulted2=3.0" << std::endl;
   }
+
   std::flush(std::cout);
   return 0;
 }

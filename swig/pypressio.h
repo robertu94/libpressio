@@ -1,9 +1,21 @@
 #include "pressio_data.h"
+#include "pressio_options.h"
 #include "libpressio_ext/cpp/dtype.h"
 #include "libpressio_ext/cpp/data.h"
+#include "libpressio_ext/cpp/options.h"
 #include <vector>
 #include <cstdint>
 #include <algorithm>
+#include "pressio_version.h"
+
+#if LIBPRESSIO_HAS_MPI4PY
+#include <mpi.h>
+
+void options_set_comm(struct pressio_options* options, const char* key, MPI_Comm comm) {
+  return pressio_options_set_userptr(options, key, comm);
+}
+
+#endif
 
 namespace {
   template <class T>
@@ -76,6 +88,28 @@ void _pressio_io_data_to_numpy_4d(pressio_data* ptr, T** ptr_argout, long int*r1
   *ptr_argout = static_cast<T*>(pressio_data_copy(ptr, nullptr));
 }
 
+std::string io_data_to_bytes(pressio_data* data) {
+  size_t n_bytes;
+  const char* bytes = static_cast<const char*>(pressio_data_ptr(data, &n_bytes));
+
+  return std::string(bytes, n_bytes);
+}
+
+pressio_data* io_data_from_bytes(const char* buffer, size_t buffer_size) {
+  return pressio_data_new_copy(pressio_byte_dtype, (void*)buffer, 1, &buffer_size);
+}
+
+std::vector<std::string> option_get_strings(pressio_option const* options) {
+  return options->get_value<std::vector<std::string>>();
+}
+
+void option_set_strings(pressio_option* options, std::vector<std::string> const& strings) {
+  *options = strings;
+}
+
+struct pressio_option* option_new_strings(std::vector<std::string> const& strings) {
+  return new pressio_option(pressio_option(strings));
+}
 
 struct pressio_data* data_new_empty(const pressio_dtype dtype, std::vector<uint64_t> dimensions) {
   return new pressio_data(pressio_data::empty(dtype, dimensions));

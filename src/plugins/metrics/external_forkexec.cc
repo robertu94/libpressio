@@ -1,4 +1,5 @@
 #include "external_launch.h"
+#include <memory>
 #include <sstream>
 #include <unistd.h>
 #include <iterator>
@@ -104,6 +105,11 @@ extern_proc_results launch(std::string const& full_command, std::string const& w
     }
   const char* prefix() const override {
     return "forkexec";
+  }
+
+  
+  std::unique_ptr<libpressio_launch_plugin> clone() const override {
+    return compat::make_unique<external_forkexec>(*this);
   }
 };
 

@@ -1,9 +1,17 @@
+#include <H5public.h>
 #include <H5Dpublic.h>
+#include <H5Ipublic.h>
 #include <H5Spublic.h>
 #include <H5Tpublic.h>
 #include <H5Ppublic.h>
 #include <H5Fpublic.h>
 #include <H5public.h>
+#include <std_compat/utility.h>
+
+#if H5_HAVE_PARALLEL
+#include <H5FDmpi.h>
+#endif
+
 #include <cstring>
 #include <sys/types.h>
 #include <unistd.h>
@@ -91,28 +99,30 @@ namespace {
    * this class is a standard c++ idiom for closing resources
    * it calls the function passed in during the destructor.
    */
-  template <class Function>
   class cleanup {
     public:
-      cleanup(Function f) noexcept: cleanup_fn(std::move(f)), do_cleanup(true) {}
-      cleanup(cleanup&& rhs) noexcept: cleanup_fn(std::move(rhs.cleanup_fn)), do_cleanup(true) {
-        do_cleanup = false;
-      }
+      cleanup() noexcept: cleanup_fn([]{}), do_cleanup(false) {}
+
+      template <class Function>
+      cleanup(Function f) noexcept: cleanup_fn(std::forward<Function>(f)), do_cleanup(true) {}
+      cleanup(cleanup&& rhs) noexcept: cleanup_fn(std::move(rhs.cleanup_fn)), do_cleanup(compat::exchange(rhs.do_cleanup, false)) {}
       cleanup(cleanup const&)=delete;
       cleanup& operator=(cleanup const&)=delete;
       cleanup& operator=(cleanup && rhs) noexcept { 
+        if(&rhs == this) return *this;
         do_cleanup = compat::exchange(rhs.do_cleanup, false);
         cleanup_fn = std::move(rhs.cleanup_fn);
+        return *this;
       }
       ~cleanup() { if(do_cleanup) cleanup_fn(); }
 
     private:
-      Function cleanup_fn;
+      std::function<void()> cleanup_fn;
       bool do_cleanup;
   };
   template<class Function>
-  auto make_cleanup(Function&& f) -> decltype(cleanup<Function>(std::declval<Function>())) {
-    return cleanup<Function>(std::forward<Function>(f));
+  cleanup make_cleanup(Function&& f) {
+    return cleanup(std::forward<Function>(f));
   }
 }
 
@@ -147,7 +157,17 @@ pressio_io_data_path_h5write(struct pressio_data const* data, const char* file_n
 
 struct hdf5_io: public libpressio_io_plugin {
   virtual struct pressio_data* read_impl(struct pressio_data* buffer) override {
-    hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+    cleanup cleanup_facl;
+    hid_t fapl_plist = H5P_DEFAULT;
+#if H5_HAVE_PARALLEL
+    if(use_parallel) {
+      fapl_plist = H5Pcreate(H5P_FILE_ACCESS);
+      MPI_Info info = MPI_INFO_NULL;
+      H5Pset_fapl_mpio(fapl_plist, comm, info);
+      cleanup_facl = make_cleanup([&]{H5Pclose(fapl_plist);});
+    }
+#endif
+    hid_t file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, fapl_plist);
     if(file < 0) {
       set_error(1, "failed to open file " + filename);
       return nullptr;
@@ -232,7 +252,16 @@ struct hdf5_io: public libpressio_io_plugin {
         }
         auto memspace_cleanup = make_cleanup([&]{ H5Sclose(memspace); });
 
-        if(H5Dread(dataset, type, memspace, filespace, H5P_DEFAULT, ptr) < 0) {
+        hid_t dxpl_plist = H5P_DEFAULT;
+        cleanup dxpl_cleanup;
+#if H5_HAVE_PARALLEL
+        if(use_parallel) {
+          hid_t dxpl_plist = H5Pcreate(H5P_DATASET_XFER);
+          dxpl_cleanup = make_cleanup([&]{ H5Pclose(dxpl_plist);});
+          H5Pset_dxpl_mpio(dxpl_plist, H5FD_MPIO_COLLECTIVE);
+        }
+#endif
+        if(H5Dread(dataset, type, memspace, filespace, dxpl_plist, ptr) < 0) {
           set_error(10, "read failed");
           return nullptr;
         }
@@ -249,12 +278,22 @@ struct hdf5_io: public libpressio_io_plugin {
     //check if the file exists
     hid_t file;
     int perms_ok = access(filename.c_str(), W_OK);
+    cleanup cleanup_facl;
+    hid_t fapl_plist = H5P_DEFAULT;
+#if H5_HAVE_PARALLEL
+    if(use_parallel) {
+      fapl_plist = H5Pcreate(H5P_FILE_ACCESS);
+      MPI_Info info = MPI_INFO_NULL;
+      H5Pset_fapl_mpio(fapl_plist, comm, info);
+      cleanup_facl = make_cleanup([&]{H5Pclose(fapl_plist);});
+    }
+#endif
     if(perms_ok == 0)
     {
-      file = H5Fopen(filename.c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
+      file = H5Fopen(filename.c_str(), H5F_ACC_RDWR, fapl_plist);
     } else {
       if(errno == ENOENT) {
-        file = H5Fcreate(filename.c_str(), H5F_ACC_EXCL, H5P_DEFAULT, H5P_DEFAULT);
+        file = H5Fcreate(filename.c_str(), H5F_ACC_EXCL, H5P_DEFAULT, fapl_plist);
       } else {
         char err_msg[1024];
         std::fill(err_msg, err_msg+1024, '\0');
@@ -294,11 +333,16 @@ struct hdf5_io: public libpressio_io_plugin {
         return 1;
       }
       auto cleanup_memspace = make_cleanup([&]{ H5Sclose(creation_filespace);});
+
+
+      hid_t lcpl_id = H5Pcreate(H5P_LINK_CREATE);
+      H5Pset_create_intermediate_group(lcpl_id, 1);
+      auto cleanup_lapl = make_cleanup([&]{ H5Pclose(lcpl_id);});
       dataset = H5Dcreate2(file,
           dataset_name.c_str(),
           pressio_to_h5t(pressio_data_dtype(data)),
           creation_filespace,
-          H5P_DEFAULT,
+          lcpl_id,
           H5P_DEFAULT,
           H5P_DEFAULT
           );
@@ -332,21 +376,32 @@ struct hdf5_io: public libpressio_io_plugin {
     }
     auto cleanup_memspace = make_cleanup([&]{ H5Sclose(memspace); });
 
+    hid_t dxpl_plist = H5P_DEFAULT;
+    cleanup dxpl_cleanup;
+#if H5_HAVE_PARALLEL
+    if(use_parallel) {
+      hid_t dxpl_plist = H5Pcreate(H5P_DATASET_XFER);
+      dxpl_cleanup = make_cleanup([&]{ H5Pclose(dxpl_plist);});
+      H5Pset_dxpl_mpio(dxpl_plist, H5FD_MPIO_COLLECTIVE);
+    }
+#endif
+
     //write the dataset
     return (H5Dwrite(
         dataset,
         pressio_to_h5t(pressio_data_dtype(data)),
         memspace,
         filespace,
-        H5P_DEFAULT,
+        dxpl_plist,
         pressio_data_ptr(data,nullptr)
         ) < 0);
   }
 
   virtual struct pressio_options get_configuration_impl() const override{
-    return {
-      {"pressio:thread_safe",  static_cast<int32_t>(pressio_thread_safety_single)}
-    };
+    pressio_options options;
+    set(options, "pressio:thread_safe",  static_cast<int32_t>(pressio_thread_safety_single));
+    set(options, "hdf5:parallel",  static_cast<int32_t>(H5_HAVE_PARALLEL));
+    return options;
   }
 
   virtual int set_options_impl(struct pressio_options const& options) override{
@@ -373,6 +428,10 @@ struct hdf5_io: public libpressio_io_plugin {
       auto file_extent_t = tmp.to_vector<uint64_t>();
       file_extent.assign(std::begin(file_extent_t), std::end(file_extent_t));
     }
+#if H5_HAVE_PARALLEL
+    get(options, "hdf5:use_parallel", &use_parallel);
+    get(options, "hdf5:mpi_comm", (void**)(&comm));
+#endif
     return 0;
   }
   virtual struct pressio_options get_options_impl() const override{
@@ -388,6 +447,10 @@ struct hdf5_io: public libpressio_io_plugin {
     set(opts, "hdf5:file_stride", to_uint64v(file_stride));
     set(opts, "hdf5:file_start", to_uint64v(file_stride));
     set(opts, "hdf5:file_extent", to_uint64v(file_extent));
+#if H5_HAVE_PARALLEL
+    set(opts, "hdf5:use_parallel", use_parallel);
+    set(opts, "hdf5:mpi_comm", (void*)(comm));
+#endif
     return opts;
   }
 
@@ -461,6 +524,10 @@ struct hdf5_io: public libpressio_io_plugin {
   std::string filename;
   std::string dataset_name;
   std::vector<hsize_t> file_block, file_start, file_count, file_stride, file_extent;
+#if H5_HAVE_PARALLEL
+  int use_parallel = false;
+  MPI_Comm comm = MPI_COMM_WORLD;
+#endif
 };
 
 static pressio_register io_hdf5_plugin(io_plugins(), "hdf5", [](){ return compat::make_unique<hdf5_io>(); });
