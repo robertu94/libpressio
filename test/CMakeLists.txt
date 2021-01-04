@@ -109,8 +109,8 @@ if(LIBPRESSIO_HAS_LIBDISTRIBUTED)
   target_link_libraries(test_distributed PRIVATE MPI::MPI_CXX)
 endif()
 
-find_package(Python3)
 if(BUILD_PYTHON_WRAPPER AND LIBPRESSIO_HAS_SZ)
+  find_package(Python3)
   add_test(test_python_wrapper 
     ${Python3_EXECUTABLE}
     ${CMAKE_CURRENT_SOURCE_DIR}/test_python.py

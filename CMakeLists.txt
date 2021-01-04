@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.54.0" LANGUAGES CXX C)
+project(libpressio VERSION "0.54.1" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -396,12 +396,21 @@ if(BUILD_DOCS)
   set(DOXYGEN_EXTRACT_STATIC YES)
   set(DOXYGEN_MACRO_EXPANSION YES)
   set(DOXYGEN_USE_MDFILE_AS_MAINPAGE README.md)
+  option(LIBPRESSIO_INSTALL_DOCS "build the documetation by default" OFF)
+  if(LIBPRESSIO_INSTALL_DOCS)
+    set(LIBPRESSIO_BUILD_DOCS_DEFAULT "ALL")
+    install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/html/" DESTINATION "${CMAKE_INSTALL_DOCDIR}")
+    install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/man/" DESTINATION "${CMAKE_INSTALL_MANDIR}")
+  else()
+    set(LIBPRESSIO_BUILD_DOCS_DEFAULT "")
+  endif()
   doxygen_add_docs(
     docs
     ${PROJECT_SOURCE_DIR}/README.md
     ${PROJECT_SOURCE_DIR}/CONTRIBUTORS.md
     ${PROJECT_SOURCE_DIR}/docs
     ${PROJECT_SOURCE_DIR}/include
+    ${LIBPRESSIO_BUILD_DOCS_DEFAULT}
     COMMENT "Generate Documenation"
   )
 endif()
