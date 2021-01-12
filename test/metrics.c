@@ -41,15 +41,33 @@ void print_all_options(struct pressio_options* options) {
         case pressio_option_userptr_type:
           printf("%s <void*>: null\n", key);
           break;
-        case pressio_option_int32_type:
-          printf("%s <int32_t>: null\n", key);
+        case pressio_option_int8_type:
+          printf("%s <int8_t>: null\n", key);
           break;
+        case pressio_option_uint8_type:
+          printf("%s <uint8_t>: null\n", key);
+          break;
+        case pressio_option_int16_type:
+          printf("%s <int16_t>: null\n", key);
+          break;
+        case pressio_option_uint16_type:
+          printf("%s <uint16_t>: null\n", key);
+          break;
+        case pressio_option_int32_type:
+            printf("%s <int32_t>: null\n", key);
+            break;
         case pressio_option_uint32_type:
           printf("%s <uint32_t>: null\n", key);
           break;
-        case pressio_option_double_type:
-          printf("%s <double>: null\n", key);
+        case pressio_option_int64_type:
+          printf("%s <int64_t>: null\n", key);
           break;
+        case pressio_option_uint64_type:
+          printf("%s <uint64_t>: null\n", key);
+          break;
+        case pressio_option_double_type:
+            printf("%s <double>: null\n", key);
+            break;
         case pressio_option_float_type:
           printf("%s <float>: null\n", key);
           break;
@@ -71,7 +89,7 @@ void print_all_options(struct pressio_options* options) {
   pressio_options_iter_free(iter);
 }
 
-int main(int argc, char *argv[])
+int main()
 {
   struct pressio* library = pressio_instance();
   struct pressio_compressor* compressor = pressio_get_compressor(library, "sz");
@@ -95,9 +113,9 @@ int main(int argc, char *argv[])
 
   
   //load a 300x300x300 dataset into data created with malloc
-  double* rawinput_data = make_input_data();
+  double*raw_input_data = make_input_data();
   size_t dims[] = {300,300,300};
-  struct pressio_data* input_data = pressio_data_new_move(pressio_double_dtype, rawinput_data, 3, dims, pressio_data_libc_free_fn, NULL);
+  struct pressio_data* input_data = pressio_data_new_move(pressio_double_dtype, raw_input_data, 3, dims, pressio_data_libc_free_fn, NULL);
 
   //creates an output dataset pointer
   struct pressio_data* compressed_data = pressio_data_new_empty(pressio_byte_dtype, 0, NULL);

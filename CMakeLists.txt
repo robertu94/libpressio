@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.54.1" LANGUAGES CXX C)
+project(libpressio VERSION "0.55.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -53,11 +53,11 @@ add_library(libpressio
   ./src/plugins/compressors/sampling.cc
   ./src/plugins/compressors/resize.cc
   ./src/plugins/compressors/transpose.cc
+  ./src/plugins/launch/external_forkexec.cc
   ./src/plugins/metrics/ks_test.cc
   ./src/plugins/metrics/kth_error.cc
   ./src/plugins/metrics/composite.cc
   ./src/plugins/metrics/external.cc
-  ./src/plugins/metrics/external_forkexec.cc
   ./src/plugins/metrics/metrics_base.cc
   ./src/plugins/metrics/size.cc
   ./src/plugins/metrics/time.cc
@@ -67,6 +67,7 @@ add_library(libpressio
   ./src/plugins/metrics/printer.cc
   ./src/plugins/metrics/region_of_interest.cc
   ./src/plugins/metrics/noop.cc
+  ./src/plugins/io/copy_template.cc
   ./src/plugins/io/posix.cc
   ./src/plugins/io/noop.cc
   ./src/plugins/io/csv.cc
@@ -177,7 +178,11 @@ if(LIBPRESSIO_HAS_MGARD)
     PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/mgard_plugin.cc
     )
+  if(TARGET mgard::mgard)
   target_link_libraries(libpressio PRIVATE mgard::mgard)
+  elseif(TARGET mgard::mgard_library)
+    target_link_libraries(libpressio PRIVATE mgard::mgard_library)
+  endif()
 endif()
 
 option(LIBPRESSIO_HAS_ZFP "build the ZFP plugin" OFF)
@@ -281,7 +286,7 @@ if(LIBPRESSIO_HAS_MPI)
   find_package(MPI COMPONENTS CXX)
   target_sources(libpressio
     PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/metrics/external_mpispawn.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/launch/external_mpispawn.cc
     )
   target_link_libraries(libpressio PRIVATE MPI::MPI_CXX)
 endif()
@@ -339,6 +344,19 @@ if(LIBPRESSIO_HAS_LIBDISTRIBUTED)
     ${CMAKE_CURRENT_SOURCE_DIR}/include/libpressio_ext/cpp/distributed_manager.h
 
     )
+endif()
+
+option(LIBPRESSIO_HAS_REMOTELAUNCH "build the remote external launch plugin" OFF)
+if(LIBPRESSIO_HAS_REMOTELAUNCH)
+  set(LIBPRESSIO_FEATURES "${LIBPRESSIO_FEATURES} remotelaunch")
+  find_package(nlohmann_json REQUIRED)
+  find_package(CURL REQUIRED)
+  target_link_libraries(libpressio PRIVATE nlohmann_json::nlohmann_json CURL::libcurl)
+  target_sources(libpressio
+    PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/launch/external_remotelaunch.cc
+    )
+
 endif()
 
 configure_file(

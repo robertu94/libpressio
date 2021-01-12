@@ -27,7 +27,7 @@ struct extern_proc_results {
 
 struct libpressio_launch_plugin: public pressio_configurable, public pressio_errorable {
   virtual ~libpressio_launch_plugin()=default;
-  virtual extern_proc_results launch(std::string const&, std::string const&) const =0;
+  virtual extern_proc_results launch(std::vector<std::string> const&) const =0;
   virtual std::unique_ptr<libpressio_launch_plugin> clone() const = 0;
 };
 

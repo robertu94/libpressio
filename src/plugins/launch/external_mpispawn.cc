@@ -1,4 +1,4 @@
-#include "external_launch.h"
+#include "libpressio_ext/launch/external_launch.h"
 #include <iterator>
 #include <memory>
 #include <sstream>
@@ -6,15 +6,14 @@
 #include "std_compat/memory.h"
 
 struct external_mpispawn: public libpressio_launch_plugin {
-extern_proc_results launch(std::string const& full_command, std::string const& workdir) const override {
+extern_proc_results launch(std::vector<std::string> const& full_command) const override {
       extern_proc_results results;
 
-      std::istringstream command_stream(full_command);
-      std::vector<std::string> args_mem(
-          std::istream_iterator<std::string>{command_stream},
-          std::istream_iterator<std::string>());
       std::vector<char*> args;
-      std::transform(std::begin(args_mem), std::end(args_mem),
+      for (auto const& command: commands) {
+        args.push_back(const_cast<char*>(command.c_str()));
+      }
+      std::transform(std::begin(full_command), std::end(full_command),
           std::back_inserter(args), [](std::string const& s){return const_cast<char*>(s.c_str());});
       args.push_back(nullptr);
 
@@ -49,10 +48,25 @@ extern_proc_results launch(std::string const& full_command, std::string const& w
     return "mpispawn";
   }
 
+  int set_options(pressio_options const& options) override {
+    get(options, "external:workdir", &workdir);
+    get(options, "external:commands", &commands);
+    return 0;
+  }
+
+  pressio_options get_options() const override {
+    pressio_options options;
+    set(options, "external:workdir", workdir);
+    set(options, "external:commands", commands);
+    return options;
+  }
+
   std::unique_ptr<libpressio_launch_plugin> clone() const override {
     return compat::make_unique<external_mpispawn>(*this);
   }
 
+  std::string workdir=".";
+  std::vector<std::string> commands;
 };
 
 static pressio_register launch_spawn_plugin(launch_plugins(), "mpispawn", [](){ return compat::make_unique<external_mpispawn>();});

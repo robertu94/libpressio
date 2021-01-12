@@ -61,13 +61,31 @@ void print_all_options(struct pressio_options* options) {
         case pressio_option_userptr_type:
           printf("%s <void*>: null\n", key);
           break;
-        case pressio_option_int32_type:
+        case pressio_option_int8_type:
+          printf("%s <int8_t>: null\n", key);
+          break;
+        case pressio_option_uint8_type:
+          printf("%s <uint8_t>: null\n", key);
+          break;
+      case pressio_option_int16_type:
+          printf("%s <int16_t>: null\n", key);
+          break;
+        case pressio_option_uint16_type:
+          printf("%s <uint16_t>: null\n", key);
+          break;
+      case pressio_option_int32_type:
           printf("%s <int32_t>: null\n", key);
           break;
         case pressio_option_uint32_type:
           printf("%s <uint32_t>: null\n", key);
           break;
-        case pressio_option_double_type:
+      case pressio_option_int64_type:
+        printf("%s <int64_t>: null\n", key);
+        break;
+      case pressio_option_uint64_type:
+        printf("%s <uint64_t>: null\n", key);
+        break;
+      case pressio_option_double_type:
           printf("%s <double>: null\n", key);
           break;
         case pressio_option_float_type:

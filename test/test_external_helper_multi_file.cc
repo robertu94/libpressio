@@ -152,7 +152,7 @@ int main(int argc, const char *argv[])
   std::cerr << "multi-file" << std::endl;
   
   for (int i = 0; i < argc; ++i) {
-    std::cerr << "argv[" << i << "] " << argv[i] << std::endl;
+    std::cerr << "argv[" << i << "] " << '\'' << argv[i] << '\'' << std::endl;
   }
 
   std::cerr << std::endl;
