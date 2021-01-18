@@ -65,7 +65,7 @@ def _python_to_pressio(options, template=None):
     def to_libpressio(x):
         op = None
         if isinstance(value, np.ndarray):
-            value_lp = pressio.io_data_to_numpy(value)
+            value_lp = pressio.io_data_from_numpy(value)
             op = pressio.option_new_data(value_lp)
             pressio.data_free(value_lp)
         elif isinstance(value, list):
