@@ -126,8 +126,11 @@ class sz_plugin: public libpressio_compressor_plugin {
 	  set(options, "sz:accelerate_pw_rel_compression", confparams_cpr->accelerate_pw_rel_compression);
 	  set_type(options, "sz:prediction_mode", pressio_option_int32_type);
     set_type(options, "sz:data_type", pressio_option_double_type);
-#if PRESSIO_SZ_VERSION_GREATEREQ(2,1,9,0)
-    set(options, "sz:exafel:peaks", exafel_peaks);
+#if PRESSIO_SZ_VERSION_GREATEREQ(2,1,11,1)
+    set(options, "sz:exafel:peaks_segs", exafel_peaks_segs);
+    set(options, "sz:exafel:peaks_rows", exafel_peaks_rows);
+    set(options, "sz:exafel:peaks_cols", exafel_peaks_cols);
+    set(options, "sz:exafel:num_peaks", static_cast<unsigned int>(exafel_params.numPeaks));
     set(options, "sz:exafel:calib_panel", exafel_calibPanel);
     set(options, "sz:exafel:tolerance", exafel_params.tolerance);
     set(options, "sz:exafel:bin_size", static_cast<unsigned int>(exafel_params.binSize));
@@ -186,16 +189,25 @@ class sz_plugin: public libpressio_compressor_plugin {
     get(options, "sz:data_type", &confparams_cpr->dataType);
     get(options, "sz:app", &app);
     get(options, "sz:user_params", &user_params);
-#if PRESSIO_SZ_VERSION_GREATEREQ(2,1,9,0)
+#if PRESSIO_SZ_VERSION_GREATEREQ(2,1,11,1)
 {
-    if(get(options, "sz:exafel:peaks", &exafel_peaks) == pressio_options_key_set) {
-      exafel_params.peaks = static_cast<uint8_t*>(exafel_peaks.data());
+    unsigned int temp;
+    if(get(options, "sz:exafel:peaks_segs", &exafel_peaks_segs) == pressio_options_key_set) {
+      exafel_params.peaksSegs = static_cast<uint16_t*>(exafel_peaks_segs.data());
+    }
+    if(get(options, "sz:exafel:peaks_rows", &exafel_peaks_rows) == pressio_options_key_set) {
+      exafel_params.peaksRows = static_cast<uint16_t*>(exafel_peaks_rows.data());
+    }
+    if(get(options, "sz:exafel:peaks_cols", &exafel_peaks_cols) == pressio_options_key_set) {
+      exafel_params.peaksCols = static_cast<uint16_t*>(exafel_peaks_cols.data());
+    }
+    if(get(options, "sz:exafel:num_peaks", &temp) == pressio_options_key_set) {
+      exafel_params.numPeaks=static_cast<uint64_t>(temp);
     }
     if(get(options, "sz:exafel:calib_panel", &exafel_calibPanel) == pressio_options_key_set) {
       exafel_params.calibPanel = static_cast<uint8_t*>(exafel_calibPanel.data());
     }
     get(options, "sz:exafel:tolerance", &exafel_params.tolerance);
-    unsigned int temp;
     if(get(options, "sz:exafel:bin_size", &temp) == pressio_options_key_set) {
       exafel_params.binSize=static_cast<uint8_t>(temp);
     }
@@ -336,8 +348,10 @@ class sz_plugin: public libpressio_compressor_plugin {
   std::string sz_version;
   std::string app = "SZ";
   void* user_params = nullptr;
-#if PRESSIO_SZ_VERSION_GREATEREQ(2,1,9,0)
-  pressio_data exafel_peaks;
+#if PRESSIO_SZ_VERSION_GREATEREQ(2,1,11,1)
+  pressio_data exafel_peaks_segs;
+  pressio_data exafel_peaks_rows;
+  pressio_data exafel_peaks_cols;
   pressio_data exafel_calibPanel;
   exafelSZ_params exafel_params{};
 #endif
