@@ -37,13 +37,13 @@ class noop_compressor_plugin: public libpressio_compressor_plugin {
   }
 
   int decompress_impl(const pressio_data *input, struct pressio_data* output) override {
-    *output = pressio_data::clone(*input);
+		*output = pressio_data::copy(output->dtype(), input->data(), output->dimensions());
     return 0;
   }
 
   int decompress_many_impl(compat::span<const pressio_data *const> const& input, compat::span<pressio_data*>& output) override {
     for (size_t i = 0; i < std::min(input.size(), output.size()); ++i) {
-      *output[i] = pressio_data::clone(*input[i]);
+      *output[i] = pressio_data::copy(output[i]->dtype(), input[i]->data(), output[i]->dimensions());
     }
     return 0;
   }

@@ -84,6 +84,8 @@ class external_metric_plugin : public libpressio_metrics_plugin {
       set(opt, "external:workdir", workdir);
       set(opt, "external:config_name", config_name);
       set(opt, "external:use_many", use_many);
+      set(opt, "external:write_inputs", write_inputs);
+      set(opt, "external:write_outputs", write_outputs);
       return opt;
     }
 
@@ -104,6 +106,8 @@ class external_metric_plugin : public libpressio_metrics_plugin {
       get(mopt, "external:workdir", &workdir);
       get(mopt, "external:config_name", &config_name);
       get(mopt, "external:use_many", &use_many);
+      get(mopt, "external:write_inputs", &write_inputs);
+      get(mopt, "external:write_outputs", &write_outputs);
       get_meta_many(opt, "external:io_format", io_plugins(), io_formats, io_modules);
       return 0;
     }
@@ -255,8 +259,10 @@ class external_metric_plugin : public libpressio_metrics_plugin {
         char* resolved_input = realpath(input_fd_name.c_str(), nullptr);
         input_fd_name = resolved_input;
         free(resolved_input);
-        io_modules[i]->set_options({{"io:path", std::string(input_fd_name)}});
-        io_modules[i]->write(input_data[i]);
+				if(write_inputs) {
+					io_modules[i]->set_options({{"io:path", std::string(input_fd_name)}});
+					io_modules[i]->write(input_data[i]);
+				}
 
         //write decompressed data to a temporary file
         std::string output_fd_name = get_or(prefixes, i).value_or("") + std::string(".pressiooutXXXXXX") + get_or(suffixes, i).value_or("");
@@ -264,8 +270,10 @@ class external_metric_plugin : public libpressio_metrics_plugin {
         char* resolved_output = realpath(output_fd_name.c_str(), nullptr);
         output_fd_name = resolved_output;
         free(resolved_output);
-        io_modules[i]->set_options({{"io:path", std::string(output_fd_name)}});
-        io_modules[i]->write(decompressed_data[i]);
+				if(write_outputs) {
+					io_modules[i]->set_options({{"io:path", std::string(output_fd_name)}});
+					io_modules[i]->write(decompressed_data[i]);
+				}
         
         filenames.emplace_back(input_fd_name, output_fd_name);
         fds.emplace_back(input_fd);
@@ -318,6 +326,8 @@ class external_metric_plugin : public libpressio_metrics_plugin {
     std::vector<std::string> io_formats = {"posix"};
     pressio_options results;
     pressio_options defaults;
+		int write_inputs = 1;
+		int write_outputs = 1;
     double duration = 0.0;
     std::vector<pressio_io> io_modules = {std::shared_ptr<libpressio_io_plugin>(io_plugins().build("posix"))};
 
