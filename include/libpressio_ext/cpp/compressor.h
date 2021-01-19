@@ -251,7 +251,7 @@ class libpressio_compressor_plugin :public pressio_configurable, public pressio_
   virtual int decompress_many_impl(compat::span<const pressio_data* const> const& inputs, compat::span<pressio_data* >& outputs) {
     //default returns an error to indicate the option is unsupported;
     if(inputs.size() == 1 && outputs.size() == 1) {
-      return decompress(inputs.front(), outputs.front());
+      return decompress_impl(inputs.front(), outputs.front());
     } else 
     return set_error(1, "decompress_many not supported");
   }
@@ -262,7 +262,7 @@ class libpressio_compressor_plugin :public pressio_configurable, public pressio_
   virtual int compress_many_impl(compat::span<const pressio_data* const> const& inputs, compat::span<pressio_data*> & outputs) {
     //default returns an error to indicate the option is unsupported;
     if(inputs.size() == 1 && outputs.size() == 1) {
-      return compress(inputs.front(), outputs.front());
+      return compress_impl(inputs.front(), outputs.front());
     } else 
     return set_error(1, "decompress_many not supported");
   }
