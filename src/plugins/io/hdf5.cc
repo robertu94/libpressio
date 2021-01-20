@@ -8,7 +8,7 @@
 #include <H5public.h>
 #include <std_compat/utility.h>
 
-#if H5_HAVE_PARALLEL
+#if defined(H5_HAVE_PARALLEL) && H5_HAVE_PARALLEL
 #include <H5FDmpi.h>
 #endif
 
@@ -159,7 +159,7 @@ struct hdf5_io: public libpressio_io_plugin {
   virtual struct pressio_data* read_impl(struct pressio_data* buffer) override {
     cleanup cleanup_facl;
     hid_t fapl_plist = H5P_DEFAULT;
-#if H5_HAVE_PARALLEL
+#if defined(H5_HAVE_PARALLEL) && H5_HAVE_PARALLEL
     if(use_parallel) {
       fapl_plist = H5Pcreate(H5P_FILE_ACCESS);
       MPI_Info info = MPI_INFO_NULL;
@@ -254,7 +254,7 @@ struct hdf5_io: public libpressio_io_plugin {
 
         hid_t dxpl_plist = H5P_DEFAULT;
         cleanup dxpl_cleanup;
-#if H5_HAVE_PARALLEL
+#if defined(H5_HAVE_PARALLEL) && H5_HAVE_PARALLEL
         if(use_parallel) {
           hid_t dxpl_plist = H5Pcreate(H5P_DATASET_XFER);
           dxpl_cleanup = make_cleanup([&]{ H5Pclose(dxpl_plist);});
@@ -280,7 +280,7 @@ struct hdf5_io: public libpressio_io_plugin {
     int perms_ok = access(filename.c_str(), W_OK);
     cleanup cleanup_facl;
     hid_t fapl_plist = H5P_DEFAULT;
-#if H5_HAVE_PARALLEL
+#if defined(H5_HAVE_PARALLEL) && H5_HAVE_PARALLEL
     if(use_parallel) {
       fapl_plist = H5Pcreate(H5P_FILE_ACCESS);
       MPI_Info info = MPI_INFO_NULL;
@@ -378,7 +378,7 @@ struct hdf5_io: public libpressio_io_plugin {
 
     hid_t dxpl_plist = H5P_DEFAULT;
     cleanup dxpl_cleanup;
-#if H5_HAVE_PARALLEL
+#if defined(H5_HAVE_PARALLEL) && H5_HAVE_PARALLEL
     if(use_parallel) {
       hid_t dxpl_plist = H5Pcreate(H5P_DATASET_XFER);
       dxpl_cleanup = make_cleanup([&]{ H5Pclose(dxpl_plist);});
@@ -400,7 +400,13 @@ struct hdf5_io: public libpressio_io_plugin {
   virtual struct pressio_options get_configuration_impl() const override{
     pressio_options options;
     set(options, "pressio:thread_safe",  static_cast<int32_t>(pressio_thread_safety_single));
-    set(options, "hdf5:parallel",  static_cast<int32_t>(H5_HAVE_PARALLEL));
+    set(options, "hdf5:parallel",  static_cast<int32_t>(
+#ifdef H5_HAVE_PARALLEL
+       H5_HAVE_PARALLEL
+#else
+          0
+#endif
+    ));
     return options;
   }
 
@@ -428,7 +434,7 @@ struct hdf5_io: public libpressio_io_plugin {
       auto file_extent_t = tmp.to_vector<uint64_t>();
       file_extent.assign(std::begin(file_extent_t), std::end(file_extent_t));
     }
-#if H5_HAVE_PARALLEL
+#if defined(H5_HAVE_PARALLEL) && H5_HAVE_PARALLEL
     get(options, "hdf5:use_parallel", &use_parallel);
     get(options, "hdf5:mpi_comm", (void**)(&comm));
 #endif
@@ -447,7 +453,7 @@ struct hdf5_io: public libpressio_io_plugin {
     set(opts, "hdf5:file_stride", to_uint64v(file_stride));
     set(opts, "hdf5:file_start", to_uint64v(file_stride));
     set(opts, "hdf5:file_extent", to_uint64v(file_extent));
-#if H5_HAVE_PARALLEL
+#if defined(H5_HAVE_PARALLEL) && H5_HAVE_PARALLEL
     set(opts, "hdf5:use_parallel", use_parallel);
     set(opts, "hdf5:mpi_comm", (void*)(comm));
 #endif
@@ -524,7 +530,7 @@ struct hdf5_io: public libpressio_io_plugin {
   std::string filename;
   std::string dataset_name;
   std::vector<hsize_t> file_block, file_start, file_count, file_stride, file_extent;
-#if H5_HAVE_PARALLEL
+#if defined(H5_HAVE_PARALLEL) && H5_HAVE_PARALLEL
   int use_parallel = false;
   MPI_Comm comm = MPI_COMM_WORLD;
 #endif
