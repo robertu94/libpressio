@@ -419,6 +419,13 @@ class PressioIO:
         pressio.options_free(lp_options)
         return options
 
+    def get_configuration(self):
+        """get compile time configuration"""
+        lp_options = pressio.io_get_configuration(self._io)
+        options = _pressio_to_python(lp_options)
+        pressio.options_free(lp_options)
+        return options
+
     def set_config(self, config):
         """set runtime time options"""
         try:
