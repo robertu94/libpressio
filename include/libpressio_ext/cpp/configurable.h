@@ -237,10 +237,15 @@ class pressio_configurable {
 
 
   protected:
+  /**
+   * \returns the string the metrics key name
+   * \internal
+   */
   std::string get_metrics_key_name() const {
     return std::string(prefix()) + ":metric";
   }
 
+  /** the name of the configurable used in nested hierarchies*/
   std::string name;
 };
 

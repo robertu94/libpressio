@@ -114,16 +114,21 @@ if(BUILD_PYTHON_WRAPPER AND LIBPRESSIO_HAS_SZ)
   add_test(test_python_wrapper 
     ${Python3_EXECUTABLE}
     ${CMAKE_CURRENT_SOURCE_DIR}/test_python.py
-    ${CMAKE_BINARY_DIR}/swig
+    ${CMAKE_BINARY_DIR}/tools/swig
   )
   add_test(test_python_io_wrapper 
     ${Python3_EXECUTABLE}
     ${CMAKE_CURRENT_SOURCE_DIR}/test_pythonio.py
-    ${CMAKE_BINARY_DIR}/swig
+    ${CMAKE_BINARY_DIR}/tools/swig
   )
   add_test(test_python_numpy_conversions
     ${Python3_EXECUTABLE}
     ${CMAKE_CURRENT_SOURCE_DIR}/from_numpy.py
-    ${CMAKE_BINARY_DIR}/swig
+    ${CMAKE_BINARY_DIR}/tools/swig
   )
+endif()
+
+if(LIBPRESSIO_HAS_JSON AND LIBPRESSIO_HAS_HDF)
+  add_gtest(test_hdffilter.cc)
+  target_link_libraries(test_hdffilter PRIVATE hdf5::hdf5 libpressio_hdf5_filter)
 endif()

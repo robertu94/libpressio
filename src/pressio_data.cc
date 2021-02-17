@@ -122,6 +122,16 @@ namespace {
       return 0;
     }
 };
+
+
+  struct data_all_equal {
+
+    template <class T, class V> 
+    bool operator()(T const* lhs_begin, T const* lhs_end, V const* rhs_begin, V const*) {
+      return std::equal(lhs_begin, lhs_end, rhs_begin);
+    }
+    
+  };
 }
 
 
@@ -367,6 +377,12 @@ pressio_data pressio_data::cast(pressio_dtype const dtype) const {
     pressio_data data = pressio_data::owning(dtype, dimensions());
     pressio_data_for_each<int>(*this, data, cast_fn());
     return data;
+}
+
+bool pressio_data::operator==(pressio_data const& rhs) const {
+  if(data_dtype != rhs.data_dtype) return false;
+  if(dims != rhs.dims) return false;
+  return pressio_data_for_each<bool>(*this, rhs, data_all_equal{});
 }
 
 }

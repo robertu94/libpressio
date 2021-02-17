@@ -31,6 +31,7 @@ namespace {
   size_t data_size_in_bytes(pressio_dtype type, T const dimensions, T const dims[]) {
     return data_size_in_elements(dimensions, dims) * pressio_dtype_size(type);
   }
+
 }
 
 /**
@@ -477,6 +478,10 @@ struct pressio_data {
    */
   pressio_data transpose(std::vector<size_t> const& axis = {}) const;
   
+  /** 
+   * \param[in] rhs the object to compare against
+   * \returns true if the options are equal */
+  bool operator==(pressio_data const& rhs) const;
 
   private:
   /**

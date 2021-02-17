@@ -22,6 +22,10 @@
  * build an array of workers, tries to be fault tolerant in degenerate cases
  */
 compat::optional<std::vector<size_t>> distributed_build_groups(const unsigned int size, const unsigned int n_workers_groups, const unsigned int n_masters, const unsigned int root);
+
+/**
+ * \returns the size of MPI_COMM_WORLD
+ */
 int distributed_world_size();
 
 /**
@@ -29,7 +33,16 @@ int distributed_world_size();
  */
 class pressio_distributed_manager: public pressio_configurable, public pressio_errorable {
   public:
+  /**
+   * a variable used to indicate there is no bound applied
+   */
   static size_t unlimited;
+  /**
+   * constructs a distributed_manager
+   *
+   * \param[in] max_ranks_per_worker the maximum numbers of workers to use
+   * \param[in] max_masters the maximum number master processes to use
+   */
   pressio_distributed_manager(unsigned int max_ranks_per_worker = 1, unsigned int max_masters = 1):
     groups(*distributed_build_groups(distributed_world_size(), 0, 0, 0)),
     max_masters(max_masters),
@@ -38,6 +51,13 @@ class pressio_distributed_manager: public pressio_configurable, public pressio_e
     n_masters(0)
   {}
 
+  /**
+   * create a work_queue from the provided configuration
+   * \param[in] begin the first task in the queue
+   * \param[in] end the last task in the queue
+   * \param[in] workerfn the function worker tasks should execute
+   * \param[in] masterfn the function master tasks should execute
+   */
   template <class TaskRandomIt, class MasterFn, class WorkerFn>
   void work_queue(TaskRandomIt begin, TaskRandomIt end, WorkerFn&& workerfn, MasterFn&& masterfn) {
     distributed::queue::work_queue_options<typename distributed::queue::iterator_to_request_type<TaskRandomIt>::type> options(comm);
@@ -46,38 +66,76 @@ class pressio_distributed_manager: public pressio_configurable, public pressio_e
     distributed::queue::work_queue( options, begin, end, std::forward<WorkerFn>(workerfn), std::forward<MasterFn>(masterfn));
   }
 
+  /**
+   * helper function for send
+   * \param[in] t the value to send
+   * \param[in] dest the destination 
+   * \param[in] tag the tag to use
+   * \returns an error code
+   */
   template <class T>
   int send(T const& t, int dest, int tag=0) {
     return distributed::comm::send(t, dest, tag, comm);
   }
 
+
+  /**
+   * helper function for recv
+   * \param[out] t the value to recv
+   * \param[in] source the source 
+   * \param[in] tag the tag to use
+   * \param[out] s the optional status value to use
+   * \returns an error code
+   */
   template <class T>
   int recv(T& t, int source, int tag=0, MPI_Status* s=nullptr) {
     return distributed::comm::recv(t, source, tag, comm, s);
   }
 
+
+  /**
+   * helper function for recv
+   * \param[in,out] t the value to bcast
+   * \param[in] bcast_root the destination 
+   * \returns an error code
+   */
   template <class T>
   int bcast(T& t, int bcast_root) {
     return distributed::comm::bcast(t, bcast_root, comm);
   }
 
+  /**
+   * helper function for recv
+   * \param[in,out] t the value to bcast
+   * \returns an error code
+   */
   template <class T>
   int bcast(T& t) {
     return distributed::comm::bcast(t, root, comm);
   }
 
+  /**
+   * \returns the size of the managed communicator
+   */
   int comm_size() const {
     int size;
     MPI_Comm_size(comm, &size);
     return size;
   }
 
+  /**
+   * \returns the rank of the managed communicator
+   */
   int comm_rank() const {
     int rank;
     MPI_Comm_rank(comm, &rank);
     return rank;
   }
 
+  /**
+   * provides options for the manager for the user to configure
+   * \returns the options
+   */
   struct pressio_options 	get_options () const override {
     pressio_options opts;
     set(opts, "distributed:mpi_comm", (void*)comm);
@@ -92,6 +150,10 @@ class pressio_distributed_manager: public pressio_configurable, public pressio_e
     }
     return opts;
   }
+  /**
+   * sets options for the manager for the user to configure
+   * \returns an error code
+   */
   virtual int	set_options (struct pressio_options const &options) override {
     get(options, "distributed:root", &root);
     get(options, "distributed:mpi_comm", (void**)&comm);
@@ -129,6 +191,9 @@ class pressio_distributed_manager: public pressio_configurable, public pressio_e
     return 0;
   }
 
+  /**
+   * the prefix "distributed" used in introspection
+   */
   const char* prefix() const override { return "distributed"; }
 
   private:

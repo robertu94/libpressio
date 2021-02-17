@@ -20,6 +20,12 @@
 #include "std_compat/language.h"
 
 #include "libpressio_ext/launch/external_launch.h"
+#include "pressio_version.h"
+
+#if LIBPRESSIO_HAS_JSON
+#include <nlohmann/json.hpp>
+#include "libpressio_ext/cpp/json.h"
+#endif
 
 
 
@@ -142,7 +148,7 @@ class external_metric_plugin : public libpressio_metrics_plugin {
 
 
     //returns the version number parsed, starts at 1, zero means error
-    size_t api_version_number(std::istringstream& stdout_stream) const {
+    std::string api_version_number(std::istringstream& stdout_stream) const {
       std::string version_line;
       std::getline(stdout_stream, version_line);
       auto eq_pos = version_line.find('=') + 1;
@@ -150,25 +156,24 @@ class external_metric_plugin : public libpressio_metrics_plugin {
         //report error
         return 0;
       }
-      return stoull(version_line.substr(eq_pos));
+      return version_line.substr(eq_pos);
     }
 
     size_t parse_result(extern_proc_results& proc_results, pressio_options& results) const
     {
       try{
         std::istringstream stdout_stream(proc_results.proc_stdout);
-        size_t api_version = api_version_number(stdout_stream);
-        switch(api_version) {
-          case 1:
-          case 2:
-          case 3:
-          case 4:
-          case 5:
+        auto api_version = api_version_number(stdout_stream);
+        if(api_version == "1" || api_version == "2" || api_version == "3" || api_version == "4" || api_version == "5") {
             parse_v1(stdout_stream, proc_results, results);
-            return api_version;
-          default:
-            (void)0;
+            return stoull(api_version);
+#if LIBPRESSIO_HAS_JSON
+        } else if(api_version == "json:1") {
+            parse_json(stdout_stream, proc_results, results);
+            return 1;
+#endif
         }
+
       } catch(...) {} //swallow all errors and set error information
 
       results.clear();
@@ -179,7 +184,7 @@ class external_metric_plugin : public libpressio_metrics_plugin {
       return 0;
     }
 
-    void parse_v1(std::istringstream& stdout_stream, extern_proc_results& input, pressio_options& results) const {
+    void parse_v1(std::istringstream& stdout_stream, extern_proc_results const& input, pressio_options& results) const {
       results.clear();
 
       for (std::string line; std::getline(stdout_stream, line); ) {
@@ -194,6 +199,25 @@ class external_metric_plugin : public libpressio_metrics_plugin {
       set(results, "external:error_code", input.return_code);
       set(results, "external:runtime", duration);
     }
+
+#if LIBPRESSIO_HAS_JSON
+    void parse_json(std::istringstream& stdout_stream, extern_proc_results const& input, pressio_options& results) const {
+      results.clear();
+
+      nlohmann::json j;
+      stdout_stream >> j;
+      pressio_options options = j;
+
+      for (auto const& item : options) {
+        results.set("external:results:"+item.first, item.second);
+      }
+
+      set(results, "external:stderr", input.proc_stderr);
+      set(results, "external:return_code", input.return_code);
+      set(results, "external:error_code", input.return_code);
+      set(results, "external:runtime", duration);
+    }
+#endif
 
     std::vector<std::string> build_command(std::vector<std::pair<std::string,std::string>> const& filenames, compat::span<const pressio_data* const> const& input_datasets) const {
       std::vector<std::string> full_command;

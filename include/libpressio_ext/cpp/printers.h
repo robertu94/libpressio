@@ -14,18 +14,30 @@
  *  \brief C++ stream compatible IO functions
  *  */
 
+/**
+ * print the elements of an iterable container
+ * \internal
+ */
 template <class CharT = char, class Traits = std::char_traits<CharT>>
 struct print_elements_helper{
   template <class T>
+    /**
+     * prints the underlying container
+     */
   int operator()(T const* begin,  T const* end) {
     out << '[';
     std::copy( begin, end, std::ostream_iterator<T>(out, ", "));
     out << ']';
     return 0;
   }
+  /** the stream to output to */
   std::basic_ostream<CharT, Traits>& out;
 };
 
+/**
+ * helper to construct the print_elements_helper for printing iterable collections
+ * \internal
+ */
 template <class CharT = char, class Traits = std::char_traits<CharT>>
 print_elements_helper<CharT, Traits> print_elements(std::basic_ostream<CharT, Traits> &out) {
   return print_elements_helper<CharT, Traits>{out};
@@ -114,9 +126,9 @@ operator<<(std::basic_ostream<CharT, Traits>& out, pressio_option const& option)
     switch(type)
     {
       case pressio_option_int8_type:
-        return out << option.get_value<int8_t>();
+        return out << int16_t{option.get_value<int8_t>()};
       case pressio_option_uint8_type:
-        return out << option.get_value<uint8_t>();
+        return out << uint16_t{option.get_value<uint8_t>()};
       case pressio_option_int16_type:
         return out << option.get_value<int16_t>();
       case pressio_option_uint16_type:

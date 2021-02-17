@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.56.2" LANGUAGES CXX C)
+project(libpressio VERSION "0.57.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -77,18 +77,18 @@ add_library(libpressio
 
   #public headers
   include/libpressio.h
-  include/libpressio_ext/cpp/configurable.h
-  include/libpressio_ext/cpp/versionable.h
-  include/libpressio_ext/cpp/errorable.h
   include/libpressio_ext/cpp/compressor.h
+  include/libpressio_ext/cpp/configurable.h
   include/libpressio_ext/cpp/data.h
+  include/libpressio_ext/cpp/errorable.h
+  include/libpressio_ext/cpp/io.h
   include/libpressio_ext/cpp/libpressio.h
   include/libpressio_ext/cpp/metrics.h
   include/libpressio_ext/cpp/options.h
   include/libpressio_ext/cpp/pressio.h
   include/libpressio_ext/cpp/printers.h
   include/libpressio_ext/cpp/subgroup_manager.h
-  include/libpressio_ext/cpp/io.h
+  include/libpressio_ext/cpp/versionable.h
   include/libpressio_ext/io/posix.h
   include/libpressio_ext/io/pressio_io.h
   include/pressio.h
@@ -241,7 +241,7 @@ if(LIBPRESSIO_HAS_MAGICK)
   try_compile(
     LIBPRESSIO_COMPAT_HAS_IMAGEMAGICK_LONGLONG
     ${CMAKE_BINARY_DIR}
-    SOURCES "${CMAKE_SOURCE_DIR}/checks/imagemagick.cc"
+    SOURCES "${CMAKE_SOURCE_DIR}/checks/imagemagick_longlong.cc"
     LINK_LIBRARIES PkgConfig::Magick++
   )
   message(STATUS "Checking for Magick::LongLong: ${LIBPRESSIO_COMPAT_HAS_IMAGEMAGICK_LONGLONG}")
@@ -291,17 +291,6 @@ if(LIBPRESSIO_HAS_MPI)
   target_link_libraries(libpressio PRIVATE MPI::MPI_CXX)
 endif()
 
-option(LIBPRESSIO_HAS_FTK "build the FTK metrics modules" OFF)
-if(LIBPRESSIO_HAS_FTK)
-  find_package(FTK)
-  target_sources(
-    libpressio
-    PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/metrics/ftk_critical_points.cc
-    )
-  target_include_directories(libpressio PRIVATE ${FTK_INCLUDE_DIRS})
-endif()
-
 
 option(LIBPRESSIO_HAS_PETSC "build the petsc io plugin" OFF)
 if(LIBPRESSIO_HAS_PETSC)
@@ -342,8 +331,23 @@ if(LIBPRESSIO_HAS_LIBDISTRIBUTED)
     ${CMAKE_CURRENT_SOURCE_DIR}/src/serializable.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/src/pressio_distributed_manager.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/include/libpressio_ext/cpp/distributed_manager.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/libpressio_ext/cpp/serializable.h
 
     )
+endif()
+
+option(LIBPRESSIO_HAS_JSON "build the options json serialization support" OFF)
+if(LIBPRESSIO_HAS_JSON)
+  set(LIBPRESSIO_FEATURES "${LIBPRESSIO_FEATURES} json")
+  find_package(nlohmann_json REQUIRED)
+  target_link_libraries(libpressio PRIVATE nlohmann_json::nlohmann_json)
+  target_sources(libpressio
+    PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/pressio_options_json.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/libpressio_ext/json/pressio_options_json.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/libpressio_ext/cpp/json.h
+    )
+
 endif()
 
 option(LIBPRESSIO_HAS_REMOTELAUNCH "build the remote external launch plugin" OFF)
@@ -368,6 +372,10 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/libpressio.pc
   @ONLY
   )
+target_sources(libpressio
+  PRIVATE
+  ${CMAKE_CURRENT_BINARY_DIR}/include/pressio_version.h
+)
 
 option(USE_CLANG_TIDY "include clang-tidy warnings in the build log" OFF)
 if(USE_CLANG_TIDY)
@@ -401,13 +409,22 @@ endif()
 
 option(BUILD_PYTHON_WRAPPER "build python wrapper" OFF)
 if(BUILD_PYTHON_WRAPPER)
-  add_subdirectory(swig)
+  add_subdirectory(tools/swig)
+endif()
+
+if(LIBPRESSIO_HAS_JSON AND LIBPRESSIO_HAS_HDF)
+  add_subdirectory(tools/hdf5_filter)
 endif()
 
 option(BUILD_DOCS "build the documetation" OFF)
 if(BUILD_DOCS)
+  option(BUILD_DOCS_LINKS "build the documetation" ON)
   find_package(Doxygen REQUIRED dot)
-  set(DOXYGEN_MAN_LINKS YES)
+  if(BUILD_DOCS_LINKS)
+    set(DOXYGEN_MAN_LINKS YES)
+  else()
+    set(DOXYGEN_MAN_LINKS NO)
+  endif()
   set(DOXYGEN_GENERATE_MAN YES)
   set(DOXYGEN_GENERATE_HTML YES)
   set(DOXYGEN_EXTRACT_LOCAL_METHODS YES)

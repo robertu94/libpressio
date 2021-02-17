@@ -47,8 +47,11 @@ struct pressio_registry {
   std::map<std::string, std::function<T()>> factories;
 
   public:
+  /** the value type the registry constructs*/
   using value_type = T;
+  /** the reference type the registry constructs*/
   using reference = T&;
+  /** the const reference type the registry constructs*/
   using const_reference = T const;
   /**
    * \returns an begin iterator over the registered types
@@ -59,14 +62,32 @@ struct pressio_registry {
    */
   auto end() const -> decltype(factories.end()) { return std::end(factories); }
 
+  /**
+   * checks if the name is registered
+   *
+   * \param[in] key the key to search for
+   * \returns true if present
+   */
   bool contains(std::string const& key) const {
     return factories.find(key) != factories.end();
   }
 
+  /**
+   * checks if the name is registered
+   *
+   * \param[in] key the key to search for
+   * \returns an iterator if the entry is found; else end()
+   */
   auto find(std::string const& key) const -> decltype(factories.find(key)) {
     return factories.find(key);
   }
 
+  /**
+   * checks if the name is registered
+   *
+   * \param[in] key the key to search for
+   * \returns an iterator if the entry is found; else end()
+   */
   auto find(std::string const& key) -> decltype(factories.find(key)) {
     return factories.find(key);
   }

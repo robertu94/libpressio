@@ -117,10 +117,8 @@ class libpressio_compressor_plugin :public pressio_configurable, public pressio_
    */
   int compress(struct pressio_data const*input, struct pressio_data* output);
   /** decompress a pressio_data buffer
-   * \param[in] in_begin iterator to the beginning of the inputs
-   * \param[in] in_end iterator to the end of the inputs
-   * \param[in,out] out_begin iterator to the beginning of the outputs
-   * \param[in,out] out_end iterator to the end of the outputs
+   * \param[in] input input buffer to compress
+   * \param[in,out] output buffer to decompress
    * \see pressio_compressor_decompress for the semantics this function should obey
    */
   int decompress(struct pressio_data const*input, struct pressio_data* output);

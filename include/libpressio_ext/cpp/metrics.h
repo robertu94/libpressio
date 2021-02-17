@@ -141,6 +141,7 @@ struct pressio_metrics {
 
   /** construct a metrics wrapper*/
   pressio_metrics(std::unique_ptr<libpressio_metrics_plugin>&& metrics): plugin(std::move(metrics)) {}
+  /** construct a metrics wrapper*/
   pressio_metrics(std::shared_ptr<libpressio_metrics_plugin>&& metrics): plugin(std::move(metrics)) {}
 
   /** allow default construction*/

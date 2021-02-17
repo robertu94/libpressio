@@ -21,6 +21,13 @@
 #include <random>
 #include <vector>
 
+/** \file  
+ *  \brief helper for subgroups in meta-objects which support multiple inputs 
+ * */
+
+/**
+ * a helper class to map input and output buffers to a meta-compressor
+ */
 class pressio_subgroup_manager: public pressio_configurable, public pressio_errorable {
 public:
   int set_options(const struct pressio_options &options) override {
@@ -44,6 +51,12 @@ public:
     return "subgroups";
   }
 
+  /**
+   * makes the input and output groups match sizes and other sanity tests
+   *
+   * \param[in] inputs the inputs groups
+   * \param[in] outputs the output groups
+   */
   template <class U, class V>
   int normalize_and_validate(compat::span<U> const& inputs, compat::span<V> const& outputs) {
     effective_input_group = normalize_data_group(input_data_groups, inputs.size());
@@ -62,20 +75,36 @@ public:
     return 0;
   }
 
+  /**
+   * \param[in] inputs the actual inputs
+   * \param[in] idx which input group to retrieve
+   * \returns the input group based on internal configuration
+   */
   template <class Span>
   std::vector<pressio_data const*> get_input_group(Span const& inputs, int idx) const {
     return make_data_group<pressio_data const*>(inputs, idx, effective_input_group);
   }
 
+  /**
+   * \param[in] inputs the actual inputs
+   * \param[in] idx which input group to retrieve
+   * \returns the input group based on internal configuration
+   */
   template <class Span>
   std::vector<pressio_data*> get_output_group(Span const& inputs, int idx) const {
     return make_data_group<pressio_data*>(inputs, idx, effective_output_group);
   }
 
+  /**
+   * \returns the effective input groups
+   */
   std::vector<int> const& effective_input_groups() const {
     return effective_input_group;
   }
 
+  /**
+   * \returns the effective outputs groups
+   */
   std::vector<int> const& effective_output_groups() const {
     return effective_output_group;
   }

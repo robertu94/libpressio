@@ -265,6 +265,13 @@ struct pressio_option final {
     }
   }
 
+  /** 
+   * \param[in] rhs the object to compare against
+   * \returns true if the options are equal */
+  bool operator==(pressio_option const& rhs) const {
+    return option == rhs.option;
+  }
+
   /**
    * converts rhs according the conversion safety specified to the type of the option and stores the result if the cast succeeds
    * \param[in] rhs the option to assign to this option
@@ -596,6 +603,10 @@ struct pressio_options final {
     options.clear();
   }
 
+  /**
+   * copies all of the options from o
+   * \param[in] o the options to copy from
+   */
   void copy_from(pressio_options const& o) {
     insert(o.begin(), o.end());
   }
@@ -631,6 +642,12 @@ struct pressio_options final {
     return options.insert(it, value);
   }
 
+  /**
+   * insert a collection of iterator
+   *
+   * \param[in] begin the iterator to the beginning
+   * \param[in] end the iterator to the end
+   */
   template <class InputIt>
   void insert(InputIt begin, InputIt end){
     options.insert(begin, end);
@@ -694,6 +711,13 @@ struct pressio_options final {
    */
   auto insert(value_type const& value) -> decltype(options.insert(value)) {
     return options.insert(value);
+  }
+
+  /** 
+   * \param[in] rhs the object to compare against
+   * \returns true if the options are equal */
+  bool operator==(pressio_options const& rhs) const {
+    return options == rhs.options;
   }
 
   /**\returns the number of set options*/

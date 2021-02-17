@@ -139,7 +139,8 @@ struct libpressio_io_plugin: public pressio_configurable, public pressio_version
    * \param[in] data data object to populate, or nullptr to allocate it from the file if supported
    * \see pressio_io_read for the semantics this function should obey
    */
-  virtual int read_many_impl(compat::span<struct pressio_data*> const&) { 
+  virtual int read_many_impl(compat::span<struct pressio_data*> const& data) { 
+    (void)data;
     return set_error(1, "read many not supported");
   }
 
@@ -147,7 +148,8 @@ struct libpressio_io_plugin: public pressio_configurable, public pressio_version
    * \param[in] data data to write
    * \see pressio_io_write for the semantics this function should obey
    */
-  virtual int write_many_impl(compat::span<struct pressio_data const*> const&) {
+  virtual int write_many_impl(compat::span<struct pressio_data const*> const& data) {
+    (void)data;
     return set_error(1, "write many not supported");
   }
 
