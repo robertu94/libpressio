@@ -20,6 +20,7 @@ class sz_auto_plugin: public libpressio_compressor_plugin {
     struct pressio_options get_options_impl() const override {
       struct pressio_options options;
       set(options, "sz_auto:error_bounds", error_bounds);
+      set(options, "sz_auto:sample_ratio", sample_ratio);
       return options;
     }
 
@@ -31,6 +32,7 @@ class sz_auto_plugin: public libpressio_compressor_plugin {
 
     int set_options_impl(struct pressio_options const& options) override {
       get(options, "sz_auto:error_bounds", &error_bounds);
+      get(options, "sz_auto:sample_ratio", &sample_ratio);
       return 0;
     }
 
@@ -52,11 +54,11 @@ class sz_auto_plugin: public libpressio_compressor_plugin {
 
       if(type == pressio_float_dtype)
       {
-        compressed_data = sz_compress_autotuning_3d<float>((float*)data, r1, r2, r3, error_bounds, outSize);
+        compressed_data = sz_compress_autotuning_3d<float>((float*)data, r1, r2, r3, error_bounds, outSize, false, false, false, sample_ratio);
       }
       else if(type == pressio_double_dtype)
       {
-        compressed_data = sz_compress_autotuning_3d<double>((double*)data, r1, r2, r3, error_bounds, outSize);
+        compressed_data = sz_compress_autotuning_3d<double>((double*)data, r1, r2, r3, error_bounds, outSize, false, false, false, sample_ratio);
       }
       else
       {
@@ -141,6 +143,7 @@ class sz_auto_plugin: public libpressio_compressor_plugin {
 
     std::string sz_auto_version;
     double error_bounds = 0.1; //params for compressing the sz-auto
+    float sample_ratio = 0.05;
 };
 
 static pressio_register compressor_sz_auto_plugin(compressor_plugins(), "sz_auto", [](){return compat::make_unique<sz_auto_plugin>(); });

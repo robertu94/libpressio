@@ -47,6 +47,7 @@ option                  | type        | description
 option                  | type        | description
 ------------------------|-------------|------------
 `sz_auto:error_bounds` | double | the error bounds for the compression
+`sz_auto:sample_ratio` | float | the sample ratio for the compression
 
 
 ### fpzip
