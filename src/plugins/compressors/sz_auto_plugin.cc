@@ -1,6 +1,7 @@
 #include <sstream>
-#include "sz_auto/sz_autotuning_3d.hpp"
-#include "sz_auto/sz_utils.hpp"
+#include "SZauto/sz_autotuning_3d.hpp"
+#include "SZauto/sz_def.hpp"
+#include "SZauto/sz_utils.hpp"
 #include "libpressio_ext/cpp/data.h" //for access to pressio_data structures
 #include "libpressio_ext/cpp/compressor.h" //for the libpressio_compressor_plugin class
 #include "libpressio_ext/cpp/options.h" // for access to pressio_options
@@ -19,8 +20,8 @@ class sz_auto_plugin: public libpressio_compressor_plugin {
     };
     struct pressio_options get_options_impl() const override {
       struct pressio_options options;
-      set(options, "sz_auto:error_bounds", error_bounds);
-      set(options, "sz_auto:sample_ratio", sample_ratio);
+      set(options, "SZauto:error_bounds", error_bounds);
+      set(options, "SZauto:sample_ratio", sample_ratio);
       return options;
     }
 
@@ -31,8 +32,8 @@ class sz_auto_plugin: public libpressio_compressor_plugin {
     }
 
     int set_options_impl(struct pressio_options const& options) override {
-      get(options, "sz_auto:error_bounds", &error_bounds);
-      get(options, "sz_auto:sample_ratio", &sample_ratio);
+      get(options, "SZauto:error_bounds", &error_bounds);
+      get(options, "SZauto:sample_ratio", &sample_ratio);
       return 0;
     }
 
@@ -49,7 +50,7 @@ class sz_auto_plugin: public libpressio_compressor_plugin {
 
       if(ndims != 3)
       {
-        return set_error(2, "Error: sz_auto only supports 3d compression");
+        return set_error(2, "Error: SZauto only supports 3d compression");
       }
 
       if(type == pressio_float_dtype)
@@ -62,13 +63,13 @@ class sz_auto_plugin: public libpressio_compressor_plugin {
       }
       else
       {
-        return set_error(2, "Error: sz_auto only supports float or double");
+        return set_error(2, "Error: SZauto only supports float or double");
       }
 
       //that means the compressor is complaining about the parameter
       if(compressed_data == NULL)
       {
-        return set_error(2, "Error when sz_auto is compressing the data");
+        return set_error(2, "Error when SZauto is compressing the data");
       }
 
       *output = pressio_data::move(pressio_byte_dtype, compressed_data, 1, &outSize, pressio_data_libc_free_fn, nullptr);
@@ -86,7 +87,7 @@ class sz_auto_plugin: public libpressio_compressor_plugin {
       size_t ndims = pressio_data_num_dimensions(output);
       if(ndims != 3)
       {
-        return set_error(2, "Error: sz_auto only supports 3d decompression");
+        return set_error(2, "Error: SZauto only supports 3d decompression");
       }
 
 
@@ -104,7 +105,7 @@ class sz_auto_plugin: public libpressio_compressor_plugin {
       }
       else
       {
-        return set_error(2, "Error: sz_auto only supports float or double");
+        return set_error(2, "Error: SZauto only supports float or double");
       }
 
 
@@ -113,18 +114,18 @@ class sz_auto_plugin: public libpressio_compressor_plugin {
       }
 
 
-    //the author of sz_auto does not release their version info.
+    //the author of SZauto does not release their version info.
     int major_version() const override {
-      return 0; 
+      return SZAUTO_MAJOR_VERSION; 
     }
     int minor_version() const override {
-      return 0;
+      return SZAUTO_MINOR_VERSION;
     }
     int patch_version() const override {
-      return 0;
+      return SZAUTO_PATCH_VERSION;
     }
     int revision_version () const { 
-      return 1;
+      return SZAUTO_REVISION_VERSION;
     }
 
     const char* version() const override {
@@ -133,7 +134,7 @@ class sz_auto_plugin: public libpressio_compressor_plugin {
 
 
     const char* prefix() const override {
-      return "sz_auto";
+      return "SZauto";
     }
 
     std::shared_ptr<libpressio_compressor_plugin> clone() override {
@@ -146,5 +147,5 @@ class sz_auto_plugin: public libpressio_compressor_plugin {
     float sample_ratio = 0.05;
 };
 
-static pressio_register compressor_sz_auto_plugin(compressor_plugins(), "sz_auto", [](){return compat::make_unique<sz_auto_plugin>(); });
+static pressio_register compressor_sz_auto_plugin(compressor_plugins(), "SZauto", [](){return compat::make_unique<sz_auto_plugin>(); });
 
