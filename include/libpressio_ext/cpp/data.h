@@ -197,7 +197,7 @@ struct pressio_data {
   static pressio_data clone(pressio_data const& src){
     size_t bytes = src.size_in_bytes(); 
     unsigned char* data = nullptr;
-    if(bytes != 0) {
+    if(bytes != 0 && src.data() != nullptr) {
       data = static_cast<unsigned char*>(malloc(bytes));
       memcpy(data, src.data(), src.size_in_bytes());
     }

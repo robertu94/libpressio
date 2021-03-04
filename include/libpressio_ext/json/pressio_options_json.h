@@ -1,4 +1,4 @@
-#ifndef __cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -27,6 +27,6 @@ extern "C" {
    */
  char* pressio_options_to_json(struct pressio* library, struct pressio_options const* options);
   
-#ifndef __cplusplus
+#ifdef __cplusplus
 }
 #endif

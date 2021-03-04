@@ -238,6 +238,12 @@ size_t pressio_options_num_set(struct pressio_options const* options);
   pressio_options_define_type_cast(name, type) \
   pressio_options_define_type_as(name, type) 
 
+pressio_options_define_type(uinteger8, uint8_t)
+pressio_options_define_type(integer8, int8_t)
+pressio_options_define_type(uinteger16, uint16_t)
+pressio_options_define_type(integer16, int16_t)
+pressio_options_define_type(uinteger64, uint64_t)
+pressio_options_define_type(integer64, int64_t)
 pressio_options_define_type(uinteger, uint32_t)
 pressio_options_define_type(integer, int32_t)
 pressio_options_define_type(float, float)
@@ -258,7 +264,7 @@ pressio_options_define_type_cast(string, char*)
  \param[in] size the number of strings passed
  \param[in] values the value to change to
  */
-void pressio_options_set_strings(struct pressio_options* options, const char* key, size_t size, const char** values);
+void pressio_options_set_strings(struct pressio_options* options, const char* key, size_t size, const char* const* values);
   /** Gets a particular value in a map if it exists
    *
    * pressio_options_get_string returns a newly allocated copy of the string
