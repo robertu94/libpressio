@@ -168,20 +168,16 @@ if(LIBPRESSIO_HAS_BIT_GROOMING)
   target_link_libraries(libpressio PRIVATE bg ZLIB::ZLIB)
 endif()
 
-option(LIBPRESSIO_HAS_SZ_AUTO "build the SZ AUTO plugin" OFF)
+option(LIBPRESSIO_HAS_SZ_AUTO "build the SZauto plugin" OFF)
 if(LIBPRESSIO_HAS_SZ_AUTO)
-  set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} SZ_AUTO")
-  get_filename_component(SZ_AUTO_ABS_PATH
-                       "../compressor-install"
-                       ABSOLUTE)
-  find_library (SZ_AUTO_LIB sz_cpp HINTS "${SZ_AUTO_ABS_PATH}/lib")
-  set (SZ_AUTO_INCLUDE "${SZ_AUTO_ABS_PATH}/include/sz_auto")
+  set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} SZauto")
+  find_package(szauto REQUIRED)
+  pkg_search_module(ZSTD IMPORTED_TARGET GLOBAL libzstd)
   target_sources(libpressio
     PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/sz_auto_plugin.cc
     )
-  target_include_directories (libpressio PRIVATE ${SZ_AUTO_INCLUDE})
-  target_link_libraries(libpressio PRIVATE ${SZ_AUTO_LIB})
+  target_link_libraries(libpressio PRIVATE szauto)
 endif()
 
 option(LIBPRESSIO_HAS_MGARD "build the MGARD plugin" OFF)
