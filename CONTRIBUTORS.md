@@ -61,6 +61,7 @@ alphabetical order:
 + Justin Sybrant
 + Franck Cappello
 + Jon C. Calhoun
++ Kai Zhao
 + Sheng Di
 + Peter Lindstrom
 

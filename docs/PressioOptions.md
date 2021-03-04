@@ -40,6 +40,16 @@ option                  | type        | description
 `digit_rounding:prec` | int32 | the prec parameter of digit rounding (a number between 0 and 64)
 
 
+
+### sz auto
+
+
+option                  | type        | description
+------------------------|-------------|------------
+`sz_auto:error_bounds` | double | the error bounds for the compression
+`sz_auto:sample_ratio` | float | the sample ratio for the compression
+
+
 ### fpzip
 
 

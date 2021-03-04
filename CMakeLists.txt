@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.58.0" LANGUAGES CXX C)
+project(libpressio VERSION "0.59.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -166,6 +166,18 @@ if(LIBPRESSIO_HAS_BIT_GROOMING)
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/bit_groooming_plugin.cc
     )
   target_link_libraries(libpressio PRIVATE bg ZLIB::ZLIB)
+endif()
+
+option(LIBPRESSIO_HAS_SZ_AUTO "build the SZauto plugin" OFF)
+if(LIBPRESSIO_HAS_SZ_AUTO)
+  set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} SZauto")
+  find_package(szauto REQUIRED)
+  pkg_search_module(ZSTD IMPORTED_TARGET GLOBAL libzstd)
+  target_sources(libpressio
+    PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/sz_auto_plugin.cc
+    )
+  target_link_libraries(libpressio PRIVATE szauto::sz_cpp)
 endif()
 
 option(LIBPRESSIO_HAS_MGARD "build the MGARD plugin" OFF)
