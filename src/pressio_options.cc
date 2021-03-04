@@ -73,6 +73,12 @@ size_t pressio_options_num_set(struct pressio_options const* options) {
   pressio_options_define_type_impl_cast(name, type)  \
   pressio_options_define_type_impl_as(name, type) 
 
+pressio_options_define_type_impl(uinteger8, uint8_t)
+pressio_options_define_type_impl(integer8, int8_t)
+pressio_options_define_type_impl(uinteger16, uint16_t)
+pressio_options_define_type_impl(integer16, int16_t)
+pressio_options_define_type_impl(uinteger64, uint64_t)
+pressio_options_define_type_impl(integer64, int64_t)
 pressio_options_define_type_impl(uinteger, uint32_t)
 pressio_options_define_type_impl(integer, int32_t)
 pressio_options_define_type_impl(float, float)
@@ -120,7 +126,7 @@ enum pressio_options_key_status pressio_options_as_data(struct pressio_options c
 } 
 
 //special case: strings -- to get/pass length information
-void pressio_options_set_strings(struct pressio_options* options, const char* key, size_t size, const char** values) {
+void pressio_options_set_strings(struct pressio_options* options, const char* key, size_t size, const char* const* values) {
   std::vector<std::string> strings(values, values+size);
   return options->set(key, strings);
 }
