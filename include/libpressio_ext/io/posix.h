@@ -24,7 +24,7 @@ extern "C" {
    *            If dims is not null, The user SHOULD assume that the memory pointed to by this pointer has been "moved" in a C++11 sense and the user MUST not rely on its contents.
    *            The implementation MAY return this pointer and reuse the underlying space if pressio_data_has_data(dims) returns true.
    * \param[in,out] in_file an file open for reading seeked to the beginning of the data to read in.
-   * \returns a pointer to a (possibly new) pressio data structure.
+   * \returns a pointer to a new pressio data structure.
    *
    */
   struct pressio_data* pressio_io_data_fread(struct pressio_data* dims, FILE* in_file); 
@@ -39,7 +39,7 @@ extern "C" {
    *            If dims is not null, The user SHOULD assume that the memory pointed to by this pointer has been "moved" in a C++11 sense and the user MUST not rely on its contents.
    *            The implementation MAY return this pointer and reuse the underlying space if pressio_data_has_data(ptr) returns true.
    * \param[in,out] in_filedes an file open for reading seeked to the beginning of the data to read in.  If dims is not null, only pressio_data_get_bytes(dims) bytes are read.
-   * \returns a pointer to a (possibly new) pressio data structure.
+   * \returns a pointer to a new pressio data structure.
    *
    */
   struct pressio_data* pressio_io_data_read(struct pressio_data* dims, int in_filedes); 
@@ -53,7 +53,7 @@ extern "C" {
    *            If dims is not null, The user SHOULD assume that the memory pointed to by this pointer has been "moved" in a C++11 sense and the user MUST not rely on its contents.
    *            The implementation MAY return this pointer and reuse the underlying space if pressio_data_has_data(dims) returns true.
    * \param[in,out] out_file an file open for reading seeked to the beginning of the data to read in.
-   * \returns a pointer to a (possibly new) pressio data structure.
+   * \returns a pointer to a new pressio data structure.
    *
    */
   struct pressio_data* pressio_io_data_path_read(struct pressio_data* dims, const char* out_file); 

@@ -241,7 +241,8 @@ struct hdf5_io: public libpressio_io_plugin {
         if(buffer == nullptr) {
           ret = pressio_data_new_owning(*dtype, pressio_size.size(), pressio_size.data());
         } else {
-          ret = buffer;
+          ret = pressio_data_new_empty(pressio_byte_dtype, 0, nullptr);
+          *ret = std::move(*buffer);
         }
         auto ptr = pressio_data_ptr(ret, nullptr);
         std::vector<hsize_t> memextents(std::begin(pressio_size), std::end(pressio_size));
@@ -297,7 +298,18 @@ struct hdf5_io: public libpressio_io_plugin {
       } else {
         char err_msg[1024];
         std::fill(err_msg, err_msg+1024, '\0');
-        strerror_r(errno, err_msg, 1024);
+
+        // gnulibc insists on providing their implementation
+        // of strerror_r when compiling with C++ which returns a char* which
+        // is declared warn_unused.  However, there is also a POSIX version
+        // which returns a int. In either case, we can't really recover
+        // from the error so capture the value in a variable and explicitly
+        // cast to (void) to silence the warning. BAD GNU...
+        //
+        // The other versions are either not thread safe or GNU extensions
+        auto rc = strerror_r(errno, err_msg, 1024);
+        (void)rc;
+
         set_error(1, err_msg);
         return 1;
       }

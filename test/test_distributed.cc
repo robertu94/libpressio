@@ -53,7 +53,7 @@ TEST(DistributedParams, InvalidRoot) {
   const unsigned int n_workers = 1;
   const unsigned int n_masters = 1;
 
-  EXPECT_EQ(distributed_build_groups(size, n_workers, n_masters, root), ret_type{});
+  EXPECT_EQ(distributed_build_groups(size, n_workers, n_masters, root), ret_type());
 }
 
 TEST(DistributedParams, InvalidTotal) {
@@ -62,7 +62,7 @@ TEST(DistributedParams, InvalidTotal) {
   const unsigned int n_workers = 8;
   const unsigned int n_masters = 1;
 
-  EXPECT_EQ(distributed_build_groups(size, n_workers, n_masters, root), ret_type{});
+  EXPECT_EQ(distributed_build_groups(size, n_workers, n_masters, root), ret_type());
 }
 
 TEST(DistributedParams, InvalidAllAsMasters) {
@@ -71,7 +71,7 @@ TEST(DistributedParams, InvalidAllAsMasters) {
   const unsigned int n_workers = 0;
   const unsigned int n_masters = 4;
 
-  EXPECT_EQ(distributed_build_groups(size, n_workers, n_masters, root), ret_type{});
+  EXPECT_EQ(distributed_build_groups(size, n_workers, n_masters, root), ret_type());
 }
 
 TEST(DistributedParams, InvalidAllAsWorkers) {
@@ -80,7 +80,7 @@ TEST(DistributedParams, InvalidAllAsWorkers) {
   const unsigned int n_workers = 4;
   const unsigned int n_masters = 0;
 
-  EXPECT_EQ(distributed_build_groups(size, n_workers, n_masters, root), ret_type{});
+  EXPECT_EQ(distributed_build_groups(size, n_workers, n_masters, root), ret_type());
 }
 
 
@@ -90,7 +90,7 @@ TEST(DistributedParams, SizeOne) {
   const unsigned int n_workers = 0;
   const unsigned int n_masters = 0;
 
-  EXPECT_EQ(distributed_build_groups(size, n_workers, n_masters, root), (ret_type{{0ull}}));
+  EXPECT_EQ(distributed_build_groups(size, n_workers, n_masters, root), (ret_type{std::vector<size_t>{0ull}}));
 }
 
 TEST(DistributedParams, FullAuto) {

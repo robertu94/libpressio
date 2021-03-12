@@ -164,32 +164,32 @@ int main(int argc, const char *argv[])
 
     auto first_input_buffer = pressio_data_new_owning(args.first_type, args.first_dims.size(), args.first_dims.data());
     auto first_input = pressio_io_data_path_read(first_input_buffer, args.first_input.c_str());
-    if(first_input == nullptr) {
-      std::cerr << "failed to read " << args.first_input << std::endl;
+    if(first_input == nullptr || pressio_data_ptr(first_input, nullptr) == nullptr) {
+      std::cerr << "failed to read first_in " << args.first_input << std::endl;
       exit(1);
     }
     check_buffer_contents(first_input, 1);
 
     auto first_decompressed_buffer = pressio_data_new_owning(args.first_type, args.first_dims.size(), args.first_dims.data());
-    auto first_output = pressio_io_data_path_read(first_input_buffer, args.first_decompressed.c_str());
-    if(first_output == nullptr) {
-      std::cerr << "failed to read " << args.first_decompressed << std::endl;
+    auto first_output = pressio_io_data_path_read(first_decompressed_buffer, args.first_decompressed.c_str());
+    if(first_output == nullptr || pressio_data_ptr(first_output, nullptr) == nullptr) {
+      std::cerr << "failed to read first_out " << args.first_decompressed << std::endl;
       exit(1);
     }
     check_buffer_contents(first_output, 1);
 
     auto second_input_buffer = pressio_data_new_owning(args.second_type, args.second_dims.size(), args.second_dims.data());
     auto second_input = pressio_io_data_path_read(second_input_buffer, args.second_input.c_str());
-    if(second_input == nullptr) {
-      std::cerr << "failed to read " << args.second_input << std::endl;
+    if(second_input == nullptr || pressio_data_ptr(second_input, nullptr) == nullptr) {
+      std::cerr << "failed to read second_in " << args.second_input << std::endl;
       exit(1);
     }
     check_buffer_contents(second_input, 2);
 
     auto second_decompressed_buffer = pressio_data_new_owning(args.second_type, args.second_dims.size(), args.second_dims.data());
-    auto second_output = pressio_io_data_path_read(second_input_buffer, args.second_decompressed.c_str());
-    if(second_output == nullptr) {
-      std::cerr << "failed to read " << args.second_decompressed << std::endl;
+    auto second_output = pressio_io_data_path_read(second_decompressed_buffer, args.second_decompressed.c_str());
+    if(second_output == nullptr || pressio_data_ptr(second_output, nullptr) == nullptr) {
+      std::cerr << "failed to read second_out " << args.second_decompressed << std::endl;
       exit(1);
     }
     check_buffer_contents(second_output, 2);

@@ -15,6 +15,10 @@ void options_set_comm(struct pressio_options* options, const char* key, MPI_Comm
   return pressio_options_set_userptr(options, key, comm);
 }
 
+pressio_option* option_new_comm(MPI_Comm comm) {
+  return pressio_option_new_userptr(comm);
+}
+
 #endif
 
 namespace {

@@ -91,7 +91,8 @@ struct petsc_io : public libpressio_io_plugin {
     if (data != nullptr && pressio_data_dtype(data) == pressio_dtype_from_type<PetscScalar>() &&
         pressio_data_num_dimensions(data) == 2 && pressio_data_get_dimension(data, 0) == sizes[0] &&
         pressio_data_get_dimension(data, 1) == sizes[1] && pressio_data_has_data(data)) {
-      ret = data;
+      ret = pressio_data_new_empty(pressio_byte_dtype, 0, nullptr);
+      *ret = std::move(*data);
       PetscScalar *data_ptr = static_cast<PetscScalar *>(pressio_data_ptr(data, nullptr));
       std::copy(raw_data, raw_data + (rows * columns), data_ptr);
     } else {

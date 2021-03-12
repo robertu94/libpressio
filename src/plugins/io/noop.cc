@@ -11,8 +11,7 @@
 #include "std_compat/memory.h"
 
 struct noop_io : public libpressio_io_plugin {
-  virtual struct pressio_data* read_impl(struct pressio_data* data) override {
-    if(data != nullptr) pressio_data_free(data);
+  virtual struct pressio_data* read_impl(struct pressio_data*) override {
     return nullptr;
   }
 

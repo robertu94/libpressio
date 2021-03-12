@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <iterator>
 #include <sys/wait.h>
+#include <errno.h>
 #include "std_compat/memory.h"
 
 struct external_forkexec: public libpressio_launch_plugin {
@@ -36,6 +37,7 @@ extern_proc_results launch(std::vector<std::string> const& full_command) const o
         case 0:
           //in the child process
           {
+          close(STDIN_FILENO);
           close(stdout_pipe_fd[0]);
           close(stderr_pipe_fd[0]);
           dup2(stdout_pipe_fd[1], 1);
@@ -78,21 +80,72 @@ extern_proc_results launch(std::vector<std::string> const& full_command) const o
           char buffer[2048];
           std::ostringstream stdout_stream;
           std::ostringstream stderr_stream;
-          do {
-            //read the stdout[0]
-            int nread;
-            while((nread = read(stdout_pipe_fd[0], buffer, 2048)) > 0) {
-              stdout_stream.write(buffer, nread);
+          bool stdout_closed = false, stderr_closed = false;
+
+          while(true) {
+            int ready, nfds = 0;
+            ssize_t nread;
+            fd_set readfds, writefds, exceptfds;
+
+            FD_ZERO(&readfds);
+            FD_ZERO(&writefds);
+            FD_ZERO(&exceptfds);
+            if(not stdout_closed) {
+              FD_SET(stdout_pipe_fd[0], &readfds);
+              nfds = std::max(stdout_pipe_fd[0], nfds);
             }
-            
-            //read the stderr[0]
-            while((nread = read(stderr_pipe_fd[0], buffer, 2048)) > 0) {
-              stderr_stream.write(buffer, nread);
+            if(not stderr_closed) {
+              FD_SET(stderr_pipe_fd[0], &readfds);
+              nfds = std::max(stderr_pipe_fd[0], nfds);
             }
 
-            //wait for the child to complete
-            waitpid(child, &status, 0);
-          } while (not WIFEXITED(status));
+            if(stdout_closed && stderr_closed) {
+              break;
+            }
+
+            ready = select(nfds+1, &readfds, &writefds, &exceptfds, nullptr);
+
+            if(ready == -1 && errno == EINTR) {
+              continue;
+            }
+
+            if(!stdout_closed && FD_ISSET(stdout_pipe_fd[0], &readfds)) {
+              nread = read(stdout_pipe_fd[0], buffer, sizeof buffer);
+              if(nread > 0) {
+                stdout_stream.write(buffer, nread);
+              } else if (nread == 0) {
+                stdout_closed = true;
+              }
+            }
+
+            if(!stderr_closed && FD_ISSET(stderr_pipe_fd[0], &readfds)) {
+              nread = read(stderr_pipe_fd[0], buffer, sizeof buffer);
+              if(nread > 0) {
+                stderr_stream.write(buffer, nread);
+              } else if(nread == 0)  {
+                stderr_closed = true;
+              }
+            }
+          }
+
+          waitpid(child, &status, 0);
+          close(stdout_pipe_fd[0]);
+          close(stderr_pipe_fd[0]);
+//          do {
+//            //read the stdout[0]
+//            int nread;
+//            while((nread = read(stdout_pipe_fd[0], buffer, 2048)) > 0) {
+//              stdout_stream.write(buffer, nread);
+//            }
+//            
+//            //read the stderr[0]
+//            while((nread = read(stderr_pipe_fd[0], buffer, 2048)) > 0) {
+//              stderr_stream.write(buffer, nread);
+//            }
+//
+//            //wait for the child to complete
+//            waitpid(child, &status, 0);
+//          } while (not WIFEXITED(status));
 
           results.proc_stdout = stdout_stream.str();
           results.proc_stderr = stderr_stream.str();

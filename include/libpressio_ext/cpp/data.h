@@ -339,7 +339,7 @@ struct pressio_data {
   /**
    * \returns a copy of the vector of dimensions
    */
-  std::vector<size_t> dimensions() const {
+  std::vector<size_t> const& dimensions() const {
     return dims;
   }
 

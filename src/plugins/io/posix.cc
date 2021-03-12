@@ -29,7 +29,6 @@ extern "C" {
         auto dims_v = dims->dimensions();
         ret = pressio_data_new_owning(dtype, dims_v.size(), dims_v.data());
       }
-      pressio_data_free(dims);
     } else {
       struct stat statbuf;
       if(fstat(in_filedes, &statbuf)) {

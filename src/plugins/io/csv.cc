@@ -46,14 +46,12 @@ namespace {
 struct csv_io : public libpressio_io_plugin
 {
   virtual struct pressio_data* read_impl(struct pressio_data* data) override {
-    if(data != nullptr) pressio_data_free(data);
-
     std::ifstream in{path};
     if(not in) {
       bad_path(path);
       return nullptr;
     }
-    size_t sizes[2] = {0,0};
+    std::array<size_t,2> sizes {0,0};
     std::vector<double> builder;
     for(std::string line; std::getline(in, line, line_delim.front()); sizes[0]++) {
       if(sizes[0] < skip_rows) continue;
@@ -65,12 +63,19 @@ struct csv_io : public libpressio_io_plugin
       sizes[1] = column;
     }
     sizes[0] -= skip_rows;
-    return pressio_data_new_copy(
-        pressio_double_dtype,
-        builder.data(),
-        2,
-        sizes
-        );
+    if(data && data->has_data() && std::equal(sizes.begin(), sizes.end(), data->dimensions().begin(), data->dimensions().end()) && data->dtype() == pressio_double_dtype) {
+      auto ret = pressio_data_new_empty(pressio_byte_dtype, 0, nullptr);
+      *ret = std::move(*data);
+      std::copy(builder.begin(), builder.end(), static_cast<double*>(ret->data()));
+      return ret;
+    } else {
+      return pressio_data_new_copy(
+          pressio_double_dtype,
+          builder.data(),
+          2,
+          sizes.data()
+          );
+    }
   }
 
   virtual int write_impl(struct pressio_data const* data) override{

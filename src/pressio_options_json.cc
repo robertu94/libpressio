@@ -71,7 +71,9 @@ void to_json(nlohmann::json& j, pressio_option const& option){
 }
 void to_json(nlohmann::json& j, pressio_options const& options){
   j = {};
-  for(auto const& [key, value]: options) {
+  for(auto const& it: options) {
+    auto const& key = std::get<0>(it);
+    auto const& value = std::get<1>(it);
     if(value.type() != pressio_option_userptr_type) {
       j[key] = value;
     }
@@ -212,7 +214,7 @@ void from_json(nlohmann::json const& j, pressio_option& option) {
             option = std::string(j.at("value"));
             break;
           case pressio_option_charptr_array_type:
-            option = std::vector<std::string>(j.at("value"));
+            option = std::vector<std::string>{j.at("value")};
             break;
           case pressio_option_unset_type:
             option = {};
@@ -243,9 +245,9 @@ void from_json(nlohmann::json const& j, pressio_option& option) {
 
 void from_json(nlohmann::json const& j, pressio_options& options) {
   pressio_option o;
-  for (auto const& [key, value]: j.items()) {
-    from_json(value, o);
-    options.set(key, o);
+  for (auto const& i: j.items()) {
+    from_json(i.value(), o);
+    options.set(i.key(), o);
   }
 }
 
@@ -256,7 +258,7 @@ extern "C" {
     nlohmann::json parsed = nlohmann::json::parse(json);
     pressio_options* options = nullptr;
     try {
-      options = new pressio_options(parsed);
+      options = new pressio_options(parsed.get<pressio_options>());
     } catch (std::runtime_error& ex) {
       if(library) {
         library->set_error(1, ex.what());

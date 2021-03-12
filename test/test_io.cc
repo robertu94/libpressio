@@ -67,6 +67,7 @@ TEST_F(PressioDataIOTests, TestReadEmptyGeneric) {
   EXPECT_EQ(pressio_data_get_bytes(data), sizeof(int)*6);
   EXPECT_EQ(pressio_data_dtype(data), pressio_int32_dtype);
   pressio_data_free(data);
+  pressio_data_free(size_info);
   pressio_io_free(io);
 }
 
@@ -79,6 +80,7 @@ TEST_F(PressioDataIOTests, TestReadEmpty) {
   EXPECT_EQ(pressio_data_get_bytes(data), sizeof(int)*6);
   EXPECT_EQ(pressio_data_dtype(data), pressio_int32_dtype);
   pressio_data_free(data);
+  pressio_data_free(size_info);
 }
 
 TEST_F(PressioDataIOTests, TestReadFullGeneric) {
@@ -96,6 +98,7 @@ TEST_F(PressioDataIOTests, TestReadFullGeneric) {
   EXPECT_EQ(pressio_data_get_bytes(data), sizeof(int)*6);
   EXPECT_EQ(pressio_data_dtype(data), pressio_int32_dtype);
   pressio_data_free(data);
+  pressio_data_free(buffer);
   pressio_io_free(io);
 }
 
@@ -110,6 +113,7 @@ TEST_F(PressioDataIOTests, TestReadFull) {
   EXPECT_EQ(pressio_data_get_bytes(data), sizeof(int)*6);
   EXPECT_EQ(pressio_data_dtype(data), pressio_int32_dtype);
   pressio_data_free(data);
+  pressio_data_free(buffer);
 }
 
 
@@ -147,6 +151,7 @@ TEST_F(PressioDataIOTests, TestReadPathEmptyGeneric) {
   EXPECT_EQ(pressio_data_get_bytes(data), sizeof(int)*6);
   EXPECT_EQ(pressio_data_dtype(data), pressio_int32_dtype);
   pressio_data_free(data);
+  pressio_data_free(size_info);
   pressio_io_free(io);
 }
 TEST_F(PressioDataIOTests, TestReadPathEmpty) {
@@ -156,6 +161,7 @@ TEST_F(PressioDataIOTests, TestReadPathEmpty) {
   ASSERT_NE(data, nullptr);
   EXPECT_EQ(pressio_data_get_bytes(data), sizeof(int)*6);
   EXPECT_EQ(pressio_data_dtype(data), pressio_int32_dtype);
+  pressio_data_free(size_info);
   pressio_data_free(data);
 }
 
@@ -175,6 +181,7 @@ TEST_F(PressioDataIOTests, TestReadPathFullGeneric) {
   EXPECT_EQ(pressio_data_get_bytes(data), sizeof(int)*6);
   EXPECT_EQ(pressio_data_dtype(data), pressio_int32_dtype);
   pressio_data_free(data);
+  pressio_data_free(buffer);
   pressio_io_free(io);
 }
 TEST_F(PressioDataIOTests, TestReadPathFull) {
@@ -188,6 +195,7 @@ TEST_F(PressioDataIOTests, TestReadPathFull) {
   EXPECT_EQ(pressio_data_get_bytes(data), sizeof(int)*6);
   EXPECT_EQ(pressio_data_dtype(data), pressio_int32_dtype);
   pressio_data_free(data);
+  pressio_data_free(buffer);
 }
 
 TEST_F(PressioDataIOTests, TestFReadNullptr) {
@@ -209,6 +217,7 @@ TEST_F(PressioDataIOTests, TestFReadEmpty) {
   EXPECT_EQ(pressio_data_get_bytes(data), sizeof(int)*6);
   EXPECT_EQ(pressio_data_dtype(data), pressio_int32_dtype);
   pressio_data_free(data);
+  pressio_data_free(size_info);
   fclose(tmp);
 }
 
@@ -224,6 +233,7 @@ TEST_F(PressioDataIOTests, TestFReadFull) {
   EXPECT_EQ(pressio_data_get_bytes(data), sizeof(int)*6);
   EXPECT_EQ(pressio_data_dtype(data), pressio_int32_dtype);
   pressio_data_free(data);
+  pressio_data_free(buffer);
   fclose(tmp);
 }
 
