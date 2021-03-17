@@ -278,7 +278,7 @@ cmake -DLIBPRESSIO_CXX_VERSION=11 ..
 make
 ```
 
-To build the experimental python bindings:
+To build the python bindings:
 
 ```
 BUILD_DIR=build
@@ -300,6 +300,54 @@ make
 ctest .
 ```
 
+## Python
+
+LibPressio has a low level and high level set of python bindings.
+The low level bindings mirror the C interface as closely as possible.
+Where as the higher level bindings are based on `numcodcs` and may lack new or developing features from the C api, but are much more ergonomic and pythonic.
+
+The recommended way to install them is with `spack install libpressio+python+mpi` in addition to enabling
+any variants for compressors such as `+sz+zfp` for SZ and ZFP.
+
+Here is an example of how to use the high level bindings:
+
+```python
+#!/usr/bin/env python
+from pprint import pprint
+from pathlib import Path
+from libpressio import PressioCompressor
+import numpy as np
+
+dataset_path = Path.home() / "git/datasets/hurricane/100x500x500/CLOUDf48.bin.f32"
+uncompressed_data = np.fromfile(dataset_path, dtype=np.float32)
+uncompressed_data = uncompressed_data.reshape(500, 500, 100)
+decompressed_data = uncompressed_data.copy()
+
+# load and configure the compressor
+compressor = PressioCompressor.from_config({
+    "compressor_id": "sz",
+    "compressor_config": {
+        "sz:error_bound_mode_str": "abs",
+        "sz:abs_err_bound": 1e-6,
+        "sz:metric": "size"
+        }
+    })
+
+# print out some metadata
+print(compressor.codec_id)
+pprint(compressor.get_config())
+pprint(compressor.get_compile_config())
+
+
+# preform compression and decompression
+compressed = compressor.encode(uncompressed_data)
+decompressed = compressor.decode(compressed, decompressed_data)
+
+# print out some metrics collected during compression
+pprint(compressor.get_metrics())
+```
+
+More documentation can be found in the doc-strings for the high level bindings.
 
 ## Option Names
 
@@ -315,7 +363,8 @@ As of version 1.0.0, LibPressio will follow the following API stability guidelin
 
 + The functions defined in files in `./include` excluding files in the `./include/libpressio_ext/` or its subdirectories may be considered to be stable.  Furthermore, all files in this set are C compatible.
 + The functions defined in files in `./include/libpressio_ext/` are to be considered unstable.
-+ The functions and modules defined in the python bindings are unstable.
++ The functions and modules defined in the low-level python bindings are stable (import `pressio`).
++ The functions and modules defined in the higher-level python bindings are unstable (import `libpressio`).
 + Any functions listed above, in `docs/MetricResults.md` or in `docs/MetricResults.md` as experimental are unstable
 + Any configurable that has a key `pressio:stability` with a value of `experimental` or `unstable` are unstable.  Modules that are experimental may crash or have other severe deficiencies, modules that are unstable generally will not crash, but may have options changed according to the unstable API garunetees.
 + Any configurable that has a key `pressio:stability` with a value of `stable` conforms to the LibPressio stability garunetees
