@@ -304,7 +304,7 @@ ctest .
 
 LibPressio has a low level and high level set of python bindings.
 The low level bindings mirror the C interface as closely as possible.
-Where as the higher level bindings are based on `numcodcs` and may lack new or developing features from the C api, but are much more ergonomic and pythonic.
+Where as the higher level bindings are based on `numcodecs` and may lack new or developing features from the C api, but are much more ergonomic and pythonic.
 
 The recommended way to install them is with `spack install libpressio+python+mpi` in addition to enabling
 any variants for compressors such as `+sz+zfp` for SZ and ZFP.
