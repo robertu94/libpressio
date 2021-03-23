@@ -25,7 +25,7 @@ namespace region_of_interest {
     {
       region_of_interest_metrics m;
       if (start.empty()) {
-        start = std::vector<uint64_t>(input_dims.size());
+        start = std::vector<size_t>(input_dims.size());
       }
       if (end.empty()) {
         end = input_dims;
@@ -35,13 +35,13 @@ namespace region_of_interest {
       const size_t n = compat::transform_reduce(
           std::begin(start), std::end(start),
           std::begin(end),
-          uint64_t{0},
-          [](uint64_t start, uint64_t stop){ return stop-start; },
+          size_t{0},
+          [](size_t start, size_t stop){ return stop-start; },
           compat::plus<>{}
           );
       switch (input_dims.size()) {
         case 1:
-          for (uint64_t i = start[0]; i < end[0]; ++i) {
+          for (size_t i = start[0]; i < end[0]; ++i) {
             input_sum += input_begin[i];
             decomp_sum += decomp_begin[i];
           }
@@ -49,8 +49,8 @@ namespace region_of_interest {
         case 2:
           {
           auto stride = input_dims[1];
-          for (uint64_t i = start[0]; i < end[0]; ++i) {
-            for (uint64_t j = start[1]; j < end[1]; ++j) {
+          for (size_t i = start[0]; i < end[0]; ++i) {
+            for (size_t j = start[1]; j < end[1]; ++j) {
               auto idx = j + stride * i;
               input_sum += input_begin[idx];
               decomp_sum += decomp_begin[idx];
@@ -62,9 +62,9 @@ namespace region_of_interest {
           {
           const auto stride = input_dims[2];
           const auto stride2 = input_dims[1] * input_dims[2];
-          for (uint64_t i = start[0]; i < end[0]; ++i) {
-            for (uint64_t j = start[1]; j < end[1]; ++j) {
-              for (uint64_t k = start[2]; k < end[2]; ++k) {
+          for (size_t i = start[0]; i < end[0]; ++i) {
+            for (size_t j = start[1]; j < end[1]; ++j) {
+              for (size_t k = start[2]; k < end[2]; ++k) {
                 auto idx =k + j*stride + i*stride2;
                 input_sum += input_begin[idx];
                 decomp_sum += decomp_begin[idx];
@@ -84,7 +84,7 @@ namespace region_of_interest {
     }
 
     std::vector<size_t> const input_dims, decomp_dims;
-    std::vector<uint64_t> start,end;
+    std::vector<size_t> start,end;
   };
 }
 
@@ -101,7 +101,7 @@ public:
                       struct pressio_data const* output, int) override
   {
     err_metrics = pressio_data_for_each<region_of_interest::region_of_interest_metrics>( input_data, *output,
-        region_of_interest::compute_metrics{input_data.dimensions(), output->dimensions(), start.to_vector<uint64_t>(), end.to_vector<uint64_t>()});
+        region_of_interest::compute_metrics{input_data.dimensions(), output->dimensions(), start.to_vector<size_t>(), end.to_vector<size_t>()});
   }
 
   struct pressio_options get_metrics_results() const override

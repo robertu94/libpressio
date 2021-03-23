@@ -12,6 +12,7 @@
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/io.h"
 #include "std_compat/memory.h"
+#include "std_compat/algorithm.h"
 
 namespace {
   struct csv_printer {
@@ -63,7 +64,7 @@ struct csv_io : public libpressio_io_plugin
       sizes[1] = column;
     }
     sizes[0] -= skip_rows;
-    if(data && data->has_data() && std::equal(sizes.begin(), sizes.end(), data->dimensions().begin(), data->dimensions().end()) && data->dtype() == pressio_double_dtype) {
+    if(data && data->has_data() && compat::equal(sizes.begin(), sizes.end(), data->dimensions().begin(), data->dimensions().end()) && data->dtype() == pressio_double_dtype) {
       auto ret = pressio_data_new_empty(pressio_byte_dtype, 0, nullptr);
       *ret = std::move(*data);
       std::copy(builder.begin(), builder.end(), static_cast<double*>(ret->data()));

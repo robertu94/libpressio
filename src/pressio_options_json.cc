@@ -140,7 +140,7 @@ static void from_json_array(nlohmann::json const& j, pressio_option& option) {
   switch(j_type) {
     case nlohmann::json::value_t::string:
     case nlohmann::json::value_t::binary:
-      option = std::vector<std::string>(j.begin(), j.end());
+      option = j.get<std::vector<std::string>>();
       break;
     case nlohmann::json::value_t::number_integer:
     case nlohmann::json::value_t::number_unsigned:
@@ -212,7 +212,7 @@ void from_json(nlohmann::json const& j, pressio_option& option) {
             option = double(j.at("value"));
             break;
           case pressio_option_charptr_type:
-            option = std::string(j.at("value"));
+            option = j.at("value").get<std::string>();
             break;
           case pressio_option_charptr_array_type:
             option = std::vector<std::string>{j.at("value")};
