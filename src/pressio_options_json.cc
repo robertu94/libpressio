@@ -15,6 +15,7 @@ void to_json(nlohmann::json& j, pressio_option const& option){
   j["type"] = uint32_t{option.type()};
   if(not option.has_value()) {
     j["value"] = nullptr;
+    return;
   }
   switch(option.type()) {
     case pressio_option_data_type:

@@ -94,7 +94,19 @@ struct pressio_option final {
     !std::is_same<T, const char*>::value &&
     !std::is_same<T, compat::monostate>::value
     >::type>
+  pressio_option(compat::optional<T> && value): option(value) {}
+
+  /** constructs an option that holds the specified value
+   * \param[in] value the value the option is to hold
+   * */
+  template<class T, typename = typename std::enable_if<
+    !std::is_same<T, pressio_conversion_safety>::value &&
+    !std::is_same<T, pressio_option>::value &&
+    !std::is_same<T, const char*>::value &&
+    !std::is_same<T, compat::monostate>::value
+    >::type>
   pressio_option(T const& value): option(compat::optional<T>(value)) {}
+
 
   /** specialization for option to reset the type to hold no type or value
    * \param[in] value the monostate singleton
@@ -102,7 +114,7 @@ struct pressio_option final {
   pressio_option(compat::monostate value): option(value) { }
 
   /** specialization for strings to be compatable with c++11
-   * \param[in] value the monostate singleton
+   * \param[in] value the string value to construct
    * */
   pressio_option(const char* value): option(std::string(value)) { }
 

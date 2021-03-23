@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.60.0" LANGUAGES CXX C)
+project(libpressio VERSION "0.61.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -66,6 +66,8 @@ add_library(libpressio
   ./src/plugins/metrics/kl_divergance.cc
   ./src/plugins/metrics/printer.cc
   ./src/plugins/metrics/region_of_interest.cc
+  ./src/plugins/metrics/diff_pdf.cc
+  ./src/plugins/metrics/autocorr.cc
   ./src/plugins/metrics/noop.cc
   ./src/plugins/io/copy_template.cc
   ./src/plugins/io/posix.cc
@@ -384,6 +386,11 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/libpressio.pc
   @ONLY
   )
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/libpressio_cxx.pc.in
+  ${CMAKE_CURRENT_BINARY_DIR}/libpressio_cxx.pc
+  @ONLY
+  )
 target_sources(libpressio
   PRIVATE
   ${CMAKE_CURRENT_BINARY_DIR}/include/pressio_version.h
@@ -414,6 +421,7 @@ install(EXPORT LibPressioConfig NAMESPACE LibPressio:: DESTINATION share/LibPres
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libpressio)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/pressio_version.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libpressio)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libpressio.pc DESTINATION ${CMAKE_INSTALL_PREFIX}/share/pkgconfig)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libpressio_cxx.pc DESTINATION ${CMAKE_INSTALL_PREFIX}/share/pkgconfig)
 
 if(BUILD_TESTING)
   add_subdirectory(test)

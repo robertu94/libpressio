@@ -1,7 +1,7 @@
 #include <nlohmann/json_fwd.hpp>
-class pressio_data;
-class pressio_option;
-class pressio_options;
+struct pressio_data;
+struct pressio_option;
+struct pressio_options;
 
 void to_json(nlohmann::json& j, pressio_data const& data);
 void to_json(nlohmann::json& j, pressio_option const& option);

@@ -154,7 +154,7 @@ class external_metric_plugin : public libpressio_metrics_plugin {
       auto eq_pos = version_line.find('=') + 1;
       if(version_line.substr(0, eq_pos) != "external:api=") {
         //report error
-        return 0;
+        throw std::runtime_error("invalid format version");
       }
       return version_line.substr(eq_pos);
     }
