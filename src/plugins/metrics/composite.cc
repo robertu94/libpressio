@@ -208,6 +208,29 @@ class composite_plugin : public libpressio_metrics_plugin {
         set_type(opt, "composite:decompression_rate", pressio_option_double_type);
       }
     }
+    
+    //compression_rate_many
+    {
+      unsigned int compression_time, uncompressed_size;
+      if(opt.get(time_name ,"time:compress_many", &compression_time) == pressio_options_key_set &&
+         opt.get(size_name ,"size:uncompressed_size", &uncompressed_size) == pressio_options_key_set) {
+        set(opt, "composite:compression_rate_many", static_cast<double>(uncompressed_size)/compression_time);
+      } else {
+        set_type(opt, "composite:compression_rate_many", pressio_option_double_type);
+      }
+    }
+
+    //decompression_rate_many
+    {
+      unsigned int decompression_time, uncompressed_size;
+      if (opt.get(time_name,  "time:decompress_many", &decompression_time) == pressio_options_key_set &&
+          opt.get(size_name, "size:uncompressed_size", &uncompressed_size) == pressio_options_key_set) {
+        set(opt, "composite:decompression_rate_many", static_cast<double>(uncompressed_size)/decompression_time);
+      } else {
+        set_type(opt, "composite:decompression_rate_many", pressio_option_double_type);
+      }
+    }
+
 
 #if LIBPRESSIO_HAS_LUA
     std::map<std::string, double> metrics;

@@ -106,7 +106,16 @@ class zfp_plugin: public libpressio_compressor_plugin {
 
       int execution;
       if(get(options, "zfp:execution", &execution) == pressio_options_key_set) { 
-        zfp_stream_set_execution(zfp, (zfp_exec_policy)execution);
+        if(!zfp_stream_set_execution(zfp, (zfp_exec_policy)execution)) {
+          switch ((zfp_exec_policy)execution) {
+            case zfp_exec_serial:
+              return set_error(1, "zfp serial execution is not available");
+            case zfp_exec_omp:
+              return set_error(1, "zfp openmp execution is not available");
+            case zfp_exec_cuda:
+              return set_error(1, "zfp cuda execution is not available");
+          }
+        }
       }
       if(zfp_stream_execution(zfp) == zfp_exec_omp) {
         unsigned int threads;
