@@ -18,11 +18,23 @@ void print_all_options(struct pressio_options* options) {
         case pressio_option_userptr_type:
           printf("%s : %p\n", key, pressio_option_get_userptr(option));
           break;
+        case pressio_option_int16_type:
+          printf("%s : %hd\n", key, pressio_option_get_integer16(option));
+          break;
+        case pressio_option_uint16_type:
+          printf("%s : %hu\n", key, pressio_option_get_uinteger16(option));
+          break;
         case pressio_option_int32_type:
           printf("%s : %d\n", key, pressio_option_get_integer(option));
           break;
         case pressio_option_uint32_type:
           printf("%s : %u\n", key, pressio_option_get_uinteger(option));
+          break;
+        case pressio_option_int64_type:
+          printf("%s : %ld\n", key, pressio_option_get_integer64(option));
+          break;
+        case pressio_option_uint64_type:
+          printf("%s : %lu\n", key, pressio_option_get_uinteger64(option));
           break;
         case pressio_option_double_type:
           printf("%s : %lf\n", key, pressio_option_get_double(option));

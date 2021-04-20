@@ -52,8 +52,6 @@ class PressioException(Exception):
         error_code = pressio.io_error_code(io)
         return cls(msg, error_code)
 
-
-
 def _python_to_pressio(options, template=None):
     config = pressio.options_new() 
 
@@ -252,11 +250,12 @@ class PressioCompressor(Codec):
             pressio.compressor_set_options(self._compressor, early_config_lp)
             pressio.options_free(early_config_lp)
 
-            config_lp = pressio.compressor_get_options(self._compressor)
-            config_lp = _python_to_pressio(compressor_config, config_lp)
+            config_lp_template = pressio.compressor_get_options(self._compressor)
+            config_lp = _python_to_pressio(compressor_config, config_lp_template)
 
             pressio.compressor_set_options(self._compressor, config_lp)
             pressio.options_free(config_lp)
+            pressio.options_free(config_lp_template)
         finally:
             pressio.release(library)
 
@@ -403,13 +402,14 @@ class PressioIO:
             pressio.io_set_options(self._io, early_config_lp)
             pressio.options_free(early_config_lp)
 
-            config_lp = pressio.io_get_options(self._io)
-            config_lp = _python_to_pressio(io_config, config_lp)
+            config_lp_template = pressio.io_get_options(self._io)
+            config_lp = _python_to_pressio(io_config, config_lp_template)
 
             pressio.io_set_options(self._io, config_lp)
         finally:
             pressio.release(library)
             pressio.options_free(config_lp)
+            pressio.options_free(config_lp_template)
 
     def __del__(self):
         pressio.io_free(self._io)
@@ -427,6 +427,8 @@ class PressioIO:
             raise PressioException.from_io(self._io)
         ret = pressio.io_data_to_numpy(ret_lp)
         pressio.data_free(ret_lp)
+        if template is not None:
+            pressio.data_free(template)
         return ret
 
     def write(self, output):
@@ -472,7 +474,7 @@ class PressioIO:
         try:
             options = _python_to_pressio(config)
             if pressio.io_set_options(self._io, options):
-                raise PressioCompressor.from_io(self._io)
+                raise PressioException.from_io(self._io)
         finally:
             pressio.options_free(options)
 
@@ -493,3 +495,102 @@ class PressioIO:
                    config.get('name', None)
                    )
 
+
+class PressioMetrics:
+    @classmethod
+    def from_config(cls, config):
+        return cls(config.get('metric_ids', []),
+                   config.get('early_config', {}),
+                   config.get('metrics_config', {}),
+                   config.get('name', None)
+                   )
+
+    def __init__(self, ids, early_config, metrics_config, name):
+        try:
+            config_lp = None
+            library = pressio.instance()
+            metrics_ids = pressio.vector_string([i.encode() for i in ids])
+            self._metric = pressio.new_metrics(library, metrics_ids)
+            self._metric_id = "composite"
+            if not self._metric:
+                raise PressioException.from_library(library)
+
+            if name is not None:
+                pressio.metrics_set_name(self._metric, name.encode())
+
+            early_config_lp = _python_to_pressio(early_config)
+            pressio.metrics_set_options(self._metric, early_config_lp)
+            pressio.options_free(early_config_lp)
+
+            config_lp_template = pressio.metrics_get_options(self._metric)
+            config_lp = _python_to_pressio(metrics_config, config_lp_template)
+
+            pressio.metrics_set_options(self._metric, config_lp)
+        finally:
+            pressio.release(library)
+            pressio.options_free(config_lp)
+            pressio.options_free(config_lp_template)
+
+    def __del__(self):
+        pressio.metrics_free(self._metric)
+
+    def evaluate(self, input=None, compressed=None, output=None):
+        results_lp = None
+        try:
+            input_lp = input if input is None else pressio.io_data_from_numpy(input)
+            compressed_lp = compressed if compressed is None else pressio.io_data_from_bytes(compressed)
+            output_lp = output if output is None else pressio.io_data_from_numpy(output)
+            results_lp = pressio.metrics_evaluate(self._metric, input_lp, compressed_lp, output_lp)
+            return _pressio_to_python(results_lp)
+        finally:
+            if input_lp is not None:
+                pressio.data_free(input_lp)
+            if output_lp is not None:
+                pressio.data_free(output_lp)
+            if compressed_lp is not None:
+                pressio.data_free(compressed_lp)
+            if results_lp is not None:
+                pressio.options_free(results_lp)
+
+
+    def set_config(self, config):
+        """set runtime time options"""
+        try:
+            options = _python_to_pressio(config)
+            pressio.metrics_set_options(options)
+        finally:
+            pressio.options_free(options)
+
+    @staticmethod
+    def _recursive_keys(config):
+        entries = [config]
+        while entries:
+            entry = entries.pop()
+            for key, value in entry.items():
+                if isinstance(value, dict):
+                    entries.append(value)
+                yield key
+
+    @property
+    def codec_id(self):
+        """returns a unique key based on this structure of compressor"""
+        return "pressio:" + str(hash(frozenset(self._recursive_keys(self._get_config()))))
+
+
+    def _get_config(self):
+        lp_options = pressio.metrics_get_options(self._metric)
+        options = _pressio_to_python(lp_options)
+        pressio.options_free(lp_options)
+        return options
+
+
+    def get_config(self):
+        """get runtime time options"""
+        options = self._get_config()
+        return {
+            "id": self.codec_id,
+            "metric_id": self._metric_id,
+            "early_config": options,
+            "metrics_config": options,
+            "name": pressio.metrics_get_name(self._metric).decode()
+        }

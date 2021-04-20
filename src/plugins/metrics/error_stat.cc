@@ -25,68 +25,68 @@ namespace error_stat {
     double value_max;
     double value_std;
     double value_mean;
+    uint64_t num_elements;
   };
 
   struct compute_metrics{
     template <class ForwardIt1, class ForwardIt2>
     metrics operator()(ForwardIt1 input_begin, ForwardIt1 input_end, ForwardIt2 input2_begin, ForwardIt2 input2_end)
     {
-      using value_type = typename std::iterator_traits<ForwardIt1>::value_type;
-      static_assert(std::is_same<typename std::iterator_traits<ForwardIt1>::value_type, value_type>::value, "the iterators must have the same type");
+      metrics m{};
       double sum_of_squared_error = 0;
       double sum_of_difference = 0;
       double sum_of_error = 0;
       double sum_of_values_squared =0;
       double sum = 0;
-      size_t num_elements = 0;
-      auto value_min = *input_begin; 
-      auto value_max = *input_begin;
-      auto diff_min = *input_begin - *input2_begin;
-      auto diff_max = diff_min;
-      auto error_min = std::abs(double(*input_begin) - double(*input2_begin));
-      auto error_max = std::abs(double(diff_min));
-      while(input_begin != input_end && input2_begin != input2_end) {
-        auto diff = *input_begin - *input2_begin;
-        auto error = std::abs(double(diff));
-        auto squared_error = error*error;
+      if(input_begin != nullptr && input2_begin != nullptr) {
+        auto value_min = *input_begin; 
+        auto value_max = *input_begin;
+        auto diff_min = *input_begin - *input2_begin;
+        auto diff_max = diff_min;
+        auto error_min = std::abs(double(*input_begin) - double(*input2_begin));
+        auto error_max = std::abs(double(diff_min));
+        while(input_begin != input_end && input2_begin != input2_end) {
+          auto diff = *input_begin - *input2_begin;
+          auto error = std::abs(double(diff));
+          auto squared_error = error*error;
 
-        sum += *input_begin;
-        sum_of_values_squared += (*input_begin * *input_begin);
-        sum_of_difference += diff;
-        sum_of_error += error;
-        sum_of_squared_error += squared_error;
-        value_min = std::min(value_min, *input_begin);
-        value_max = std::max(value_max, *input_begin);
-        diff_min = std::min(diff, diff_min);
-        diff_max = std::max(diff, diff_max);
-        error_max = std::max(error, error_max);
-        error_min = std::min(error, error_min);
-        ++num_elements;
+          sum += *input_begin;
+          sum_of_values_squared += (*input_begin * *input_begin);
+          sum_of_difference += diff;
+          sum_of_error += error;
+          sum_of_squared_error += squared_error;
+          value_min = std::min(value_min, *input_begin);
+          value_max = std::max(value_max, *input_begin);
+          diff_min = std::min(diff, diff_min);
+          diff_max = std::max(diff, diff_max);
+          error_max = std::max(error, error_max);
+          error_min = std::min(error, error_min);
+          ++m.num_elements;
 
-        ++input_begin;
-        ++input2_begin;
+          ++input_begin;
+          ++input2_begin;
+        }
+        m.mse = sum_of_squared_error/m.num_elements;
+        m.rmse = sqrt(m.mse);
+        m.average_difference = sum_of_difference/m.num_elements;
+        m.average_error = sum_of_error/m.num_elements;
+
+        m.value_min = value_min;
+        m.value_max = value_max;
+        m.value_mean = sum/static_cast<double>(m.num_elements);
+        m.value_std = std::sqrt((sum_of_values_squared - ((sum*sum)/static_cast<double>(m.num_elements))) / static_cast<double>(m.num_elements));
+        m.value_range = value_max-value_min;
+
+        m.difference_range = diff_max - diff_min;
+        m.error_range = error_max - error_min;
+
+        m.min_error = error_min;
+        m.max_error = error_max;
+        m.min_rel_error = error_min/m.value_range;
+        m.max_rel_error = error_max/m.value_range;
+
+        m.psnr = -20.0*log10(sqrt(m.mse)/m.value_range);
       }
-      metrics m;
-      m.mse = sum_of_squared_error/num_elements;
-      m.rmse = sqrt(m.mse);
-      m.average_difference = sum_of_difference/num_elements;
-      m.average_error = sum_of_error/num_elements;
-
-      m.value_min = value_min;
-      m.value_max = value_max;
-      m.value_mean = sum/static_cast<double>(num_elements);
-      m.value_std = std::sqrt((sum_of_values_squared - ((sum*sum)/static_cast<double>(num_elements))) / static_cast<double>(num_elements));
-      m.value_range = value_max-value_min;
-
-      m.difference_range = diff_max - diff_min;
-      m.error_range = error_max - error_min;
-
-      m.min_error = error_min;
-      m.max_error = error_max;
-      m.min_rel_error = error_min/m.value_range;
-      m.max_rel_error = error_max/m.value_range;
-
-      m.psnr = -20.0*log10(sqrt(m.mse)/m.value_range);
 
       return m;
     }
@@ -122,7 +122,9 @@ class error_stat_plugin : public libpressio_metrics_plugin {
         set(opt, "error_stat:average_error", (*err_metrics).average_error);
         set(opt, "error_stat:difference_range", (*err_metrics).difference_range);
         set(opt, "error_stat:error_range", (*err_metrics).error_range);
+        set(opt, "error_stat:n", (*err_metrics).num_elements);
       } else {
+        set_type(opt, "error_stat:n", pressio_option_uint64_type);
         set_type(opt, "error_stat:psnr", pressio_option_double_type);
         set_type(opt, "error_stat:mse", pressio_option_double_type);
         set_type(opt, "error_stat:rmse", pressio_option_double_type);
