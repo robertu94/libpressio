@@ -33,9 +33,10 @@ namespace {
 }
 
 int libpressio_compressor_plugin::check_options(struct pressio_options const& options) {
-  set_error(0, "");
+  clear_error();
 
-  if(metrics_plugin) metrics_plugin->begin_check_options(&options);
+  if(metrics_plugin)
+    metrics_plugin->begin_check_options(&options);
 
   struct pressio_options my_options = get_options();
   auto my_keys = get_keys(my_options, prefix());
@@ -56,13 +57,15 @@ int libpressio_compressor_plugin::check_options(struct pressio_options const& op
   }
 
   auto ret =  check_options_impl(options);
-  if(metrics_plugin) metrics_plugin->end_check_options(&options, ret);
+  if(metrics_plugin)
+    metrics_plugin->end_check_options(&options, ret);
 
   return ret;
 }
 
 struct pressio_options libpressio_compressor_plugin::get_configuration() const {
-  if(metrics_plugin) metrics_plugin->begin_get_configuration();
+  if(metrics_plugin)
+    metrics_plugin->begin_get_configuration();
   auto ret = get_configuration_impl();
   if(metrics_plugin) { 
     ret.copy_from(metrics_plugin->get_configuration());
@@ -71,37 +74,79 @@ struct pressio_options libpressio_compressor_plugin::get_configuration() const {
   return ret;
 }
 
+struct pressio_options libpressio_compressor_plugin::get_documentation() const {
+  if(metrics_plugin)
+    metrics_plugin->begin_get_documentation();
+  auto ret = get_documentation_impl();
+  set(ret, "pressio:thread_safe", "level of thread safety provided by the compressor");
+  set(ret, "pressio:stability", "level of stablity provided by the compressor; see the README for libpressio");
+  if(metrics_plugin) { 
+    ret.copy_from(metrics_plugin->get_documentation());
+    set_meta_docs(ret, get_metrics_key_name(), "metrics to collect when using the compressor", metrics_plugin);
+    metrics_plugin->end_get_documentation(ret);
+  }
+  return ret;
+}
+
 struct pressio_options libpressio_compressor_plugin::get_options() const {
-  if(metrics_plugin) metrics_plugin->begin_get_options();
+  if(metrics_plugin)
+    metrics_plugin->begin_get_options();
   pressio_options opts;
   set_meta(opts, get_metrics_key_name(), metrics_id, metrics_plugin);
+  set(opts, "metrics:errors_fatal", metrics_errors_fatal);
+  set(opts, "metrics:copy_compressor_results", metrics_copy_impl_results);
   opts.copy_from(get_options_impl());
-  if(metrics_plugin) metrics_plugin->end_get_options(&opts);
+  if(metrics_plugin)
+    metrics_plugin->end_get_options(&opts);
   return opts;
 }
 
 int libpressio_compressor_plugin::set_options(struct pressio_options const& options) {
-  set_error(0, "");
-  if(metrics_plugin) metrics_plugin->begin_set_options(options);
+  clear_error();
+  if(metrics_plugin) {
+    if(metrics_plugin->begin_set_options(options) != 0 && metrics_errors_fatal) {
+      set_error(metrics_plugin->error_code(), metrics_plugin->error_msg());
+      return error_code();
+    }
+  }
   get_meta(options, get_metrics_key_name(), metrics_plugins(), metrics_id, metrics_plugin);
+  get(options, "metrics:errors_fatal", &metrics_errors_fatal);
+  get(options, "metrics:copy_compressor_results", &metrics_copy_impl_results);
   auto ret = set_options_impl(options);
-  if(metrics_plugin) metrics_plugin->end_set_options(options, ret);
+  if(metrics_plugin) {
+    if(metrics_plugin->end_set_options(options, ret) != 0 && metrics_errors_fatal) {
+      set_error(metrics_plugin->error_code(), metrics_plugin->error_msg());
+      return error_code();
+    }
+  }
   return ret;
 }
 
 int libpressio_compressor_plugin::compress(const pressio_data *input, struct pressio_data* output) {
-  set_error(0, "");
-  if(metrics_plugin) metrics_plugin->begin_compress(input, output);
+  clear_error();
+  if(metrics_plugin) {
+    if(metrics_plugin->begin_compress(input, output) != 0 && metrics_errors_fatal) {
+      set_error(metrics_plugin->error_code(), metrics_plugin->error_msg());
+      return error_code();
+    }
+  }
   auto ret = compress_impl(input, output);
-  if(metrics_plugin) metrics_plugin->end_compress(input, output, ret);
+  if(metrics_plugin) {
+    if(metrics_plugin->end_compress(input, output, ret) != 0 && metrics_errors_fatal) {
+      set_error(metrics_plugin->error_code(), metrics_plugin->error_msg());
+      return error_code();
+    }
+  }
   return ret;
 }
 
 int libpressio_compressor_plugin::decompress(const pressio_data *input, struct pressio_data* output) {
-  set_error(0, "");
-  if(metrics_plugin) metrics_plugin->begin_decompress(input, output);
+  clear_error();
+  if(metrics_plugin)
+    metrics_plugin->begin_decompress(input, output);
   auto ret = decompress_impl(input, output);
-  if(metrics_plugin) metrics_plugin->end_decompress(input, output, ret);
+  if(metrics_plugin)
+    metrics_plugin->end_decompress(input, output, ret);
   return ret;
 }
 
@@ -109,12 +154,15 @@ int libpressio_compressor_plugin::check_options_impl(struct pressio_options cons
 
 
 struct pressio_options libpressio_compressor_plugin::get_metrics_results() const {
-  pressio_options metrics_plugin_results;
-  if(metrics_plugin) {
-    metrics_plugin_results = metrics_plugin->get_metrics_results();
+  pressio_options results_impl = get_metrics_results_impl();
+  pressio_options results;
+  if(metrics_copy_impl_results) {
+    results.copy_from(results_impl);
   }
-  metrics_plugin_results.copy_from(get_metrics_results_impl());
-  return metrics_plugin_results;
+  if(metrics_plugin) {
+    results.copy_from(metrics_plugin->get_metrics_results(results_impl));
+  }
+  return results;
 }
 
 struct pressio_metrics libpressio_compressor_plugin::get_metrics() const {
@@ -138,10 +186,32 @@ struct pressio_options libpressio_compressor_plugin::get_metrics_options() const
 }
 
 int libpressio_compressor_plugin::set_metrics_options(struct pressio_options const& options) {
-  set_error(0, "");
+  clear_error();
   return metrics_plugin->set_options(options);
 }
 
 struct pressio_options libpressio_compressor_plugin::get_metrics_results_impl() const {
   return {};
+}
+
+int libpressio_compressor_plugin::compress_many_impl(compat::span<const pressio_data* const> const& inputs, compat::span<pressio_data*> & outputs) {
+    //default returns an error to indicate the option is unsupported;
+    if(inputs.size() == 1 && outputs.size() == 1) {
+      return compress_impl(inputs.front(), outputs.front());
+    } else 
+    return set_error(1, "decompress_many not supported");
+  }
+
+int libpressio_compressor_plugin::decompress_many_impl(compat::span<const pressio_data* const> const& inputs, compat::span<pressio_data* >& outputs) {
+    //default returns an error to indicate the option is unsupported;
+    if(inputs.size() == 1 && outputs.size() == 1) {
+      return decompress_impl(inputs.front(), outputs.front());
+    } else 
+    return set_error(1, "decompress_many not supported");
+  }
+
+
+void libpressio_compressor_plugin::set_name(std::string const& new_name) {
+    pressio_configurable::set_name(new_name);
+    metrics_plugin->set_name(new_name + "/" + metrics_plugin->prefix());
 }

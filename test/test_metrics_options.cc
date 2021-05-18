@@ -25,8 +25,13 @@ public:
     options.set("hasoptions:value", value);
     return options;
   }
+  pressio_options get_documentation_impl() const override {
+    pressio_options options;
+    options.set("hasoptions:value", "dummy constant");
+    return options;
+  }
 
-  pressio_options get_metrics_results() const override {
+  pressio_options get_metrics_results(pressio_options const &options) const override {
     return {};
   }
   std::unique_ptr<libpressio_metrics_plugin> clone() override {

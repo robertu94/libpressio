@@ -1,6 +1,7 @@
 #include <cmath>
 #include "pressio_data.h"
 #include "pressio_options.h"
+#include "pressio_compressor.h"
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/options.h"
@@ -66,10 +67,10 @@ namespace error_stat {
           ++input_begin;
           ++input2_begin;
         }
-        m.mse = sum_of_squared_error/m.num_elements;
+        m.mse = sum_of_squared_error/static_cast<double>(m.num_elements);
         m.rmse = sqrt(m.mse);
-        m.average_difference = sum_of_difference/m.num_elements;
-        m.average_error = sum_of_error/m.num_elements;
+        m.average_difference = sum_of_difference/static_cast<double>(m.num_elements);
+        m.average_error = sum_of_error/static_cast<double>(m.num_elements);
 
         m.value_min = value_min;
         m.value_max = value_max;
@@ -96,14 +97,46 @@ namespace error_stat {
 class error_stat_plugin : public libpressio_metrics_plugin {
 
   public:
-    void begin_compress(const struct pressio_data * input, struct pressio_data const * ) override {
+    int begin_compress_impl(const struct pressio_data * input, struct pressio_data const * ) override {
       input_data = pressio_data::clone(*input);
+      return 0;
     }
-    void end_decompress(struct pressio_data const*, struct pressio_data const* output, int ) override {
-      err_metrics = pressio_data_for_each<error_stat::metrics>(input_data, *output, error_stat::compute_metrics{});      
+    int end_decompress_impl(struct pressio_data const*, struct pressio_data const* output, int ) override {
+      err_metrics = pressio_data_for_each<error_stat::metrics>(input_data, *output, error_stat::compute_metrics{});
+      return 0;
     }
 
-    struct pressio_options get_metrics_results() const override {
+    struct pressio_options get_configuration() const override {
+      pressio_options opts;
+      set(opts, "pressio:stability", "stable");
+      set(opts, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+      return opts;
+    }
+
+
+    struct pressio_options get_documentation_impl() const override {
+      pressio_options opt;
+      set(opt, "pressio:description", "Basic error statistics that can be computed in in one pass");
+      set(opt, "error_stat:psnr", "peak signal to noise ratio");
+      set(opt, "error_stat:mse", "mean squared error");
+      set(opt, "error_stat:rmse", "root mean squared error");
+      set(opt, "error_stat:value_mean", "the mean of the input values");
+      set(opt, "error_stat:value_std", "standard deviation of the input values");
+      set(opt, "error_stat:value_min", "minimum of the input values");
+      set(opt, "error_stat:value_max", "maximum of the input values");
+      set(opt, "error_stat:value_range", "the range of the input values");
+      set(opt, "error_stat:min_error", "the minimum absolute difference");
+      set(opt, "error_stat:max_error", "the maximum absolute difference");
+      set(opt, "error_stat:min_rel_error", "the minimum absolute difference relative to the input value range");
+      set(opt, "error_stat:max_rel_error", "the maximum absolute difference relative to the input value range");
+      set(opt, "error_stat:average_difference", "the average difference");
+      set(opt, "error_stat:average_error", "the average absolute difference");
+      set(opt, "error_stat:difference_range", "the range of the differences");
+      set(opt, "error_stat:error_range", "the range of the absolute differences");
+      set(opt, "error_stat:n", "the number of input values");
+      return opt;
+    }
+    pressio_options get_metrics_results(pressio_options const &) const override {
       pressio_options opt;
       if(err_metrics) {
         set(opt, "error_stat:psnr", (*err_metrics).psnr);

@@ -1,6 +1,7 @@
 #include <cmath>
 #include "pressio_data.h"
 #include "pressio_options.h"
+#include "pressio_compressor.h"
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/options.h"
@@ -9,8 +10,8 @@
 
 namespace pearson {
   struct pearson_metrics {
-    double r;
-    double r2;
+    double r = 0.0;
+    double r2 = 0.0;
   };
 
   struct compute_metrics{
@@ -69,19 +70,37 @@ class pearsons_plugin : public libpressio_metrics_plugin
 {
 
 public:
-  void begin_compress(const struct pressio_data* input,
+  int begin_compress_impl(const struct pressio_data* input,
                       struct pressio_data const*) override
   {
     input_data = pressio_data::clone(*input);
+    return 0;
   }
-  void end_decompress(struct pressio_data const*,
+  int end_decompress_impl(struct pressio_data const*,
                       struct pressio_data const* output, int) override
   {
     err_metrics = pressio_data_for_each<pearson::pearson_metrics>(input_data, *output,
                                                        pearson::compute_metrics{});
+    return 0;
   }
 
-  struct pressio_options get_metrics_results() const override
+  struct pressio_options get_configuration() const override {
+    pressio_options opts;
+    set(opts, "pressio:stability", "stable");
+    set(opts, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+    return opts;
+  }
+
+
+  pressio_options get_documentation_impl() const override {
+    pressio_options opts;
+    set(opts, "pressio:description", "computes the Pearson's coefficient of correlation and determination");
+    set(opts, "pearson:r", "the Pearson's coefficient of correlation");
+    set(opts, "pearson:r2", "the Pearson's coefficient of determination");
+    return opts;
+  }
+
+  pressio_options get_metrics_results(pressio_options const &) const override
   {
     pressio_options opt;
     if (err_metrics) {

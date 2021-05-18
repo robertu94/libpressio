@@ -29,9 +29,24 @@ class fpzip_plugin: public libpressio_compressor_plugin {
     return options;
   };
 
+  struct pressio_options 	get_documentation_impl () const override {
+    pressio_options options;
+    set(options, "pressio:description", R"(The FPZip lossless floating point compressor.  See also
+      Lindstrom, Peter G, and USDOE National Nuclear Security Administration. FPZIP. Computer software.
+      Version 1.2.0. June 10, 2017. https://www.osti.gov//servlets/purl/1579935. 
+      doi:https://doi.org/10.11578/dc.20191219.2.)");
+    set(options, "fpzip:codec_version", "the FPZip Codec version");
+    set(options, "fpzip:library_version", "the FPZip library_version");
+    set(options, "fpzip:data_model", "the FPZip data model");
+    set(options, "fpzip:has_header", "output a header on compression");
+    set(options, "fpzip:prec", "the precision to use");
+    return options;
+  };
+
   struct pressio_options 	get_configuration_impl () const override {
     pressio_options options;
     set(options, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+    set(options, "pressio:stability", "stable");
     set(options, "fpzip:codec_version", fpzip_codec_version);
     set(options, "fpzip:library_version", fpzip_library_version);
     set(options, "fpzip:data_model", fpzip_data_model);

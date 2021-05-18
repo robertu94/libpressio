@@ -6,7 +6,7 @@ extern "C" {
 #define LIBPRESSIO_DTYPE
 
 
-/*! \file  
+/*! \file  pressio_dtype.h
  *  \brief Information on types used by libpressio
  */
 

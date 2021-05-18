@@ -3,6 +3,7 @@
 #include <iterator>
 #include "pressio_data.h"
 #include "pressio_options.h"
+#include "pressio_compressor.h"
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/options.h"
@@ -236,20 +237,37 @@ kolmogorov(double x)
 class ks_test_plugin : public libpressio_metrics_plugin {
 
 public:
-  void begin_compress(const struct pressio_data* input,
+  int begin_compress_impl(const struct pressio_data* input,
                       struct pressio_data const*) override
   {
     input_data = pressio_data::clone(*input);
+    return 0;
   }
-  void end_decompress(struct pressio_data const*,
+  int end_decompress_impl(struct pressio_data const*,
                       struct pressio_data const* output, int) override
   {
       auto result = pressio_data_for_each<KSTestResult>(input_data, *output, ks_test{});
       pvalue = result.prob;
       d = result.D;
+      return 0;
   }
 
-  struct pressio_options get_metrics_results() const override
+  struct pressio_options get_configuration() const override {
+    pressio_options opts;
+    set(opts, "pressio:stability", "stable");
+    set(opts, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+    return opts;
+  }
+
+  struct pressio_options get_documentation_impl() const override {
+    pressio_options opt;
+    set(opt, "pressio:description", "Kolmogorov–Smirnov test for difference in distributions");
+    set(opt, "ks_test:pvalue", "the p-value of the test statistic");
+    set(opt, "ks_test:d", "the test statistic");
+    return opt;
+  }
+
+  pressio_options get_metrics_results(pressio_options const &) const override
   {
     pressio_options opt;
     set(opt, "ks_test:pvalue", pvalue);

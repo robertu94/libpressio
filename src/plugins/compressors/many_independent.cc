@@ -25,8 +25,20 @@ public:
   {
     struct pressio_options options;
     set_meta(options, "many_independent:compressor", compressor_id, compressor);
+    set(options, "many_independent:bcast_outputs", bcast_outputs);
     options.copy_from(manager.get_options());
     options.copy_from(subgroups.get_options());
+    return options;
+  }
+
+  struct pressio_options get_documentation_impl() const override
+  {
+    struct pressio_options options;
+    set_meta_docs(options, "many_independent:compressor", "compressor to parallelize using MPI", compressor);
+    set(options, "many_independent:bcast_outputs", "true if all ranks have the same outputs otherwise just the root has the outputs");
+    set(options, "pressio:description", R"(Uses MPI to compress multiple buffers in parallel)");
+    options.copy_from(manager.get_documentation());
+    options.copy_from(subgroups.get_documentation());
     return options;
   }
 
@@ -34,6 +46,7 @@ public:
   {
     struct pressio_options options;
     set(options, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+    set(options, "pressio:stability", "experimental");
     options.copy_from(manager.get_configuration());
     options.copy_from(subgroups.get_configuration());
     return options;
@@ -44,6 +57,7 @@ public:
     pressio_data tmp;
 
     get_meta(options, "many_independent:compressor", compressor_plugins(), compressor_id, compressor);
+    get(options, "many_independent:bcast_outputs", &bcast_outputs);
     manager.set_options(options);
     subgroups.set_options(options);
     return 0;
@@ -126,7 +140,7 @@ private:
     std::end(subgroups.effective_input_groups()));
 
     int status = 0;
-    manager.work_queue(
+    status = manager.work_queue(
         std::begin(indicies), std::end(indicies),
         [this, &inputs, &outputs, &action](request_t request, distributed::queue::TaskManager<request_t, MPI_Comm>& task_manager) {
           //setup the work groups
@@ -174,6 +188,11 @@ private:
             }
           }
         });
+    if(status == 0 && bcast_outputs) {
+      for (size_t i = 0; i < inputs.size(); ++i) {
+        manager.bcast(outputs[i], 0);
+      }
+    }
     return status;
   }
 
@@ -184,6 +203,7 @@ private:
       );
   pressio_compressor compressor = compressor_plugins().build("noop");
   std::string compressor_id = "noop";
+  int bcast_outputs = 1;
 };
 
 static pressio_register compressor_many_fields_plugin(compressor_plugins(), "many_independent", []() {

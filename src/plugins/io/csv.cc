@@ -98,10 +98,22 @@ struct csv_io : public libpressio_io_plugin
     return 0;
   }
   
+  virtual struct pressio_options get_documentation_impl() const override{
+    pressio_options opts;
+    set(opts, "pressio:description", "read CSV files");
+    set(opts,  "io:path", "path to the file");
+    set(opts, "csv:headers", "headers for the CSV file used for writing");
+    set(opts, "csv:skip_rows", "number of rows to skip while reading");
+    set(opts, "csv:line_delim", "delimiter for rows");
+    set(opts, "csv:field_delim", "delimiter for columns");
+    return opts;
+  }
+
   virtual struct pressio_options get_configuration_impl() const override{
-    return {
-      {"pressio:thread_safe",  static_cast<int32_t>(pressio_thread_safety_multiple)}
-    };
+    pressio_options opts;
+    set(opts, "pressio:stability", "stable");
+    set(opts,"pressio:thread_safe",  static_cast<int32_t>(pressio_thread_safety_multiple));
+    return opts;
   }
 
   virtual int set_options_impl(struct pressio_options const& opts) override{

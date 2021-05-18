@@ -2,6 +2,7 @@
 #include <mutex>
 #include "std_compat/memory.h"
 #include <nlohmann/json.hpp>
+#include "pressio_compressor.h"
 #include <curl/curl.h>
 #include <curl/easy.h>
 
@@ -104,6 +105,20 @@ extern_proc_results launch(std::vector<std::string> const& full_command) const o
   int set_options(pressio_options const& options) override {
     get(options, "external:connection_string", &connection_string);
     return 0;
+  }
+
+  struct pressio_options get_configuration() const override {
+    struct pressio_options options;
+    set(options, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+    set(options, "pressio:stability", "stable");
+    return options;
+  }
+
+  pressio_options get_documentation_impl() const override {
+    pressio_options options;
+    set(options, "pressio:description", "request metrics from a remote server");
+    set(options, "external:connection_string", "curl connection string");
+    return options;
   }
 
   pressio_options get_options() const override {

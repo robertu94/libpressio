@@ -28,8 +28,17 @@ class digit_rounding_plugin: public libpressio_compressor_plugin {
     struct pressio_options get_configuration_impl() const override {
       struct pressio_options options;
       set(options, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+      set(options, "pressio:stability", "stable");
       return options;
     }
+
+    struct pressio_options get_documentation_impl() const override {
+      struct pressio_options options;
+      set(options, "pressio:description", R"(Various methods for digit rounding which improve compression)");
+      set(options, "digit_rounding:prec", "The prec parameter of digit rounding (a number between 0 and 64)");
+      return options;
+    }
+
 
     int set_options_impl(struct pressio_options const& options) override {
       get(options, "digit_rounding:prec", &prec);

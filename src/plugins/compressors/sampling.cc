@@ -25,9 +25,24 @@ class sample_compressor_plugin: public libpressio_compressor_plugin {
     struct pressio_options get_configuration_impl() const override {
       struct pressio_options options;
       set(options,"pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
-      set(options, "sampling:modes", std::vector<std::string>{"wr", "wor", "decimate"});
+      set(options,"pressio:stability", "unstable");
+      set(options, "sample:mode", std::vector<std::string>{"wr", "wor", "decimate"});
       return options;
     }
+
+    struct pressio_options get_documentation_impl() const override {
+      struct pressio_options options;
+      set(options, "pressio:description", "A \"compressor\" which samples the data by row");
+      set(options, "sample:mode", R"(what kind of sampling to apply
+      +  wr -- with replacement
+      +  wor -- without replacement
+      +  decimate -- sample every kth entry
+      )");
+      set(options, "sample:seed", "the seed to use");
+      set(options, "sample:rate", "the sampling rate to use");
+      return options;
+    }
+
 
     int set_options_impl(struct pressio_options const& options) override {
       get(options, "sample:mode", &mode);
@@ -45,8 +60,8 @@ class sample_compressor_plugin: public libpressio_compressor_plugin {
         sample_size = std::floor(rate * total_rows);
       } else if( mode =="decimate") {
         do {
-          sample_size = std::ceil(static_cast<double>(total_rows)/++take_rows);
-        } while(sample_size/static_cast<double>(total_rows) > rate);
+          sample_size = std::ceil(static_cast<double>(total_rows)/static_cast<double>(++take_rows));
+        } while(rate < static_cast<double>(sample_size) / static_cast<double>(total_rows));
       } else {
         return invalid_mode(mode);
       }

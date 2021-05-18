@@ -3,6 +3,7 @@
 #include <memory>
 #include <sstream>
 #include <mpi.h>
+#include "pressio_compressor.h"
 #include "std_compat/memory.h"
 
 struct external_mpispawn: public libpressio_launch_plugin {
@@ -53,6 +54,23 @@ extern_proc_results launch(std::vector<std::string> const& full_command) const o
     get(options, "external:commands", &commands);
     return 0;
   }
+
+  struct pressio_options get_configuration() const override {
+    struct pressio_options options;
+    set(options, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+    set(options, "pressio:stability", "stable");
+    return options;
+  }
+
+
+  pressio_options get_documentation_impl() const override {
+    pressio_options options;
+    set(options, "pressio:description", "spawn the child process using MPI_Comm_spawn on MPI_COMM_SELF");
+    set(options, "external:workdir", "working directory for the child process");
+    set(options, "external:commands", "list of strings passed to exec");
+    return options;
+  }
+
 
   pressio_options get_options() const override {
     pressio_options options;

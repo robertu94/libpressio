@@ -184,6 +184,21 @@ struct pressio {
   }
 
   /**
+   * Returns an metrics module
+   * \param[in] id name of the compressor to request
+   * \returns an instance of compressor registered at name, or nullptr on error
+   */
+  template <class Str>
+  std::unique_ptr<libpressio_metrics_plugin> get_metric(Str id) {
+    auto ret = metrics_plugins().build(id);
+    if(!ret) {
+        set_error(2, std::string("failed to construct metrics plugin: ") + id);
+        return nullptr;
+    }
+    return ret;
+  }
+
+  /**
    * Returns a composite metric for all the metric_ids requested
    * \param[in] first iterator to the first metric_id requested
    * \param[in] last iterator to the last metric_id requested

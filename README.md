@@ -134,7 +134,7 @@ For information on writing a metrics plugin see [Writing a Metrics Plugin](@ref 
 
 ### Compressor Plugins
 
-See the [compressor settings page](@ref pressiooptions) for information on how to configure them.
+See the [compressor settings page](@ref compressors) for information on how to configure them.
 
 + `sz` -- the SZ error bounded lossy compressor
 + `zfp` -- the ZFP error bounded lossy compressor
@@ -153,7 +153,7 @@ See the [compressor settings page](@ref pressiooptions) for information on how t
 
 ### Metrics Plugins
 
-See the [metrics results page](@ref metricsresults) for information on what they produce
+See the [metrics results page](@ref metrics) for information on what they produce
 
 + `time` -- time information on each compressor API
 + `error_stat` -- statistics on the difference between the uncompressed and decompressed values that can be computed in one pass in linear time.
@@ -353,7 +353,7 @@ More documentation can be found in the doc-strings for the high level bindings.
 
 LibPressio uses a key-value system to refer to configuration settings.
 
-Each compressor may find specific configuration settings for its specific compressor with settings beginning with its compressor id as prefix (i.e. configurations for SZ begin with `sz:`).  [Refer to the specific compressors documentation](@ref pressiooptions) for further documentation for each settings.
+Each compressor may find specific configuration settings for its specific compressor with settings beginning with its compressor id as prefix (i.e. configurations for SZ begin with `sz:`).  [Refer to the specific compressors documentation](@ref compressors) for further documentation for each settings.
 
 The prefixes `metrics:` and `pressio:` are reserved for future use.
 

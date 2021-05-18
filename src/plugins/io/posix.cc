@@ -10,6 +10,7 @@
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/io.h"
 #include "std_compat/memory.h"
+#include "pressio_posix.h"
 
 
 
@@ -100,7 +101,7 @@ struct posix_io : public libpressio_io_plugin {
     if(path) {
         auto ret = pressio_io_data_path_read(data, path->c_str());
         if(ret == nullptr) {
-          if(errno != 0)set_error(2, strerror(errno));
+          if(errno != 0)set_error(2, errno_to_error());
           else set_error(3, "invalid dims");
         }
         return ret;
@@ -108,7 +109,7 @@ struct posix_io : public libpressio_io_plugin {
     if(file_ptr) {
       auto ret = pressio_io_data_fread(data, *file_ptr);
       if(ret == nullptr) {
-        if(errno != 0)set_error(2, strerror(errno));
+        if(errno != 0)set_error(2, errno_to_error());
         else set_error(3, "invalid dims");
       }
       return ret;
@@ -116,7 +117,7 @@ struct posix_io : public libpressio_io_plugin {
     if(fd) {
       auto ret = pressio_io_data_read(data, *fd);
       if(ret == nullptr) {
-        if(errno != 0) set_error(2, strerror(errno));
+        if(errno != 0) set_error(2, errno_to_error());
         else set_error(3, "invalid dims");
       }
       return ret;
@@ -131,7 +132,7 @@ struct posix_io : public libpressio_io_plugin {
     if(path) {
       int ret = pressio_io_data_path_write(data, path->c_str()) != data->size_in_bytes();
       if(ret) {
-        if(errno) return set_error(2, strerror(errno));
+        if(errno) return set_error(2, errno_to_error());
         else return set_error(3, "unknown failure");
       }
       return ret;
@@ -139,7 +140,7 @@ struct posix_io : public libpressio_io_plugin {
     else if(file_ptr) {
       int ret = pressio_io_data_fwrite(data, *file_ptr) != data->size_in_bytes();
       if(ret) {
-        if(errno) set_error(2, strerror(errno));
+        if(errno) set_error(2, errno_to_error());
         else set_error(3, "unknown failure");
       }
       return ret;
@@ -147,7 +148,7 @@ struct posix_io : public libpressio_io_plugin {
     else if(fd) {
       int ret = pressio_io_data_write(data, *fd) != data->size_in_bytes();
       if(ret) {
-        if(errno) set_error(2, strerror(errno));
+        if(errno) set_error(2, errno_to_error());
         else set_error(3, "unknown failure");
       }
       return ret;
@@ -155,9 +156,10 @@ struct posix_io : public libpressio_io_plugin {
     return invalid_configuration();
   }
   virtual struct pressio_options get_configuration_impl() const override{
-    return {
-      {"pressio:thread_safe",  static_cast<int32_t>(pressio_thread_safety_single)}
-    };
+    pressio_options opts;
+    set(opts, "pressio:stability", "stable");
+    set(opts, "pressio:thread_safe",  static_cast<int32_t>(pressio_thread_safety_single));
+    return opts;
   }
 
   virtual int set_options_impl(struct pressio_options const& options) override{
@@ -182,6 +184,14 @@ struct posix_io : public libpressio_io_plugin {
       this->fd = {};
     }
     return 0;
+  }
+  struct pressio_options get_documentation_impl() const override{
+    pressio_options opts;
+    set(opts, "pressio:description", "POSIX io");
+    set(opts, "io:path", "path on the file system to read/write from");
+    set(opts, "io:file_pointer", "FILE* to read/write from");
+    set(opts, "io:file_descriptor", "posix file descriptor to read/write from");
+    return opts;
   }
   virtual struct pressio_options get_options_impl() const override{
     pressio_options opts;

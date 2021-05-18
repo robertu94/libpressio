@@ -1,4 +1,5 @@
 #include "pressio_options.h"
+#include "pressio_compressor.h"
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
@@ -6,78 +7,106 @@
 
 class printer_plugin : public libpressio_metrics_plugin {
 public:
-
-  void begin_check_options(struct pressio_options const* ) override {
+  int begin_check_options_impl(struct pressio_options const* ) override {
     log.emplace_back("begin_check_options");
+    return 0;
   }
 
-  void end_check_options(struct pressio_options const*, int ) override {
+  int end_check_options_impl(struct pressio_options const*, int ) override {
     log.emplace_back("end_check_options");
+    return 0;
   }
 
-  void begin_get_options() override {
+  int begin_get_options_impl() override {
     log.emplace_back("begin_get_options");
+    return 0;
   }
 
-  void end_get_options(struct pressio_options const* ) override {
+  int end_get_options_impl(struct pressio_options const* ) override {
     log.emplace_back("end_get_options");
+    return 0;
   }
 
-  void begin_get_configuration() override {
+  int begin_get_configuration_impl() override {
     log.emplace_back("begin_get_configuration");
+    return 0;
   }
 
-  void end_get_configuration(struct pressio_options const& ) override {
+  int end_get_configuration_impl(struct pressio_options const& ) override {
     log.emplace_back("end_get_configuration");
+    return 0;
   }
 
-
-  void begin_set_options(struct pressio_options const& ) override {
+  int begin_set_options_impl(struct pressio_options const& ) override {
     log.emplace_back("begin_set_options");
+    return 0;
   }
 
-  void end_set_options(struct pressio_options const& , int ) override {
+  int end_set_options_impl(struct pressio_options const& , int ) override {
     log.emplace_back("end_set_options");
+    return 0;
   }
 
-  void begin_compress(const struct pressio_data * , struct pressio_data const * ) override {
+  int begin_compress_impl(const struct pressio_data * , struct pressio_data const * ) override {
     log.emplace_back("begin_compress");
+    return 0;
   }
 
-  void end_compress(struct pressio_data const* , pressio_data const * , int ) override {
+  int end_compress_impl(struct pressio_data const* , pressio_data const * , int ) override {
     log.emplace_back("end_compress");
+    return 0;
   }
 
-  void begin_decompress(struct pressio_data const* , pressio_data const* ) override {
+  int begin_decompress_impl(struct pressio_data const* , pressio_data const* ) override {
     log.emplace_back("begin_decompress");
+    return 0;
   }
 
-  void end_decompress(struct pressio_data const* , pressio_data const* , int ) override {
+  int end_decompress_impl(struct pressio_data const* , pressio_data const* , int ) override {
     log.emplace_back("end_decompress");
+    return 0;
   }
 
-  virtual void begin_compress_many(compat::span<const pressio_data* const> const&,
+  int begin_compress_many_impl(compat::span<const pressio_data* const> const&,
                                    compat::span<const pressio_data* const> const& ) override {
     log.emplace_back("begin_compress_many");
+    return 0;
   }
 
-  void end_compress_many(compat::span<const pressio_data* const> const&,
+  int end_compress_many_impl(compat::span<const pressio_data* const> const&,
                                    compat::span<const pressio_data* const> const&, int) override {
     log.emplace_back("end_compress_many");
+    return 0;
   }
 
-  virtual void begin_decompress_many(compat::span<const pressio_data* const> const&,
+  int begin_decompress_many_impl(compat::span<const pressio_data* const> const&,
                                    compat::span<const pressio_data* const> const&) override {
     log.emplace_back("begin_decompress_many");
+    return 0;
   }
 
-  virtual void end_decompress_many(compat::span<const pressio_data* const> const&,
+  int end_decompress_many_impl(compat::span<const pressio_data* const> const&,
                                    compat::span<const pressio_data* const> const&, int ) override {
     log.emplace_back("end_decompress_many");
+    return 0;
   }
 
 
-  struct pressio_options get_metrics_results() const override {
+  struct pressio_options get_configuration() const override {
+    pressio_options opts;
+    set(opts, "pressio:stability", "stable");
+    set(opts, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+    return opts;
+  }
+
+  struct pressio_options get_documentation_impl() const override {
+    pressio_options opt;
+    set(opt, "pressio:description", "metric that records the operations preformed");
+    set(opt, "printer:log", "log of operations preformed on this metrics object");
+    return opt;
+  }
+
+  pressio_options get_metrics_results(pressio_options const &) const override {
     pressio_options opt;
     set(opt, "printer:log", log);
     return opt;

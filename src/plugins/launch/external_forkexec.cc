@@ -5,6 +5,7 @@
 #include <iterator>
 #include <sys/wait.h>
 #include <errno.h>
+#include "pressio_compressor.h"
 #include "std_compat/memory.h"
 
 struct external_forkexec: public libpressio_launch_plugin {
@@ -163,6 +164,21 @@ extern_proc_results launch(std::vector<std::string> const& full_command) const o
     get(options, "external:workdir", &workdir);
     get(options, "external:commands", &commands);
     return 0;
+  }
+
+  struct pressio_options get_configuration() const override {
+    struct pressio_options options;
+    set(options, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+    set(options, "pressio:stability", "stable");
+    return options;
+  }
+
+  pressio_options get_documentation_impl() const override {
+    pressio_options options;
+    set(options, "pressio:description", "spawn the child process using fork+exec");
+    set(options, "external:workdir", "working directory for the child process");
+    set(options, "external:commands", "list of strings passed to exec");
+    return options;
   }
 
   pressio_options get_options() const override {

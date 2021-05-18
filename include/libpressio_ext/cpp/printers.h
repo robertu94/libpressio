@@ -9,10 +9,40 @@
 #include "options.h"
 #include "data.h"
 #include "pressio_dtype.h"
+#include "pressio_compressor.h"
 
 /** \file 
  *  \brief C++ stream compatible IO functions
  *  */
+
+/**
+ * print the thread safety entries
+ */
+template <class CharT = char, class Traits = std::char_traits<CharT>>
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& out, pressio_thread_safety const& safety) {
+  switch(safety) {
+    case pressio_thread_safety_single: return out << "single";
+    case pressio_thread_safety_multiple: return out << "multiple";
+    case pressio_thread_safety_serialized: return out << "serialized";
+    default: throw std::logic_error("invalid thread safety");
+  }
+}
+
+
+/**
+ * print the thread safety entries
+ */
+template <class CharT = char, class Traits = std::char_traits<CharT>>
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& out, pressio_options_key_status const& safety) {
+  switch(safety) {
+    case pressio_options_key_set: return out << "set";
+    case pressio_options_key_exists: return out << "exists";
+    case pressio_options_key_does_not_exist: return out << "does not exist";
+    default: throw std::logic_error("invalid key status");
+  }
+}
 
 /**
  * print the elements of an iterable container

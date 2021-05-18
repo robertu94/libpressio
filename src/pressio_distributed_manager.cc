@@ -60,7 +60,10 @@ compat::optional<std::vector<size_t>> distributed_build_groups(const unsigned in
 
 
 int distributed_world_size() {
-  int size;
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  int size = 1, flag = 0;
+  MPI_Initialized(&flag);
+  if(flag) {
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+  }
   return size;
 }

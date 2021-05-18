@@ -100,6 +100,13 @@ class libpressio_compressor_plugin :public pressio_configurable, public pressio_
    * \see pressio_compressor_get_configuration for the semantics this function should obey
    */
   struct pressio_options get_configuration() const override final;
+
+  /** get the documentation of a compressor, handles metrics calls
+   *
+   * \see pressio_compressor_get_documentation for the semantics this function should obey
+   */
+  struct pressio_options get_documentation() const override final;
+
   /** sets a set of options for the compressor, handles metrics calls
    * \param[in] options to set for configuration of the compressor
    * \see pressio_compressor_set_options for the semantics this function should obey
@@ -130,15 +137,29 @@ class libpressio_compressor_plugin :public pressio_configurable, public pressio_
    * \param[in,out] out_end iterator to the end of the outputs
    * \see pressio_compressor_compress for the semantics this function should obey
    */
-  template <class InputRandomAccessIterator, class OutputRandomAccessIterator>
-  int compress_many(InputRandomAccessIterator in_begin, InputRandomAccessIterator in_end,
-                    OutputRandomAccessIterator out_begin, OutputRandomAccessIterator out_end) {
-    set_error(0, "");
+  template <class InputRandomAccessIterator,
+            class InputRandomAccessIteratorEnd,
+            class OutputRandomAccessIterator,
+            class OutputRandomAccessIteratorEnd
+           >
+  int compress_many(InputRandomAccessIterator in_begin, InputRandomAccessIteratorEnd in_end,
+                    OutputRandomAccessIterator out_begin, OutputRandomAccessIteratorEnd out_end) {
+    clear_error();
     compat::span<const pressio_data* const> inputs(in_begin, in_end);
     compat::span<pressio_data*> outputs(out_begin, out_end);
-    if(metrics_plugin) metrics_plugin->begin_compress_many(inputs, outputs);
+    if(metrics_plugin) {
+      if(metrics_plugin->begin_compress_many(inputs, outputs) != 0 && metrics_errors_fatal) {
+        set_error(metrics_plugin->error_code(), metrics_plugin->error_msg());
+        return error_code();
+      }
+    }
     auto ret = compress_many_impl(inputs, outputs);
-    if(metrics_plugin) metrics_plugin->end_compress_many(inputs, outputs, ret);
+    if(metrics_plugin) {
+      if(metrics_plugin->end_compress_many(inputs, outputs, ret) != 0 && metrics_errors_fatal) {
+        set_error(metrics_plugin->error_code(), metrics_plugin->error_msg());
+        return error_code();
+      }
+    }
     return ret;
   }
   /** decompress a pressio_data buffer
@@ -148,15 +169,29 @@ class libpressio_compressor_plugin :public pressio_configurable, public pressio_
    * \param[in,out] out_end iterator to the end of the outputs
    * \see pressio_compressor_decompress for the semantics this function should obey
    */
-  template <class InputRandomAccessIterator, class OutputRandomAccessIterator>
-  int decompress_many(InputRandomAccessIterator in_begin, InputRandomAccessIterator in_end,
-                      OutputRandomAccessIterator out_begin, OutputRandomAccessIterator out_end) {
-    set_error(0, "");
+  template <class InputRandomAccessIterator,
+            class InputRandomAccessIteratorEnd,
+            class OutputRandomAccessIterator,
+            class OutputRandomAccessIteratorEnd
+           >
+  int decompress_many(InputRandomAccessIterator in_begin, InputRandomAccessIteratorEnd in_end,
+                      OutputRandomAccessIterator out_begin, OutputRandomAccessIteratorEnd out_end) {
+    clear_error();
     compat::span<const pressio_data* const> inputs(in_begin, in_end);
     compat::span<pressio_data*> outputs(out_begin, out_end);
-    if(metrics_plugin) metrics_plugin->begin_decompress_many(inputs, outputs);
+    if(metrics_plugin) {
+      if(metrics_plugin->begin_decompress_many(inputs, outputs) != 0 && metrics_errors_fatal) {
+        set_error(metrics_plugin->error_code(), metrics_plugin->error_msg());
+        return error_code();
+      }
+    }
     auto ret = decompress_many_impl(inputs, outputs);
-    if(metrics_plugin) metrics_plugin->end_decompress_many(inputs, outputs, ret);
+    if(metrics_plugin) {
+      if(metrics_plugin->end_decompress_many(inputs, outputs, ret) != 0 && metrics_errors_fatal) {
+        set_error(metrics_plugin->error_code(), metrics_plugin->error_msg());
+        return error_code();
+      }
+    }
     return ret;
   }
 
@@ -187,10 +222,7 @@ class libpressio_compressor_plugin :public pressio_configurable, public pressio_
   /**
    * sets the name of the metrics plugin
    */
-  void set_name(std::string const& new_name) override final {
-    pressio_configurable::set_name(new_name);
-    metrics_plugin->set_name(new_name + "/" + metrics_plugin->prefix());
-  }
+  void set_name(std::string const& new_name) override final;
 
 
   protected:
@@ -207,6 +239,11 @@ class libpressio_compressor_plugin :public pressio_configurable, public pressio_
    * \see pressio_options_set_string to set a string value
    */
   virtual struct pressio_options get_options_impl() const=0;
+  /** get a set of documentation for the compressor.
+   *
+   * \see pressio_compressor_get_documentation for the semantics this function should obey
+   */
+  virtual struct pressio_options get_documentation_impl() const=0;
   /** get a set of compile-time configurations for the compressor.
    *
    * \see pressio_compressor_get_configuration for the semantics this function should obey
@@ -246,28 +283,18 @@ class libpressio_compressor_plugin :public pressio_configurable, public pressio_
   /**
    * decompress multiple data buffers
    */
-  virtual int decompress_many_impl(compat::span<const pressio_data* const> const& inputs, compat::span<pressio_data* >& outputs) {
-    //default returns an error to indicate the option is unsupported;
-    if(inputs.size() == 1 && outputs.size() == 1) {
-      return decompress_impl(inputs.front(), outputs.front());
-    } else 
-    return set_error(1, "decompress_many not supported");
-  }
+  virtual int decompress_many_impl(compat::span<const pressio_data* const> const& inputs, compat::span<pressio_data* >& outputs);
 
   /**
    * compress multiple data buffers
    */
-  virtual int compress_many_impl(compat::span<const pressio_data* const> const& inputs, compat::span<pressio_data*> & outputs) {
-    //default returns an error to indicate the option is unsupported;
-    if(inputs.size() == 1 && outputs.size() == 1) {
-      return compress_impl(inputs.front(), outputs.front());
-    } else 
-    return set_error(1, "decompress_many not supported");
-  }
+  virtual int compress_many_impl(compat::span<const pressio_data* const> const& inputs, compat::span<pressio_data*> & outputs);
 
   private:
   pressio_metrics metrics_plugin;
   std::string metrics_id;
+  int32_t metrics_errors_fatal = 1;
+  int32_t metrics_copy_impl_results = 1;
 };
 
 /**

@@ -1,5 +1,6 @@
 #include "pressio_data.h"
 #include "pressio_options.h"
+#include "pressio_compressor.h"
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/options.h"
@@ -31,7 +32,7 @@ namespace diff_pdf {
         m.max_diff = std::max(m.max_diff, diff);
         m.min_diff = std::min(m.min_diff, diff);
       }
-      m.interval = (m.max_diff - m.min_diff)/pdf_intervals;
+      m.interval = (m.max_diff - m.min_diff)/static_cast<double >(pdf_intervals);
       if (m.interval == 0) {
         return m;
       }
@@ -58,11 +59,13 @@ namespace diff_pdf {
 class diff_pdf_plugin : public libpressio_metrics_plugin {
 
   public:
-    void begin_compress(const struct pressio_data * input, struct pressio_data const * ) override {
+    int begin_compress_impl(const struct pressio_data * input, struct pressio_data const * ) override {
       input_data = pressio_data::clone(*input);
+      return 0;
     }
-    void end_decompress(struct pressio_data const*, struct pressio_data const* output, int ) override {
-      err_metrics = pressio_data_for_each<diff_pdf::metrics>(input_data, *output, diff_pdf::compute_metrics{pdf_intervals});      
+    int end_decompress_impl(struct pressio_data const*, struct pressio_data const* output, int ) override {
+      err_metrics = pressio_data_for_each<diff_pdf::metrics>(input_data, *output, diff_pdf::compute_metrics{pdf_intervals});
+      return 0;
     }
 
     int set_options(pressio_options const& opts) override {
@@ -75,7 +78,26 @@ class diff_pdf_plugin : public libpressio_metrics_plugin {
       return opts;
     }
 
-    struct pressio_options get_metrics_results() const override {
+
+    struct pressio_options get_configuration() const override {
+      pressio_options opts;
+      set(opts, "pressio:stability", "stable");
+      set(opts, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+      return opts;
+    }
+
+    struct pressio_options get_documentation_impl() const override {
+      pressio_options opt;
+      set(opt, "pressio:description", "computes a histogram of the error distribution");
+      set(opt, "diff_pdf:histogram", "the counts for the histogram bins");
+      set(opt, "diff_pdf:intervals", "the number of intervals to use in the histogram");
+      set(opt, "diff_pdf:interval", "the width of an interval in the histogram");
+      set(opt, "diff_pdf:min_diff", "the smallest difference observed");
+      set(opt, "diff_pdf:max_diff", "the largest difference observed");
+      return opt;
+    }
+
+    pressio_options get_metrics_results(pressio_options const &) const override {
       pressio_options opt;
       if(err_metrics) {
         set(opt, "diff_pdf:histogram", err_metrics->histogram);
@@ -83,7 +105,10 @@ class diff_pdf_plugin : public libpressio_metrics_plugin {
         set(opt, "diff_pdf:min_diff", err_metrics->min_diff);
         set(opt, "diff_pdf:max_diff", err_metrics->max_diff);
       } else {
-        set_type(opt, "diff_pdf:pdf", pressio_option_data_type);
+        set_type(opt, "diff_pdf:histogram", pressio_option_data_type);
+        set_type(opt, "diff_pdf:interval", pressio_option_double_type);
+        set_type(opt, "diff_pdf:min_diff", pressio_option_double_type);
+        set_type(opt, "diff_pdf:max_diff", pressio_option_double_type);
       }
       return opt;
     }

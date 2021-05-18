@@ -59,11 +59,18 @@ class pressio_distributed_manager: public pressio_configurable, public pressio_e
    * \param[in] masterfn the function master tasks should execute
    */
   template <class TaskRandomIt, class MasterFn, class WorkerFn>
-  void work_queue(TaskRandomIt begin, TaskRandomIt end, WorkerFn&& workerfn, MasterFn&& masterfn) {
+  int work_queue(TaskRandomIt begin, TaskRandomIt end, WorkerFn&& workerfn, MasterFn&& masterfn) {
+    clear_error();
+    int initalized = 0;
+    MPI_Initialized(&initalized);
+    if(!initalized) {
+      return set_error(1, "MPI must be initialized");
+    }
     distributed::queue::work_queue_options<typename distributed::queue::iterator_to_request_type<TaskRandomIt>::type> options(comm);
     options.set_root(root);
     options.set_groups(groups);
     distributed::queue::work_queue( options, begin, end, std::forward<WorkerFn>(workerfn), std::forward<MasterFn>(masterfn));
+    return error_code();
   }
 
   /**
@@ -132,12 +139,23 @@ class pressio_distributed_manager: public pressio_configurable, public pressio_e
     return rank;
   }
 
+  struct pressio_options get_documentation() const override {
+    pressio_options opts;
+    set(opts, "distributed:root", "which rank should be considered the root?");
+    set(opts, "distributed:mpi_comm", "which MPI communicator to use");
+    set(opts, "distributed:n_masters", "How many ranks are assigned to as task masters?");
+    set(opts, "distributed:n_worker_groups", "How many groups of workers are there?");
+    set(opts, "distributed:groups", "maps the each rank to either a worker or master processes group a la MPI_Comm_split");
+    return opts;
+  }
+
   /**
    * provides options for the manager for the user to configure
    * \returns the options
    */
   struct pressio_options 	get_options () const override {
     pressio_options opts;
+    set(opts, "distributed:root", root);
     set(opts, "distributed:mpi_comm", (void*)comm);
     if(max_masters > 1 || max_masters == 0) {
       set(opts, "distributed:n_masters", n_masters);

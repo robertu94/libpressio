@@ -40,6 +40,12 @@ public:
     }
     return 0;
   }
+  struct pressio_options get_documentation() const override {
+    pressio_options opts;
+    set(opts, "subgroups:input_data_groups", "which inputs get mapped to which sub compression operations");
+    set(opts, "subgroups:output_data_groups", "which outputs get mapped to which sub compression operations");
+    return opts;
+  }
   struct pressio_options get_options() const override {
     pressio_options opts;
     set(opts, "subgroups:input_data_groups", pressio_data(std::begin(input_data_groups), std::end(input_data_groups)));

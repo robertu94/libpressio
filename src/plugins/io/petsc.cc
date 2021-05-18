@@ -148,7 +148,10 @@ struct petsc_io : public libpressio_io_plugin {
     return 0;
   }
   virtual struct pressio_options get_configuration_impl() const override {
-    return {{"pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_single)}};
+    pressio_options opts;
+    set(opts, "pressio:stability", "stable");
+    set(opts, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_single));
+    return opts;
   }
 
   virtual int set_options_impl(struct pressio_options const &opts) override {
@@ -167,6 +170,16 @@ struct petsc_io : public libpressio_io_plugin {
 
     return 0;
   }
+  virtual struct pressio_options get_documentation_impl() const override{
+    pressio_options opts;
+    set(opts, "pressio:description", "reads PETSc Matrix files");
+    set(opts, "io:path", "the path to the file on disk");
+    set(opts, "petsc:matrix_format", "the petsc matrix format");
+    set(opts, "petsc:viewer_format", "the petsc viewer format");
+    set(opts, "petsc:viewer_type", "the petsc viewer type");
+    return opts;
+  }
+
   virtual struct pressio_options get_options_impl() const override {
     pressio_options opts;
     set(opts, "io:path", path);
@@ -217,9 +230,6 @@ static std::vector<std::pair<std::string, PetscViewerFormat>> petsc_viewer_forma
                  PETSC_VIEWER_ASCII_INDEX,
                  PETSC_VIEWER_ASCII_DENSE,
                  PETSC_VIEWER_ASCII_MATRIXMARKET,
-                 PETSC_VIEWER_ASCII_VTK,
-                 PETSC_VIEWER_ASCII_VTK_CELL,
-                 PETSC_VIEWER_ASCII_VTK_COORDS,
                  PETSC_VIEWER_ASCII_PCICE,
                  PETSC_VIEWER_ASCII_PYTHON,
                  PETSC_VIEWER_ASCII_FACTOR_INFO,

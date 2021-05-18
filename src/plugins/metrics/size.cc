@@ -1,4 +1,5 @@
 #include "pressio_data.h"
+#include "pressio_compressor.h"
 #include "pressio_options.h"
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/pressio.h"
@@ -7,23 +8,24 @@
 
 class size_plugin : public libpressio_metrics_plugin {
   public:
-
-    void end_compress(struct pressio_data const* input, pressio_data const* output, int) override {
-      if(!output) return;
+    int end_compress_impl(struct pressio_data const* input, pressio_data const* output, int) override {
+      if(!output) return set_error(1, "missing output");
       uncompressed_size = pressio_data_get_bytes(input);
       compressed_size = pressio_data_get_bytes(output);
-      compression_ratio =  static_cast<double>(*uncompressed_size)/ *compressed_size;
-      bit_rate = static_cast<double>(*compressed_size * 8 /*bits_per_byte*/)/pressio_data_num_elements(input);
+      compression_ratio =  static_cast<double>(*uncompressed_size)/ static_cast<double>(*compressed_size);
+      bit_rate = static_cast<double>(*compressed_size * 8 /*bits_per_byte*/)/static_cast<double>(pressio_data_num_elements(input));
+      return 0;
     }
 
-    void end_decompress(struct pressio_data const* , pressio_data const* output, int) override {
+    int end_decompress_impl(struct pressio_data const* , pressio_data const* output, int) override {
       decompressed_size = pressio_data_get_bytes(output);
+      return 0;
     }
 
-  void end_compress_many(compat::span<const pressio_data* const> const& inputs,
+    int end_compress_many_impl(compat::span<const pressio_data* const> const& inputs,
                                    compat::span<const pressio_data* const> const& outputs, int ) override {
    
-      if(outputs.empty()) return;
+      if(outputs.empty()) return set_error(1, "missing outputs");
       uncompressed_size = 0;
       compressed_size = 0;
       size_t num_elements = 0;
@@ -35,20 +37,40 @@ class size_plugin : public libpressio_metrics_plugin {
         *compressed_size += pressio_data_get_bytes(output);
       }
 
-      compression_ratio =  static_cast<double>(*uncompressed_size)/ *compressed_size;
-      bit_rate = static_cast<double>(*compressed_size * 8 /*bits_per_byte*/)/num_elements;
+      compression_ratio =  static_cast<double>(*uncompressed_size)/ static_cast<double>(*compressed_size);
+      bit_rate = static_cast<double>(*compressed_size * 8 /*bits_per_byte*/)/static_cast<double>(num_elements);
+      return 0;
   }
 
-
-  void end_decompress_many(compat::span<const pressio_data* const> const& ,
+  int end_decompress_many_impl(compat::span<const pressio_data* const> const& ,
                                    compat::span<const pressio_data* const> const& outputs, int ) override {
     decompressed_size = 0;
     for (auto const& output : outputs) {
       *decompressed_size += pressio_data_get_bytes(output);
     }
+    return 0;
   }
 
-  struct pressio_options get_metrics_results() const override {
+  
+  struct pressio_options get_configuration() const override {
+    pressio_options opts;
+    set(opts, "pressio:stability", "stable");
+    set(opts, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+    return opts;
+  }
+
+  struct pressio_options get_documentation_impl() const override {
+    pressio_options opt;
+    set(opt, "pressio:description", "captures the size of compressed buffers");
+    set(opt, "size:compressed_size", "compressed size in bytes");
+    set(opt, "size:uncompressed_size", "uncompressed size in bytes");
+    set(opt, "size:decompressed_size", "decompressed_size in bytes");
+    set(opt, "size:compression_ratio", "uncompressed_size/compressed_size");
+    set(opt, "size:bit_rate", bit_rate);
+    return opt;
+  }
+
+  pressio_options get_metrics_results(pressio_options const &) const override {
     pressio_options opt;
 
     auto set_or_double = [&opt, this](const char* key, compat::optional<double> size) {

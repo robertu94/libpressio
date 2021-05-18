@@ -16,6 +16,9 @@ namespace impl {
   };
 }
 
+/**
+ * \returns the size of a size_t dtype
+ */
 constexpr pressio_dtype pressio_size_type() {
 	static_assert(sizeof(size_t) <= 8, "unexpected type");
 	return (

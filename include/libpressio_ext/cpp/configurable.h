@@ -3,6 +3,7 @@
 #include <string>
 #include <utility>
 #include "options.h"
+#include "pressio_compressor.h"
 
 /**
  * \file
@@ -50,6 +51,12 @@ class pressio_configurable {
    * \see pressio_compressor_get_configuration for the semantics this function should obey
    */
   virtual struct pressio_options get_configuration() const;
+
+  /** get the documentation strings for a compressor
+   *
+   * \see pressio_compressor_get_documentation for the semantics this function should obey
+   */
+  virtual struct pressio_options get_documentation() const;
 
   /** checks for extra arguments set for the configurable object.
    *
@@ -135,6 +142,40 @@ class pressio_configurable {
   set_meta(pressio_options& options, StringType&& key, std::string const& current_id, Wrapper const& current_value, Args&&... args) const {
     set(options, std::forward<StringType>(key), current_id);
     options.copy_from(current_value->get_options(std::forward<Args>(args)...));
+  }
+
+  /**
+   * helper function to set docs on a pressio_options structure the values associated with a meta-object
+   *
+   * \param[in] options the options structure to set
+   * \param[in] key the key for the name of the child meta-object
+   * \param[in] docstring docs for the purpose of the meta object
+   * \param[in] current_value value of the current meta-object
+   * \param[in] args the remaining args needed for some meta modules
+   */
+  template<class StringType, class Wrapper, class... Args>
+  void
+  set_meta_docs(pressio_options& options, StringType&& key, std::string const& docstring, Wrapper const& current_value, Args&&... args) const {
+    set(options, std::forward<StringType>(key), docstring);
+    options.copy_from(current_value->get_documentation(std::forward<Args>(args)...));
+  }
+
+  /**
+   * helper function to set on a pressio_options structure the docs associated with a collection of meta-objects
+   *
+   * \param[in] options the options structure to set
+   * \param[in] key the key for the name of the child meta-object
+   * \param[in] docstring docs for the purpose of this collection of meta objects
+   * \param[in] current_values value of the current meta-object
+   * \param[in] args the remaining args needed for some meta modules
+   */
+  template<class StringType, class Wrapper, class... Args>
+  void
+  set_meta_many_docs(pressio_options& options, StringType&& key, std::string const& docstring, std::vector<Wrapper> const& current_values, Args&&... args) const {
+    set(options, std::forward<StringType>(key), docstring);
+    for (auto const& wrapper : current_values) {
+      options.copy_from(wrapper->get_documentation(std::forward<Args>(args)...));
+    }
   }
 
   /**
@@ -237,6 +278,17 @@ class pressio_configurable {
 
 
   protected:
+
+  /**
+   * 
+   * \returns that returns the thread_safe configuration parameter
+   */
+  static pressio_thread_safety get_threadsafe(pressio_configurable const& c) {
+    int32_t thread_safe = pressio_thread_safety_single;
+    c.get_configuration().get("pressio:thread_safe", &thread_safe);
+    return pressio_thread_safety(thread_safe);
+  }
+
   /**
    * \returns the string the metrics key name
    * \internal

@@ -34,10 +34,25 @@ public:
   {
     struct pressio_options options;
     set(options, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+    set(options, "pressio:stability", "experimental");
     options.copy_from(manager.get_configuration());
     options.copy_from(subgroups.get_configuration());
     return options;
   }
+
+  struct pressio_options get_documentation_impl() const override
+  {
+    struct pressio_options options;
+    set(options, "pressio:description", R"(Uses MPI to compress multiple buffers in parallel using results of previously
+      successful compressions to guide future compressions)");
+    set_meta_docs(options, "many_dependent:compressor", "the name of the compressor to pipeline over using MPI", compressor);
+    set(options, "many_dependent:to_names", "list of options to set on each launch");
+    set(options, "many_dependent:from_names", "list of metrics to pull the next set of configurations from");
+    options.copy_from(manager.get_documentation());
+    options.copy_from(subgroups.get_documentation());
+    return options;
+  }
+
 
   int set_options_impl(struct pressio_options const& options) override
   {
@@ -76,14 +91,14 @@ public:
     );
     size_t outstanding = 1;
     size_t next_task = 1;
-    int ret = 0;
 
     if(subgroups.normalize_and_validate(inputs, outputs)) {
       return set_error(subgroups.error_code(), subgroups.error_msg());
     }
 
 
-    manager.work_queue(
+    int ret = 0;
+    ret = manager.work_queue(
         std::begin(requests), std::end(requests),
         [&inputs, &outputs, this](request_t request, distributed::queue::TaskManager<request_t, MPI_Comm>& task_manager) {
 
@@ -114,14 +129,14 @@ public:
             output_data.emplace_back(std::move(*i));
           }
 
-          pressio_options options = compressor->get_metrics_results();
+          pressio_options metrics_results = compressor->get_metrics_results();
           int error_code = compressor->error_code();
           std::string error_msg = compressor->error_msg();
 
           pressio_options new_options;
           for (size_t i = 0; i < to_names.size(); ++i) {
-            auto option_it = options.find(from_names[i]);
-            if(option_it != options.end()){
+            auto option_it = metrics_results.find(from_names[i]);
+            if(option_it != metrics_results.end()){
               new_options.set(from_names[i], option_it->second);
             } else {
               error_code = 3;

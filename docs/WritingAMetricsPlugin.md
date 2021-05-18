@@ -22,7 +22,7 @@ First we will include a number of required headers:
 
 ```
 
-Next, we need to write our class.  Since we want to count the number of data buffers of each type that we compress, we will hook the `begin_compress` method.  Alternatively we could also hook the `end_compress` method.  Once we have the counts, we report them out using the `get_metrics_results` function.  We do this like so:
+Next, we need to write our class.  Since we want to count the number of data buffers of each type that we compress, we will hook the `begin_compress_impl` method.  Alternatively we could also hook the `end_compress_impl` method.  Once we have the counts, we report them out using the `get_metrics_results` function.  We do this like so:
 
 ```cpp
 class counting_metric: public libpressio_metrics_plugin {
@@ -42,7 +42,7 @@ class counting_metric: public libpressio_metrics_plugin {
   }
 
   //increment the count at the beginning of each compress
-  void begin_compress(pressio_data const* input, pressio_data const*) override {
+  void begin_compress_impl(pressio_data const* input, pressio_data const*) override {
     counts[input->dtype()]++;
   }
 

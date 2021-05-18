@@ -26,6 +26,16 @@ public:
   {
     struct pressio_options options;
     set(options, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+    set(options, "pressio:stability", "unstable");
+    return options;
+  }
+
+  struct pressio_options get_documentation_impl() const override
+  {
+    struct pressio_options options;
+    set_meta_docs(options, "transpose:compressor", "Compressor to use after transpose is applied", compressor);
+    set(options, "pressio:description", "Meta-compressor that applies a transpose before compression");
+    set(options, "transpose:axis", "how to reorder the dimensions, contains indicies 0..(N_DIMS-1)");
     return options;
   }
 

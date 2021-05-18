@@ -3,6 +3,7 @@
 #include <functional>
 #include "libpressio_ext/cpp/pressio.h"
 #include "pressio_options.h"
+#include "pressio_compressor.h"
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/options.h"
 #include "std_compat/memory.h"
@@ -16,7 +17,7 @@
 
 class composite_plugin : public libpressio_metrics_plugin {
   public:
-  composite_plugin(std::vector<pressio_metrics>&& plugins) :
+  explicit composite_plugin(std::vector<pressio_metrics>&& plugins) :
     plugins(std::move(plugins))
     {
       std::transform(std::begin(this->plugins),
@@ -33,100 +34,114 @@ class composite_plugin : public libpressio_metrics_plugin {
 
   composite_plugin():
     composite_plugin(std::vector<pressio_metrics>{}) {}
-  void begin_check_options(struct pressio_options const* options) override {
+  int begin_check_options_impl(struct pressio_options const* options) override {
     for (auto& plugin : plugins) {
       plugin->begin_check_options(options);
     }
+    return 0;
   }
 
-  void end_check_options(struct pressio_options const* options, int rc) override {
+  int end_check_options_impl(struct pressio_options const* options, int rc) override {
     for (auto& plugin : plugins) {
       plugin->end_check_options(options, rc);
     }
+    return 0;
   }
 
-  void begin_get_options() override {
+  int begin_get_options_impl() override {
     for (auto& plugin : plugins) {
       plugin->begin_get_options();
     }
+    return 0;
   }
 
-  void end_get_options(struct pressio_options const* options) override {
+  int end_get_options_impl(struct pressio_options const* options) override {
     for (auto& plugin : plugins) {
       plugin->end_get_options(options);
     }
+    return 0;
   }
 
-  void begin_set_options(struct pressio_options const& options) override {
+  int begin_set_options_impl(struct pressio_options const& options) override {
     for (auto& plugin : plugins) {
       plugin->begin_set_options(options);
     }
+    return 0;
   }
 
-  void end_set_options(struct pressio_options const& options, int rc) override {
+  int end_set_options_impl(struct pressio_options const& options, int rc) override {
     for (auto& plugin : plugins) {
       plugin->end_set_options(options, rc);
     }
+    return 0;
   }
 
-  void begin_compress(const struct pressio_data * input, struct pressio_data const * output) override {
+  int begin_compress_impl(const struct pressio_data * input, struct pressio_data const * output) override {
     for (auto& plugin : plugins) {
       plugin->begin_compress(input, output);
     }
+    return 0;
   }
 
-  void end_compress(struct pressio_data const* input, pressio_data const * output, int rc) override {
+  int end_compress_impl(struct pressio_data const* input, pressio_data const * output, int rc) override {
     for (auto& plugin : plugins) {
       plugin->end_compress(input, output, rc);
     }
+    return 0;
   }
 
-  void begin_decompress(struct pressio_data const* input, pressio_data const* output) override {
+  int begin_decompress_impl(struct pressio_data const* input, pressio_data const* output) override {
     for (auto& plugin : plugins) {
       plugin->begin_decompress(input, output);
     }
+    return 0;
   }
 
-  void end_decompress(struct pressio_data const* input, pressio_data const* output, int rc) override {
+  int end_decompress_impl(struct pressio_data const* input, pressio_data const* output, int rc) override {
     for (auto& plugin : plugins) {
       plugin->end_decompress(input, output, rc);
     }
+    return 0;
   }
 
-  void begin_compress_many(compat::span<const pressio_data* const> const& inputs,
+  int begin_compress_many_impl(compat::span<const pressio_data* const> const& inputs,
                                    compat::span<const pressio_data* const> const& outputs) override {
     for (auto& plugin : plugins) {
       plugin->begin_compress_many(inputs, outputs);
     }
+    return 0;
   }
 
-  void end_compress_many(compat::span<const pressio_data* const> const& inputs,
+  int end_compress_many_impl(compat::span<const pressio_data* const> const& inputs,
                                    compat::span<const pressio_data* const> const& outputs, int rc) override {
     for (auto& plugin : plugins) {
       plugin->end_compress_many(inputs, outputs, rc);
     }
-   
+
+    return 0;
   }
 
-  void begin_decompress_many(compat::span<const pressio_data* const> const& inputs,
+  int begin_decompress_many_impl(compat::span<const pressio_data* const> const& inputs,
                                    compat::span<const pressio_data* const> const& outputs) override {
     for (auto& plugin : plugins) {
       plugin->begin_decompress_many(inputs, outputs);
     }
+    return 0;
   }
 
-  void end_decompress_many(compat::span<const pressio_data* const> const& inputs,
+  int end_decompress_many_impl(compat::span<const pressio_data* const> const& inputs,
                                    compat::span<const pressio_data* const> const& outputs, int rc) override {
     for (auto& plugin : plugins) {
       plugin->end_decompress_many(inputs, outputs, rc);
     }
+    return 0;
  
   }
 
-  struct pressio_options get_metrics_results() const override {
+  pressio_options get_metrics_results(pressio_options const &) const override {
     struct pressio_options metrics_result;
     for (auto const& plugin : plugins) {
-      pressio_options plugin_options = plugin->get_metrics_results();
+      pressio_options plugin_options = plugin->get_metrics_results({});
       auto tmp = pressio_options_merge(&metrics_result, &plugin_options);
       metrics_result = std::move(*tmp);
       pressio_options_free(tmp);
@@ -167,11 +182,33 @@ class composite_plugin : public libpressio_metrics_plugin {
     return "composite";
   }
 
+  struct pressio_options get_configuration() const override {
+    pressio_options opts;
+    set(opts, "pressio:stability", "stable");
+    set(opts, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+    return opts;
+  }
+
+
+  pressio_options get_documentation_impl() const override {
+    pressio_options options;
+    set(options, "composite:compression_rate", "compression rate for the compress method, activated by size and time");
+    set(options, "composite:compression_rate_many", "compression rate for the compress_many method, activated by size and time");
+    set(options, "composite:decompression_rate", "decompression rate for the compress method, activated by size and time");
+    set(options, "composite:decompression_rate_many", "decompression rate for the compress_many method, activated by size and time");
+    set(options, "composite:names", "the names to use for the constructed metrics plugins");
+    set(options, "composite:plugins", "the ids to use for the constructed metrics plugins");
+    set(options, "composite:scripts", "a lua script used to compute metrics from other metrics that have been previously computed");
+    set(options, "pressio:description", "meta-metric that runs a set of metrics in sequence");
+
+    return options;
+  }
+
   protected:
   void set_name_impl(std::string const& name) override {
     if(name.empty()) {
-      for (size_t i = 0; i < plugins.size(); ++i) {
-        plugins[i]->set_name(name);
+      for (auto & plugin : plugins) {
+        plugin->set_name(name);
       }
     } else {
       if(not names.empty()) {
@@ -179,8 +216,8 @@ class composite_plugin : public libpressio_metrics_plugin {
           plugins[i]->set_name(name + "/" + names[i]);
         }
       } else {
-        for (size_t i = 0; i < plugins.size(); ++i) {
-          plugins[i]->set_name(name + "/" + plugins[i]->prefix());
+        for (auto & plugin : plugins) {
+          plugin->set_name(name + "/" + plugin->prefix());
         }
       }
     }
@@ -191,11 +228,11 @@ class composite_plugin : public libpressio_metrics_plugin {
   void set_composite_metrics(struct pressio_options& opt) const {
     std::string time_name;
     std::string size_name;
-    for (size_t i = 0; i < plugins.size(); ++i) {
-      if(compat::string_view(plugins[i]->prefix()) == "time") {
-        time_name = plugins[i]->get_name();
-      } else if(compat::string_view(plugins[i]->prefix()) == "size") {
-        size_name = plugins[i]->get_name();
+    for (const auto & plugin : plugins) {
+      if(compat::string_view(plugin->prefix()) == "time") {
+        time_name = plugin->get_name();
+      } else if(compat::string_view(plugin->prefix()) == "size") {
+        size_name = plugin->get_name();
       }
     }
 

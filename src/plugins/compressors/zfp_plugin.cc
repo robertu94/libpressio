@@ -69,9 +69,32 @@ class zfp_plugin: public libpressio_compressor_plugin {
       return options;
     }
 
+    struct pressio_options get_documentation_impl() const override {
+      struct pressio_options options;
+      set(options, "pressio:description", R"(ZFP is an error bounded lossy compressor that uses a transform
+          which is similar to a discrete cosine transform. More information on ZFP can be found on its 
+          [project homepage](https://zfp.readthedocs.io/en/release0.5.5/))");
+      set(options, "zfp:accuracy", "absolute error tolerance for fixed-accuracy mode ");
+      set(options, "zfp:dims", "the dimensionality of the input data, used in fixed-rate mode");
+      set(options, "zfp:execution", "which execution mode to use");
+      set(options, "zfp:maxbits", "maximum number of bits to store per block");
+      set(options, "zfp:maxprec", "maximum number of bit planes to store");
+      set(options, "zfp:minbits", "minimum number of bits to store per block");
+      set(options, "zfp:minexp", "minimum floating point bit plane number to store");
+      set(options, "zfp:mode", "a compact encoding of compressor parmeters");
+      set(options, "zfp:omp_chunk_size", "OpenMP chunk size used in OpenMP mode");
+      set(options, "zfp:omp_threads", "number of OpenMP threads to use in OpenMP mode");
+      set(options, "zfp:precision", "The precision specifies how many uncompressed bits per value to store, and indirectly governs the relative error");
+      set(options, "zfp:rate", "the rate used in fixed rate mode");
+      set(options, "zfp:type", "the type used in fixed rate mode");
+      set(options, "zfp:wra", "write random access used in fixed rate mode");
+      return options;
+    }
+
     struct pressio_options get_configuration_impl() const override {
       struct pressio_options options;
       set(options, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+      set(options, "pressio:stability", "stable");
       return options;
     }
 

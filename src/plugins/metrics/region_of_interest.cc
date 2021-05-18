@@ -1,7 +1,6 @@
-#include <cmath>
-#include <iterator>
 #include <stdexcept>
 #include "pressio_data.h"
+#include "pressio_compressor.h"
 #include "pressio_options.h"
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/metrics.h"
@@ -25,32 +24,32 @@ namespace region_of_interest {
     {
       region_of_interest_metrics m;
       if (start.empty()) {
-        start = std::vector<size_t>(input_dims.size());
+        start = std::vector<size_t>(data_dims.size());
       }
-      if (end.empty()) {
-        end = input_dims;
+      if (stop.empty()) {
+        stop = data_dims;
       }
 
       double input_sum = 0, decomp_sum = 0;
       const size_t n = compat::transform_reduce(
           std::begin(start), std::end(start),
-          std::begin(end),
+          std::begin(stop),
           size_t{0},
-          [](size_t start, size_t stop){ return stop-start; },
+          [](size_t begin, size_t end){ return end - begin; },
           compat::plus<>{}
           );
-      switch (input_dims.size()) {
+      switch (data_dims.size()) {
         case 1:
-          for (size_t i = start[0]; i < end[0]; ++i) {
+          for (size_t i = start[0]; i < stop[0]; ++i) {
             input_sum += input_begin[i];
             decomp_sum += decomp_begin[i];
           }
           break;
         case 2:
           {
-          auto stride = input_dims[1];
-          for (size_t i = start[0]; i < end[0]; ++i) {
-            for (size_t j = start[1]; j < end[1]; ++j) {
+          auto stride = data_dims[1];
+          for (size_t i = start[0]; i < stop[0]; ++i) {
+            for (size_t j = start[1]; j < stop[1]; ++j) {
               auto idx = j + stride * i;
               input_sum += input_begin[idx];
               decomp_sum += decomp_begin[idx];
@@ -60,11 +59,11 @@ namespace region_of_interest {
           break;
         case 3:
           {
-          const auto stride = input_dims[2];
-          const auto stride2 = input_dims[1] * input_dims[2];
-          for (size_t i = start[0]; i < end[0]; ++i) {
-            for (size_t j = start[1]; j < end[1]; ++j) {
-              for (size_t k = start[2]; k < end[2]; ++k) {
+          const auto stride = data_dims[2];
+          const auto stride2 = data_dims[1] * data_dims[2];
+          for (size_t i = start[0]; i < stop[0]; ++i) {
+            for (size_t j = start[1]; j < stop[1]; ++j) {
+              for (size_t k = start[2]; k < stop[2]; ++k) {
                 auto idx =k + j*stride + i*stride2;
                 input_sum += input_begin[idx];
                 decomp_sum += decomp_begin[idx];
@@ -83,8 +82,8 @@ namespace region_of_interest {
       return m;
     }
 
-    std::vector<size_t> const input_dims, decomp_dims;
-    std::vector<size_t> start,end;
+    std::vector<size_t> const data_dims;
+    std::vector<size_t> start, stop;
   };
 }
 
@@ -92,19 +91,21 @@ class region_of_interest_plugin : public libpressio_metrics_plugin
 {
 
 public:
-  void begin_compress(const struct pressio_data* input,
+  int begin_compress_impl(const struct pressio_data* input,
                       struct pressio_data const*) override
   {
     input_data = pressio_data::clone(*input);
+    return 0;
   }
-  void end_decompress(struct pressio_data const*,
+  int end_decompress_impl(struct pressio_data const*,
                       struct pressio_data const* output, int) override
   {
     err_metrics = pressio_data_for_each<region_of_interest::region_of_interest_metrics>( input_data, *output,
-        region_of_interest::compute_metrics{input_data.dimensions(), output->dimensions(), start.to_vector<size_t>(), end.to_vector<size_t>()});
+        region_of_interest::compute_metrics{input_data.dimensions(), start.to_vector<size_t>(), end.to_vector<size_t>()});
+    return 0;
   }
 
-  struct pressio_options get_metrics_results() const override
+  pressio_options get_metrics_results(pressio_options const &) const override
   {
     pressio_options opt;
     set(opt, "region_of_interest:input_average", err_metrics.input_avg);
@@ -114,11 +115,26 @@ public:
     return opt;
   }
 
-  pressio_options get_configuration() const override {
+  struct pressio_options get_configuration() const override {
     pressio_options opts;
     set(opts, "pressio:stability", "unstable");
+    set(opts, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
     return opts;
   }
+
+  struct pressio_options get_documentation_impl() const override
+  {
+    pressio_options opt;
+    set(opt, "pressio:description", "computes the sum and average of a region of interest");
+    set(opt, "region_of_interest:start", "index of the starting location for the region of interest");
+    set(opt, "region_of_interest:end", "index of the ending location for the region of interest");
+    set(opt, "region_of_interest:input_average", "arithmetic mean of the region of interest for the input");
+    set(opt, "region_of_interest:input_sum", "sum of the region of interest for the input");
+    set(opt, "region_of_interest:decomp_average", "arithmetic mean of the region of interest for the decompressed buffer");
+    set(opt, "region_of_interest:decomp_sum", "sum of the region of interest for the decompressed buffer");
+    return opt;
+  }
+
   pressio_options get_options() const override {
     pressio_options opts;
     set(opts, "region_of_interest:start", start);

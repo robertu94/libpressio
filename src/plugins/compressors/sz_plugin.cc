@@ -68,6 +68,7 @@ class sz_plugin: public libpressio_compressor_plugin {
   struct pressio_options get_configuration_impl() const override {
     struct pressio_options options;
     set(options, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_serialized));
+    set(options, "pressio:stability", "stable");
 #ifdef HAVE_RANDOMACCESS
     set(options, "sz:random_access_enabled", 1u);
 #else
@@ -97,6 +98,54 @@ class sz_plugin: public libpressio_compressor_plugin {
         std::back_inserter(vs),
         [](typename decltype(sz_mode_str_to_code)::const_reference m){ return m.first; });
     set(options, "sz:error_bound_mode_str", vs);
+    return options;
+  }
+
+  struct pressio_options get_documentation_impl() const override {
+    struct pressio_options options;
+    set(options, "pressio:description", R"(SZ is an error bounded lossy compressor that uses prediction 
+      based methods to compress data. More information can be found about SZ on its 
+      [project homepage](https://github.com/disheng222/sz).)");
+    set(options, "sz:random_access_enabled", "true if SZ was compiled in random access mode");
+    set(options, "sz:timecmpr", "true if SZ if SZ is compiled in time based compression mode");
+    set(options, "sz:pastri", "true if PASTRI mode was built");
+    set(options, "sz:write_stats", "true if SZ is compiled with compression statistics support");
+
+
+    set(options, "sz:abs_err_bound", "the absolute error bound ");
+    set(options, "sz:accelerate_pw_rel_compression", "trade compression ratio for a faster pw_rel compression");
+    set(options, "sz:app", "access a application specific mode of SZ");
+    set(options, "sz:config_file", "filepath passed to SZ_Init()");
+    set(options, "sz:config_struct", "structure passed to SZ_Init_Params()" );
+    set(options, "sz:data_type", "an internal option to control compression");
+    set(options, "sz:error_bound_mode", "integer code used to determine error bound mode");
+    set(options, "sz:error_bound_mode_str", "human readable string to set the error bound mode");
+    set(options, "sz:exafel:bin_size", "for ROIBIN-SZ, the size of the binning applied");
+    set(options, "sz:exafel:calib_panel", "for ROIBIN-SZ the size of the calibration panel");
+    set(options, "sz:exafel:num_peaks", "for ROIBIN-SZ the number of peaks");
+    set(options, "sz:exafel:peak_size", "for ROIBIN-SZ the size of the peaks");
+    set(options, "sz:exafel:peaks_cols", "for ROIBIN-SZ the list of columns peaks appear in");
+    set(options, "sz:exafel:peaks_rows", "for ROIBIN-SZ the list of rows peaks appear in");
+    set(options, "sz:exafel:peaks_segs", "for ROIBIN-SZ the segments peaks appear in");
+    set(options, "sz:exafel:sz_dim", "for ROIBIN-SZ the SZ dimensionality prefered");
+    set(options, "sz:exafel:tolerance", "for ROIBIN-SZ the tolerance used after binning");
+    set(options, "sz:gzip_mode", "Which mode to pass to GZIP when used");
+    set(options, "sz:lossless_compressor", "Which lossless compressor to use for stage 4");
+    set(options, "sz:max_quant_intervals", "the maximum number of quantization intervals");
+    set(options, "sz:pred_threshold", "an internal option used to control compression");
+    set(options, "sz:prediction_mode", "an internal option used to control compression");
+    set(options, "sz:psnr_err_bound", "the bound on the error in the PSNR");
+    set(options, "sz:pw_rel_err_bound", "the bound on the pointwise relative error");
+    set(options, "sz:quantization_intervals", "the number of quantization intervals to use, 0 means automatic");
+    set(options, "sz:random_access", "internal options to use random access mode when compiled in");
+    set(options, "sz:rel_err_bound", "the value range relative error bound mode");
+    set(options, "sz:sample_distance", "internal option used to control compression");
+    set(options, "sz:segment_size", "internal option used to control compression. number of points in each segement for pw_relBoundRatio");
+    set(options, "sz:snapshot_cmpr_step", "the frequency of preforming single snapshot based compression in time based compression");
+    set(options, "sz:sol_id", "an internal option use d to control compression");
+    set(options, "sz:sz_mode", "SZ Mode either SZ_BEST_COMPRESSION or SZ_BEST_SPEED");
+    set(options, "sz:user_params", "arguments passed to the application specific mode of SZ. Use in conjunction with sz:app");
+    set(options, "sz:protect_value_range", "should the value range be preserved during compression");
     return options;
   }
 

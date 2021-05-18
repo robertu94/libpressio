@@ -36,19 +36,37 @@ struct apply_mask{
 
 class mask_metrics: public libpressio_metrics_plugin {
   public:
-  pressio_options get_metrics_results() const override {
-    return plugin->get_metrics_results();
+    pressio_options get_metrics_results(pressio_options const &options) const override {
+    return plugin->get_metrics_results(options);
   }
 
-  void begin_compress(pressio_data const* input, pressio_data const* output) override {
-    pressio_data masked(pressio_data_for_each<pressio_data>(*input, mask, apply_mask{}));
+  int begin_compress_impl(pressio_data const* input, pressio_data const* output) override {
+    auto masked(pressio_data_for_each<pressio_data>(*input, mask, apply_mask{}));
     plugin->begin_compress(&masked, output);
+    return 0;
   }
 
-  void end_decompress(pressio_data const* input, pressio_data const* output, int rc) override {
-    pressio_data masked(pressio_data_for_each<pressio_data>(*output, mask, apply_mask{}));
+  int end_decompress_impl(pressio_data const* input, pressio_data const* output, int rc) override {
+    auto masked(pressio_data_for_each<pressio_data>(*output, mask, apply_mask{}));
     plugin->end_decompress(input, &masked, rc);
+    return 0;
   }
+
+  struct pressio_options get_configuration() const override {
+    pressio_options opts;
+    set(opts, "pressio:stability", "stable");
+    set(opts, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+    return opts;
+  }
+
+  pressio_options get_documentation_impl() const override {
+    pressio_options opts;
+    set(opts, "pressio:description", "applies to mask to keep only interesting values");
+    set_meta(opts, "mask:metrics", "the metrics to compute after applying the mask", plugin);
+    set(opts, "mask:mask", "the mask to apply; the mask has 1 on values to include");
+    return opts;
+  }
+
 
   pressio_options get_options() const override {
     pressio_options opts;

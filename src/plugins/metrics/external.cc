@@ -1,4 +1,3 @@
-#include <cmath>
 #include <cstdlib>
 #include <string>
 #include <vector>
@@ -6,10 +5,10 @@
 #include <sstream>
 #include <unistd.h>
 #include <chrono>
-#include <ratio>
 #include <iterator>
 #include "pressio_data.h"
 #include "pressio_options.h"
+#include "pressio_compressor.h"
 #include "libpressio_ext/io/pressio_io.h"
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/metrics.h"
@@ -37,15 +36,15 @@ pressio_registry<std::unique_ptr<libpressio_launch_plugin>>& launch_plugins() {
 class external_metric_plugin : public libpressio_metrics_plugin {
 
   public:
-
-    void begin_compress(const struct pressio_data * input, struct pressio_data const * ) override {
+    int begin_compress_impl(const struct pressio_data * input, struct pressio_data const * ) override {
       if((not use_many) and field_names.size() == 1) {
         input_data.resize(1);
         input_data.back() = pressio_data::clone(*input);
       }
+      return 0;
     }
 
-    void begin_compress_many(compat::span<const pressio_data* const> const& inputs,
+    int begin_compress_many_impl(compat::span<const pressio_data* const> const& inputs,
                                    compat::span<const pressio_data* const> const&) override {
       if(use_many or field_names.size() > 1) {
         input_data.resize(inputs.size());
@@ -53,9 +52,10 @@ class external_metric_plugin : public libpressio_metrics_plugin {
           input_data[i] = pressio_data::clone(*inputs[i]);
         }
       }
+      return 0;
     }
 
-    void end_decompress(struct pressio_data const*, struct pressio_data const* output, int ) override {
+    int end_decompress_impl(struct pressio_data const*, struct pressio_data const* output, int ) override {
       if((not use_many) and field_names.size() == 1) {
         std::vector<const pressio_data*> input_ptrs(input_data.size());
         for (size_t i = 0; i < input_data.size(); ++i) {
@@ -65,9 +65,10 @@ class external_metric_plugin : public libpressio_metrics_plugin {
         compat::span<const pressio_data* const> output_datasets{&output, 1};
         run_external(input_datasets, output_datasets);
       }
+      return 0;
     }
 
-    void end_decompress_many(compat::span<const pressio_data* const> const& ,
+    int end_decompress_many_impl(compat::span<const pressio_data* const> const& ,
                                    compat::span<const pressio_data* const> const& outputs, int ) override {
       if(use_many or field_names.size() > 1) {
         std::vector<const pressio_data*> input_ptrs(input_data.size());
@@ -77,6 +78,36 @@ class external_metric_plugin : public libpressio_metrics_plugin {
         compat::span<const pressio_data* const> input_datasets{input_ptrs.data(), input_ptrs.size()};
         run_external(input_datasets, outputs);
       }
+      return 0;
+    }
+
+    struct pressio_options get_configuration() const override {
+      pressio_options opts;
+      set(opts, "pressio:stability", "unstable");
+      set(opts, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+      return opts;
+    }
+
+    struct pressio_options get_documentation_impl() const override {
+      pressio_options opt;
+      set_meta_docs(opt, "external:launch_method", "launch methods to use with the external metric", launcher);
+      set_meta_many_docs(opt, "external:io_format", "io formats used to write out data buffers", io_modules);
+      set(opt, "pressio:description", "metrics module that launches an external task");
+      set(opt, "external:stderr", "the stderr from the external process, used for error reporting");
+      set(opt, "external:return_code", "the return code from the external process if it was launched");
+      set(opt, "external:error_code", "error code, indicates problems with launching processes");
+      set(opt, "external:runtime", "runtime of the external request, in seconds");
+      set(opt, "external:command", "the command to use passed as a single string");
+      set(opt, "external:suffix", "suffix to use in generated temporary file names");
+      set(opt, "external:prefix", "prefix to use in generated temporary file names");
+      set(opt, "external:fieldnames", "names of the fields used when generating arguments");
+      set(opt, "external:workdir", "directory to launch the external process in");
+      set(opt, "external:config_name", "string passed to the config_name option");
+      set(opt, "external:use_many", "use the begin_many/end_many versions for launching the job when there is only one buffer");
+      set(opt, "external:write_inputs", "disables the writing of all inputs");
+      set(opt, "external:write_outputs", "disables the writing of all ouputs");
+
+      return opt;
     }
 
     struct pressio_options get_options() const override {
@@ -118,7 +149,7 @@ class external_metric_plugin : public libpressio_metrics_plugin {
       return 0;
     }
 
-    struct pressio_options get_metrics_results() const override {
+    pressio_options get_metrics_results(pressio_options const &) const override {
       if(results.size() == 0) {
         pressio_options ret;
         auto default_result = launcher->launch({});
@@ -148,7 +179,7 @@ class external_metric_plugin : public libpressio_metrics_plugin {
 
 
     //returns the version number parsed, starts at 1, zero means error
-    std::string api_version_number(std::istringstream& stdout_stream) const {
+    static std::string api_version_number(std::istringstream& stdout_stream)  {
       std::string version_line;
       std::getline(stdout_stream, version_line);
       auto eq_pos = version_line.find('=') + 1;
@@ -184,20 +215,20 @@ class external_metric_plugin : public libpressio_metrics_plugin {
       return 0;
     }
 
-    void parse_v1(std::istringstream& stdout_stream, extern_proc_results const& input, pressio_options& results) const {
-      results.clear();
+    void parse_v1(std::istringstream& stdout_stream, extern_proc_results const& input, pressio_options&proc_results_opts) const {
+      proc_results_opts.clear();
 
       for (std::string line; std::getline(stdout_stream, line); ) {
         auto equal_pos = line.find('=');
         std::string name = "external:results:" + line.substr(0, equal_pos);
         std::string value_s = line.substr(equal_pos + 1);
         double value = std::stod(value_s);
-        set(results, name, value);
+        set(proc_results_opts, name, value);
       }
-      set(results, "external:stderr", input.proc_stderr);
-      set(results, "external:return_code", input.return_code);
-      set(results, "external:error_code", input.return_code);
-      set(results, "external:runtime", duration);
+      set(proc_results_opts, "external:stderr", input.proc_stderr);
+      set(proc_results_opts, "external:return_code", input.return_code);
+      set(proc_results_opts, "external:error_code", input.return_code);
+      set(proc_results_opts, "external:runtime", duration);
     }
 
 #if LIBPRESSIO_HAS_JSON
@@ -221,10 +252,10 @@ class external_metric_plugin : public libpressio_metrics_plugin {
 
     std::vector<std::string> build_command(std::vector<std::pair<std::string,std::string>> const& filenames, compat::span<const pressio_data* const> const& input_datasets) const {
       std::vector<std::string> full_command;
-      full_command.push_back("--api");
-      full_command.push_back("5");
-      full_command.push_back("--config_name");
-      full_command.push_back(config_name);
+      full_command.emplace_back("--api");
+      full_command.emplace_back("5");
+      full_command.emplace_back("--config_name");
+      full_command.emplace_back(config_name);
       auto format_arg = [this](size_t i, std::string const& arg) {
         std::ostringstream ss;
         if(i >= field_names.size() || field_names[i].empty()) {
@@ -238,27 +269,27 @@ class external_metric_plugin : public libpressio_metrics_plugin {
         auto const& input_path = filenames[i].first;
         auto const& decomp_path = filenames[i].second;
         auto const& input_data = input_datasets[i];
-        full_command.push_back(format_arg(i, "input"));
-        full_command.push_back(input_path);
-        full_command.push_back(format_arg(i, "decompressed"));
-        full_command.push_back(decomp_path);
-        full_command.push_back(format_arg(i, "type"));
+        full_command.emplace_back(format_arg(i, "input"));
+        full_command.emplace_back(input_path);
+        full_command.emplace_back(format_arg(i, "decompressed"));
+        full_command.emplace_back(decomp_path);
+        full_command.emplace_back(format_arg(i, "type"));
         switch(input_data->dtype()) {
-          case pressio_float_dtype: full_command.push_back("float"); break;
-          case pressio_double_dtype: full_command.push_back("double"); break;
-          case pressio_int8_dtype: full_command.push_back("int8"); break;
-          case pressio_int16_dtype: full_command.push_back("int16"); break;
-          case pressio_int32_dtype:  full_command.push_back("int32"); break;
-          case pressio_int64_dtype:  full_command.push_back("int64"); break;
-          case pressio_uint8_dtype:  full_command.push_back("uint8"); break;
-          case pressio_uint16_dtype: full_command.push_back("uint16"); break;
-          case pressio_uint32_dtype: full_command.push_back("uint32"); break;
-          case pressio_uint64_dtype: full_command.push_back("uint64"); break;
-          case pressio_byte_dtype: full_command.push_back("byte"); break;
+          case pressio_float_dtype: full_command.emplace_back("float"); break;
+          case pressio_double_dtype: full_command.emplace_back("double"); break;
+          case pressio_int8_dtype: full_command.emplace_back("int8"); break;
+          case pressio_int16_dtype: full_command.emplace_back("int16"); break;
+          case pressio_int32_dtype:  full_command.emplace_back("int32"); break;
+          case pressio_int64_dtype:  full_command.emplace_back("int64"); break;
+          case pressio_uint8_dtype:  full_command.emplace_back("uint8"); break;
+          case pressio_uint16_dtype: full_command.emplace_back("uint16"); break;
+          case pressio_uint32_dtype: full_command.emplace_back("uint32"); break;
+          case pressio_uint64_dtype: full_command.emplace_back("uint64"); break;
+          case pressio_byte_dtype: full_command.emplace_back("byte"); break;
         }
         for (auto dim : input_data->dimensions()) {
-          full_command.push_back(format_arg(i, "dim"));
-          full_command.push_back(std::to_string(dim));
+          full_command.emplace_back(format_arg(i, "dim"));
+          full_command.emplace_back(std::to_string(dim));
         }
         
       }

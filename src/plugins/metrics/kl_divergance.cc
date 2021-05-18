@@ -4,6 +4,7 @@
 #include <iterator>
 #include "pressio_data.h"
 #include "pressio_options.h"
+#include "pressio_compressor.h"
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/options.h"
@@ -33,8 +34,8 @@ namespace kl_divergence{
       std::for_each( decomp_begin, decomp_end, [&q_counts,&X](value_type q) { q_counts[q] += 1; X.insert(q);});
 
       for (auto const& x : X) {
-        m.p_q += static_cast<double>(p_counts[x]) / static_cast<double>(p_size) * std::log((p_counts[x] * q_size)/ (static_cast<double>(q_counts[x])* p_size));
-        m.q_p += static_cast<double>(q_counts[x]) / static_cast<double>(q_size) * std::log((q_counts[x] * p_size)/ (static_cast<double>(p_counts[x])* q_size));
+        m.p_q += static_cast<double>(p_counts[x]) / static_cast<double>(p_size) * std::log((p_counts[x] * q_size)/ (static_cast<double>(q_counts[x])* static_cast<double>(p_size)));
+        m.q_p += static_cast<double>(q_counts[x]) / static_cast<double>(q_size) * std::log((q_counts[x] * p_size)/ (static_cast<double>(p_counts[x])* static_cast<double>(q_size)));
         
       }
 
@@ -46,19 +47,35 @@ namespace kl_divergence{
 class kl_divergance_plugin : public libpressio_metrics_plugin {
 
 public:
-  void begin_compress(const struct pressio_data* input,
+  int begin_compress_impl(const struct pressio_data* input,
                       struct pressio_data const*) override
   {
     input_data = pressio_data::clone(*input);
+    return 0;
   }
-  void end_decompress(struct pressio_data const*,
+  int end_decompress_impl(struct pressio_data const*,
                       struct pressio_data const* output, int) override
   {
     err_metrics = pressio_data_for_each<kl_divergence::kl_metrics>(input_data, *output,
                                                        kl_divergence::compute_metrics{});
+    return 0;
   }
 
-  struct pressio_options get_metrics_results() const override
+  struct pressio_options get_configuration() const override {
+    pressio_options opts;
+    set(opts, "pressio:stability", "stable");
+    set(opts, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+    return opts;
+  }
+
+  struct pressio_options get_documentation_impl() const override {
+    pressio_options opt;
+    set(opt, "pressio:description", "Kullback–Leibler divergence");
+    set(opt, "kl_divergence:q_p", "relative entropy of q given p");
+    set(opt, "kl_divergence:p_q", "relative entropy of p given q");
+    return opt;
+  }
+  pressio_options get_metrics_results(pressio_options const &) const override
   {
     pressio_options opt;
     if (err_metrics) {

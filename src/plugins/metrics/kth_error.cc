@@ -1,8 +1,8 @@
 #include <algorithm>
 #include <cmath>
-#include <iterator>
 #include "pressio_data.h"
 #include "pressio_options.h"
+#include "pressio_compressor.h"
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/options.h"
@@ -22,7 +22,7 @@ namespace {
       std::transform(input_begin, input_end, decomp_begin, errors.begin(), [](value_type i, value_type d){
           return std::fabs(i -d);
       });
-      size_t kth = size_t(errors.size() * k);
+      auto kth = size_t(static_cast<double>(errors.size()) * k);
       compat::nth_element(errors.begin(), std::next(errors.begin(), kth), errors.end());
 
       return errors[kth];
@@ -37,18 +37,36 @@ class kth_error_plugin : public libpressio_metrics_plugin
 {
 
 public:
-  void begin_compress(const struct pressio_data* input,
+  int begin_compress_impl(const struct pressio_data* input,
                       struct pressio_data const*) override
   {
     input_data = pressio_data::clone(*input);
+    return 0;
   }
-  void end_decompress(struct pressio_data const*,
+  int end_decompress_impl(struct pressio_data const*,
                       struct pressio_data const* output, int) override
   {
     this->error = pressio_data_for_each<double>(input_data, *output, kth_error{k});
+    return 0;
   }
 
-  struct pressio_options get_metrics_results() const override
+  struct pressio_options get_configuration() const override {
+    pressio_options opts;
+    set(opts, "pressio:stability", "stable");
+    set(opts, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+    return opts;
+  }
+
+  struct pressio_options get_documentation_impl() const override
+  {
+    pressio_options opt;
+    set(opt, "pressio:description", "computes the kth order statistic");
+    set(opt, "kth_error:k", "the k order, as a value between 0.0 and 1.0");
+    set(opt, "kth_error:kth_error", "the kth order error");
+    return opt;
+  }
+
+  pressio_options get_metrics_results(pressio_options const &) const override
   {
     pressio_options opt;
     set(opt, "kth_error:kth_error", error);

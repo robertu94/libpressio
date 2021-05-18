@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.64.0" LANGUAGES CXX C)
+project(libpressio VERSION "0.65.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -36,6 +36,7 @@ set(LIBPRESSIO_COMPRESSORS "noop")
 add_library(libpressio
   #core implementation
   ./src/pressio.cc
+  ./src/pressio_posix.cc
   ./src/pressio_configurable.cc
   ./src/pressio_versionable.cc
   ./src/pressio_errorable.cc
@@ -53,6 +54,7 @@ add_library(libpressio
   ./src/plugins/compressors/sampling.cc
   ./src/plugins/compressors/resize.cc
   ./src/plugins/compressors/transpose.cc
+  ./src/plugins/compressors/chunking.cc
   ./src/plugins/launch/external_forkexec.cc
   ./src/plugins/metrics/ks_test.cc
   ./src/plugins/metrics/kth_error.cc
@@ -70,6 +72,7 @@ add_library(libpressio
   ./src/plugins/metrics/autocorr.cc
   ./src/plugins/metrics/mask1d.cc
   ./src/plugins/metrics/noop.cc
+  ./src/plugins/metrics/historian.cc
   ./src/plugins/io/copy_template.cc
   ./src/plugins/io/iota.cc
   ./src/plugins/io/numpy.cc
@@ -120,6 +123,10 @@ if(LIBPRESSIO_INTERPROCEDURAL_OPTIMIZATION)
 endif()
 
 target_include_directories(libpressio
+  PRIVATE 
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src> 
+  )
+target_include_directories(libpressio
   PUBLIC 
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> 
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
@@ -146,6 +153,16 @@ if(LIBPRESSIO_HAS_OPENMP)
   target_sources(libpressio
     PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/metrics/spatial_error.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/many_independent_threaded.cc
+    )
+endif()
+
+option(LIBPRESSIO_HAS_LINUX "plugins that depend on various unixisms" OFF)
+if(LIBPRESSIO_HAS_LINUX)
+  target_sources(libpressio
+    PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/metrics/rusage.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/io/mmap.cc
     )
 endif()
 
@@ -441,6 +458,9 @@ endif()
 
 option(BUILD_DOCS "build the documetation" OFF)
 if(BUILD_DOCS)
+  add_subdirectory(tools/docs)
+
+
   option(BUILD_DOCS_LINKS "build the documetation" ON)
   find_package(Doxygen REQUIRED dot)
   if(BUILD_DOCS_LINKS)
@@ -462,11 +482,32 @@ if(BUILD_DOCS)
   else()
     set(LIBPRESSIO_BUILD_DOCS_DEFAULT "")
   endif()
+  add_custom_command(
+    OUTPUT "IO.md"
+    COMMAND generate_docs -m i -o "${CMAKE_BINARY_DIR}/IO.md"
+    DEPENDS generate_docs libpressio
+    COMMENT "Documenting IO"
+    )
+  add_custom_command(
+    OUTPUT "Compressors.md"
+    COMMAND generate_docs -m c -o "${CMAKE_BINARY_DIR}/Compressors.md"
+    DEPENDS generate_docs libpressio
+    COMMENT "Documenting Compressors"
+    )
+  add_custom_command(
+    OUTPUT "Metrics.md"
+    COMMAND generate_docs -m m -o "${CMAKE_BINARY_DIR}/Metrics.md"
+    DEPENDS generate_docs libpressio
+    COMMENT "Documenting Metrics"
+    )
   doxygen_add_docs(
     docs
     ${PROJECT_SOURCE_DIR}/README.md
     ${PROJECT_SOURCE_DIR}/CONTRIBUTORS.md
     ${PROJECT_SOURCE_DIR}/docs
+    ${PROJECT_BINARY_DIR}/Compressors.md
+    ${PROJECT_BINARY_DIR}/Metrics.md
+    ${PROJECT_BINARY_DIR}/IO.md
     ${PROJECT_SOURCE_DIR}/include
     ${LIBPRESSIO_BUILD_DOCS_DEFAULT}
     COMMENT "Generate Documenation"

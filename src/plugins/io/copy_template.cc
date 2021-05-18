@@ -33,9 +33,19 @@ struct copy_template_io : public libpressio_io_plugin {
   }
   virtual struct pressio_options get_configuration_impl() const override{
     pressio_options opts;
+    set(opts, "pressio:stability", "stable");
     set(opts, "pressio:thread_safe",  static_cast<int32_t>(pressio_thread_safety_single));
     return opts;
   }
+  virtual struct pressio_options get_documentation_impl() const override{
+    pressio_options opts;
+    set_meta_docs(opts, "copy_template:io", "io object to use after applying template", impl);
+    set(opts, "pressio:description", "copy a template before preforming writes");
+    set(opts, "copy_template:template_path", "path to the template file to copy");
+    set(opts, "io:path", "path to write the file to");
+    return opts;
+  }
+
 
 
   int patch_version() const override{ 

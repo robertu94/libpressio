@@ -127,6 +127,25 @@ class mgard_plugin: public libpressio_compressor_plugin {
   struct pressio_options get_configuration_impl() const override {
     struct pressio_options options;
     set(options, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_single));
+    set(options, "pressio:stability", "experimental");
+    return options;
+  }
+
+  struct pressio_options get_documentation_impl() const override {
+    struct pressio_options options;
+    set(options, "pressio:description",  R"(MGARD is a error bounded lossy compressor based on using multi-level grids.
+      More information can be found on onis [project homepage](https://github.com/CODARcode/MGARD))");
+    set(options, "mgard:tolerance",  "the tolerance parameter");
+    set(options, "mgard:s", "the shape parameter");
+    set(options, "mgard:norm_of_qoi", "the norm of the qoi to preserve");
+    set(options, "mgard:qoi_double", "function pointer to a double qoi metric");
+    set(options, "mgard:qoi_float", "function pointer to a float qoi metric");
+#if PRESSIO_MGARD_VERSION_GREATEREQ(0,0,0,3)
+    set(options, "mgard:qoi_double_void", "function pointer to a double qoi metric");
+    set(options, "mgard:qoi_float_void", "function pointer to a float qoi metric");
+    set(options, "mgard:qoi_use_metric", "true if MGARD QOI mode should use a libpressio metric");
+    set(options, "mgard:qoi_metric_name", "the id of the metric used for MGARD QOI mode");
+#endif
     return options;
   }
 

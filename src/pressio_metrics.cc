@@ -15,11 +15,19 @@ void pressio_metrics_free(struct pressio_metrics* metrics) {
 }
 
 struct pressio_options* pressio_metrics_get_results(struct pressio_metrics const* metrics) {
-  return new pressio_options((*metrics)->get_metrics_results());
+  return new pressio_options((*metrics)->get_metrics_results({}));
 }
 
 struct pressio_options* pressio_metrics_get_options(struct pressio_metrics const* metrics) {
   return new pressio_options((*metrics)->get_options());
+}
+
+struct pressio_options* pressio_metrics_get_configuration(struct pressio_metrics const* metrics) {
+  return new pressio_options((*metrics)->get_configuration());
+}
+
+struct pressio_options* pressio_metrics_get_documentation(struct pressio_metrics const* metrics) {
+  return new pressio_options((*metrics)->get_documentation());
 }
 
 int pressio_metrics_set_options(struct pressio_metrics const* metrics, struct pressio_options const* options){
@@ -55,7 +63,7 @@ struct pressio_options* pressio_metrics_evaluate(
     (*metrics)->end_decompress(compressed, decompressed, 0);
   }
 
-  return new pressio_options((*metrics)->get_metrics_results());
+  return new pressio_options((*metrics)->get_metrics_results({}));
 }
 
 struct pressio_options* pressio_metrics_evaluate_many(
@@ -78,7 +86,7 @@ struct pressio_options* pressio_metrics_evaluate_many(
     (*metrics)->end_decompress_many(compressed_s, decompressed_s, 0);
   }
 
-  return new pressio_options((*metrics)->get_metrics_results());
+  return new pressio_options((*metrics)->get_metrics_results({}));
 }
 
 

@@ -35,7 +35,16 @@ void pressio_release(struct pressio* library);
 struct pressio_compressor* pressio_get_compressor(struct pressio* library, const char* compressor_id);
 
 /**
- * creates a possibly composite metrics structure
+ * creates a new metrics structure
+ *
+ * \param[in] library the pointer to the library
+ * \param[in] metric a c-string for the metric requested
+ * \returns a new pressio_metrics structure
+ */
+struct pressio_metrics* pressio_new_metric(struct pressio* library, const char* const metric);
+
+/**
+ * creates a composite metrics structure
  *
  * \param[in] library the pointer to the library
  * \param[in] metrics a list of c-strings containing the list of metrics requested

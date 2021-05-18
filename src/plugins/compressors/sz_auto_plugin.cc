@@ -27,9 +27,25 @@ class sz_auto_plugin: public libpressio_compressor_plugin {
 
     struct pressio_options get_configuration_impl() const override {
       struct pressio_options options;
-      options.set("pressio:thread_safe", static_cast<int>(pressio_thread_safety_multiple));
+      set(options, "pressio:thread_safe", static_cast<int>(pressio_thread_safety_multiple));
+      set(options,"pressio:stability", "experimental");
       return options;
     }
+
+    struct pressio_options get_documentation_impl() const override {
+      struct pressio_options options;
+      set(options, "pressio:description", R"(SZ C++ Version that Supports Second-Order Prediction and Parameter 
+          Optimization. 
+
+          See also SZauto: Kai Zhao, Sheng Di, Xin Liang, Sihuan Li, Dingwen Tao, Zizhong Chen,
+          and Franck Cappello. "Significantly Improving Lossy Compression for HPC Datasets with 
+          Second-Order Prediction and Parameter Optimization", Proceedings of the 29th International Symposium on 
+          High-Performance Parallel and Distributed Computing (HPDC 20), Stockholm, Sweden, 2020. )");
+      set(options, "SZauto:error_bounds", "the absolute error bound to apply");
+      set(options, "SZauto:sample_ratio", "the sampling ratio used for tuning");
+      return options;
+    }
+
 
     int set_options_impl(struct pressio_options const& options) override {
       get(options, "SZauto:error_bounds", &error_bounds);

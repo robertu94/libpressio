@@ -36,11 +36,28 @@ class counting_metric: public libpressio_metrics_plugin {
   }
 
   private:
-  void begin_compress(pressio_data const* input, pressio_data const*) override {
+  int begin_compress_impl(pressio_data const* input, pressio_data const*) override {
     counts[input->dtype()]++;
+    return 0;
   }
 
-  pressio_options get_metrics_results() const override {
+  pressio_options get_documentation_impl() const override {
+    pressio_options opts;
+    opts.set("mycounts:int8", "number of data buffers of type int8");
+    opts.set("mycounts:int16", "number of data buffers of type int16");
+    opts.set("mycounts:int32", "number of data buffers of type int32");
+    opts.set("mycounts:int64", "number of data buffers of type int64");
+    opts.set("mycounts:uint8", "number of data buffers of type uint8");
+    opts.set("mycounts:uint16", "number of data buffers of type uint16");
+    opts.set("mycounts:uint32", "number of data buffers of type uint32");
+    opts.set("mycounts:uint64", "number of data buffers of type uint64");
+    opts.set("mycounts:float", "number of data buffers of type float");
+    opts.set("mycounts:double", "number of data buffers of type double");
+    opts.set("mycounts:byte", "number of data buffers of type byte");
+    return opts;
+  }
+
+  pressio_options get_metrics_results(pressio_options const &options) const override {
     pressio_options opts;
     opts.set("mycounts:int8", counts.at(pressio_int8_dtype));
     opts.set("mycounts:int16", counts.at(pressio_int16_dtype));

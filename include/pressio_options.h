@@ -12,7 +12,7 @@ extern "C" {
 #include "stddef.h"
 #include "stdint.h"
 
-/*! \file  
+/*! \file pressio_options.h 
  *  \brief A set of options for a compressor
  */
 

@@ -16,9 +16,10 @@ struct select_io: public libpressio_io_plugin {
   }
 
   struct pressio_options get_configuration_impl() const override{
-    return {
-      {"pressio:thread_safe",  static_cast<int32_t>(pressio_thread_safety_single)}
-    };
+    pressio_options opts;
+    set(opts, "pressio:stability",  "unstable");
+    set(opts, "pressio:thread_safe",  static_cast<int32_t>(pressio_thread_safety_single));
+    return opts;
   }
 
   int set_options_impl(struct pressio_options const& options) override{
@@ -46,6 +47,17 @@ struct select_io: public libpressio_io_plugin {
     set(opts, "select:stride", pressio_data(std::begin(stride), std::end(stride)));
     set(opts, "select:size", pressio_data(std::begin(size), std::end(size)));
     set(opts, "select:block", pressio_data(std::begin(block), std::end(block)));
+    return opts;
+  }
+
+  struct pressio_options get_documentation_impl() const override{
+    pressio_options opts;
+    set_meta_docs(opts, "select:io", "IO to use before selection", impl);
+    set(opts, "pressio:description", "selects a subset from a buffer read in or written out");
+    set(opts, "select:start", "starting block for selection");
+    set(opts, "select:stride", "stride of selection");
+    set(opts, "select:size", "size of selection in blocks");
+    set(opts, "select:block", "size of each block");
     return opts;
   }
 

@@ -31,11 +31,16 @@ class pressio_errorable {
    */
   int set_error(int code, std::string const& msg);
 
+  /**
+   * clears the error code and resets the error message
+   */
+  void clear_error();
+
   private:
   struct {
     int code;
     std::string msg;
-  } error;
+  } error = {0, ""};
 };
 
 #endif /* end of include guard: LIBPRESSIO_ERRORS_H */

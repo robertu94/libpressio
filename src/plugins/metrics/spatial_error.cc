@@ -2,6 +2,7 @@
 #include <algorithm>
 #include "pressio_data.h"
 #include "pressio_options.h"
+#include "pressio_compressor.h"
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/options.h"
@@ -43,16 +44,33 @@ class spatial_error_plugin : public libpressio_metrics_plugin
 {
 
 public:
-  void begin_compress(const struct pressio_data* input,
+  int begin_compress_impl(const struct pressio_data* input,
                       struct pressio_data const*) override
   {
     input_data = pressio_data::clone(*input);
+    return 0;
   }
-  void end_decompress(struct pressio_data const*,
+  int end_decompress_impl(struct pressio_data const*,
                       struct pressio_data const* output, int) override
   {
     spatial_error =
       pressio_data_for_each<double>(input_data, *output, compute_metrics{threshold});
+    return 0;
+  }
+
+  struct pressio_options get_configuration() const override {
+    pressio_options opts;
+    set(opts, "pressio:stability", "stable");
+    set(opts, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+    return opts;
+  }
+
+  struct pressio_options get_documentation_impl() const override {
+    pressio_options opts;
+    set(opts, "pressio:description", "Computes the Spatial Error Percentage -- the percentage of elements that exceed some threshold");
+    set(opts, "spatial_error:threshold", "threshold for triggering spatial_error");
+    set(opts, "spatial_error:percent", "percentage of elements that exceed the threshold");
+    return opts;
   }
 
   struct pressio_options get_options() const override {
@@ -66,7 +84,7 @@ public:
     return 0;
   }
 
-  struct pressio_options get_metrics_results() const override
+  pressio_options get_metrics_results(pressio_options const &) const override
   {
     pressio_options opt;
     if (spatial_error) {

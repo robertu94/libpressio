@@ -65,11 +65,31 @@ class bit_grooming_plugin: public libpressio_compressor_plugin {
       return options;
     }
 
+    struct pressio_options get_documentation_impl() const override {
+      struct pressio_options options;
+      set(options, "pressio:description", "Various bitgroomimg methods for floating point data which improve compressibility");
+      set(options, "bit_grooming:mode", "the big grooming mode code, prefer mode_str instead for user facing use");
+      set(options, "bit_grooming:mode_str", R"(the type of bit grooming to use
+      +  bitgroom -- use the method described in Bit Grooming: Statistically accurate precision-preserving quantization with compression, evaluated in the netCDF Operators
+      +  bitshave -- use the method described in https://www.unidata.ucar.edu/blogs/developer/entry/compression_by_bit_shaving
+      +  bitset -- set lower order bits to improve compressibility
+      )");
+      set(options, "bit_grooming:error_control_mode", "the error_control_mode code, prefer error_control_mode_str instead for user facing use");
+      set(options, "bit_grooming:error_control_mode_str", R"(the type of error control to use
+      +  nsd -- the number of significant digits
+      +  dsd -- the number of significant decimal digits
+      )");
+      set(options, "bit_grooming:n_sig_digits", "number of significant digits");
+      set(options, "bit_grooming:n_sig_decimals", "number of significant decimals");
+      return options;
+    }
+
     struct pressio_options get_configuration_impl() const override {
       struct pressio_options options;
       set(options, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+      set(options, "pressio:stability", "stable");
       set(options, "bit_grooming:mode", bg_keys(bitgroom_mode_str_to_code));
-      set(options, "bit_grooming:error_control_mode_mode", bg_keys(bitgroom_ec_mode_str_to_code));
+      set(options, "bit_grooming:error_control_mode", bg_keys(bitgroom_ec_mode_str_to_code));
       return options;
     }
 

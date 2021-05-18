@@ -43,7 +43,7 @@ struct libpressio_io_plugin: public pressio_configurable, public pressio_version
    */
   template <class ContigIterator>
   int read_many(ContigIterator data_begin, ContigIterator data_end) {
-    set_error(0, "");
+    clear_error();
     compat::span<struct pressio_data*> data(data_begin, data_end);
     return read_many_impl(data);
   }
@@ -65,7 +65,7 @@ struct libpressio_io_plugin: public pressio_configurable, public pressio_version
    */
   template <class ContigIterator>
   int write_many(ContigIterator data_begin, ContigIterator data_end) {
-    set_error(0, "");
+    clear_error();
     compat::span<const struct pressio_data*> data(data_begin, data_end);
     return write_many_impl(data);
   }
@@ -82,6 +82,11 @@ struct libpressio_io_plugin: public pressio_configurable, public pressio_version
    * \see pressio_io_set_options for the semantics this function should obey
    */
   int set_options(struct pressio_options const& options) override final;
+  /** get the documentation for an io module. Modules should override get_documentation_impl instead
+   *
+   * \see pressio_io_get_configuration for the semantics this function should obey
+   */
+  struct pressio_options get_documentation() const override final;
   /** get the compile time configuration of a io module. Modules should override get_configuration_impl instead
    *
    * \see pressio_io_get_configuration for the semantics this function should obey
@@ -152,6 +157,12 @@ struct libpressio_io_plugin: public pressio_configurable, public pressio_version
     (void)data;
     return set_error(1, "write many not supported");
   }
+
+  /** get the compile time documentation of an io module
+   *
+   * \see pressio_io_get_documentation for the semantics this function should obey
+   */
+  virtual struct pressio_options get_documentation_impl() const=0;
 
   /** get the compile time configuration of a io module
    *

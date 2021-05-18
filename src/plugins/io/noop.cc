@@ -19,9 +19,10 @@ struct noop_io : public libpressio_io_plugin {
     return 0;
   }
   virtual struct pressio_options get_configuration_impl() const override{
-    return {
-      {"pressio:thread_safe",  static_cast<int32_t>(pressio_thread_safety_multiple)}
-    };
+    pressio_options opts;
+    set(opts, "pressio:thread_safe",  static_cast<int32_t>(pressio_thread_safety_multiple));
+    set(opts, "pressio:stability", "stable");
+    return opts;
   }
 
   virtual int set_options_impl(struct pressio_options const&) override{
@@ -29,6 +30,13 @@ struct noop_io : public libpressio_io_plugin {
   }
   virtual struct pressio_options get_options_impl() const override{
     return {};
+  }
+  virtual struct pressio_options get_documentation_impl() const override{
+    pressio_options opts;
+    set(opts, "pressio:description", "a writer which preforms a noop");
+    set(opts, "pressio:stability", "stable");
+
+    return opts;
   }
 
   int patch_version() const override{ 

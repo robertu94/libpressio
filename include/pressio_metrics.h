@@ -36,6 +36,20 @@ struct pressio_options* pressio_metrics_get_results(struct pressio_metrics const
 struct pressio_options* pressio_metrics_get_options(struct pressio_metrics const* metrics);
 
 /**
+ * Gets the configuration for a metrics structure
+ * \param[in] metrics the metrics structure to get configuration for
+ * \returns a new pressio_options structure with the configuration for the metrics
+ */
+struct pressio_options* pressio_metrics_get_configuration(struct pressio_metrics const* metrics);
+
+/**
+ * Gets the documentation for a metrics structure
+ * \param[in] metrics the metrics structure to get documentation for
+ * \returns a new pressio_options structure with the documentation for the metrics
+ */
+struct pressio_options* pressio_metrics_get_documentation(struct pressio_metrics const* metrics);
+
+/**
  * Gets the options for a metrics structure
  * \param[in] metrics the metrics structure to get options for
  * \param[in] options the to set
@@ -82,9 +96,9 @@ const char* pressio_metrics_get_name(struct pressio_metrics const* metrics);
  * If the metric does not support being called on data buffers, the returned object is undefined.
  *
  * \param[in] metrics the metrics object to invoke
- * \param[in] uncompressed the data before compression, if nullptr, begin/end_compress will not be called
+ * \param[in] uncompressed the data before compression, if nullptr, begin/end_compress_impl will not be called
  * \param[in] compressed the data after compression, if nullptr, the metrics object MAY choose not to compute some or all metrics, but SHOULD compute as many as possible
- * \param[in] decompressed  the data after decompression, if nullptr, begin/end_decompress will not be called
+ * \param[in] decompressed  the data after decompression, if nullptr, begin/end_decompress_impl will not be called
  *
  * \returns a new pressio_options as if pressio_metrics_get_results was called.
  */

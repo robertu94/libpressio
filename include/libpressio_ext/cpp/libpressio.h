@@ -4,6 +4,7 @@
  */
 #include "compressor.h"
 #include "data.h"
+#include "dtype.h"
 #include "metrics.h"
 #include "options.h"
 #include "pressio.h"

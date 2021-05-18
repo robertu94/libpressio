@@ -24,9 +24,36 @@ class blosc_plugin: public libpressio_compressor_plugin {
       return options;
     }
 
+    struct pressio_options get_documentation_impl() const override {
+      struct pressio_options options;
+      set(options, "pressio:description", R"(BLOSC is a collection of lossless compressors optimized to transfer
+        data more quickly than a direct memory fetch can preform. More information on BLOSC can be found on its
+        [project homepage](https://blosc.org/pages/blosc-in-depth/))");
+      set(options, "blosc:clevel", "compression level");
+      set(options, "blosc:numinternalthreads", "number of threads to use internally");
+      set(options, "blosc:doshuffle", "should blosc shuffle bits to try to improve compressability");
+      set(options, "blosc:blocksize", "what blocksize should blosc use?");
+      set(options, "blosc:compressor", "what lossless compressors should blosc use");
+      return options;
+    }
+
     struct pressio_options get_configuration_impl() const override {
       struct pressio_options options;
-      options.set("pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+      set(options, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+      set(options, "pressio:stability", "stable");
+      std::vector<std::string> compiled_compressors;
+      std::string s = blosc_list_compressors();
+      
+      size_t begin = 0;
+      size_t last_comma = s.find_first_of(',');
+      while(last_comma != std::string::npos) {
+        compiled_compressors.emplace_back(s.substr(begin, last_comma - begin));
+        begin = last_comma + 1;
+        last_comma = s.find_first_of(',', begin);
+      }
+      compiled_compressors.emplace_back(s.substr(begin, last_comma - 1));
+
+      set(options, "blosc:compressor", compiled_compressors);
       return options;
     }
 

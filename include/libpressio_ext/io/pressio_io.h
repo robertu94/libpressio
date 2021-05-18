@@ -40,6 +40,12 @@ const char* pressio_supported_io_modules();
 struct pressio_options* pressio_io_get_configuration(struct pressio_io const* io);
 
 /*!
+ * \returns a pressio options struct that represents the documentation of the io module
+ * \param[in] io which io to get documentation for
+ */
+struct pressio_options* pressio_io_get_documentation(struct pressio_io const* io);
+
+/*!
  * \returns a pressio options struct that represents the current options of the io module
  * \param[in] io which io to get options for
  */

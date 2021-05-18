@@ -21,6 +21,13 @@ void pressio_compressor_release(struct pressio_compressor* compressor);
 
 //option getting/setting functions
 /*!
+ * \returns a pressio options struct that represents the documentation for the compressor
+ * \param[in] compressor which compressor to get documentation for
+ */
+struct pressio_options* pressio_compressor_get_documentation(struct pressio_compressor const* compressor);
+
+//option getting/setting functions
+/*!
  * \returns a pressio options struct that represents the compile time configuration of the compressor
  * \param[in] compressor which compressor to get compile-time configuration for
  */
@@ -178,6 +185,15 @@ int pressio_compressor_patch_version(struct pressio_compressor const* compressor
  *                
  */
 struct pressio_compressor* pressio_compressor_clone(struct pressio_compressor* compressor);
+
+
+/**
+ * Returns the name this compressor uses its keys
+ *
+ * \param[in] compressor the compressor to get the prefix for
+ * \returns the prefix for this compressor
+ */
+const char* pressio_compressor_get_prefix(const struct pressio_compressor* compressor);
 
 /**
  * Assign a new name to a compressor.  Names are used to prefix options in meta-compressors.

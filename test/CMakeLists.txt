@@ -39,6 +39,13 @@ target_include_directories(test_pressio_data PRIVATE ${CMAKE_SOURCE_DIR}/src)
 add_gtest(test_pressio_options.cc)
 add_gtest(test_io.cc)
 
+add_executable(test_compressor_integration ./test_compressor_integration.cc mpi_test_main.cc)
+target_link_libraries(test_compressor_integration PRIVATE libpressio gtest gmock)
+if(LIBPRESSIO_HAS_MPI)
+  target_link_libraries(test_compressor_integration PRIVATE MPI::MPI_CXX)
+endif()
+gtest_discover_tests(test_compressor_integration)
+
 if(LIBPRESSIO_HAS_HDF)
   add_gtest(test_hdf5.cc)
   if(LIBPRESSIO_HAS_MPI)
@@ -83,25 +90,6 @@ if(LIBPRESSIO_HAS_SZ)
   target_link_libraries(test_register_compressor PRIVATE SZ)
 endif()
 
-
-if(LIBPRESSIO_HAS_ZFP)
-  add_executable(zfp_basic zfp_basic.c make_input_data.cc)
-  target_link_libraries(zfp_basic PRIVATE libpressio zfp::zfp)
-  add_test(zfp_basic_test zfp_basic)
-endif()
-
-if(LIBPRESSIO_HAS_MAGICK)
-  add_executable(magick_basic magick_basic.cc)
-  target_link_libraries(magick_basic PRIVATE libpressio)
-  add_test(magick_basic_test magick_basic)
-endif()
-
-if(LIBPRESSIO_HAS_SZ AND LIBPRESSIO_HAS_ZFP AND LIBPRESSIO_HAS_MGARD AND
-    LIBPRESSIO_HAS_MAGICK AND LIBPRESSIO_HAS_FPZIP)
-  add_executable(full full.c make_input_data.cc)
-  target_link_libraries(full PRIVATE libpressio SZ)
-  add_test(full_test full)
-endif()
 
 if(LIBPRESSIO_HAS_LIBDISTRIBUTED)
   find_package(MPI)

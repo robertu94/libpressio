@@ -3,6 +3,7 @@
  */
 #include <memory>
 
+#include "pressio_compressor.h"
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/compressor.h"
 #include "libpressio_ext/cpp/pressio.h"
@@ -13,7 +14,16 @@ class noop_compressor_plugin: public libpressio_compressor_plugin {
   public:
 
   struct pressio_options get_configuration_impl() const override {
-    return {};
+    pressio_options options;
+    set(options, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+    set(options, "pressio:stability", "stable");
+    return options;
+  }
+
+  struct pressio_options get_documentation_impl() const override {
+    pressio_options options;
+    set(options, "pressio:description", "A no-op compressor useful for testing and defaults");
+    return options;
   }
 
   struct pressio_options get_options_impl() const override {

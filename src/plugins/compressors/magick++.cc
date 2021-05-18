@@ -52,9 +52,22 @@ class magick_plugin: public libpressio_compressor_plugin {
   };
 
 
+  struct pressio_options get_documentation_impl() const override {
+    struct pressio_options options;
+    set(options, "pressio:description", R"(ImageMagick is a robust library that preforms a wide array of image
+      compression and manipulation. Only a fraction of its api is exposed. More information on ImageMagick
+      can be found on its [project homepage](https://imagemagick.org/))");
+    set(options, "magick:samples_magick", "the string for the samples format");
+    set(options, "magick:compressed_magick", "the ImageMagick magick format");
+    set(options, "magick:quality", "the quality parameter for lossy images");
+    return options;
+  }
+
+
   struct pressio_options get_configuration_impl() const override {
     struct pressio_options options;
     set(options, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+    set(options, "pressio:stability", "unstable");
     return options;
   }
 

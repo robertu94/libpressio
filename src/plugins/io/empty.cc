@@ -39,16 +39,23 @@ struct empty_io : public libpressio_io_plugin
   }
   
   virtual struct pressio_options get_configuration_impl() const override{
-    return {
-      {"pressio:thread_safe",  static_cast<int32_t>(pressio_thread_safety_multiple)}
-    };
+    pressio_options opts;
+    set(opts, "pressio:stability", "stable");
+    set(opts, "pressio:thread_safe",  static_cast<int32_t>(pressio_thread_safety_multiple));
+    return opts;
   }
 
   virtual int set_options_impl(struct pressio_options const&) override{
     return 0;
   }
   virtual struct pressio_options get_options_impl() const override{
-    return pressio_options{};
+    pressio_options opts;
+    return opts;
+  }
+  virtual struct pressio_options get_documentation_impl() const override{
+    pressio_options opts;
+    set(opts, "pressio:description", "read in an array of all zeros");
+    return opts;
   }
 
   int patch_version() const override{ 

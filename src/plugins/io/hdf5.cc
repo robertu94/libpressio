@@ -12,6 +12,7 @@
 #include <H5FDmpi.h>
 #endif
 
+#include "pressio_posix.h"
 #include <cstring>
 #include <sys/types.h>
 #include <unistd.h>
@@ -296,21 +297,7 @@ struct hdf5_io: public libpressio_io_plugin {
       if(errno == ENOENT) {
         file = H5Fcreate(filename.c_str(), H5F_ACC_EXCL, H5P_DEFAULT, fapl_plist);
       } else {
-        char err_msg[1024];
-        std::fill(err_msg, err_msg+1024, '\0');
-
-        // gnulibc insists on providing their implementation
-        // of strerror_r when compiling with C++ which returns a char* which
-        // is declared warn_unused.  However, there is also a POSIX version
-        // which returns a int. In either case, we can't really recover
-        // from the error so capture the value in a variable and explicitly
-        // cast to (void) to silence the warning. BAD GNU...
-        //
-        // The other versions are either not thread safe or GNU extensions
-        auto rc = strerror_r(errno, err_msg, 1024);
-        (void)rc;
-
-        set_error(1, err_msg);
+        set_error(1, errno_to_error());
         return 1;
       }
     }
@@ -411,6 +398,7 @@ struct hdf5_io: public libpressio_io_plugin {
 
   virtual struct pressio_options get_configuration_impl() const override{
     pressio_options options;
+    set(options, "pressio:stability", "stable");
     set(options, "pressio:thread_safe",  static_cast<int32_t>(pressio_thread_safety_single));
     set(options, "hdf5:parallel",  static_cast<int32_t>(
 #ifdef H5_HAVE_PARALLEL
@@ -452,6 +440,24 @@ struct hdf5_io: public libpressio_io_plugin {
 #endif
     return 0;
   }
+  virtual struct pressio_options get_documentation_impl() const override{
+    pressio_options opts;
+    set(opts, "pressio:description", "read in HDF5 files");
+    set(opts, "io:path", "the path to the file on the disk");
+    set(opts, "hdf5:dataset", "the name of the dataset to read or write");
+    set(opts, "hdf5:file_block", "the size of a block in this read or write");
+    set(opts, "hdf5:file_count", "the number of blocks in this read or write");
+    set(opts, "hdf5:file_stride", "the stride for the read/write");
+    set(opts, "hdf5:file_start", "the start of the the read/write");
+    set(opts, "hdf5:file_extent", "the extent for the dataset");
+    set(opts, "hdf5:parallel", "indicates if HDF was built with parallel support");
+#if defined(H5_HAVE_PARALLEL) && H5_HAVE_PARALLEL
+    set(opts, "hdf5:use_parallel", "use parallel IO for reading and writing");
+    set(opts, "hdf5:mpi_comm", "the MPI communicator to use for reading and writing");
+#endif
+    return opts;
+  }
+
   virtual struct pressio_options get_options_impl() const override{
     pressio_options opts;
     set(opts, "io:path", filename);

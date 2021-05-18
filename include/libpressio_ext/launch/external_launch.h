@@ -57,6 +57,20 @@ struct libpressio_launch_plugin: public pressio_configurable, public pressio_err
    * \returns results of running the process
    */
   virtual extern_proc_results launch(std::vector<std::string> const& args) const =0;
+
+  pressio_options get_documentation() const final {
+    pressio_options opts;
+    opts.copy_from(get_documentation_impl());
+    set(opts, "pressio:thread_safe", "level of thread safety provided by the compressor");
+    set(opts, "pressio:stability", "level of stablity provided by the compressor; see the README for libpressio");
+    return opts;
+  }
+
+  /**
+   * \returns documentation for this launch plugin
+   */
+  virtual pressio_options get_documentation_impl() const=0;
+
   /**
    * clones the launch method
    *

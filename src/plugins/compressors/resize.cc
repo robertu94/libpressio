@@ -28,6 +28,17 @@ public:
   {
     struct pressio_options options;
     set(options, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+    set(options, "pressio:stability", "stable");
+    return options;
+  }
+
+  struct pressio_options get_documentation_impl() const override
+  {
+    struct pressio_options options;
+    set_meta_docs(options, "resize:compressor", "compressor to use after resizing", compressor);
+    set(options, "pressio:description", "A meta-compressor which applies a re-size operation prior to compression");
+    set(options, "resize:compressed_dims", "how to reshape the dimensions pre compression");
+    set(options, "resize:decompressed_dims", "how to reshape the dimensions post decompression");
     return options;
   }
 
@@ -48,7 +59,9 @@ public:
                     struct pressio_data* output) override
   {
     auto tmp = pressio_data::clone(*input);
-    tmp.reshape(compressed_dims);
+    if(!compressed_dims.empty()) {
+      tmp.reshape(compressed_dims);
+    }
     return compressor->compress(&tmp, output);
   }
 
@@ -56,7 +69,9 @@ public:
                       struct pressio_data* output) override
   {
     auto ret = compressor->decompress(input, output);
-    output->reshape(compressed_dims);
+    if(!decompressed_dims.empty()) {
+      output->reshape(decompressed_dims);
+    }
     return ret;
   }
 

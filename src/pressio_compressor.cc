@@ -3,6 +3,12 @@
 
 extern "C" {
 
+const char* pressio_compressor_get_prefix(struct pressio_compressor const* compressor) {
+  return (*compressor)->prefix();
+}
+struct pressio_options* pressio_compressor_get_documentation(struct pressio_compressor const* compressor) {
+  return new pressio_options((*compressor)->get_documentation());
+}
 struct pressio_options* pressio_compressor_get_configuration(struct pressio_compressor const* compressor) {
   return new pressio_options((*compressor)->get_configuration());
 }
