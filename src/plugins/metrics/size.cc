@@ -83,9 +83,9 @@ class size_plugin : public libpressio_metrics_plugin {
 
     auto set_or_size_t = [&opt, this](const char* key, compat::optional<size_t> size) {
       if(size) {
-        set(opt, key, static_cast<unsigned int>(*size));
+        set(opt, key, static_cast<uint64_t>(*size));
       } else {
-        set_type(opt, key, pressio_option_uint32_type);
+        set_type(opt, key, pressio_option_uint64_type);
       }
     };
 

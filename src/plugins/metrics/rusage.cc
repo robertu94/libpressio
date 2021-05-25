@@ -10,7 +10,7 @@ namespace memory_metrics{
   struct memory_range{
     uint64_t begin = 0;
     uint64_t end = 0;
-    uint64_t used() const { return end-begin; }
+    uint64_t used() const { return (end-begin) * 1024; }
   };
   using tracker = compat::optional<memory_range>;
   uint64_t now() {
@@ -150,14 +150,14 @@ class memory_plugin : public libpressio_metrics_plugin {
   struct pressio_options get_documentation_impl() const override {
     pressio_options opts;
 
-    set(opts, "pressio:description", "uses rusage to record memory usage");
-    set(opts, "memory:check_options", "memory used by check options");
-    set(opts, "memory:set_options", "memory used by set options");
-    set(opts, "memory:get_options", "memory used by get options");
-    set(opts, "memory:compress", "memory used by compress");
-    set(opts, "memory:decompress", "memory used by decompress");
-    set(opts, "memory:compress_many", "memory used by compress_many");
-    set(opts, "memory:decompress_many", "memory used by decompress_many");
+    set(opts, "pressio:description", "uses getrusage to record memory usage");
+    set(opts, "memory:check_options", "memory used in bytes by check options");
+    set(opts, "memory:set_options", "memory used in bytes by set options");
+    set(opts, "memory:get_options", "memory used in bytes by get options");
+    set(opts, "memory:compress", "memory used in bytes by compress");
+    set(opts, "memory:decompress", "memory used in bytes by decompress");
+    set(opts, "memory:compress_many", "memory used in bytes by compress_many");
+    set(opts, "memory:decompress_many", "memory used in bytes by decompress_many");
 
     return opts;
   }
