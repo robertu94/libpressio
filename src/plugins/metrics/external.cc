@@ -149,7 +149,7 @@ class external_metric_plugin : public libpressio_metrics_plugin {
       return 0;
     }
 
-    pressio_options get_metrics_results(pressio_options const &) const override {
+    pressio_options get_metrics_results(pressio_options const &)  override {
       if(results.size() == 0) {
         pressio_options ret;
         auto default_result = launcher->launch({});

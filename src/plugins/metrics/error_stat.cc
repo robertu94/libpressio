@@ -136,7 +136,7 @@ class error_stat_plugin : public libpressio_metrics_plugin {
       set(opt, "error_stat:n", "the number of input values");
       return opt;
     }
-    pressio_options get_metrics_results(pressio_options const &) const override {
+    pressio_options get_metrics_results(pressio_options const &)  override {
       pressio_options opt;
       if(err_metrics) {
         set(opt, "error_stat:psnr", (*err_metrics).psnr);

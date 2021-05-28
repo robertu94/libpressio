@@ -149,7 +149,7 @@ class libpressio_metrics_plugin : public pressio_configurable, public pressio_er
   /**
    * \returns a pressio_options structure containing the metrics returned by the provided metrics plugin
    */
-  virtual pressio_options get_metrics_results(pressio_options const &options) const=0;
+  virtual pressio_options get_metrics_results(pressio_options const &options)=0;
 
   /**
    * \returns a clone of the metric
@@ -260,6 +260,7 @@ protected:
                                    compat::span<const pressio_data* const> const& outputs, int rc);
 
 
+//  virtual pressio_options get_metrics_results_impl(pressio_options const &options)=0;
 };
 
 /**

@@ -36,7 +36,7 @@ struct apply_mask{
 
 class mask_metrics: public libpressio_metrics_plugin {
   public:
-    pressio_options get_metrics_results(pressio_options const &options) const override {
+    pressio_options get_metrics_results(pressio_options const &options) override {
     return plugin->get_metrics_results(options);
   }
 

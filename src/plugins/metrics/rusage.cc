@@ -117,7 +117,7 @@ class memory_plugin : public libpressio_metrics_plugin {
     return 0;
   }
 
-  struct pressio_options get_metrics_results(pressio_options const&) const override {
+  struct pressio_options get_metrics_results(pressio_options const&) override {
     struct pressio_options opt;
 
     auto set_or = [&opt, this](const char* key, memory_metrics::tracker memory) {

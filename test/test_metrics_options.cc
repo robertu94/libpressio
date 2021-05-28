@@ -31,7 +31,7 @@ public:
     return options;
   }
 
-  pressio_options get_metrics_results(pressio_options const &options) const override {
+  pressio_options get_metrics_results(pressio_options const &options)  override {
     return {};
   }
   std::unique_ptr<libpressio_metrics_plugin> clone() override {

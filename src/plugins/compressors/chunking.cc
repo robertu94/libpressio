@@ -51,6 +51,12 @@ class chunking_plugin: public libpressio_compressor_plugin {
       return 0;
     }
 
+
+    void set_name_impl(std::string const& new_name) override {
+      compressor->set_name(new_name + "/" + compressor->prefix());
+    }
+
+
     int compress_impl(const pressio_data *input, struct pressio_data* output) override {
       if(not check_valid_dims(input)) return set_error(1, "chunks must currently be a multiple of input size");
       if(not check_contigous(input)) return set_error(2, "chunks must currently be contiguous within the input");
@@ -140,6 +146,7 @@ class chunking_plugin: public libpressio_compressor_plugin {
         outputs.emplace_back(pressio_data::owning(output->dtype(), chunk_size));
         inputs_ptr.emplace_back(&inputs.back());
         outputs_ptr.emplace_back(&outputs.back());
+        accum_size+=sizes[i];
       }
 
       //run the decompressor

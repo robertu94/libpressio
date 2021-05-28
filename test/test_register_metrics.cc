@@ -57,7 +57,7 @@ class counting_metric: public libpressio_metrics_plugin {
     return opts;
   }
 
-  pressio_options get_metrics_results(pressio_options const &options) const override {
+  pressio_options get_metrics_results(pressio_options const &options)  override {
     pressio_options opts;
     opts.set("mycounts:int8", counts.at(pressio_int8_dtype));
     opts.set("mycounts:int16", counts.at(pressio_int16_dtype));

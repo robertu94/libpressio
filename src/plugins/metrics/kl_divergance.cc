@@ -75,7 +75,7 @@ public:
     set(opt, "kl_divergence:p_q", "relative entropy of p given q");
     return opt;
   }
-  pressio_options get_metrics_results(pressio_options const &) const override
+  pressio_options get_metrics_results(pressio_options const &) override
   {
     pressio_options opt;
     if (err_metrics) {

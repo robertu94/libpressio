@@ -155,7 +155,7 @@ class autocorr_plugin : public libpressio_metrics_plugin {
       set(opts, "pressio:description", "computes the 1d autocorrelation");
       return opts;
     }
-    pressio_options get_metrics_results(pressio_options const&) const override {
+    pressio_options get_metrics_results(pressio_options const&)  override {
       pressio_options opt;
       if(err_metrics) {
         set(opt, "autocorr:autocorr", err_metrics->autocorr);

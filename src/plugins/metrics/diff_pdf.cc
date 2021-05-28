@@ -97,7 +97,7 @@ class diff_pdf_plugin : public libpressio_metrics_plugin {
       return opt;
     }
 
-    pressio_options get_metrics_results(pressio_options const &) const override {
+    pressio_options get_metrics_results(pressio_options const &)  override {
       pressio_options opt;
       if(err_metrics) {
         set(opt, "diff_pdf:histogram", err_metrics->histogram);

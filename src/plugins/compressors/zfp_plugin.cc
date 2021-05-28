@@ -57,6 +57,7 @@ class zfp_plugin: public libpressio_compressor_plugin {
       set(options, "zfp:maxprec", zfp->maxprec);
       set(options, "zfp:minexp", zfp->minexp);
       set(options, "zfp:execution", static_cast<int32_t>(zfp_stream_execution(zfp)));
+      set_type(options, "zfp:execution_name", pressio_option_charptr_type);
       set(options, "zfp:omp_threads", zfp_stream_omp_threads(zfp));
       set(options, "zfp:omp_chunk_size", zfp_stream_omp_chunk_size(zfp));
       set_type(options, "zfp:precision", pressio_option_uint32_type);
@@ -77,6 +78,7 @@ class zfp_plugin: public libpressio_compressor_plugin {
       set(options, "zfp:accuracy", "absolute error tolerance for fixed-accuracy mode ");
       set(options, "zfp:dims", "the dimensionality of the input data, used in fixed-rate mode");
       set(options, "zfp:execution", "which execution mode to use");
+      set(options, "zfp:execution_name", "which execution mode to use as a human readable string");
       set(options, "zfp:maxbits", "maximum number of bits to store per block");
       set(options, "zfp:maxprec", "maximum number of bit planes to store");
       set(options, "zfp:minbits", "minimum number of bits to store per block");
@@ -95,6 +97,7 @@ class zfp_plugin: public libpressio_compressor_plugin {
       struct pressio_options options;
       set(options, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
       set(options, "pressio:stability", "stable");
+      set(options, "zfp:execution_name", std::vector<std::string>{"omp", "cuda", "serial"});
       return options;
     }
 
@@ -128,16 +131,23 @@ class zfp_plugin: public libpressio_compressor_plugin {
       }
 
       int execution;
-      if(get(options, "zfp:execution", &execution) == pressio_options_key_set) { 
-        if(!zfp_stream_set_execution(zfp, (zfp_exec_policy)execution)) {
-          switch ((zfp_exec_policy)execution) {
-            case zfp_exec_serial:
-              return set_error(1, "zfp serial execution is not available");
-            case zfp_exec_omp:
-              return set_error(1, "zfp openmp execution is not available");
-            case zfp_exec_cuda:
-              return set_error(1, "zfp cuda execution is not available");
-          }
+      std::string tmp_execution_name;
+      if(get(options, "zfp:execution_name", &tmp_execution_name) == pressio_options_key_set) {
+        if (tmp_execution_name == "serial") {
+          execution = zfp_exec_serial;
+        } else if (tmp_execution_name == "omp") {
+          execution = zfp_exec_omp;
+        } else if (tmp_execution_name == "cuda") {
+          execution = zfp_exec_cuda;
+        } else {
+          return set_error(1, "unknown execution policy: " + tmp_execution_name);
+        }
+        if(set_execution(static_cast<zfp_exec_policy>(execution))) {
+          return error_code();
+        }
+      } else if(get(options, "zfp:execution", &execution) == pressio_options_key_set) { 
+        if(set_execution(static_cast<zfp_exec_policy>(execution))) {
+          return error_code();
         }
       }
       if(zfp_stream_execution(zfp) == zfp_exec_omp) {
@@ -312,6 +322,20 @@ class zfp_plugin: public libpressio_compressor_plugin {
           return invalid_dimensions();
       }
       return 0;
+    }
+
+    int set_execution(zfp_exec_policy execution) {
+        if(!zfp_stream_set_execution(zfp, execution)) {
+          switch ((zfp_exec_policy)execution) {
+            case zfp_exec_serial:
+              return set_error(1, "zfp serial execution is not available");
+            case zfp_exec_omp:
+              return set_error(1, "zfp openmp execution is not available");
+            case zfp_exec_cuda:
+              return set_error(1, "zfp cuda execution is not available");
+          }
+        }
+        return 0;
     }
     
     zfp_stream* zfp;

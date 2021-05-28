@@ -70,7 +70,7 @@ class size_plugin : public libpressio_metrics_plugin {
     return opt;
   }
 
-  pressio_options get_metrics_results(pressio_options const &) const override {
+  pressio_options get_metrics_results(pressio_options const &) override {
     pressio_options opt;
 
     auto set_or_double = [&opt, this](const char* key, compat::optional<double> size) {

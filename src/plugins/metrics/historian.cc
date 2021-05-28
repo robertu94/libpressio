@@ -181,7 +181,7 @@ class pressio_historian_metric: public libpressio_metrics_plugin {
 
     return opts;
   };
-  pressio_options get_metrics_results(pressio_options const&) const override {
+  pressio_options get_metrics_results(pressio_options const&)  override {
     return opts;
   }
   void set_name_impl(std::string const& new_name) override {

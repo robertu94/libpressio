@@ -66,7 +66,7 @@ public:
     return opt;
   }
 
-  pressio_options get_metrics_results(pressio_options const &) const override
+  pressio_options get_metrics_results(pressio_options const &) override
   {
     pressio_options opt;
     set(opt, "kth_error:kth_error", error);

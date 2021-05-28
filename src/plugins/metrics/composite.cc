@@ -138,7 +138,7 @@ class composite_plugin : public libpressio_metrics_plugin {
  
   }
 
-  pressio_options get_metrics_results(pressio_options const &) const override {
+  pressio_options get_metrics_results(pressio_options const &)  override {
     struct pressio_options metrics_result;
     for (auto const& plugin : plugins) {
       pressio_options plugin_options = plugin->get_metrics_results({});
@@ -225,7 +225,7 @@ class composite_plugin : public libpressio_metrics_plugin {
 
   private:
 
-  void set_composite_metrics(struct pressio_options& opt) const {
+  int set_composite_metrics(struct pressio_options& opt) {
     std::string time_name;
     std::string size_name;
     for (const auto & plugin : plugins) {
@@ -297,7 +297,12 @@ class composite_plugin : public libpressio_metrics_plugin {
         lua.open_libraries(sol::lib::math);
         lua["metrics"] = metrics;
 
-        sol::optional<std::tuple<std::string, sol::optional<double>>> lua_result = lua.safe_script(script);
+        sol::optional<std::tuple<std::string, sol::optional<double>>> lua_result = lua.safe_script(script, 
+            [this](lua_State*, sol::protected_function_result pfr) {
+                sol::error err = pfr;
+                set_error(1, std::string("lua error: ") + err.what());
+                return pfr;
+        });
         if(lua_result) {
           auto const& lua_result_v = *lua_result;
           std::string name = std::string("composite:") + std::get<0>(lua_result_v);
@@ -307,12 +312,16 @@ class composite_plugin : public libpressio_metrics_plugin {
           } else {
             set_type(opt, name, pressio_option_double_type);
           }
+        } else {
+          return error_code();
         }
       } catch (sol::error& err) {
-        //swallow errors from sol and do not insert a key
+        return set_error(1, std::string("lua error; ") + err.what());
       }
     }
 #endif
+
+    return 0;
 
   }
 

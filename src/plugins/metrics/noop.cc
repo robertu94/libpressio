@@ -7,7 +7,7 @@
 
 class noop_metrics_plugin : public libpressio_metrics_plugin {
 public:
-  pressio_options get_metrics_results(pressio_options const &) const override {
+  pressio_options get_metrics_results(pressio_options const &) override {
     return pressio_options();
   }
 
