@@ -1,7 +1,6 @@
 #ifndef LIBPRESSSIO_SUBGROUP_MANAGER
 #define LIBPRESSSIO_SUBGROUP_MANAGER
 #include "configurable.h"
-#include "libdistributed/libdistributed_work_queue.h"
 #include "std_compat/memory.h"
 #include "std_compat/span.h"
 #include "libpressio_ext/cpp/compressor.h"
@@ -12,8 +11,6 @@
 #include "pressio_data.h"
 #include "pressio_options.h"
 #include <cstddef>
-#include <libdistributed_task_manager.h>
-#include <libdistributed_work_queue_options.h>
 #include <libpressio_ext/cpp/distributed_manager.h>
 #include <libpressio_ext/cpp/serializable.h>
 #include <memory>

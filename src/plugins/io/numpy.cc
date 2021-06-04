@@ -1,6 +1,7 @@
 #include <vector>
 #include <regex>
 #include <fstream>
+#include <sstream>
 #include <sys/stat.h>
 #include "pressio_data.h"
 #include "pressio_compressor.h"
