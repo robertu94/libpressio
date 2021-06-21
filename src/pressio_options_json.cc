@@ -4,6 +4,7 @@
 #include <pressio_options.h>
 #include <vector>
 #include <stdexcept>
+#include <sstream>
 
 void to_json(nlohmann::json& j, pressio_data const& data){
   j["dims"] = data.dimensions();
@@ -256,10 +257,20 @@ void from_json(nlohmann::json const& j, pressio_options& options) {
 
 extern "C" {
   struct pressio_options* pressio_options_new_json(struct pressio* library, const char* json) {
-    nlohmann::json parsed = nlohmann::json::parse(json);
     pressio_options* options = nullptr;
     try {
+      nlohmann::json parsed = nlohmann::json::parse(json);
       options = new pressio_options(parsed.get<pressio_options>());
+    } catch (nlohmann::detail::out_of_range& ex) {
+      if(library) {
+        library->set_error(2, ex.what());
+      }
+    } catch (nlohmann::detail::parse_error& ex) {
+      if(library) {
+        std::stringstream err_msg;
+        err_msg << ex.what() << "\n" << json;
+        library->set_error(2, err_msg.str());
+      }
     } catch (std::runtime_error& ex) {
       if(library) {
         library->set_error(1, ex.what());
