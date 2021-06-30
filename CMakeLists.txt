@@ -240,6 +240,7 @@ if(LIBPRESSIO_HAS_SZ)
   target_sources(libpressio
     PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/sz_plugin.cc
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/sz_threadsafe_plugin.cc
     )
   target_link_libraries(libpressio PRIVATE SZ)
 endif()
