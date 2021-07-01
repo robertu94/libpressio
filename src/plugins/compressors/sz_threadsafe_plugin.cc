@@ -6,7 +6,7 @@
 
 #include <sz/sz.h>
 #if HAVE_WRITESTATS
-#include <sz/sz_stats.h>
+#include <sz/sz_threadsafe_stats.h>
 #endif
 
 #include "libpressio_ext/cpp/data.h"
@@ -52,15 +52,15 @@ namespace {
   };
 }
 
-class sz_plugin: public libpressio_compressor_plugin {
+class sz_threadsafe_plugin: public libpressio_compressor_plugin {
   public:
-  sz_plugin() {
+  sz_threadsafe_plugin() {
     std::stringstream ss;
-    ss << sz_plugin::major_version() << "." << sz_plugin::minor_version() << "." << sz_plugin::patch_version() << "." << revision_version();
+    ss << sz_threadsafe_plugin::major_version() << "." << sz_threadsafe_plugin::minor_version() << "." << sz_threadsafe_plugin::patch_version() << "." << revision_version();
     sz_version = ss.str();
     SZ_Init(NULL);
   };
-  ~sz_plugin() {
+  ~sz_threadsafe_plugin() {
     SZ_Finalize();
   }
 
@@ -149,8 +149,7 @@ class sz_plugin: public libpressio_compressor_plugin {
     return options;
   }
 
-  sz_params threadsafe_params;
-  memcpy(&threadsafe_params, confparams_cpr,sizeof(sz_params));
+  sz_params *threadsafe_params;
 
 
   struct pressio_options get_options_impl() const override {
@@ -302,7 +301,7 @@ class sz_plugin: public libpressio_compressor_plugin {
         &outsize,
         &status
         );*/
-    unsigned char* compressed_data=SZ_compress_customize_threadsafe("SZ",&threadsafe_params,SZ_FLOAT,input->data(),...
+    unsigned char* compressed_data=SZ_compress_customize_threadsafe("SZ",&threadsafe_params,SZ_FLOAT,input->data(),
 		    r5,r4,r3,r2,r1,&outsize,&status);
 
     *output = pressio_data::move(pressio_byte_dtype, compressed_data, 1, &outsize, pressio_data_libc_free_fn, nullptr);
@@ -334,7 +333,7 @@ class sz_plugin: public libpressio_compressor_plugin {
         r[0],
         &status
         );*/
-    void* decompressed_data=SZ_decompress_customize_threadsafe("SZ",&threadsafe_params,SZ_FLOAT,compressed_data,outsize,...
+    void* decompressed_data=SZ_decompress_customize_threadsafe("SZ",&threadsafe_params,SZ_FLOAT,(unsigned char*)input->data(),ndims,
 		    r[4],r[3],r[2],r[1],r[0],&status);
     
     *output = pressio_data::move(type, decompressed_data, ndims, r, pressio_data_libc_free_fn, nullptr);
@@ -363,33 +362,33 @@ class sz_plugin: public libpressio_compressor_plugin {
   }
 
   pressio_options get_metrics_results_impl() const override {
-    pressio_options sz_metrics;
+    pressio_options sz_threadsafe_metrics;
 #if HAVE_WRITESTATS
-    set(sz_metrics, "sz_threadsafe:use_mean", sz_stat.use_mean);
-    set(sz_metrics, "sz_threadsafe:block_size", (unsigned int)sz_stat.blockSize);
-    set(sz_metrics, "sz_threadsafe:lorenzo_blocks", (unsigned int)sz_stat.lorenzoBlocks);
-    set(sz_metrics, "sz_threadsafe:regression_blocks", (unsigned int)sz_stat.regressionBlocks);
-    set(sz_metrics, "sz_threadsafe:total_blocks", (unsigned int)sz_stat.totalBlocks);
-    set(sz_metrics, "sz_threadsafe:huffman_tree_size", (unsigned int)sz_stat.huffmanTreeSize);
-    set(sz_metrics, "sz_threadsafe:huffman_coding_size", (unsigned int)sz_stat.huffmanCodingSize);
-    set(sz_metrics, "sz_threadsafe:huffman_node_count", (unsigned int)sz_stat.huffmanNodeCount);
-    set(sz_metrics, "sz_threadsafe:unpredict_count", (unsigned int)sz_stat.unpredictCount);
+    set(sz_threadsafe_metrics, "sz_threadsafe:use_mean", sz_threadsafe_stat.use_mean);
+    set(sz_threadsafe_metrics, "sz_threadsafe:block_size", (unsigned int)sz_threadsafe_stat.blockSize);
+    set(sz_threadsafe_metrics, "sz_threadsafe:lorenzo_blocks", (unsigned int)sz_threadsafe_stat.lorenzoBlocks);
+    set(sz_threadsafe_metrics, "sz_threadsafe:regression_blocks", (unsigned int)sz_threadsafe_stat.regressionBlocks);
+    set(sz_threadsafe_metrics, "sz_threadsafe:total_blocks", (unsigned int)sz_threadsafe_stat.totalBlocks);
+    set(sz_threadsafe_metrics, "sz_threadsafe:huffman_tree_size", (unsigned int)sz_threadsafe_stat.huffmanTreeSize);
+    set(sz_threadsafe_metrics, "sz_threadsafe:huffman_coding_size", (unsigned int)sz_threadsafe_stat.huffmanCodingSize);
+    set(sz_threadsafe_metrics, "sz_threadsafe:huffman_node_count", (unsigned int)sz_threadsafe_stat.huffmanNodeCount);
+    set(sz_threadsafe_metrics, "sz_threadsafe:unpredict_count", (unsigned int)sz_threadsafe_stat.unpredictCount);
 
-    set(sz_metrics, "sz_threadsafe:lorenzo_percent", sz_stat.lorenzoPercent);
-    set(sz_metrics, "sz_threadsafe:regression_percent", sz_stat.lorenzoPercent);
-    set(sz_metrics, "sz_threadsafe:huffman_compression_ratio", sz_stat.huffmanCompressionRatio);
+    set(sz_threadsafe_metrics, "sz_threadsafe:lorenzo_percent", sz_threadsafe_stat.lorenzoPercent);
+    set(sz_threadsafe_metrics, "sz_threadsafe:regression_percent", sz_threadsafe_stat.lorenzoPercent);
+    set(sz_threadsafe_metrics, "sz_threadsafe:huffman_compression_ratio", sz_threadsafe_stat.huffmanCompressionRatio);
 #endif
-    return sz_metrics;
+    return sz_threadsafe_metrics;
   }
 
   std::shared_ptr<libpressio_compressor_plugin> clone() override {
-	  return compat::make_unique<sz_threadsafe_plugin>(*this);
+	return compat::make_unique<sz_threadsafe_plugin>(*this);
 	//return compressor_plugins().build("sz");
   }
 
 
   private:
-  static int libpressio_type_to_sz_type(pressio_dtype type) {
+  static int libpressio_type_to_sz_threadsafe_type(pressio_dtype type) {
     switch(type)
     {
       case pressio_float_dtype:  return SZ_FLOAT;
@@ -418,8 +417,8 @@ class sz_plugin: public libpressio_compressor_plugin {
 #endif
 };
 
-std::unique_ptr<libpressio_compressor_plugin> make_c_sz() {
+std::unique_ptr<libpressio_compressor_plugin> make_c_sz_threadsafe() {
   return compat::make_unique<sz_threadsafe_plugin>();
 }
 
-static pressio_register compressor_sz_plugin(compressor_plugins(), "sz_threadsafe", [](){ static auto sz = std::make_shared<sz_threadsafe_plugin>(); return sz; });
+static pressio_register compressor_sz_threadsafe_plugin(compressor_plugins(), "sz_threadsafe", [](){ static auto sz_threadsafe = std::make_shared<sz_threadsafe_plugin>(); return sz_threadsafe; });
