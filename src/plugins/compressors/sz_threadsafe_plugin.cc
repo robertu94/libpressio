@@ -199,14 +199,14 @@ class sz_threadsafe_plugin: public libpressio_compressor_plugin {
 
   int set_options_impl(struct pressio_options const& options) override {
 
-    struct sz_params* sz_param;
+    struct sz_params* sz_threadsafe_param;
     std::string config_file;
     if(get(options, "sz_threadsafe:config_file", &config_file) == pressio_options_key_set) {
       SZ_Finalize();
       SZ_Init(config_file.c_str());
-    } else if (get(options, "sz_threadsafe:config_struct", (void**)&sz_param) == pressio_options_key_set) {
+    } else if (get(options, "sz_threadsafe:config_struct", (void**)&sz_threadsafe_param) == pressio_options_key_set) {
       SZ_Finalize();
-      SZ_Init_Params(sz_param);
+      SZ_Init_Params(sz_threadsafe_param);
     }
 
 #if PRESSIO_SZ_VERSION_GREATEREQ(2,1,9,0)
