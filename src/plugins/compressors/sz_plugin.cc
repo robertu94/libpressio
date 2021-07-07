@@ -19,22 +19,22 @@
 #include "pressio_options.h"
 #include "pressio_option.h"
 #include "std_compat/memory.h"
+#include "sz_header.h"
+#include "iless.h"
 
-#define PRESSIO_SZ_VERSION_GREATEREQ(major, minor, build, revision) \
-   (SZ_VER_MAJOR > major || \
-   (SZ_VER_MAJOR == major && SZ_VER_MINOR > minor) ||                                  \
-   (SZ_VER_MAJOR == major && SZ_VER_MINOR == minor && SZ_VER_BUILD > build) || \
-   (SZ_VER_MAJOR == major && SZ_VER_MINOR == minor && SZ_VER_BUILD == build && SZ_VER_REVISION >= revision))
+const char* get_version_sz(int major_version, int minor_version, int patch_version, int revision_version);
 
-namespace {
-  struct iless {
-    bool operator()(std::string lhs, std::string rhs) const {
-      std::transform(std::begin(lhs), std::end(lhs), std::begin(lhs), [](unsigned char c){return std::tolower(c);});
-      std::transform(std::begin(rhs), std::end(rhs), std::begin(rhs), [](unsigned char c){return std::tolower(c);});
-      return lhs < rhs;
-    }
-  };
-  static std::map<std::string, int, iless> const sz_mode_str_to_code {
+const char* get_version_sz(int major_version, int minor_version, int patch_version, int revision_version){
+        static std::string
+                s=[major_version,minor_version,patch_version,revision_version]{
+			std::stringstream ss;
+                        ss << major_version << "." << minor_version << "." << patch_version << "." << revision_version;
+                        return ss.str();
+                }();
+        return s.c_str();
+}
+
+static std::map<std::string, int, iless> const sz_mode_str_to_code {
     {"abs", ABS},
     {"rel", REL},
     {"vr_rel", REL},
@@ -49,15 +49,13 @@ namespace {
     {"abs_and_pw_rel", ABS_AND_PW_REL},
     {"rel_or_pw_rel", REL_OR_PW_REL},
     {"rel_and_pw_rel", REL_AND_PW_REL},
-  };
-}
+};
 
 class sz_plugin: public libpressio_compressor_plugin {
   public:
   sz_plugin() {
     std::stringstream ss;
-    ss << sz_plugin::major_version() << "." << sz_plugin::minor_version() << "." << sz_plugin::patch_version() << "." << revision_version();
-    sz_version = ss.str();
+    sz_version = get_version_sz(sz_plugin::major_version(),sz_plugin::minor_version(),sz_plugin::patch_version(),revision_version());
     SZ_Init(NULL);
   };
   ~sz_plugin() {
@@ -375,25 +373,6 @@ class sz_plugin: public libpressio_compressor_plugin {
     return compressor_plugins().build("sz");
   }
 
-
-  private:
-  static int libpressio_type_to_sz_type(pressio_dtype type) {
-    switch(type)
-    {
-      case pressio_float_dtype:  return SZ_FLOAT;
-      case pressio_double_dtype: return SZ_DOUBLE;
-      case pressio_uint8_dtype: return SZ_UINT8;
-      case pressio_int8_dtype: return SZ_INT8;
-      case pressio_uint16_dtype: return SZ_UINT16;
-      case pressio_int16_dtype: return SZ_INT16;
-      case pressio_uint32_dtype: return SZ_UINT32;
-      case pressio_int32_dtype: return SZ_INT32;
-      case pressio_uint64_dtype: return SZ_UINT64;
-      case pressio_int64_dtype: return SZ_INT64;
-      case pressio_byte_dtype: return SZ_INT8;
-    }
-    return -1;
-  }
   std::string sz_version;
   std::string app = "SZ";
   void* user_params = nullptr;

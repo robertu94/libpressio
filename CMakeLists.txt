@@ -241,8 +241,11 @@ if(LIBPRESSIO_HAS_SZ)
     PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/sz_plugin.cc
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/sz_threadsafe_plugin.cc
-    )
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/variable_definition.cc
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/iless.cc
+  )
   target_link_libraries(libpressio PRIVATE SZ)
+  target_include_directories(libpressio PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors)
 endif()
 
 option(LIBPRESSIO_HAS_BLOSC "build the BLOSC plugin" OFF)
