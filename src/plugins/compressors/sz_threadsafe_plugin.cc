@@ -45,12 +45,12 @@ static std::map<std::string, int, iless> const sz_threadsafe_mode_str_to_code {
 };
 class sz_threadsafe_plugin: public libpressio_compressor_plugin {
   public:
-  sz_threadsafe_plugin() {
+  sz_threadsafe_plugin(std::shared_ptr<sz_init_handle>&& init_handle): init_handle(init_handle) {
+    std::shared_lock<std::shared_mutex> lock(init_handle->sz_init_lock);
+    threadsafe_params = *confparams_cpr;
     sz_version = get_version_sz_threadsafe(sz_threadsafe_plugin::major_version(),sz_threadsafe_plugin::minor_version(),sz_threadsafe_plugin::patch_version(),revision_version());
-    SZ_Init(NULL);
   };
   ~sz_threadsafe_plugin() {
-    SZ_Finalize();
   }
 
 
@@ -259,6 +259,7 @@ class sz_threadsafe_plugin: public libpressio_compressor_plugin {
   }
 
   int compress_impl(const pressio_data *input, struct pressio_data* output) override {
+    std::shared_lock<std::shared_mutex> lock(init_handle->sz_init_lock);
     size_t r1 = pressio_data_get_dimension(input, 0);
     size_t r2 = pressio_data_get_dimension(input, 1);
     size_t r3 = pressio_data_get_dimension(input, 2);
@@ -270,10 +271,15 @@ class sz_threadsafe_plugin: public libpressio_compressor_plugin {
     unsigned char* compressed_data=SZ_compress_customize_threadsafe(app.c_str(),user_params,libpressio_type_to_sz_type(input->dtype()),input->data(),
 		    r5,r4,r3,r2,r1,&outsize,&status);
 
-    *output = pressio_data::move(pressio_byte_dtype, compressed_data, 1, &outsize, pressio_data_libc_free_fn, nullptr);
-    return 0;
+    if(compressed_data != nullptr) {
+      *output = pressio_data::move(pressio_byte_dtype, compressed_data, 1, &outsize, pressio_data_libc_free_fn, nullptr);
+      return 0;
+    } else {
+      return set_error(1, "compression failed");
+    }
   }
   int decompress_impl(const pressio_data *input, struct pressio_data* output) override {
+    std::shared_lock<std::shared_mutex> lock(init_handle->sz_init_lock);
 
     size_t r[] = {
      pressio_data_get_dimension(output, 0),
@@ -299,8 +305,12 @@ class sz_threadsafe_plugin: public libpressio_compressor_plugin {
         r[0],
         &status);
     
-    *output = pressio_data::move(type, decompressed_data, ndims, r, pressio_data_libc_free_fn, nullptr);
-    return 0;
+    if(decompressed_data != nullptr) {
+      *output = pressio_data::move(type, decompressed_data, ndims, r, pressio_data_libc_free_fn, nullptr);
+      return 0;
+    } else {
+      return set_error(2, "decompression failed");
+    }
   }
 
   int major_version() const override {
@@ -330,6 +340,7 @@ class sz_threadsafe_plugin: public libpressio_compressor_plugin {
   std::string sz_version;
   std::string app = "SZ";
   void* user_params = &threadsafe_params;
+  std::shared_ptr<sz_init_handle> init_handle;
 #if PRESSIO_SZ_VERSION_GREATEREQ(2,1,11,1)
   pressio_data exafel_peaks_segs;
   pressio_data exafel_peaks_rows;
@@ -340,4 +351,6 @@ class sz_threadsafe_plugin: public libpressio_compressor_plugin {
 };
 
 
-static pressio_register compressor_sz_threadsafe_plugin(compressor_plugins(), "sz_threadsafe", [](){ return compat::make_unique<sz_threadsafe_plugin>(); });
+static pressio_register compressor_sz_threadsafe_plugin(compressor_plugins(), "sz_threadsafe", [](){
+    return compat::make_unique<sz_threadsafe_plugin>(pressio_get_sz_init_handle()); 
+});

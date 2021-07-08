@@ -36,3 +36,21 @@ int libpressio_type_to_sz_type(pressio_dtype type) {
     }
     return -1;
 }
+
+sz_init_handle::sz_init_handle() {
+  SZ_Init(nullptr);
+}
+sz_init_handle::~sz_init_handle() {
+  SZ_Finalize();
+}
+std::shared_ptr<sz_init_handle> pressio_get_sz_init_handle() {
+  static std::weak_ptr<sz_init_handle> handle;
+  std::shared_ptr<sz_init_handle> sp_handle;
+  if((sp_handle = handle.lock())) {
+    return sp_handle;
+  } else {
+    sp_handle = std::make_shared<sz_init_handle>();
+    handle = sp_handle;
+    return sp_handle;
+  }
+}
