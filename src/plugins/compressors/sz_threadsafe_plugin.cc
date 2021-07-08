@@ -5,9 +5,6 @@
 #include <cstdlib>
 
 #include <sz/sz.h>
-#if HAVEWRITESTATS
-#include <sz/sz_stats.h>
-#endif
 
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/compressor.h"
@@ -76,11 +73,6 @@ class sz_threadsafe_plugin: public libpressio_compressor_plugin {
 #else
     set(options, "sz_threadsafe:pastri", 0u);
 #endif
-#ifdef HAVE_WRITESTATS
-    set(options, "sz_threadsafe:write_stats", 1u);
-#else
-    set(options, "sz_threadsafe:write_stats", 0u);
-#endif
 
 
     std::vector<std::string> vs;
@@ -140,32 +132,32 @@ class sz_threadsafe_plugin: public libpressio_compressor_plugin {
     return options;
   }
 
-  sz_params *threadsafe_params;
+  sz_params threadsafe_params;
 
 
   struct pressio_options get_options_impl() const override {
     struct pressio_options options;
     set_type(options, "sz_threadsafe:config_struct", pressio_option_userptr_type);
 #if PRESSIO_SZ_VERSION_GREATEREQ(2,1,9,0)
-    set(options, "sz_threadsafe:protect_value_range", threadsafe_params->protectValueRange);
+    set(options, "sz_threadsafe:protect_value_range", threadsafe_params.protectValueRange);
 #endif
-    set(options, "sz_threadsafe:max_quant_intervals", threadsafe_params->max_quant_intervals);
-    set(options, "sz_threadsafe:quantization_intervals", threadsafe_params->quantization_intervals);
-    set(options, "sz_threadsafe:sol_id", threadsafe_params->sol_ID);
-    set(options, "sz_threadsafe:lossless_compressor", threadsafe_params->losslessCompressor);
-    set(options, "sz_threadsafe:sample_distance", threadsafe_params->sampleDistance);
-    set(options, "sz_threadsafe:pred_threshold", threadsafe_params->predThreshold);
-    set(options, "sz_threadsafe:sz_mode", threadsafe_params->szMode);
-    set(options, "sz_threadsafe:gzip_mode", threadsafe_params->gzipMode);
-    set(options, "sz_threadsafe:error_bound_mode", threadsafe_params->errorBoundMode);
+    set(options, "sz_threadsafe:max_quant_intervals", threadsafe_params.max_quant_intervals);
+    set(options, "sz_threadsafe:quantization_intervals", threadsafe_params.quantization_intervals);
+    set(options, "sz_threadsafe:sol_id", threadsafe_params.sol_ID);
+    set(options, "sz_threadsafe:lossless_compressor", threadsafe_params.losslessCompressor);
+    set(options, "sz_threadsafe:sample_distance", threadsafe_params.sampleDistance);
+    set(options, "sz_threadsafe:pred_threshold", threadsafe_params.predThreshold);
+    set(options, "sz_threadsafe:sz_mode", threadsafe_params.szMode);
+    set(options, "sz_threadsafe:gzip_mode", threadsafe_params.gzipMode);
+    set(options, "sz_threadsafe:error_bound_mode", threadsafe_params.errorBoundMode);
     set_type(options, "sz_threadsafe:error_bound_mode_str", pressio_option_charptr_type);
-	  set(options, "sz_threadsafe:abs_err_bound", threadsafe_params->absErrBound);
-	  set(options, "sz_threadsafe:rel_err_bound", threadsafe_params->relBoundRatio);
-	  set(options, "sz_threadsafe:psnr_err_bound", threadsafe_params->psnr);
-	  set(options, "sz_threadsafe:pw_rel_err_bound", threadsafe_params->pw_relBoundRatio);
-	  set(options, "sz_threadsafe:segment_size", threadsafe_params->segment_size);
-	  set(options, "sz_threadsafe:snapshot_cmpr_step", threadsafe_params->snapshotCmprStep);
-	  set(options, "sz_threadsafe:accelerate_pw_rel_compression", threadsafe_params->accelerate_pw_rel_compression);
+	  set(options, "sz_threadsafe:abs_err_bound", threadsafe_params.absErrBound);
+	  set(options, "sz_threadsafe:rel_err_bound", threadsafe_params.relBoundRatio);
+	  set(options, "sz_threadsafe:psnr_err_bound", threadsafe_params.psnr);
+	  set(options, "sz_threadsafe:pw_rel_err_bound", threadsafe_params.pw_relBoundRatio);
+	  set(options, "sz_threadsafe:segment_size", threadsafe_params.segment_size);
+	  set(options, "sz_threadsafe:snapshot_cmpr_step", threadsafe_params.snapshotCmprStep);
+	  set(options, "sz_threadsafe:accelerate_pw_rel_compression", threadsafe_params.accelerate_pw_rel_compression);
 	  set_type(options, "sz_threadsafe:prediction_mode", pressio_option_int32_type);
     set_type(options, "sz_threadsafe:data_type", pressio_option_double_type);
 #if PRESSIO_SZ_VERSION_GREATEREQ(2,1,11,1)
@@ -181,7 +173,7 @@ class sz_threadsafe_plugin: public libpressio_compressor_plugin {
 #endif
     set(options, "sz_threadsafe:app", app.c_str());
 #ifdef HAVE_RANDOMACCESS
-    set(options, "sz_threadsafe:random_access", threadsafe_params->randomAccess);
+    set(options, "sz_threadsafe:random_access", threadsafe_params.randomAccess);
 #endif
     set(options, "sz_threadsafe:user_params", user_params);
     return options;
@@ -195,35 +187,35 @@ class sz_threadsafe_plugin: public libpressio_compressor_plugin {
     }
 
 #if PRESSIO_SZ_VERSION_GREATEREQ(2,1,9,0)
-    get(options, "sz_threadsafe:protect_value_range", &threadsafe_params->protectValueRange);
+    get(options, "sz_threadsafe:protect_value_range", &threadsafe_params.protectValueRange);
 #endif
-    get(options, "sz_threadsafe:max_quant_intervals", &threadsafe_params->max_quant_intervals);
-    get(options, "sz_threadsafe:quantization_intervals", &threadsafe_params->quantization_intervals);
-    get(options, "sz_threadsafe:sol_id", &threadsafe_params->sol_ID);
-    get(options, "sz_threadsafe:lossless_compressor", &threadsafe_params->losslessCompressor);
-    get(options, "sz_threadsafe:sample_distance", &threadsafe_params->sampleDistance);
-    get(options, "sz_threadsafe:pred_threshold", &threadsafe_params->predThreshold);
-    get(options, "sz_threadsafe:sz_mode", &threadsafe_params->szMode);
-    get(options, "sz_threadsafe:gzip_mode", &threadsafe_params->gzipMode);
+    get(options, "sz_threadsafe:max_quant_intervals", &threadsafe_params.max_quant_intervals);
+    get(options, "sz_threadsafe:quantization_intervals", &threadsafe_params.quantization_intervals);
+    get(options, "sz_threadsafe:sol_id", &threadsafe_params.sol_ID);
+    get(options, "sz_threadsafe:lossless_compressor", &threadsafe_params.losslessCompressor);
+    get(options, "sz_threadsafe:sample_distance", &threadsafe_params.sampleDistance);
+    get(options, "sz_threadsafe:pred_threshold", &threadsafe_params.predThreshold);
+    get(options, "sz_threadsafe:sz_mode", &threadsafe_params.szMode);
+    get(options, "sz_threadsafe:gzip_mode", &threadsafe_params.gzipMode);
 
     std::string error_bound_mode_str;
     if(get(options, "sz_threadsafe:error_bound_mode_str", &error_bound_mode_str) == pressio_options_key_set) {
       auto key = sz_threadsafe_mode_str_to_code.find(error_bound_mode_str);
       if(key != sz_threadsafe_mode_str_to_code.end()) {
-        threadsafe_params->errorBoundMode = key->second;
+        threadsafe_params.errorBoundMode = key->second;
       }
     } else { 
-      get(options, "sz_threadsafe:error_bound_mode", &threadsafe_params->errorBoundMode ); 
+      get(options, "sz_threadsafe:error_bound_mode", &threadsafe_params.errorBoundMode ); 
     }
-    get(options, "sz_threadsafe:abs_err_bound", &threadsafe_params->absErrBound);
-    get(options, "sz_threadsafe:rel_err_bound", &threadsafe_params->relBoundRatio);
-    get(options, "sz_threadsafe:psnr_err_bound", &threadsafe_params->psnr);
-    get(options, "sz_threadsafe:pw_rel_err_bound", &threadsafe_params->pw_relBoundRatio);
-    get(options, "sz_threadsafe:segment_size", &threadsafe_params->segment_size);
-    get(options, "sz_threadsafe:snapshot_cmpr_step", &threadsafe_params->snapshotCmprStep);
-    get(options, "sz_threadsafe:prediction_mode", &threadsafe_params->predictionMode);
-    get(options, "sz_threadsafe:accelerate_pw_rel_compression", &threadsafe_params->accelerate_pw_rel_compression);
-    get(options, "sz_threadsafe:data_type", &threadsafe_params->dataType);
+    get(options, "sz_threadsafe:abs_err_bound", &threadsafe_params.absErrBound);
+    get(options, "sz_threadsafe:rel_err_bound", &threadsafe_params.relBoundRatio);
+    get(options, "sz_threadsafe:psnr_err_bound", &threadsafe_params.psnr);
+    get(options, "sz_threadsafe:pw_rel_err_bound", &threadsafe_params.pw_relBoundRatio);
+    get(options, "sz_threadsafe:segment_size", &threadsafe_params.segment_size);
+    get(options, "sz_threadsafe:snapshot_cmpr_step", &threadsafe_params.snapshotCmprStep);
+    get(options, "sz_threadsafe:prediction_mode", &threadsafe_params.predictionMode);
+    get(options, "sz_threadsafe:accelerate_pw_rel_compression", &threadsafe_params.accelerate_pw_rel_compression);
+    get(options, "sz_threadsafe:data_type", &threadsafe_params.dataType);
     get(options, "sz_threadsafe:app", &app);
     get(options, "sz_threadsafe:user_params", &user_params);
 #if PRESSIO_SZ_VERSION_GREATEREQ(2,1,11,1)
@@ -260,7 +252,7 @@ class sz_threadsafe_plugin: public libpressio_compressor_plugin {
 }
 #endif
 #ifdef HAVE_RANDOMACCESS
-    get(options, "sz_threadsafe:random_access", &threadsafe_params->randomAccess);
+    get(options, "sz_threadsafe:random_access", &threadsafe_params.randomAccess);
 #endif
 
     return 0;
@@ -275,7 +267,7 @@ class sz_threadsafe_plugin: public libpressio_compressor_plugin {
     int status = SZ_NSCS;
     size_t outsize = 0;
 
-    unsigned char* compressed_data=SZ_compress_customize_threadsafe(app.c_str(),&user_params,input->dtype(),input->data(),
+    unsigned char* compressed_data=SZ_compress_customize_threadsafe(app.c_str(),user_params,libpressio_type_to_sz_type(input->dtype()),input->data(),
 		    r5,r4,r3,r2,r1,&outsize,&status);
 
     *output = pressio_data::move(pressio_byte_dtype, compressed_data, 1, &outsize, pressio_data_libc_free_fn, nullptr);
@@ -294,8 +286,18 @@ class sz_threadsafe_plugin: public libpressio_compressor_plugin {
 
     int status = SZ_NSCS;
     pressio_dtype type = pressio_data_dtype(output);
-    void* decompressed_data=SZ_decompress_customize_threadsafe(app.c_str(),&user_params,input->dtype(),(unsigned char*)input->data(),ndims,
-		    r[4],r[3],r[2],r[1],r[0],&status);
+    void* decompressed_data=SZ_decompress_customize_threadsafe(
+        app.c_str(),
+        user_params,
+        libpressio_type_to_sz_type(output->dtype()),
+        static_cast<unsigned char*>(input->data()),
+        pressio_data_get_dimension(input, 0),
+		    r[4],
+        r[3],
+        r[2],
+        r[1],
+        r[0],
+        &status);
     
     *output = pressio_data::move(type, decompressed_data, ndims, r, pressio_data_libc_free_fn, nullptr);
     return 0;
@@ -321,26 +323,6 @@ class sz_threadsafe_plugin: public libpressio_compressor_plugin {
   const char* prefix() const override {
     return "sz_threadsafe";
   }
-/*
-  pressio_options get_metrics_results_impl() const override {
-    pressio_options sz_threadsafe_metrics;
-#if HAVE_WRITESTATS
-    set(sz_threadsafe_metrics, "sz_threadsafe:use_mean", sz_threadsafe_stat.use_mean);
-    set(sz_threadsafe_metrics, "sz_threadsafe:block_size", (unsigned int)sz_threadsafe_stat.blockSize);
-    set(sz_threadsafe_metrics, "sz_threadsafe:lorenzo_blocks", (unsigned int)sz_threadsafe_stat.lorenzoBlocks);
-    set(sz_threadsafe_metrics, "sz_threadsafe:regression_blocks", (unsigned int)sz_threadsafe_stat.regressionBlocks);
-    set(sz_threadsafe_metrics, "sz_threadsafe:total_blocks", (unsigned int)sz_threadsafe_stat.totalBlocks);
-    set(sz_threadsafe_metrics, "sz_threadsafe:huffman_tree_size", (unsigned int)sz_threadsafe_stat.huffmanTreeSize);
-    set(sz_threadsafe_metrics, "sz_threadsafe:huffman_coding_size", (unsigned int)sz_threadsafe_stat.huffmanCodingSize);
-    set(sz_threadsafe_metrics, "sz_threadsafe:huffman_node_count", (unsigned int)sz_threadsafe_stat.huffmanNodeCount);
-    set(sz_threadsafe_metrics, "sz_threadsafe:unpredict_count", (unsigned int)sz_threadsafe_stat.unpredictCount);
-
-    set(sz_threadsafe_metrics, "sz_threadsafe:lorenzo_percent", sz_threadsafe_stat.lorenzoPercent);
-    set(sz_threadsafe_metrics, "sz_threadsafe:regression_percent", sz_threadsafe_stat.lorenzoPercent);
-    set(sz_threadsafe_metrics, "sz_threadsafe:huffman_compression_ratio", sz_threadsafe_stat.huffmanCompressionRatio);
-#endif
-    return sz_threadsafe_metrics;
-  }*/
 
   std::shared_ptr<libpressio_compressor_plugin> clone() override {
 	return compat::make_unique<sz_threadsafe_plugin>(*this);
