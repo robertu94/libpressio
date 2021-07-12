@@ -16,17 +16,15 @@
 #include "pressio_options.h"
 #include "pressio_option.h"
 #include "std_compat/memory.h"
-#include "sz_header.h"
+#include "sz_common.h"
 #include "iless.h"
 
 
-const char* get_version_sz_threadsafe(int major_version, int minor_version, int patch_version, int revision_version);
-
-const char* get_version_sz_threadsafe(int major_version, int minor_version, int patch_version, int revision_version){
+std::string get_version_sz_threadsafe(){
 	static std::string
-		s=[major_version,minor_version,patch_version,revision_version]{
+		s=[]{
 			std::stringstream ss;
-			ss << major_version << "." << minor_version << "." << patch_version << "." << revision_version;
+			ss << SZ_VER_MAJOR << "." << SZ_VER_MINOR << "." << SZ_VER_BUILD << "." << SZ_VER_REVISION;
 			return ss.str();
 		}();
 	return s.c_str();
@@ -48,7 +46,6 @@ class sz_threadsafe_plugin: public libpressio_compressor_plugin {
   sz_threadsafe_plugin(std::shared_ptr<sz_init_handle>&& init_handle): init_handle(init_handle) {
     std::shared_lock<std::shared_mutex> lock(init_handle->sz_init_lock);
     threadsafe_params = *confparams_cpr;
-    sz_version = get_version_sz_threadsafe(sz_threadsafe_plugin::major_version(),sz_threadsafe_plugin::minor_version(),sz_threadsafe_plugin::patch_version(),revision_version());
   };
   ~sz_threadsafe_plugin() {
   }
@@ -87,9 +84,9 @@ class sz_threadsafe_plugin: public libpressio_compressor_plugin {
 
   struct pressio_options get_documentation_impl() const override {
     struct pressio_options options;
-    set(options, "pressio:description", R"(SZ is an error bounded lossy compressor that uses prediction 
-      based methods to compress data. More information can be found about SZ on its 
-      [project homepage](https://github.com/disheng222/sz).)");
+    set(options, "pressio:description", R"(SZ threadsafe is a threadsafe version of the error bounded lossy compressor SZ that uses prediction 
+      based methods to compress data. SZ threadsafe has fewer features than SZ, including but not limited to: no write stats support,
+      and no PSNR/NORM mode. More information can be found about SZ on its [project homepage](https://github.com/disheng222/sz).)");
     set(options, "sz_threadsafe:random_access_enabled", "true if SZ was compiled in random access mode");
     set(options, "sz_threadsafe:timecmpr", "true if SZ if SZ is compiled in time based compression mode");
     set(options, "sz_threadsafe:pastri", "true if PASTRI mode was built");
@@ -180,10 +177,9 @@ class sz_threadsafe_plugin: public libpressio_compressor_plugin {
   }
 
   int set_options_impl(struct pressio_options const& options) override {
-
     struct sz_params* sz_threadsafe_param;
-    if (get(options, "sz_threadsafe:config_struct", (void**)&sz_threadsafe_param) == pressio_options_key_set) {
-	    memcpy(&sz_threadsafe_param,&options,sizeof(options));
+    if (get(options, "sz_threadsafe:config_struct",(void **) &sz_threadsafe_param) == pressio_options_key_set) {
+	    memcpy(&threadsafe_params,sz_threadsafe_param,sizeof(sz_params));
     }
 
 #if PRESSIO_SZ_VERSION_GREATEREQ(2,1,9,0)
@@ -337,7 +333,7 @@ class sz_threadsafe_plugin: public libpressio_compressor_plugin {
   std::shared_ptr<libpressio_compressor_plugin> clone() override {
 	return compat::make_unique<sz_threadsafe_plugin>(*this);
   }
-  std::string sz_version;
+  static const std::string sz_version;
   std::string app = "SZ";
   void* user_params = &threadsafe_params;
   std::shared_ptr<sz_init_handle> init_handle;
@@ -350,6 +346,8 @@ class sz_threadsafe_plugin: public libpressio_compressor_plugin {
 #endif
 };
 
+
+std::string const sz_threadsafe_plugin::sz_version= get_version_sz_threadsafe(); 
 
 static pressio_register compressor_sz_threadsafe_plugin(compressor_plugins(), "sz_threadsafe", [](){
     return compat::make_unique<sz_threadsafe_plugin>(pressio_get_sz_init_handle()); 

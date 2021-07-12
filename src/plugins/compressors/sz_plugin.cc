@@ -19,14 +19,14 @@
 #include "pressio_options.h"
 #include "pressio_option.h"
 #include "std_compat/memory.h"
-#include "sz_header.h"
+#include "sz_common.h"
 #include "iless.h"
 
-const char* get_version_sz(int major_version, int minor_version, int patch_version, int revision_version){
+std::string get_version_sz(){
         static std::string
-                s=[major_version,minor_version,patch_version,revision_version]{
+                s=[]{
 			std::stringstream ss;
-                        ss << major_version << "." << minor_version << "." << patch_version << "." << revision_version;
+                        ss << SZ_VER_MAJOR << "." << SZ_VER_MINOR << "." << SZ_VER_BUILD << "." << SZ_VER_REVISION;
                         return ss.str();
                 }();
         return s.c_str();
@@ -93,7 +93,7 @@ class sz_plugin: public libpressio_compressor_plugin {
   struct pressio_options get_documentation_impl() const override {
     struct pressio_options options;
     set(options, "pressio:description", R"(SZ is an error bounded lossy compressor that uses prediction 
-      based methods to compress data. More information can be found about SZ on its 
+      based methods to compress data. This version of SZ is not threadsafe. Please refer to sz_threadsafe if a threadsafe version of SZ is desired. More information can be found about SZ on its 
       [project homepage](https://github.com/disheng222/sz).)");
     set(options, "sz:random_access_enabled", "true if SZ was compiled in random access mode");
     set(options, "sz:timecmpr", "true if SZ if SZ is compiled in time based compression mode");
@@ -375,7 +375,7 @@ class sz_plugin: public libpressio_compressor_plugin {
     return compressor_plugins().build("sz");
   }
 
-  std::string sz_version;
+  static const std::string sz_version;
   std::string app = "SZ";
   void* user_params = nullptr;
   std::shared_ptr<sz_init_handle> init_handle;
@@ -391,6 +391,8 @@ class sz_plugin: public libpressio_compressor_plugin {
 std::unique_ptr<libpressio_compressor_plugin> make_c_sz() {
   return compat::make_unique<sz_plugin>(pressio_get_sz_init_handle());
 }
+
+std::string const sz_plugin::sz_version = get_version_sz();
 
 static pressio_register compressor_sz_plugin(compressor_plugins(), "sz", [](){
     return compat::make_unique<sz_plugin>(pressio_get_sz_init_handle()); 

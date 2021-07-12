@@ -242,7 +242,7 @@ if(LIBPRESSIO_HAS_SZ)
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/sz_plugin.cc
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/sz_threadsafe_plugin.cc
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/variable_definition.cc
-      ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/iless.cc
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/iless.cc
   )
   target_link_libraries(libpressio PRIVATE SZ)
   target_include_directories(libpressio PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors)

@@ -16,7 +16,7 @@
 #include "pressio_options.h"
 #include "pressio_option.h"
 #include "std_compat/memory.h"
-#include "sz_header.h"
+#include "sz_common.h"
 
 
 int libpressio_type_to_sz_type(pressio_dtype type) {
