@@ -276,6 +276,31 @@ class pressio_configurable {
     return pressio_options_key_exists;
   }
 
+  /**
+   * Apply names to a set of plugins
+   * \param[in] name the new name to apply to the plugins
+   * \param[in] plugins the list of plugins to rename
+   * \param[in] names the names to apply to the plugins, if empty, the prefix() will be used
+   */
+  template <class T>
+  void set_names_many(std::string const& name, std::vector<T>& plugins, std::vector<std::string> const& names) const {
+    if(name.empty()) {
+      for (auto & plugin : plugins) {
+        plugin->set_name(name);
+      }
+    } else {
+      if(not names.empty()) {
+        for (size_t i = 0; i < std::min(plugins.size(), names.size()); ++i) {
+          plugins[i]->set_name(name + "/" + names[i]);
+        }
+      } else {
+        for (auto & plugin : plugins) {
+          plugin->set_name(name + "/" + plugin->prefix());
+        }
+      }
+    }
+  }
+
 
   protected:
 

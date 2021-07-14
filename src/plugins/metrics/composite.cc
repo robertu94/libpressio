@@ -206,21 +206,7 @@ class composite_plugin : public libpressio_metrics_plugin {
 
   protected:
   void set_name_impl(std::string const& name) override {
-    if(name.empty()) {
-      for (auto & plugin : plugins) {
-        plugin->set_name(name);
-      }
-    } else {
-      if(not names.empty()) {
-        for (size_t i = 0; i < std::min(plugins.size(), names.size()); ++i) {
-          plugins[i]->set_name(name + "/" + names[i]);
-        }
-      } else {
-        for (auto & plugin : plugins) {
-          plugin->set_name(name + "/" + plugin->prefix());
-        }
-      }
-    }
+    set_names_many(name, plugins, names);
   };
 
   private:
