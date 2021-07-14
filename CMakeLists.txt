@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.69.0" LANGUAGES CXX C)
+project(libpressio VERSION "0.70.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -244,6 +244,7 @@ if(LIBPRESSIO_HAS_SZ)
   target_sources(libpressio
     PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/sz_plugin.cc
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/sz_omp.cc
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/sz_threadsafe_plugin.cc
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/sz_common.cc
       ${CMAKE_CURRENT_SOURCE_DIR}/src/iless.cc
