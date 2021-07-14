@@ -19,22 +19,20 @@
 #include "pressio_options.h"
 #include "pressio_option.h"
 #include "std_compat/memory.h"
+#include "sz_common.h"
+#include "iless.h"
 
-#define PRESSIO_SZ_VERSION_GREATEREQ(major, minor, build, revision) \
-   (SZ_VER_MAJOR > major || \
-   (SZ_VER_MAJOR == major && SZ_VER_MINOR > minor) ||                                  \
-   (SZ_VER_MAJOR == major && SZ_VER_MINOR == minor && SZ_VER_BUILD > build) || \
-   (SZ_VER_MAJOR == major && SZ_VER_MINOR == minor && SZ_VER_BUILD == build && SZ_VER_REVISION >= revision))
+std::string get_version_sz(){
+        static std::string
+                s=[]{
+			std::stringstream ss;
+                        ss << SZ_VER_MAJOR << "." << SZ_VER_MINOR << "." << SZ_VER_BUILD << "." << SZ_VER_REVISION;
+                        return ss.str();
+                }();
+        return s.c_str();
+}
 
-namespace {
-  struct iless {
-    bool operator()(std::string lhs, std::string rhs) const {
-      std::transform(std::begin(lhs), std::end(lhs), std::begin(lhs), [](unsigned char c){return std::tolower(c);});
-      std::transform(std::begin(rhs), std::end(rhs), std::begin(rhs), [](unsigned char c){return std::tolower(c);});
-      return lhs < rhs;
-    }
-  };
-  static std::map<std::string, int, iless> const sz_mode_str_to_code {
+static std::map<std::string, int, iless> const sz_mode_str_to_code {
     {"abs", ABS},
     {"rel", REL},
     {"vr_rel", REL},
@@ -49,21 +47,12 @@ namespace {
     {"abs_and_pw_rel", ABS_AND_PW_REL},
     {"rel_or_pw_rel", REL_OR_PW_REL},
     {"rel_and_pw_rel", REL_AND_PW_REL},
-  };
-}
+};
 
 class sz_plugin: public libpressio_compressor_plugin {
   public:
-  sz_plugin() {
-    std::stringstream ss;
-    ss << sz_plugin::major_version() << "." << sz_plugin::minor_version() << "." << sz_plugin::patch_version() << "." << revision_version();
-    sz_version = ss.str();
-    SZ_Init(NULL);
-  };
-  ~sz_plugin() {
-    SZ_Finalize();
-  }
 
+    sz_plugin(std::shared_ptr<sz_init_handle> && init_handle): init_handle(init_handle) {}
 
   struct pressio_options get_configuration_impl() const override {
     struct pressio_options options;
@@ -104,7 +93,7 @@ class sz_plugin: public libpressio_compressor_plugin {
   struct pressio_options get_documentation_impl() const override {
     struct pressio_options options;
     set(options, "pressio:description", R"(SZ is an error bounded lossy compressor that uses prediction 
-      based methods to compress data. More information can be found about SZ on its 
+      based methods to compress data. This version of SZ is not threadsafe. Please refer to sz_threadsafe if a threadsafe version of SZ is desired. More information can be found about SZ on its 
       [project homepage](https://github.com/disheng222/sz).)");
     set(options, "sz:random_access_enabled", "true if SZ was compiled in random access mode");
     set(options, "sz:timecmpr", "true if SZ if SZ is compiled in time based compression mode");
@@ -150,6 +139,7 @@ class sz_plugin: public libpressio_compressor_plugin {
   }
 
   struct pressio_options get_options_impl() const override {
+    std::shared_lock<std::shared_mutex> lock(init_handle->sz_init_lock);
     struct pressio_options options;
     set_type(options, "sz:config_file", pressio_option_charptr_type);
     set_type(options, "sz:config_struct", pressio_option_userptr_type);
@@ -195,6 +185,7 @@ class sz_plugin: public libpressio_compressor_plugin {
   }
 
   int set_options_impl(struct pressio_options const& options) override {
+    std::unique_lock<std::shared_mutex> lock(init_handle->sz_init_lock);
 
     struct sz_params* sz_param;
     std::string config_file;
@@ -279,6 +270,7 @@ class sz_plugin: public libpressio_compressor_plugin {
   }
 
   int compress_impl(const pressio_data *input, struct pressio_data* output) override {
+    std::shared_lock<std::shared_mutex> lock(init_handle->sz_init_lock);
     size_t r1 = pressio_data_get_dimension(input, 0);
     size_t r2 = pressio_data_get_dimension(input, 1);
     size_t r3 = pressio_data_get_dimension(input, 2);
@@ -297,11 +289,15 @@ class sz_plugin: public libpressio_compressor_plugin {
         &outsize,
         &status
         );
-    *output = pressio_data::move(pressio_byte_dtype, compressed_data, 1, &outsize, pressio_data_libc_free_fn, nullptr);
-    return 0;
+    if (compressed_data != nullptr) {
+      *output = pressio_data::move(pressio_byte_dtype, compressed_data, 1, &outsize, pressio_data_libc_free_fn, nullptr);
+      return 0;
+    } else {
+      return set_error(1, "compression failed");
+    }
   }
   int decompress_impl(const pressio_data *input, struct pressio_data* output) override {
-
+    std::shared_lock<std::shared_mutex> lock(init_handle->sz_init_lock);
     size_t r[] = {
      pressio_data_get_dimension(output, 0),
      pressio_data_get_dimension(output, 1),
@@ -326,8 +322,12 @@ class sz_plugin: public libpressio_compressor_plugin {
         r[0],
         &status
         );
-    *output = pressio_data::move(type, decompressed_data, ndims, r, pressio_data_libc_free_fn, nullptr);
-    return 0;
+    if(decompressed_data != nullptr) {
+      *output = pressio_data::move(type, decompressed_data, ndims, r, pressio_data_libc_free_fn, nullptr);
+      return 0;
+    } else {
+      return set_error(2, "decompression failed");
+    }
   }
 
   int major_version() const override {
@@ -375,28 +375,10 @@ class sz_plugin: public libpressio_compressor_plugin {
     return compressor_plugins().build("sz");
   }
 
-
-  private:
-  static int libpressio_type_to_sz_type(pressio_dtype type) {
-    switch(type)
-    {
-      case pressio_float_dtype:  return SZ_FLOAT;
-      case pressio_double_dtype: return SZ_DOUBLE;
-      case pressio_uint8_dtype: return SZ_UINT8;
-      case pressio_int8_dtype: return SZ_INT8;
-      case pressio_uint16_dtype: return SZ_UINT16;
-      case pressio_int16_dtype: return SZ_INT16;
-      case pressio_uint32_dtype: return SZ_UINT32;
-      case pressio_int32_dtype: return SZ_INT32;
-      case pressio_uint64_dtype: return SZ_UINT64;
-      case pressio_int64_dtype: return SZ_INT64;
-      case pressio_byte_dtype: return SZ_INT8;
-    }
-    return -1;
-  }
-  std::string sz_version;
+  static const std::string sz_version;
   std::string app = "SZ";
   void* user_params = nullptr;
+  std::shared_ptr<sz_init_handle> init_handle;
 #if PRESSIO_SZ_VERSION_GREATEREQ(2,1,11,1)
   pressio_data exafel_peaks_segs;
   pressio_data exafel_peaks_rows;
@@ -407,7 +389,11 @@ class sz_plugin: public libpressio_compressor_plugin {
 };
 
 std::unique_ptr<libpressio_compressor_plugin> make_c_sz() {
-  return compat::make_unique<sz_plugin>();
+  return compat::make_unique<sz_plugin>(pressio_get_sz_init_handle());
 }
 
-static pressio_register compressor_sz_plugin(compressor_plugins(), "sz", [](){ static auto sz = std::make_shared<sz_plugin>(); return sz; });
+std::string const sz_plugin::sz_version = get_version_sz();
+
+static pressio_register compressor_sz_plugin(compressor_plugins(), "sz", [](){
+    return compat::make_unique<sz_plugin>(pressio_get_sz_init_handle()); 
+});

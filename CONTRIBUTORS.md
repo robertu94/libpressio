@@ -44,6 +44,7 @@ The following people have contributed code to LibPressio in alphabetical order:
 
 + Ali Gok
 + Hengzhi Chen
++ Victoriana Malvoso
 + Robert Underwood
 + Sheng Di
 
