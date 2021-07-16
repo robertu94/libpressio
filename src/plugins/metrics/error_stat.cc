@@ -40,24 +40,24 @@ namespace error_stat {
       double sum_of_values_squared =0;
       double sum = 0;
       if(input_begin != nullptr && input2_begin != nullptr) {
-        auto value_min = *input_begin; 
-        auto value_max = *input_begin;
-        auto diff_min = *input_begin - *input2_begin;
-        auto diff_max = diff_min;
-        auto error_min = std::abs(double(*input_begin) - double(*input2_begin));
-        auto error_max = std::abs(double(diff_min));
+        double value_min = *input_begin; 
+        double value_max = *input_begin;
+        double diff_min = *input_begin - *input2_begin;
+        double diff_max = diff_min;
+        double error_min = std::abs(double(*input_begin) - double(*input2_begin));
+        double error_max = std::abs(double(diff_min));
         while(input_begin != input_end && input2_begin != input2_end) {
-          auto diff = *input_begin - *input2_begin;
-          auto error = std::abs(double(diff));
-          auto squared_error = error*error;
+          double diff = *input_begin - *input2_begin;
+          double error = std::abs(double(diff));
+          double squared_error = error*error;
 
           sum += *input_begin;
           sum_of_values_squared += (*input_begin * *input_begin);
           sum_of_difference += diff;
           sum_of_error += error;
           sum_of_squared_error += squared_error;
-          value_min = std::min(value_min, *input_begin);
-          value_max = std::max(value_max, *input_begin);
+          value_min = std::min(value_min, static_cast<double>(*input_begin));
+          value_max = std::max(value_max, static_cast<double>(*input_begin));
           diff_min = std::min(diff, diff_min);
           diff_max = std::max(diff, diff_max);
           error_max = std::max(error, error_max);

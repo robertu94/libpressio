@@ -36,12 +36,8 @@ class sz_omp: public libpressio_compressor_plugin {
     set(options, "sz_omp:error_bound_mode", confparams_cpr->errorBoundMode);
     set_type(options, "sz_omp:error_bound_mode_str", pressio_option_charptr_type);
 	  set(options, "sz_omp:abs_err_bound", confparams_cpr->absErrBound);
-	  set(options, "sz_omp:rel_err_bound", confparams_cpr->relBoundRatio);
-	  set(options, "sz_omp:psnr_err_bound", confparams_cpr->psnr);
-	  set(options, "sz_omp:pw_rel_err_bound", confparams_cpr->pw_relBoundRatio);
 	  set(options, "sz_omp:segment_size", confparams_cpr->segment_size);
 	  set(options, "sz_omp:snapshot_cmpr_step", confparams_cpr->snapshotCmprStep);
-	  set(options, "sz_omp:accelerate_pw_rel_compression", confparams_cpr->accelerate_pw_rel_compression);
 	  set_type(options, "sz_omp:prediction_mode", pressio_option_int32_type);
     set_type(options, "sz_omp:data_type", pressio_option_double_type);
 #ifdef HAVE_RANDOMACCESS
@@ -58,7 +54,6 @@ class sz_omp: public libpressio_compressor_plugin {
     set(options, "sz_omp:pastri", "true if PASTRI mode was built");
     set(options, "sz_omp:write_stats", "true if SZ is compiled with compression statistics support");
     set(options, "sz_omp:abs_err_bound", "the absolute error bound ");
-    set(options, "sz_omp:accelerate_pw_rel_compression", "trade compression ratio for a faster pw_rel compression");
     set(options, "sz_omp:config_file", "filepath passed to SZ_Init()");
     set(options, "sz_omp:config_struct", "structure passed to SZ_Init_Params()" );
     set(options, "sz_omp:data_type", "an internal option to control compression");
@@ -69,11 +64,8 @@ class sz_omp: public libpressio_compressor_plugin {
     set(options, "sz_omp:max_quant_intervals", "the maximum number of quantization intervals");
     set(options, "sz_omp:pred_threshold", "an internal option used to control compression");
     set(options, "sz_omp:prediction_mode", "an internal option used to control compression");
-    set(options, "sz_omp:psnr_err_bound", "the bound on the error in the PSNR");
-    set(options, "sz_omp:pw_rel_err_bound", "the bound on the pointwise relative error");
     set(options, "sz_omp:quantization_intervals", "the number of quantization intervals to use, 0 means automatic");
     set(options, "sz_omp:random_access", "internal options to use random access mode when compiled in");
-    set(options, "sz_omp:rel_err_bound", "the value range relative error bound mode");
     set(options, "sz_omp:sample_distance", "internal option used to control compression");
     set(options, "sz_omp:segment_size", "internal option used to control compression. number of points in each segement for pw_relBoundRatio");
     set(options, "sz_omp:snapshot_cmpr_step", "the frequency of preforming single snapshot based compression in time based compression");
@@ -121,46 +113,42 @@ class sz_omp: public libpressio_compressor_plugin {
   int set_options_impl(const pressio_options &options) override {
     struct sz_params* sz_param;
     std::string config_file;
-    if(get(options, "sz:config_file", &config_file) == pressio_options_key_set) {
+    if(get(options, "sz_omp:config_file", &config_file) == pressio_options_key_set) {
       SZ_Finalize();
       SZ_Init(config_file.c_str());
-    } else if (get(options, "sz:config_struct", (void**)&sz_param) == pressio_options_key_set) {
+    } else if (get(options, "sz_omp:config_struct", (void**)&sz_param) == pressio_options_key_set) {
       SZ_Finalize();
       SZ_Init_Params(sz_param);
     }
 
 #if PRESSIO_SZ_VERSION_GREATEREQ(2,1,9,0)
-    get(options, "sz:protect_value_range", &confparams_cpr->protectValueRange);
+    get(options, "sz_omp:protect_value_range", &confparams_cpr->protectValueRange);
 #endif
-    get(options, "sz:max_quant_intervals", &confparams_cpr->max_quant_intervals);
-    get(options, "sz:quantization_intervals", &confparams_cpr->quantization_intervals);
-    get(options, "sz:sol_id", &confparams_cpr->sol_ID);
-    get(options, "sz:lossless_compressor", &confparams_cpr->losslessCompressor);
-    get(options, "sz:sample_distance", &confparams_cpr->sampleDistance);
-    get(options, "sz:pred_threshold", &confparams_cpr->predThreshold);
-    get(options, "sz:sz_mode", &confparams_cpr->szMode);
-    get(options, "sz:gzip_mode", &confparams_cpr->gzipMode);
+    get(options, "sz_omp:max_quant_intervals", &confparams_cpr->max_quant_intervals);
+    get(options, "sz_omp:quantization_intervals", &confparams_cpr->quantization_intervals);
+    get(options, "sz_omp:sol_id", &confparams_cpr->sol_ID);
+    get(options, "sz_omp:lossless_compressor", &confparams_cpr->losslessCompressor);
+    get(options, "sz_omp:sample_distance", &confparams_cpr->sampleDistance);
+    get(options, "sz_omp:pred_threshold", &confparams_cpr->predThreshold);
+    get(options, "sz_omp:sz_mode", &confparams_cpr->szMode);
+    get(options, "sz_omp:gzip_mode", &confparams_cpr->gzipMode);
 
     std::string error_bound_mode_str;
-    if(get(options, "sz:error_bound_mode_str", &error_bound_mode_str) == pressio_options_key_set) {
+    if(get(options, "sz_omp:error_bound_mode_str", &error_bound_mode_str) == pressio_options_key_set) {
       auto key = sz_omp_mode_str_to_code.find(error_bound_mode_str);
       if(key != sz_omp_mode_str_to_code.end()) {
         confparams_cpr->errorBoundMode = key->second;
       }
     } else { 
-      get(options, "sz:error_bound_mode", &confparams_cpr->errorBoundMode ); 
+      get(options, "sz_omp:error_bound_mode", &confparams_cpr->errorBoundMode ); 
     }
-    get(options, "sz:abs_err_bound", &confparams_cpr->absErrBound);
-    get(options, "sz:rel_err_bound", &confparams_cpr->relBoundRatio);
-    get(options, "sz:psnr_err_bound", &confparams_cpr->psnr);
-    get(options, "sz:pw_rel_err_bound", &confparams_cpr->pw_relBoundRatio);
-    get(options, "sz:segment_size", &confparams_cpr->segment_size);
-    get(options, "sz:snapshot_cmpr_step", &confparams_cpr->snapshotCmprStep);
-    get(options, "sz:prediction_mode", &confparams_cpr->predictionMode);
-    get(options, "sz:accelerate_pw_rel_compression", &confparams_cpr->accelerate_pw_rel_compression);
-    get(options, "sz:data_type", &confparams_cpr->dataType);
+    get(options, "sz_omp:abs_err_bound", &confparams_cpr->absErrBound);
+    get(options, "sz_omp:segment_size", &confparams_cpr->segment_size);
+    get(options, "sz_omp:snapshot_cmpr_step", &confparams_cpr->snapshotCmprStep);
+    get(options, "sz_omp:prediction_mode", &confparams_cpr->predictionMode);
+    get(options, "sz_omp:data_type", &confparams_cpr->dataType);
 #ifdef HAVE_RANDOMACCESS
-    get(options, "sz:random_access", &confparams_cpr->randomAccess);
+    get(options, "sz_omp:random_access", &confparams_cpr->randomAccess);
 #endif
     return 0;
   }
