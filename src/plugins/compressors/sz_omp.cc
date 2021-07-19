@@ -18,7 +18,7 @@ class sz_omp: public libpressio_compressor_plugin {
 
   private:
   pressio_options get_options_impl() const override {
-    std::shared_lock<std::shared_mutex> lock(init_handle->sz_init_lock);
+    compat::shared_lock<compat::shared_mutex> lock(init_handle->sz_init_lock);
     struct pressio_options options;
     set_type(options, "sz_omp:config_file", pressio_option_charptr_type);
     set_type(options, "sz_omp:config_struct", pressio_option_userptr_type);
@@ -159,7 +159,7 @@ class sz_omp: public libpressio_compressor_plugin {
     if(input->num_dimensions() != 3) {
       return set_error(2, "only 3d data is supported");
     }
-    std::unique_lock<std::shared_mutex> lock(init_handle->sz_init_lock);
+    compat::unique_lock<compat::shared_mutex> lock(init_handle->sz_init_lock);
     confparams_cpr->dataType = SZ_FLOAT;
     size_t r1 = pressio_data_get_dimension(input, 0);
     size_t r2 = pressio_data_get_dimension(input, 1);
@@ -193,7 +193,7 @@ class sz_omp: public libpressio_compressor_plugin {
     if(output->num_dimensions() != 3) {
       return set_error(2, "only 3d data is supported");
     }
-    std::unique_lock<std::shared_mutex> lock(init_handle->sz_init_lock);
+    compat::unique_lock<compat::shared_mutex> lock(init_handle->sz_init_lock);
 
     //expected to be set to float, but the user might have other uses, so save it first here before
     //making changes

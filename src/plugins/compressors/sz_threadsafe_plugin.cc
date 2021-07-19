@@ -44,7 +44,7 @@ static std::map<std::string, int, iless> const sz_threadsafe_mode_str_to_code {
 class sz_threadsafe_plugin: public libpressio_compressor_plugin {
   public:
   sz_threadsafe_plugin(std::shared_ptr<sz_init_handle>&& init_handle): init_handle(init_handle) {
-    std::shared_lock<std::shared_mutex> lock(init_handle->sz_init_lock);
+    compat::shared_lock<compat::shared_mutex> lock(init_handle->sz_init_lock);
     threadsafe_params = *confparams_cpr;
   };
   ~sz_threadsafe_plugin() {
@@ -255,7 +255,7 @@ class sz_threadsafe_plugin: public libpressio_compressor_plugin {
   }
 
   int compress_impl(const pressio_data *input, struct pressio_data* output) override {
-    std::shared_lock<std::shared_mutex> lock(init_handle->sz_init_lock);
+    compat::shared_lock<compat::shared_mutex> lock(init_handle->sz_init_lock);
     size_t r1 = pressio_data_get_dimension(input, 0);
     size_t r2 = pressio_data_get_dimension(input, 1);
     size_t r3 = pressio_data_get_dimension(input, 2);
@@ -275,7 +275,7 @@ class sz_threadsafe_plugin: public libpressio_compressor_plugin {
     }
   }
   int decompress_impl(const pressio_data *input, struct pressio_data* output) override {
-    std::shared_lock<std::shared_mutex> lock(init_handle->sz_init_lock);
+    compat::shared_lock<compat::shared_mutex> lock(init_handle->sz_init_lock);
 
     size_t r[] = {
      pressio_data_get_dimension(output, 0),

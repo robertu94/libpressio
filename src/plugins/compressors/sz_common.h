@@ -1,6 +1,6 @@
 #include <memory>
 #include <string>
-#include <shared_mutex>
+#include <std_compat/shared_mutex.h>
 #include <pressio_dtype.h>
 #include <sz/sz.h>
 
@@ -21,7 +21,7 @@ struct sz_init_handle {
   sz_init_handle& operator=(sz_init_handle &&)=delete;
 
   
-  std::shared_mutex sz_init_lock;
+  compat::shared_mutex sz_init_lock;
 };
 
 std::shared_ptr<sz_init_handle> pressio_get_sz_init_handle();

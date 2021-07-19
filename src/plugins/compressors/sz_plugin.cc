@@ -139,7 +139,7 @@ class sz_plugin: public libpressio_compressor_plugin {
   }
 
   struct pressio_options get_options_impl() const override {
-    std::shared_lock<std::shared_mutex> lock(init_handle->sz_init_lock);
+    compat::shared_lock<compat::shared_mutex> lock(init_handle->sz_init_lock);
     struct pressio_options options;
     set_type(options, "sz:config_file", pressio_option_charptr_type);
     set_type(options, "sz:config_struct", pressio_option_userptr_type);
@@ -185,7 +185,7 @@ class sz_plugin: public libpressio_compressor_plugin {
   }
 
   int set_options_impl(struct pressio_options const& options) override {
-    std::unique_lock<std::shared_mutex> lock(init_handle->sz_init_lock);
+    compat::unique_lock<compat::shared_mutex> lock(init_handle->sz_init_lock);
 
     struct sz_params* sz_param;
     std::string config_file;
@@ -270,7 +270,7 @@ class sz_plugin: public libpressio_compressor_plugin {
   }
 
   int compress_impl(const pressio_data *input, struct pressio_data* output) override {
-    std::shared_lock<std::shared_mutex> lock(init_handle->sz_init_lock);
+    compat::shared_lock<compat::shared_mutex> lock(init_handle->sz_init_lock);
     size_t r1 = pressio_data_get_dimension(input, 0);
     size_t r2 = pressio_data_get_dimension(input, 1);
     size_t r3 = pressio_data_get_dimension(input, 2);
@@ -297,7 +297,7 @@ class sz_plugin: public libpressio_compressor_plugin {
     }
   }
   int decompress_impl(const pressio_data *input, struct pressio_data* output) override {
-    std::shared_lock<std::shared_mutex> lock(init_handle->sz_init_lock);
+    compat::shared_lock<compat::shared_mutex> lock(init_handle->sz_init_lock);
     size_t r[] = {
      pressio_data_get_dimension(output, 0),
      pressio_data_get_dimension(output, 1),
