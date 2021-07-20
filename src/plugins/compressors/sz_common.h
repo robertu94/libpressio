@@ -1,6 +1,7 @@
 #include <memory>
 #include <string>
 #include <std_compat/shared_mutex.h>
+#include <std_compat/mutex.h>
 #include <pressio_dtype.h>
 #include <sz/sz.h>
 
