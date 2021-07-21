@@ -167,8 +167,7 @@ class zfp_plugin: public libpressio_compressor_plugin {
     int compress_impl(const pressio_data *input, struct pressio_data* output) override {
 
       zfp_field* in_field;
-      auto input_copy = pressio_data::clone(*input);
-      if(int ret = convert_pressio_data_to_field(&input_copy, &in_field)) {
+      if(int ret = convert_pressio_data_to_field(input, &in_field)) {
         return ret;
       }
 
@@ -272,7 +271,7 @@ class zfp_plugin: public libpressio_compressor_plugin {
     int decompression_failed() { return set_error(4, "decompression failed");}
     int invalid_rate() { return set_error(1, "if you set rate, you must set type, dims, and wra for the rate mode"); }
 
-    int libpressio_type(pressio_data* data, zfp_type* type) {
+    int libpressio_type(pressio_data const* data, zfp_type* type) {
       switch(pressio_data_dtype(data))
       {
         case pressio_int32_dtype:
@@ -293,7 +292,7 @@ class zfp_plugin: public libpressio_compressor_plugin {
       }
       return 0;
     }
-    int convert_pressio_data_to_field(struct pressio_data* data, zfp_field** field) {
+    int convert_pressio_data_to_field(struct pressio_data const* data, zfp_field** field) {
       zfp_type type;
       void* in_data = pressio_data_ptr(data, nullptr);
       unsigned int r0 = pressio_data_get_dimension(data, 0);
