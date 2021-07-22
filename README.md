@@ -174,7 +174,7 @@ Libpressio unconditionally requires:
 
 + `cmake` version `3.13` or later (3.14 required for python bindings)
 + `pkg-config` version `1.6.3` or later
-+ `std_compat` version 0.0.2 or later
++ [`std_compat`](https://github.com/robertu94/std_compat) version 0.0.7 or later
 + either:
   + `gcc-4.8.5` or later
   + `clang-7.0.0` or later using either `libc++` or `libstdc++`.  Beware that system libraries may need to be recompiled with `libc++` if using `libc++`
