@@ -4,6 +4,7 @@ extern "C" {
 
 #ifndef PRESSIO_IO_H
 #define PRESSIO_IO_H
+#include <stddef.h>
 
 /**
  * \file

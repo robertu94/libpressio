@@ -247,15 +247,19 @@ class PressioCompressor(Codec):
                 pressio.compressor_set_name(self._compressor, name.encode())
 
             early_config_lp = _python_to_pressio(early_config)
-            pressio.compressor_set_options(self._compressor, early_config_lp)
+            ec = pressio.compressor_set_options(self._compressor, early_config_lp)
             pressio.options_free(early_config_lp)
+            if ec != 0:
+                raise PressioException.from_compressor(self._compressor)
 
             config_lp_template = pressio.compressor_get_options(self._compressor)
             config_lp = _python_to_pressio(compressor_config, config_lp_template)
-
-            pressio.compressor_set_options(self._compressor, config_lp)
+            ec = pressio.compressor_set_options(self._compressor, config_lp)
             pressio.options_free(config_lp)
             pressio.options_free(config_lp_template)
+            if ec != 0:
+                raise PressioException.from_compressor(self._compressor)
+
         finally:
             pressio.release(library)
 

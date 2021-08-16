@@ -223,8 +223,9 @@ class composite_plugin : public libpressio_metrics_plugin {
     }
 
     //compression_rate
+    uint64_t uncompressed_size;
     {
-      unsigned int compression_time, uncompressed_size;
+      unsigned int compression_time;
       if(opt.get(time_name ,"time:compress", &compression_time) == pressio_options_key_set &&
          opt.get(size_name ,"size:uncompressed_size", &uncompressed_size) == pressio_options_key_set) {
         set(opt, "composite:compression_rate", static_cast<double>(uncompressed_size)/compression_time);
@@ -235,7 +236,7 @@ class composite_plugin : public libpressio_metrics_plugin {
 
     //decompression_rate
     {
-      unsigned int decompression_time, uncompressed_size;
+      unsigned int decompression_time;
       if (opt.get(time_name,  "time:decompress", &decompression_time) == pressio_options_key_set &&
           opt.get(size_name, "size:uncompressed_size", &uncompressed_size) == pressio_options_key_set) {
         set(opt, "composite:decompression_rate", static_cast<double>(uncompressed_size)/decompression_time);
@@ -246,7 +247,7 @@ class composite_plugin : public libpressio_metrics_plugin {
     
     //compression_rate_many
     {
-      unsigned int compression_time, uncompressed_size;
+      unsigned int compression_time;
       if(opt.get(time_name ,"time:compress_many", &compression_time) == pressio_options_key_set &&
          opt.get(size_name ,"size:uncompressed_size", &uncompressed_size) == pressio_options_key_set) {
         set(opt, "composite:compression_rate_many", static_cast<double>(uncompressed_size)/compression_time);
@@ -257,7 +258,7 @@ class composite_plugin : public libpressio_metrics_plugin {
 
     //decompression_rate_many
     {
-      unsigned int decompression_time, uncompressed_size;
+      unsigned int decompression_time;
       if (opt.get(time_name,  "time:decompress_many", &decompression_time) == pressio_options_key_set &&
           opt.get(size_name, "size:uncompressed_size", &uncompressed_size) == pressio_options_key_set) {
         set(opt, "composite:decompression_rate_many", static_cast<double>(uncompressed_size)/decompression_time);
