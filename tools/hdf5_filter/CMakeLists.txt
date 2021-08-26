@@ -7,7 +7,6 @@ target_link_libraries(libpressio_hdf5_filter PRIVATE
   libpressio
   hdf5::hdf5
   nlohmann_json::nlohmann_json
-  MPI::MPI_CXX
   )
 target_include_directories(libpressio_hdf5_filter 
   PUBLIC
