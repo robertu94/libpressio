@@ -8,6 +8,7 @@
 #include <ostream>
 #include "options.h"
 #include "data.h"
+#include "compressor.h"
 #include "pressio_dtype.h"
 #include "pressio_compressor.h"
 
@@ -249,4 +250,11 @@ operator<<(std::basic_ostream<CharT, Traits>& out, enum pressio_dtype type)
       return out << "byte";
   }
 }
+
+template <class CharT = char, class Traits = std::char_traits<CharT>>
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& out, libpressio_compressor_plugin const& comp) {
+	return out << comp.prefix();
+}
+
 #endif /* end of include guard: LIBPRESSIO_PRINTERS_H */

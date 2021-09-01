@@ -372,7 +372,7 @@ class sz_plugin: public libpressio_compressor_plugin {
   }
 
   std::shared_ptr<libpressio_compressor_plugin> clone() override {
-    return compressor_plugins().build("sz");
+    return compat::make_unique<sz_plugin>(*this);
   }
 
   static const std::string sz_version;

@@ -29,7 +29,7 @@ if(SWIG_FOUND AND PYTHON3_FOUND)
       if(NOT ${MPI4PY_FOUND} EQUAL "0")
         message(FATAL_ERROR "Could not locate mpi4py")
       endif()
-      target_include_directories(${filelibname} PRIVATE ${MPI4PY_SWIG_DIR})
+      target_include_directories(${filelibname} PRIVATE ${MPI4PY_SWIG_DIR} ${MPI_CXX_INCLUDE_DIRS})
     endif()
     get_property(swig_generated_module TARGET ${filelibname} PROPERTY SWIG_SUPPORT_FILES)
 
