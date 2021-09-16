@@ -13,6 +13,18 @@ void pressio_data_libc_free_fn(void* data, void*) {
   free(data);
 }
 
+size_t data_size_in_elements(size_t dimensions, size_t const dims[]) {
+  if(dimensions == 0) return 0;
+  size_t totalsize = 1;
+  for (size_t i = 0; i < dimensions; ++i) {
+    totalsize *= dims[i];
+  }
+  return totalsize;
+}
+size_t data_size_in_bytes(pressio_dtype type, size_t const dimensions, size_t const dims[]) {
+  return data_size_in_elements(dimensions, dims) * pressio_dtype_size(type);
+}
+
 namespace {
   bool validate_select_args(std::vector<size_t> const& start,
     std::vector<size_t> const& stride,

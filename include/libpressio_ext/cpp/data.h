@@ -17,22 +17,9 @@
  * \brief C++ pressio_data interface
  */
 
-namespace {
-  template <class T>
-  size_t data_size_in_elements(size_t dimensions, T const dims[]) {
-    if(dimensions == 0) return 0;
-    size_t totalsize = 1;
-    for (size_t i = 0; i < dimensions; ++i) {
-      totalsize *= dims[i];
-    }
-    return totalsize;
-  }
-  template <class T>
-  size_t data_size_in_bytes(pressio_dtype type, T const dimensions, T const dims[]) {
-    return data_size_in_elements(dimensions, dims) * pressio_dtype_size(type);
-  }
+size_t data_size_in_elements(size_t dimensions, size_t const dims[]);
+size_t data_size_in_bytes(pressio_dtype type, size_t const dimensions, size_t const dims[]);
 
-}
 
 /**
  * represents a data buffer that may or may not be owned by the class

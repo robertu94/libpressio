@@ -6,6 +6,9 @@ if(SWIG_FOUND AND PYTHON3_FOUND)
 
 
   set(CMAKE_SWIG_FLAGS "-doxygen")
+  if(NOT LIBPRESSIO_PYTHON_SITELIB)
+    set(LIBPRESSIO_PYTHON_SITELIB ${Python3_SITELIB} CACHE PATH "path to install python libraries to")
+  endif()
   function(build_pressio_swig_module)
     get_filename_component(filelibname ${ARGV0} NAME_WE)
     set_property(SOURCE ${ARGV0} PROPERTY CPLUSPLUS ON)
@@ -33,13 +36,14 @@ if(SWIG_FOUND AND PYTHON3_FOUND)
     endif()
     get_property(swig_generated_module TARGET ${filelibname} PROPERTY SWIG_SUPPORT_FILES)
 
-    install(TARGETS ${filelibname} DESTINATION ${Python3_SITELIB})
-    install(FILES ${swig_generated_module} DESTINATION ${Python3_SITELIB})
+
+    install(TARGETS ${filelibname} DESTINATION ${LIBPRESSIO_PYTHON_SITELIB})
+    install(FILES ${swig_generated_module} DESTINATION ${LIBPRESSIO_PYTHON_SITELIB})
 
   endfunction()
 
 
   build_pressio_swig_module(pressio.i)
-  install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/libpressio.py" DESTINATION ${Python3_SITELIB})
+  install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/libpressio.py" DESTINATION ${LIBPRESSIO_PYTHON_SITELIB})
 endif()
 
