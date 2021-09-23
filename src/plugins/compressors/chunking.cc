@@ -1,10 +1,12 @@
 #include <sstream>
+#include <chrono>
 #include "libpressio_ext/cpp/data.h" //for access to pressio_data structures
 #include "libpressio_ext/cpp/compressor.h" //for the libpressio_compressor_plugin class
 #include "libpressio_ext/cpp/options.h" // for access to pressio_options
 #include "libpressio_ext/cpp/pressio.h" //for the plugin registries
 #include "pressio_options.h"
 #include "pressio_data.h"
+#include "chunking_impl.h"
 #include "pressio_compressor.h"
 #include "std_compat/memory.h"
 #include "std_compat/numeric.h"
@@ -21,6 +23,7 @@ class chunking_plugin: public libpressio_compressor_plugin {
       struct pressio_options options;
       set_meta(options, "chunking:compressor", compressor_id, compressor);
       set(options, "chunking:size", pressio_data(chunk_size.begin(), chunk_size.end()));
+      set(options, "chunking:chunk_nthreads", nthreads);
       return options;
     }
 
@@ -35,9 +38,10 @@ class chunking_plugin: public libpressio_compressor_plugin {
 
     struct pressio_options get_documentation_impl() const override {
       struct pressio_options options;
-      set(options, "pressio:description", R"(Chunks a larger dataset into smaller datasets for parallel compression)");
       set_meta_docs(options, "chunking:compressor", "compressor to use after chunking", compressor);
+      set(options, "pressio:description", R"(Chunks a larger dataset into smaller datasets for parallel compression)");
       set(options, "chunking:size", "size of the chunks to use");
+      set(options, "chunking:chunk_nthreads", "number of threads to use to chunk the data");
       return options;
     }
 
@@ -47,8 +51,18 @@ class chunking_plugin: public libpressio_compressor_plugin {
       if (get(options, "chunking:size", &d) == pressio_options_key_set) {
         chunk_size = d.to_vector<size_t>();
       }
+      get(options, "chunking:chunk_nthreads", &nthreads);
 
       return 0;
+    }
+
+    pressio_options get_metrics_results_impl() const override {
+      pressio_options mr = compressor->get_metrics_results();
+      set(mr, "chunking:chunk_time", chunk_time);
+      set(mr, "chunking:dechunk_time", dechunk_time);
+      set(mr, "chunking:write_chunk_time", write_chunk_time);
+      set(mr, "chunking:read_dechunk_time", read_dechunk_time);
+      return mr;
     }
 
 
@@ -58,28 +72,45 @@ class chunking_plugin: public libpressio_compressor_plugin {
 
 
     int compress_impl(const pressio_data *input, struct pressio_data* output) override {
-      if(not check_valid_dims(input)) return set_error(1, "chunks must currently be a multiple of input size");
-      if(not check_contigous(input)) return set_error(2, "chunks must currently be contiguous within the input");
-
+      auto chunk_begin = std::chrono::steady_clock::now();
       //partition data into chunks
+      pressio_data tmp;
       size_t num_chunks = compute_num_chunks(input);
-      size_t stride = std::accumulate(chunk_size.begin(), chunk_size.end(), pressio_dtype_size(input->dtype()), compat::multiplies<>{});
       std::vector<pressio_data> inputs; 
       std::vector<pressio_data> outputs; 
-      std::vector<pressio_data*> inputs_ptr; 
+      std::vector<pressio_data const*> inputs_ptr; 
       std::vector<pressio_data*> outputs_ptr; 
       inputs.reserve(num_chunks);
       outputs.reserve(num_chunks);
       inputs_ptr.reserve(num_chunks);
       outputs_ptr.reserve(num_chunks);
       std::vector<size_t> empty_dims = {};
-      auto* ptr = reinterpret_cast<unsigned char*>(input->data());
-      for (size_t i = 0; i < num_chunks; ++i) {
-        inputs.emplace_back(pressio_data::nonowning(input->dtype(), ptr+(i*stride), chunk_size));
-        inputs_ptr.emplace_back(&inputs.back());
-        outputs.emplace_back(pressio_data::empty(pressio_byte_dtype, empty_dims));
-        outputs_ptr.emplace_back(&outputs.back());
+      size_t stride = std::accumulate(chunk_size.begin(), chunk_size.end(), pressio_dtype_size(input->dtype()), compat::multiplies<>{});
+      if (num_chunks == 1) {
+          inputs_ptr.emplace_back(input);
+          outputs.emplace_back(pressio_data::empty(pressio_byte_dtype, empty_dims));
+          outputs_ptr.emplace_back(&outputs.back());
+      } else if (check_contigous(input) and check_valid_dims(input)){
+        auto* ptr = reinterpret_cast<unsigned char*>(input->data());
+        for (size_t i = 0; i < num_chunks; ++i) {
+          inputs.emplace_back(pressio_data::nonowning(input->dtype(), ptr+(i*stride), chunk_size));
+          inputs_ptr.emplace_back(&inputs.back());
+          outputs.emplace_back(pressio_data::empty(pressio_byte_dtype, empty_dims));
+          outputs_ptr.emplace_back(&outputs.back());
+        }
+      } else {
+        //non-contigious, need to copy
+        tmp = libpressio::chunking::chunk_data(*input, chunk_size, {{"nthreads", nthreads}});
+        auto ptr = static_cast<uint8_t*>(tmp.data());
+        for (size_t i = 0; i < num_chunks; ++i) {
+          inputs.emplace_back(pressio_data::nonowning(input->dtype(), ptr+(i*stride), chunk_size));
+          inputs_ptr.emplace_back(&inputs.back());
+          outputs.emplace_back(pressio_data::empty(pressio_byte_dtype, empty_dims));
+          outputs_ptr.emplace_back(&outputs.back());
+        }
       }
+      auto chunk_end = std::chrono::steady_clock::now();
+      chunk_time = std::chrono::duration_cast<std::chrono::milliseconds>(chunk_end-chunk_begin).count();
 
       //run the child compressor on the chunks
       int rc = compressor->compress_many(
@@ -89,7 +120,16 @@ class chunking_plugin: public libpressio_compressor_plugin {
           outputs_ptr.size()
           );
 
+      if(rc > 0) {
+        set_error(compressor->error_code(), compressor->error_msg());
+        return rc;
+      } else if(rc < 0) {
+        set_error(compressor->error_code(), compressor->error_msg());
+      }
+
+
       //compute metadata sizes
+      auto write_chunk_begin = std::chrono::steady_clock::now();
       size_t total_compsize = std::accumulate(
           std::begin(outputs),
           std::end(outputs),
@@ -120,11 +160,14 @@ class chunking_plugin: public libpressio_compressor_plugin {
         memcpy(outptr+accum_size, i.data(), i.size_in_bytes());
         accum_size += i.size_in_bytes();
       }
+      auto write_chunk_end = std::chrono::steady_clock::now();
+      write_chunk_time = std::chrono::duration_cast<std::chrono::milliseconds>(write_chunk_end-write_chunk_begin).count();
       return rc;
     }
 
     int decompress_impl(const pressio_data *input, struct pressio_data* output) override {
       //read in the header
+      auto read_dechunk_begin = std::chrono::steady_clock::now();
       unsigned char* inptr = reinterpret_cast<unsigned char*>(input->data());
       uint64_t* inptr64 = reinterpret_cast<uint64_t*>(input->data());
       size_t n_buffers = *inptr64;
@@ -134,7 +177,7 @@ class chunking_plugin: public libpressio_compressor_plugin {
       //create the buffers to decompress
       std::vector<pressio_data> inputs;
       std::vector<pressio_data> outputs;
-      std::vector<pressio_data*> inputs_ptr;
+      std::vector<pressio_data const*> inputs_ptr;
       std::vector<pressio_data*> outputs_ptr;
       inputs.reserve(n_buffers);
       inputs_ptr.reserve(n_buffers);
@@ -148,6 +191,8 @@ class chunking_plugin: public libpressio_compressor_plugin {
         outputs_ptr.emplace_back(&outputs.back());
         accum_size+=sizes[i];
       }
+      auto read_dechunk_end = std::chrono::steady_clock::now();
+      read_dechunk_time = std::chrono::duration_cast<std::chrono::milliseconds>(read_dechunk_end-read_dechunk_begin).count();
 
       //run the decompressor
       int rc = compressor->decompress_many(
@@ -157,25 +202,40 @@ class chunking_plugin: public libpressio_compressor_plugin {
           outputs_ptr.size()
           );
 
+      auto dechunk_begin = std::chrono::steady_clock::now();
       //join the buffers
-      unsigned char* outptr = reinterpret_cast<unsigned char*>(output->data());
-      size_t accum_size_out = 0;
-      const size_t stride_in_bytes = std::accumulate( std::begin(chunk_size), std::end(chunk_size), static_cast<size_t>(pressio_dtype_size(output->dtype())), compat::multiplies<>{});
-      for (size_t i = 0; i < n_buffers; ++i) {
-        memcpy(outptr+accum_size_out, outputs[i].data(), stride_in_bytes);
-        accum_size_out += stride_in_bytes;
+      if(n_buffers == 1) {
+        *output = std::move(outputs[0]);
+      } else if(check_contigous(output) and check_valid_dims(output)) {
+        unsigned char* outptr = reinterpret_cast<unsigned char*>(output->data());
+        size_t accum_size_out = 0;
+        const size_t stride_in_bytes = std::accumulate( std::begin(chunk_size), std::end(chunk_size), static_cast<size_t>(pressio_dtype_size(output->dtype())), compat::multiplies<>{});
+        for (size_t i = 0; i < n_buffers; ++i) {
+          memcpy(outptr+accum_size_out, outputs[i].data(), stride_in_bytes);
+          accum_size_out += stride_in_bytes;
+        }
+      } else {
+        size_t accum_size_out = 0;
+        const size_t stride_in_bytes = std::accumulate( std::begin(chunk_size), std::end(chunk_size), static_cast<size_t>(pressio_dtype_size(output->dtype())), compat::multiplies<>{});
+        pressio_data combined(pressio_data::owning(pressio_byte_dtype, {n_buffers * stride_in_bytes}));
+        unsigned char* outptr = reinterpret_cast<unsigned char*>(combined.data());
+        for (size_t i = 0; i < n_buffers; ++i) {
+          memcpy(outptr+accum_size_out, outputs[i].data(), stride_in_bytes);
+          accum_size_out += stride_in_bytes;
+        }
+        libpressio::chunking::restore_data(*output, combined, chunk_size, {{"nthreads", nthreads}});
       }
+      auto dechunk_end = std::chrono::steady_clock::now();
+      dechunk_time = std::chrono::duration_cast<std::chrono::milliseconds>(dechunk_end-dechunk_begin).count();
 
       return rc;
     }
 
-
-    //the author of SZauto does not release their version info.
     int major_version() const override {
       return 0; 
     }
     int minor_version() const override {
-      return 0;
+      return 1;
     }
     int patch_version() const override {
       return 0;
@@ -203,8 +263,8 @@ class chunking_plugin: public libpressio_compressor_plugin {
           dims.end(),
           chunk_size.begin(),
           true,
-          [](size_t dim, size_t chunk){ return dim % chunk == 0; },
-          [](bool current, bool next){ return current && next; }
+          [](bool current, bool next){ return current && next; },
+          [](size_t dim, size_t chunk){ return dim % chunk == 0; }
           );
     }
     bool check_contigous(pressio_data const* input) const {
@@ -223,6 +283,9 @@ class chunking_plugin: public libpressio_compressor_plugin {
     }
 
     size_t compute_num_chunks(pressio_data const* input) const {
+      if(chunk_size.empty()) {
+        return 1;
+      }
       auto const& dims = input->dimensions();
       return compat::transform_reduce(
           dims.begin(),
@@ -230,8 +293,10 @@ class chunking_plugin: public libpressio_compressor_plugin {
           chunk_size.begin(),
           1,
           compat::multiplies<>{},
-          [](size_t dim, size_t chunk) { return dim/chunk; }
-          );
+          [](size_t dim, size_t chunk) {
+            if(dim % chunk == 0) return dim/chunk; 
+            else return dim/chunk+1;
+          });
     }
 
 
@@ -239,6 +304,11 @@ class chunking_plugin: public libpressio_compressor_plugin {
     std::string chunking_version;
     pressio_compressor compressor = compressor_plugins().build("noop");
     std::string compressor_id = "noop";
+    compat::optional<uint64_t> chunk_time;
+    compat::optional<uint64_t> read_dechunk_time;
+    compat::optional<uint64_t> dechunk_time;
+    compat::optional<uint64_t> write_chunk_time;
+    uint64_t nthreads = 1;
 };
 
 static pressio_register compressor_chunking_plugin(compressor_plugins(), "chunking", [](){return compat::make_unique<chunking_plugin>(); });

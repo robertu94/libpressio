@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.70.8" LANGUAGES CXX C)
+project(libpressio VERSION "0.71.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -59,6 +59,7 @@ add_library(libpressio
   ./src/plugins/compressors/resize.cc
   ./src/plugins/compressors/transpose.cc
   ./src/plugins/compressors/chunking.cc
+  ./src/plugins/compressors/chunking_impl.cc
   ./src/plugins/launch/external_forkexec.cc
   ./src/plugins/metrics/entropy.cc
   ./src/plugins/metrics/ks_test.cc

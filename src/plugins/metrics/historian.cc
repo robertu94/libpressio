@@ -1,3 +1,4 @@
+#include <mutex>
 #include <sstream>
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/pressio.h"
@@ -6,6 +7,38 @@
 
 class pressio_historian_metric: public libpressio_metrics_plugin {
 
+  //these methods are "private" outside of this file, but need to be public
+  //to be shared with the factory function below
+  public:
+  pressio_historian_metric()=default;
+  pressio_historian_metric(pressio_historian_metric && lhs)=default;
+  pressio_historian_metric& operator=(pressio_historian_metric && lhs)=default;
+
+  //historian is special in that it needs to offer a higher degree of thread safety to be useful
+  //since it can record the number of times that a metrics plugin is cloned, which might happen
+  //from a multi-threaded context (an exception to the normal thread safety rules of libpressio).
+  //thus it needs an internal mutex to ensure consistently; but std::mutex is not copy-able meaning
+  //that we need to default construct a new one, and then copy all of the other state.
+  pressio_historian_metric(pressio_historian_metric const& lhs):
+    lock(), opts(lhs.opts), idx(lhs.idx), metrics_id(lhs.metrics_id),
+    metrics(lhs.metrics), events(lhs.events)
+  {
+    //I don't think we need to lock here because we guarantee that we lock elsewhere
+    //before calling this method
+  }
+  pressio_historian_metric& operator=(pressio_historian_metric const& lhs) {
+    if(&lhs != this) return *this;
+    //I don't think we need to lock here because we guarantee that we lock elsewhere
+    //before calling this method
+    opts = lhs.opts;
+    idx = lhs.idx;
+    metrics_id = lhs.metrics_id;
+    metrics = lhs.metrics;
+    events = lhs.events;
+    return *this;
+  }
+
+  private:
   const char* prefix() const override {
     return "historian";
   }
@@ -122,6 +155,7 @@ class pressio_historian_metric: public libpressio_metrics_plugin {
   }
 
   void record() {
+    std::lock_guard<std::mutex> guard(lock);
     std::stringstream ss;
     if(!name.empty()) {
       ss << get_name() << '/';
@@ -134,6 +168,9 @@ class pressio_historian_metric: public libpressio_metrics_plugin {
 
 
   std::unique_ptr<libpressio_metrics_plugin> clone() override {
+    if (events.on_clone) {
+      record();
+    }
     return compat::make_unique<pressio_historian_metric>(*this);
   }
   int set_options(pressio_options const& opts) override {
@@ -166,7 +203,8 @@ class pressio_historian_metric: public libpressio_metrics_plugin {
        "get_configuration",
        "get_documentation",
        "get_options",
-       "set_options"
+       "set_options",
+       "clone"
     };
     set(opts, "historian:events", events_types);
 
@@ -188,6 +226,7 @@ class pressio_historian_metric: public libpressio_metrics_plugin {
     metrics->set_name(new_name);
   }
 
+  std::mutex lock;
   pressio_options opts;
   uint64_t idx = 0;
   std::string metrics_id = "noop";
@@ -203,6 +242,7 @@ class pressio_historian_metric: public libpressio_metrics_plugin {
     bool on_get_documentation = false;
     bool on_get_options = false;
     bool on_set_options = false;
+    bool on_clone = false;
 
     event_hooks()=default;
     event_hooks(event_hooks const&)=default;
@@ -218,7 +258,8 @@ class pressio_historian_metric: public libpressio_metrics_plugin {
       on_get_configuration(contains(events, "get_configuration")),
       on_get_documentation(contains(events, "get_documentation")),
       on_get_options(contains(events, "get_options")),
-      on_set_options(contains(events, "set_options"))
+      on_set_options(contains(events, "set_options")),
+      on_clone(contains(events, "clone"))
     {}
     explicit operator std::vector<std::string>() const {
       std::vector<std::string> events;
@@ -231,6 +272,7 @@ class pressio_historian_metric: public libpressio_metrics_plugin {
       if(on_get_documentation) events.emplace_back("get_documentation");
       if(on_get_options) events.emplace_back("get_options");
       if(on_set_options) events.emplace_back("set_options");
+      if(on_clone) events.emplace_back("clone");
       return events;
     }
     private:

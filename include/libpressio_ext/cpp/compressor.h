@@ -201,13 +201,21 @@ class libpressio_compressor_plugin :public pressio_configurable, public pressio_
    */
   struct pressio_options get_metrics_results() const;
   /**
-   * \returns the configured libpressio_metricsplugin plugin
+   * \returns the moved configured libpressio_metricsplugin plugin
    */
-  struct pressio_metrics get_metrics() const;
+  struct pressio_metrics&& get_metrics() &&;
+  /**
+   * \returns a copy of configured libpressio_metricsplugin plugin
+   */
+  struct pressio_metrics get_metrics() const&;
   /**
    * \param[in] plugin the configured libpressio_metricsplugin plugin to use
    */
   void set_metrics(struct pressio_metrics& plugin);
+  /**
+   * \param[in] plugin the configured libpressio_metricsplugin plugin to use
+   */
+  void set_metrics(struct pressio_metrics&& plugin);
 
 
   /**

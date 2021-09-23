@@ -165,8 +165,12 @@ struct pressio_options libpressio_compressor_plugin::get_metrics_results() const
   return results;
 }
 
-struct pressio_metrics libpressio_compressor_plugin::get_metrics() const {
+struct pressio_metrics libpressio_compressor_plugin::get_metrics() const& {
   return metrics_plugin;
+}
+
+struct pressio_metrics&& libpressio_compressor_plugin::get_metrics() && {
+  return std::move(metrics_plugin);
 }
 
 void libpressio_compressor_plugin::set_metrics(pressio_metrics& plugin) {
@@ -180,6 +184,19 @@ void libpressio_compressor_plugin::set_metrics(pressio_metrics& plugin) {
     metrics_id = "";
   }
 }
+
+void libpressio_compressor_plugin::set_metrics(pressio_metrics&& plugin) {
+  metrics_plugin = std::move(plugin);
+  if(metrics_plugin) {
+    metrics_id = metrics_plugin->prefix();
+    if(not get_name().empty()) {
+      metrics_plugin->set_name(get_name() + "/" + metrics_plugin->prefix());
+    }
+  } else {
+    metrics_id = "";
+  }
+}
+
 
 struct pressio_options libpressio_compressor_plugin::get_metrics_options() const {
   return metrics_plugin->get_options();
