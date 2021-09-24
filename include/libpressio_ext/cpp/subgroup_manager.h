@@ -11,12 +11,11 @@
 #include "pressio_data.h"
 #include "pressio_options.h"
 #include <cstddef>
-#include <libpressio_ext/cpp/distributed_manager.h>
-#include <libpressio_ext/cpp/serializable.h>
 #include <memory>
 #include <numeric>
 #include <random>
 #include <vector>
+#include <set>
 
 /** \file  
  *  \brief helper for subgroups in meta-objects which support multiple inputs 

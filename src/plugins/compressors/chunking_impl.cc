@@ -56,7 +56,7 @@ struct dispatch_1d {
   int operator()(T* data_begin, T* ) {
     std::vector<size_t> max_idx(dims.size());
     std::vector<size_t> strides(dims.size());
-    compat::exclusive_scan(std::cbegin(dims), std::cend(dims), std::begin(strides), size_t{1}, std::multiplies{});
+    compat::exclusive_scan(std::cbegin(dims), std::cend(dims), std::begin(strides), size_t{1}, compat::multiplies<>{});
     size_t elements_in_block = 1;
     for (size_t i = 0; i < max_idx.size(); ++i) {
       if(dims[i] % block[i] == 0) {
@@ -67,7 +67,7 @@ struct dispatch_1d {
       elements_in_block *= block[i];
     }
     std::vector<size_t> block_stide(block.size());
-    compat::exclusive_scan(std::cbegin(max_idx), std::cend(max_idx), std::begin(block_stide), size_t{1}, std::multiplies{});
+    compat::exclusive_scan(std::cbegin(max_idx), std::cend(max_idx), std::begin(block_stide), size_t{1}, compat::multiplies<>{});
 #ifdef  _OPENMP
 #pragma omp parallel for num_threads(nthreads)
 #endif
@@ -112,7 +112,7 @@ struct dispatch_2d {
   int operator()(T* data_begin, T* ) {
   std::vector<size_t> max_idx(dims.size());
   std::vector<size_t> strides(dims.size());
-  std::exclusive_scan(std::cbegin(dims), std::cend(dims), std::begin(strides), size_t{1}, std::multiplies{});
+  compat::exclusive_scan(std::cbegin(dims), std::cend(dims), std::begin(strides), size_t{1}, compat::multiplies<>{});
   size_t elements_in_block = 1;
   for (size_t i = 0; i < max_idx.size(); ++i) {
     if(dims[i] % block[i] == 0) {
@@ -123,7 +123,7 @@ struct dispatch_2d {
     elements_in_block *= block[i];
   }
   std::vector<size_t> block_stide(block.size());
-  std::exclusive_scan(std::cbegin(max_idx), std::cend(max_idx), std::begin(block_stide), size_t{1}, std::multiplies{});
+  compat::exclusive_scan(std::cbegin(max_idx), std::cend(max_idx), std::begin(block_stide), size_t{1}, compat::multiplies<>{});
   
 #ifdef  _OPENMP
 #pragma omp parallel for num_threads(nthreads)
@@ -177,7 +177,7 @@ struct dispatch_3d {
   int operator()(T* data_begin, T* ) {
     std::vector<size_t> max_idx(dims.size());
     std::vector<size_t> strides(dims.size());
-    std::exclusive_scan(std::cbegin(dims), std::cend(dims), std::begin(strides), 1, std::multiplies{});
+    compat::exclusive_scan(std::cbegin(dims), std::cend(dims), std::begin(strides), 1, compat::multiplies<>{});
     size_t elements_in_block = 1;
     for (size_t i = 0; i < max_idx.size(); ++i) {
       if(dims[i] % block[i] == 0) {
@@ -188,7 +188,7 @@ struct dispatch_3d {
       elements_in_block *= block[i];
     }
     std::vector<size_t> block_stide(block.size());
-    std::exclusive_scan(std::cbegin(max_idx), std::cend(max_idx), std::begin(block_stide), size_t{1}, std::multiplies{});
+    compat::exclusive_scan(std::cbegin(max_idx), std::cend(max_idx), std::begin(block_stide), size_t{1}, compat::multiplies<>{});
     
 #ifdef _OPENMP
 #pragma omp parallel for num_threads(nthreads)

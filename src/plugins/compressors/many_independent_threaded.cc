@@ -12,7 +12,6 @@
 #include <numeric>
 #include <random>
 #include <vector>
-#include <mpi.h>
 
 namespace libpressio { namespace many_independent_threaded_ns {
   enum class MetricsAction {
@@ -170,7 +169,7 @@ private:
 
     pressio_options tmp_metrics_results;
 
-#pragma omp parallel default(none), shared(indicies_vec, inputs, outputs, action, status, collect_metrics, tmp_metrics_results, metrics_action), num_threads(nthreads)
+#pragma omp parallel num_threads(nthreads)
 #pragma omp for schedule(dynamic)
     for (size_t idx = 0; idx < indicies_vec.size(); ++idx) {
       auto input_data = subgroups.get_input_group(inputs, indicies_vec[idx]);
