@@ -116,7 +116,12 @@ class sz_plugin: public libpressio_compressor_plugin {
     set(options, "sz:exafel:peaks_cols", "for ROIBIN-SZ the list of columns peaks appear in");
     set(options, "sz:exafel:peaks_rows", "for ROIBIN-SZ the list of rows peaks appear in");
     set(options, "sz:exafel:peaks_segs", "for ROIBIN-SZ the segments peaks appear in");
-    set(options, "sz:exafel:sz_dim", "for ROIBIN-SZ the SZ dimensionality prefered");
+    set(options, "sz:exafel:sz_dim", R"(for ROIBIN-SZ the SZ dimensionality prefered
+1:  nEvents * panels * pr->binnedRows * pr->binnedCols
+2:  nEvents * panels * pr->binnedRows, pr->binnedCols
+3:  nEvents * panels, pr->binnedRows, pr->binnedCols
+4:  nEvents , pr->binnedRows * panels, pr->binnedCols
+    )");
     set(options, "sz:exafel:tolerance", "for ROIBIN-SZ the tolerance used after binning");
     set(options, "sz:gzip_mode", "Which mode to pass to GZIP when used");
     set(options, "sz:lossless_compressor", "Which lossless compressor to use for stage 4");

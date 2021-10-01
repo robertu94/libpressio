@@ -92,6 +92,9 @@ applies linear_quantizer encoding to prior to compression and reverses it post d
     pressio_data_for_each<int>(quantized_output, *output, linear_quantizer_decoder{step});
     return ret;
   }
+  pressio_options get_metrics_results_impl() const override {
+    return meta->get_metrics_results();
+  }
   void set_name_impl(std::string const& new_name) override {
     meta->set_name(new_name + "/" + meta->prefix());
   }

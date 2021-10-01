@@ -708,6 +708,15 @@ struct pressio_options final {
   }
 
   /**
+   * find an element of the container.  if it is not found, return end().  Useful for lua
+   * \param[in] key the key to search for
+   * \returns an iterator to the found key
+   */
+  const_iterator find(key_type const& key) const {
+    return options.find(key);
+  }
+
+  /**
    * erase a key from the container, useful for lua
    * \param[in] key the key to search for
    * \returns the number of elements erased

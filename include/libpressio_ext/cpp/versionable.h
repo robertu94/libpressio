@@ -9,6 +9,11 @@
  */
 class pressio_versionable {
   public:
+  /**
+   * virtual default destructor
+   */
+  virtual ~pressio_versionable()=default;
+
   /** get a implementation specific version string for the io module
    * \see pressio_io_version for the semantics this function should obey
    */
