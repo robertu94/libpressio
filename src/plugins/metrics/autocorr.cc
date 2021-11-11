@@ -8,6 +8,7 @@
 #include "libpressio_ext/cpp/pressio.h"
 #include "std_compat/memory.h"
 
+namespace libpressio {
 namespace autocorr {
   struct metrics {
     pressio_data autocorr;
@@ -117,7 +118,6 @@ namespace autocorr {
 
     uint64_t autocorr_lags;
   };
-}
 
 class autocorr_plugin : public libpressio_metrics_plugin {
 
@@ -180,3 +180,4 @@ class autocorr_plugin : public libpressio_metrics_plugin {
 };
 
 static pressio_register metrics_autocorr_plugin(metrics_plugins(), "autocorr", [](){ return compat::make_unique<autocorr_plugin>(); });
+} }

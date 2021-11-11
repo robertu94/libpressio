@@ -3,6 +3,7 @@
 #include "pressio_compressor.h"
 #include "std_compat/memory.h"
 
+namespace libpressio { namespace select {
 struct select_io: public libpressio_io_plugin {
   struct pressio_data* read_impl(struct pressio_data* dims) override {
     auto read_data = impl->read(dims);
@@ -87,3 +88,4 @@ struct select_io: public libpressio_io_plugin {
 };
 
 static pressio_register io_select_plugin(io_plugins(), "select", [](){ return compat::make_unique<select_io>(); });
+} }

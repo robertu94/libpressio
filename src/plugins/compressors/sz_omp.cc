@@ -7,6 +7,8 @@
 #include "sz_common.h"
 #include "iless.h"
 
+namespace libpressio { namespace sz_omp {
+
 static std::map<std::string, int, iless> const sz_omp_mode_str_to_code {
     {"abs", ABS},
 };
@@ -243,3 +245,4 @@ static pressio_register sz_omp_register(
     }
     );
 
+} }

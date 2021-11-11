@@ -8,6 +8,7 @@
 #include "libpressio_ext/cpp/pressio.h"
 #include "std_compat/memory.h"
 
+namespace libpressio {
 namespace pearson {
   struct pearson_metrics {
     double r = 0.0;
@@ -64,7 +65,6 @@ namespace pearson {
       return m;
     }
   };
-}
 
 class pearsons_plugin : public libpressio_metrics_plugin
 {
@@ -129,3 +129,5 @@ private:
 static pressio_register metrics_pearson_plugin(metrics_plugins(), "pearson", []() {
   return compat::make_unique<pearsons_plugin>();
 });
+}
+}

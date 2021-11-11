@@ -5,6 +5,7 @@
 #include "libpressio_ext/cpp/pressio.h"
 #include "std_compat/memory.h"
 
+namespace libpressio { namespace noop_metrics {
 class noop_metrics_plugin : public libpressio_metrics_plugin {
 public:
   pressio_options get_metrics_results(pressio_options const &) override {
@@ -34,3 +35,4 @@ public:
 };
 
 static pressio_register metrics_noop_plugin(metrics_plugins(), "noop", [](){ return compat::make_unique<noop_metrics_plugin>(); });
+} }

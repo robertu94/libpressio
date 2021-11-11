@@ -17,6 +17,8 @@
 #include "libpressio_ext/cpp/distributed_manager.h"
 #include <mpi.h>
 
+namespace libpressio { namespace many_dependent_compressor {
+
 class many_dependent_compressor_plugin : public libpressio_compressor_plugin {
 public:
   struct pressio_options get_options_impl() const override
@@ -263,3 +265,4 @@ static pressio_register
     compressor_many_timesteps_plugin(compressor_plugins(), "many_dependent", []() {
       return compat::make_unique<many_dependent_compressor_plugin>();
     });
+} }

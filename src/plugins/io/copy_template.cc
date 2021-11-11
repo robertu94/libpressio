@@ -8,6 +8,8 @@
 #include "libpressio_ext/cpp/io.h"
 #include "std_compat/memory.h"
 
+namespace libpressio { namespace copy_template {
+
 struct copy_template_io : public libpressio_io_plugin {
   virtual struct pressio_data* read_impl(struct pressio_data* data) override {
     return impl->read(data);
@@ -83,3 +85,4 @@ struct copy_template_io : public libpressio_io_plugin {
 };
 
 static pressio_register io_copy_template_plugin(io_plugins(), "copy_template", [](){ return compat::make_unique<copy_template_io>(); });
+} }

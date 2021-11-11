@@ -12,8 +12,9 @@ int main(int argc, char *argv[])
   MPI_Init(&argc, &argv);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+#endif
   ::testing::InitGoogleTest(&argc, argv);
-
+#if LIBPRESSIO_HAS_MPI
   if(rank == 0){
     int opt;
     while((opt = getopt(argc, argv, "p")) != -1) {

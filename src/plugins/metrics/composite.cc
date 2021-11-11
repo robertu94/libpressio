@@ -15,6 +15,7 @@
 #include <sol/sol.hpp>
 #endif
 
+namespace libpressio { namespace composite {
 class composite_plugin : public libpressio_metrics_plugin {
   public:
   explicit composite_plugin(std::vector<pressio_metrics>&& plugins) :
@@ -323,6 +324,8 @@ class composite_plugin : public libpressio_metrics_plugin {
 static pressio_register metrics_composite_plugin(metrics_plugins(), "composite", [](){ return compat::make_unique<composite_plugin>(); });
 
 
+} }
+
 std::unique_ptr<libpressio_metrics_plugin> make_m_composite(std::vector<pressio_metrics>&& plugins) {
-  return compat::make_unique<composite_plugin>(std::move(plugins));
+  return compat::make_unique<libpressio::composite::composite_plugin>(std::move(plugins));
 }

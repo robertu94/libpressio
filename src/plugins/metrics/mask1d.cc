@@ -1,6 +1,7 @@
 #include <libpressio_ext/cpp/libpressio.h>
 #include <std_compat/memory.h>
 
+namespace libpressio { namespace mask1d {
 struct apply_mask{
 
   template <class T, class V>
@@ -100,3 +101,4 @@ class mask_metrics: public libpressio_metrics_plugin {
 };
 
 pressio_register mask_plugin(metrics_plugins(), "mask", []{ return compat::make_unique<mask_metrics>(); });
+} }

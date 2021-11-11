@@ -14,6 +14,7 @@
 #include "std_compat/bit.h"
 #include "std_compat/string_view.h"
 
+namespace libpressio { namespace numpy {
 const size_t libpressio_numpy_max_v1_length = ~uint16_t{0};
 
 std::string libpressio_read_data(std::string const& path) {
@@ -326,3 +327,4 @@ struct numpy_io : public libpressio_io_plugin {
 };
 
 static pressio_register io_posix_plugin(io_plugins(), "numpy", [](){ return compat::make_unique<numpy_io>(); });
+} }

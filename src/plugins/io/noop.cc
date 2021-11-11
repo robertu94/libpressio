@@ -10,6 +10,7 @@
 #include "libpressio_ext/cpp/io.h"
 #include "std_compat/memory.h"
 
+namespace libpressio { namespace noop_io {
 struct noop_io : public libpressio_io_plugin {
   virtual struct pressio_data* read_impl(struct pressio_data*) override {
     return nullptr;
@@ -57,3 +58,4 @@ struct noop_io : public libpressio_io_plugin {
 
 static pressio_register io_noop_plugin(io_plugins(), "noop", [](){ return compat::make_unique<noop_io>(); });
 
+} }

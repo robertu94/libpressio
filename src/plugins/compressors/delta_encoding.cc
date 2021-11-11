@@ -3,6 +3,8 @@
 #include <std_compat/memory.h>
 #include <sstream>
 
+namespace libpressio { namespace delta_encoder {
+
 struct delta_encoder {
   template <class T>
   pressio_data operator()(T const* begin, T const* end) {
@@ -80,6 +82,9 @@ y[i] = x[i] - x[i-1];
   void set_name_impl(std::string const& new_name) override {
     meta->set_name(new_name + "/" + meta->prefix());
   }
+  pressio_options get_metrics_results_impl() const override {
+    return meta->get_metrics_results();
+  }
   const char* prefix() const override { return "delta_encoding"; }
   const char* version() const override { 
     const static std::string version_str = [this]{
@@ -104,3 +109,4 @@ static pressio_register delta_encoding_register(
       return compat::make_unique<delta_encoding>();
     }
     );
+} }

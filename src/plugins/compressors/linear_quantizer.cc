@@ -3,6 +3,8 @@
 #include <std_compat/memory.h>
 #include <sstream>
 
+namespace  libpressio { namespace linear_quantizer {
+
 struct linear_quantizer_step_finder {
   template <class T>
   double operator()(T const* begin, T const* end) {
@@ -124,3 +126,4 @@ static pressio_register linear_quantizer_register(
       return compat::make_unique<linear_quantizer>();
     }
     );
+} }

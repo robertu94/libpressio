@@ -7,6 +7,7 @@
 #include "libpressio_ext/cpp/pressio.h"
 #include "std_compat/memory.h"
 
+namespace libpressio {
 namespace diff_pdf {
   static const uint64_t zero = 0;
   struct metrics {
@@ -54,7 +55,6 @@ namespace diff_pdf {
 
     uint64_t pdf_intervals;
   };
-}
 
 class diff_pdf_plugin : public libpressio_metrics_plugin {
 
@@ -128,3 +128,5 @@ class diff_pdf_plugin : public libpressio_metrics_plugin {
 };
 
 static pressio_register metrics_diff_pdf_plugin(metrics_plugins(), "diff_pdf", [](){ return compat::make_unique<diff_pdf_plugin>(); });
+}
+}

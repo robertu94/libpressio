@@ -25,7 +25,8 @@ public:
   struct pressio_options get_options_impl() const override
   {
     struct pressio_options options;
-    set_meta(options, "many_independent_threaded:compressor", compressor_id, compressor);
+    set_meta_many(options, "many_independent_threaded:compressors", compressor_ids, compressors);
+    set_type(options, "many_independent_threaded:compressor", pressio_option_charptr_type);
     options.copy_from(subgroups.get_options());
     set(options, "many_independent_threaded:nthreads", nthreads);
     set(options, "many_independent_threaded:collect_metrics_on_compression", collect_metrics_on_compression);
@@ -38,7 +39,9 @@ public:
   {
     struct pressio_options options;
     options.copy_from(subgroups.get_configuration());
-    options.copy_from(compressor->get_configuration());
+    for (auto& compressor : compressors) {
+      options.copy_from(compressor->get_configuration());
+    }
     set(options, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
     set(options, "pressio:stability", "experimental");
     return options;
@@ -47,9 +50,13 @@ public:
   struct pressio_options get_documentation_impl() const override
   {
     struct pressio_options options;
-    set_meta_docs(options, "many_independent_threaded:compressor", "the child compressor to use", compressor);
+    set_meta_many_docs(options, "many_independent_threaded:compressors", "the child compressor(s) to use", compressors);
+    set(options, "many_independent_threaded:compressor", "the child compressor to use; if many_independent_threaded:compressors is set, this value is ignored");
     options.copy_from(subgroups.get_documentation());
-    set(options, "pressio:description", R"(Uses OpenMP to compress multiple buffers in parallel)");
+    set(options, "pressio:description", R"(Uses OpenMP to compress multiple buffers in parallel
+
+    On each invocation a key called "many_independent_threaded:idx" with a type of uint64_t is set with the index of the compressor
+    )");
     set(options, "many_independent_threaded:nthreads", R"(number of threads to use for compression)");
     set(options, "many_independent_threaded:collect_metrics_on_compression", R"(collect metrics after compression)");
     set(options, "many_independent_threaded:collect_metrics_on_decompression", R"(collect metrics after decompression)");
@@ -62,7 +69,17 @@ public:
   {
     pressio_data tmp;
 
-    get_meta(options, "many_independent_threaded:compressor", compressor_plugins(), compressor_id, compressor);
+    get_meta_many(options, "many_independent_threaded:compressors", compressor_plugins(), compressor_ids, compressors);
+    if(options.key_status(get_name(), "many_independent_threaded:compressor") == pressio_options_key_set) {
+      size_t old_size = compressors.size();
+      compressors.resize(1);
+      compressor_ids.resize(1);
+      if(old_size < 1) {
+        compressors[0] = compressor_plugins().build("noop");
+        compressor_ids[0] = "noop";
+      }
+      get_meta(options, "many_independent_threaded:compressor", compressor_plugins(), compressor_ids[0], compressors[0]);
+    }
     subgroups.set_options(options);
     auto tmp_threads = nthreads;
     if (get(options, "many_independent_threaded:nthreads", &tmp_threads) == pressio_options_key_set) {
@@ -137,7 +154,7 @@ public:
   const char* prefix() const override { return "many_independent_threaded"; }
 
   void set_name_impl(std::string const& name) override {
-    compressor->set_name(name + "/" + compressor->prefix());
+    set_names_many(name, compressors, compressor_ids);
     subgroups.set_name(name);
   }
 
@@ -167,19 +184,32 @@ private:
  
     int status = 0;
 
+    if(compressors.size() > indicies.size()) {
+      return set_error(2, "if multiple compressors are used, the number of subgroups must equal the number of compressors");
+    }
+
     pressio_options tmp_metrics_results;
 
 #pragma omp parallel num_threads(nthreads)
 #pragma omp for schedule(dynamic)
-    for (size_t idx = 0; idx < indicies_vec.size(); ++idx) {
+    for (uint64_t idx = 0; idx < static_cast<uint64_t>(indicies_vec.size()); ++idx) {
       auto input_data = subgroups.get_input_group(inputs, indicies_vec[idx]);
       auto output_data_ptrs = subgroups.get_output_group(outputs, indicies_vec[idx]);
       pressio_compressor thread_local_compressor;
 
-      thread_local_compressor = compressor->clone();
+      if(compressors.size() == 1) {
+        thread_local_compressor = compressors[0]->clone();
+      } else {
+        thread_local_compressor = compressors[idx]->clone();
+      }
+
       if(metrics_action == MetricsAction::Restore) {
         thread_local_compressor->set_metrics(std::move(preserve_metrics_mem.at(idx)));
       }
+
+      pressio_options per_invoke_opts;
+      set(per_invoke_opts, "many_independent_threaded:idx", idx);
+      thread_local_compressor->set_options(per_invoke_opts);
 
       //run the action: either compression or decompression
       int local_status = action(
@@ -204,7 +234,7 @@ private:
       if(local_status) {
 #pragma omp critical
         {
-          set_error(compressor->error_code(), compressor->error_msg());
+          set_error(thread_local_compressor->error_code(), thread_local_compressor->error_msg());
           status = local_status;
         }
 #pragma omp cancel for
@@ -222,8 +252,8 @@ private:
   pressio_subgroup_manager subgroups;
   pressio_options metrics_results;
   std::vector<pressio_metrics> preserve_metrics_mem;
-  std::string compressor_id = "noop";
-  pressio_compressor compressor = compressor_plugins().build("noop");
+  std::vector<std::string> compressor_ids{"noop"};
+  std::vector<pressio_compressor> compressors {compressor_plugins().build("noop")};
   uint32_t nthreads = 1;
   int32_t collect_metrics_on_decompression = 0;
   int32_t collect_metrics_on_compression = 0;

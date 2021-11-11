@@ -11,6 +11,7 @@
    (SZ_VER_MAJOR == major && SZ_VER_MINOR == minor && SZ_VER_BUILD > build) || \
    (SZ_VER_MAJOR == major && SZ_VER_MINOR == minor && SZ_VER_BUILD == build && SZ_VER_REVISION >= revision))
 
+namespace libpressio {
 int libpressio_type_to_sz_type(pressio_dtype type);
 
 struct sz_init_handle {
@@ -26,3 +27,4 @@ struct sz_init_handle {
 };
 
 std::shared_ptr<sz_init_handle> pressio_get_sz_init_handle();
+}

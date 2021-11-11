@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.71.3" LANGUAGES CXX C)
+project(libpressio VERSION "0.72.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -51,43 +51,14 @@ add_library(libpressio
   #plugins
   ./src/plugins/compressors/compressor_base.cc
   ./src/plugins/compressors/noop.cc
-  ./src/plugins/compressors/switch.cc
-  ./src/plugins/compressors/delta_encoding.cc
-  ./src/plugins/compressors/log_transform.cc
-  ./src/plugins/compressors/linear_quantizer.cc
-  ./src/plugins/compressors/sampling.cc
-  ./src/plugins/compressors/resize.cc
-  ./src/plugins/compressors/transpose.cc
-  ./src/plugins/compressors/chunking.cc
-  ./src/plugins/compressors/chunking_impl.cc
-  ./src/plugins/launch/external_forkexec.cc
-  ./src/plugins/metrics/entropy.cc
-  ./src/plugins/metrics/ks_test.cc
-  ./src/plugins/metrics/kth_error.cc
   ./src/plugins/metrics/composite.cc
   ./src/plugins/metrics/external.cc
   ./src/plugins/metrics/metrics_base.cc
-  ./src/plugins/metrics/size.cc
-  ./src/plugins/metrics/time.cc
-  ./src/plugins/metrics/error_stat.cc
-  ./src/plugins/metrics/pearsons.cc
-  ./src/plugins/metrics/kl_divergance.cc
-  ./src/plugins/metrics/printer.cc
-  ./src/plugins/metrics/region_of_interest.cc
-  ./src/plugins/metrics/diff_pdf.cc
-  ./src/plugins/metrics/autocorr.cc
-  ./src/plugins/metrics/mask1d.cc
+  ./src/plugins/launch/external_forkexec.cc
   ./src/plugins/metrics/noop.cc
-  ./src/plugins/metrics/historian.cc
-  ./src/plugins/io/copy_template.cc
-  ./src/plugins/io/iota.cc
-  ./src/plugins/io/numpy.cc
-  ./src/plugins/io/posix.cc
   ./src/plugins/io/noop.cc
-  ./src/plugins/io/csv.cc
   ./src/plugins/io/io.cc
-  ./src/plugins/io/select.cc
-  ./src/plugins/io/empty.cc
+  ./src/plugins/io/posix.cc
 
   #public headers
   include/libpressio.h
@@ -115,6 +86,61 @@ add_library(libpressio
   include/pressio_options_iter.h
   )
 
+if(NOT LIBPRESSIO_BUILD_MODE)
+  set(LIBPRESSIO_BUILD_MODE FULL CACHE STRING "enable sets of plugins" FORCE)
+  set_property(CACHE LIBPRESSIO_BUILD_MODE PROPERTY STRINGS "CORE" "FULL")
+else()
+  set(LIBPRESSIO_BUILD_MODE ${LIBPRESSIO_BUILD_MODE} CACHE STRING "enable sets of plugins" FORCE)
+  set_property(CACHE LIBPRESSIO_BUILD_MODE PROPERTY STRINGS "CORE" "FULL")
+endif()
+
+#optional components created with libpressio_optional_component don't require dependencies
+#they can be enabled in two (non-exclusive) ways:
+# 1 by 1 using -DLIBPRESSIO_HAS_${NAME}=ON
+# enabling sets of plugins organized by level LIBPRESSIO_BUILD_MODE=${level}
+#    CORE -- build no plugins except noop's and the composite metric
+#    FULL -- build all optional plugins that don't have additional dependencies
+function(libpressio_optional_component name description file_names)
+  string(TOUPPER "${name}" name_upper)
+  option("LIBPRESSIO_HAS_${name_upper}" ${description} OFF)
+  if(LIBPRESSIO_HAS_${name_upper} OR LIBPRESSIO_BUILD_MODE STREQUAL FULL)
+    foreach(file_name IN LISTS file_names)
+    target_sources(libpressio
+      PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/${file_name}
+      )
+    endforeach()
+  endif()
+endfunction()
+
+libpressio_optional_component(csv "build the CSV io plugin" /io/csv.cc)
+libpressio_optional_component(numpy "build the numpy io plugin" /io/numpy.cc)
+libpressio_optional_component(size "build the size metrics plugin" /metrics/size.cc)
+libpressio_optional_component(time "build the time metrics plugin" /metrics/time.cc)
+libpressio_optional_component(autocorr "build the autocorr metrics plugin" /metrics/autocorr.cc)
+libpressio_optional_component(chunking "build the chunking compressor plugin" "/compressors/chunking.cc;/compressors/chunking_impl.cc")
+libpressio_optional_component(delta_encoding "build the delta_encoding compressor plugin" /compressors/delta_encoding.cc)
+libpressio_optional_component(diff_pdf "build the difference probability distribution function metric" /metrics/diff_pdf.cc)
+libpressio_optional_component(empty "build the empty IO plugin" /io/empty.cc)
+libpressio_optional_component(entropy "build the entropy metrics plugin" /metrics/entropy.cc)
+libpressio_optional_component(error_stat "build the error_stat metrics plugin" /metrics/error_stat.cc)
+libpressio_optional_component(historian "build the historian metrics plugin" /metrics/historian.cc)
+libpressio_optional_component(input_stats "build the input_stats metrics plugin" /metrics/input_stats.cc)
+libpressio_optional_component(iota "build the iota io plugin" /io/iota.cc)
+libpressio_optional_component(kl_divergance "build the kl_divergance plugin" /metrics/kl_divergance.cc)
+libpressio_optional_component(ks_test "build the KS test metrics plugin" /metrics/ks_test.cc)
+libpressio_optional_component(kth_error "build the kth error metrics plugin" /metrics/kth_error.cc)
+libpressio_optional_component(linear_quantizer "build the linear quantizer compressor plugin" /compressors/linear_quantizer.cc)
+libpressio_optional_component(log_transform "build the log_transform compressor plugin" /compressors/log_transform.cc)
+libpressio_optional_component(mask1d "build the mask1d metrics plugin" /metrics/mask1d.cc)
+libpressio_optional_component(pearsons "build the pearsons metrics plugin" /metrics/pearsons.cc)
+libpressio_optional_component(printer "build the printer metrics plugin" /metrics/printer.cc)
+libpressio_optional_component(region_of_interest "build the region_of_interest metrics plugin" /metrics/region_of_interest.cc)
+libpressio_optional_component(resize "build the resize compressor plugin" /compressors/resize.cc)
+libpressio_optional_component(sampling "build the sampling compressors plugin" /compressors/sampling.cc)
+libpressio_optional_component(select "build the io selection plugin" /io/select.cc)
+libpressio_optional_component(switch "build the switch comprssor plugin" /compressors/switch.cc)
+libpressio_optional_component(transpose "build the transpose compressor plugin" /compressors/transpose.cc)
 
 option(LIBPRESSIO_INTERPROCEDURAL_OPTIMIZATION "Use interprocedural optimization (LTO)" OFF)
 if(LIBPRESSIO_INTERPROCEDURAL_OPTIMIZATION)
@@ -212,17 +238,26 @@ option(LIBPRESSIO_HAS_MGARD "build the MGARD plugin" OFF)
 if(LIBPRESSIO_HAS_MGARD)
   set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} mgard")
   find_package(mgard REQUIRED)
-  find_file(LIBPRESSIO_MGARD_NEED_FLOAT_HEADER mgard_api_float.h)
-  find_file(LIBPRESSIO_MGARD_HAS_CONFIG_HEADER MGARDConfig.h)
-  target_sources(libpressio
-    PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/mgard_plugin.cc
-    )
-  if(TARGET mgard::mgard)
-  target_link_libraries(libpressio PRIVATE mgard::mgard)
-  elseif(TARGET mgard::mgard_library)
-    target_link_libraries(libpressio PRIVATE mgard::mgard_library)
-  endif()
+    if(DEFINED mgard_VERSION_MAJOR AND ${mgard_VERSION_MAJOR} GREATER_EQUAL 1)
+      target_sources(libpressio
+        PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/mgard-1.0_plugin.cc
+        )
+      target_link_libraries(libpressio PRIVATE mgard::mgard)
+  else()
+    find_file(LIBPRESSIO_MGARD_NEED_FLOAT_HEADER mgard_api_float.h)
+    find_file(LIBPRESSIO_MGARD_HAS_CONFIG_HEADER MGARDConfig.h)
+    find_file(LIBPRESSIO_MGARD_HAS_CONFIG_HEADER_HPP MGARDConfig.hpp PATH_SUFFIXES mgard)
+    target_sources(libpressio
+      PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/mgard_plugin.cc
+      )
+    if(TARGET mgard::mgard)
+      target_link_libraries(libpressio PRIVATE mgard::mgard)
+    elseif(TARGET mgard::mgard_library)
+      target_link_libraries(libpressio PRIVATE mgard::mgard_library)
+    endif()
+   endif()
 endif()
 
 option(LIBPRESSIO_HAS_ZFP "build the ZFP plugin" OFF)
@@ -362,6 +397,9 @@ if(LIBPRESSIO_HAS_LUA)
     target_link_libraries(libpressio PRIVATE ${LUA_LIBRARIES})
     target_include_directories(libpressio PRIVATE ${LUA_INCLUDE_DIR})
   endif()
+  target_sources(libpressio PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/lambda_fn.cc
+    )
 endif()
 
 option(LIBPRESSIO_HAS_LIBDISTRIBUTED "build plugins based on distributed work queues" OFF)

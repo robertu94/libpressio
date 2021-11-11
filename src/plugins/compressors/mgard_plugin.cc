@@ -55,6 +55,8 @@
 #include "libpressio_ext/cpp/pressio.h"
 #include "std_compat/memory.h"
 
+namespace libpressio { namespace mgard_ns {
+
 struct pressio_mgard_metrics_data {
   std::string metric;
   pressio_metrics metrics;
@@ -709,3 +711,5 @@ class mgard_plugin: public libpressio_compressor_plugin {
   compat::optional<double> norm_of_qoi;
 };
 static pressio_register compressor_mgard_plugin(compressor_plugins(), "mgard", [](){ return compat::make_unique<mgard_plugin>(); });
+
+} }

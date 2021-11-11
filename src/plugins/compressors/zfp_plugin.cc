@@ -11,6 +11,8 @@
 #include "std_compat/memory.h"
 #include "std_compat/utility.h"
 
+namespace libpressio { namespace zfp_plugin {
+
 class zfp_plugin: public libpressio_compressor_plugin {
   public:
     zfp_plugin() {
@@ -67,6 +69,7 @@ class zfp_plugin: public libpressio_compressor_plugin {
       set_type(options, "zfp:dims", pressio_option_uint32_type);
       set_type(options, "zfp:wra", pressio_option_int32_type);
       set_type(options, "zfp:mode", pressio_option_uint32_type);
+      set_type(options, "zfp:reversible", pressio_option_uint32_type);
       return options;
     }
 
@@ -90,6 +93,7 @@ class zfp_plugin: public libpressio_compressor_plugin {
       set(options, "zfp:rate", "the rate used in fixed rate mode");
       set(options, "zfp:type", "the type used in fixed rate mode");
       set(options, "zfp:wra", "write random access used in fixed rate mode");
+      set(options, "zfp:reversible", "use reversible mode");
       return options;
     }
 
@@ -104,7 +108,7 @@ class zfp_plugin: public libpressio_compressor_plugin {
     int set_options_impl(struct pressio_options const& options) override {
       
       //precision, accuracy, and expert mode settings
-      unsigned int mode, precision; 
+      uint32_t mode, precision, reversible; 
       double tolerance, rate; 
       if(get(options, "zfp:mode", &mode) == pressio_options_key_set) {
         zfp_stream_set_mode(zfp, mode);
@@ -123,6 +127,8 @@ class zfp_plugin: public libpressio_compressor_plugin {
         } else {
           return invalid_rate();
         }
+      } else if (get(options, "zfp:reversible", &reversible) == pressio_options_key_set) { 
+        zfp_stream_set_reversible(zfp);
       } else {
         get(options, "zfp:minbits", &zfp->minbits);
         get(options, "zfp:maxbits", &zfp->maxbits);
@@ -224,7 +230,7 @@ class zfp_plugin: public libpressio_compressor_plugin {
       if(int ret = convert_pressio_data_to_field(output, &out_field)) {
         return ret;
       }
-      int num_bytes = zfp_decompress(zfp, out_field);
+      size_t num_bytes = zfp_decompress(zfp, out_field);
       zfp_field_free(out_field);
       stream_close(stream);
 
@@ -341,3 +347,5 @@ class zfp_plugin: public libpressio_compressor_plugin {
 };
 
 static pressio_register compressor_zfp_plugin(compressor_plugins(), "zfp", [](){ return compat::make_unique<zfp_plugin>(); });
+
+} }

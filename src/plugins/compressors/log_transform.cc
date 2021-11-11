@@ -4,6 +4,8 @@
 #include <sstream>
 #include <cmath>
 
+namespace libpressio { namespace log_transform {
+
 struct log_encoder {
   template <class T>
   pressio_data operator()(T const* begin, T const* end) {
@@ -101,3 +103,4 @@ static pressio_register log_transform_register(
       return compat::make_unique<log_transform>();
     }
     );
+} }

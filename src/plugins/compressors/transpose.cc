@@ -11,6 +11,8 @@
 #include "pressio_compressor.h"
 #include "std_compat/memory.h"
 
+namespace libpressio { namespace transpose {
+
 class transpose_meta_compressor_plugin : public libpressio_compressor_plugin
 {
 public:
@@ -94,3 +96,4 @@ private:
 static pressio_register compressor_transpose_plugin(compressor_plugins(), "transpose", [](){ return compat::make_unique<transpose_meta_compressor_plugin>(); });
 
 
+} } 

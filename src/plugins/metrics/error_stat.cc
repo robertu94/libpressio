@@ -8,6 +8,7 @@
 #include "libpressio_ext/cpp/pressio.h"
 #include "std_compat/memory.h"
 
+namespace libpressio {
 namespace error_stat {
   struct metrics {
     double psnr;
@@ -92,7 +93,6 @@ namespace error_stat {
       return m;
     }
   };
-}
 
 class error_stat_plugin : public libpressio_metrics_plugin {
 
@@ -193,3 +193,4 @@ class error_stat_plugin : public libpressio_metrics_plugin {
 };
 
 static pressio_register metrics_error_stat_plugin(metrics_plugins(), "error_stat", [](){ return compat::make_unique<error_stat_plugin>(); });
+}}

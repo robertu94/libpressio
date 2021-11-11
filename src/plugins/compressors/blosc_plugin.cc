@@ -11,6 +11,7 @@
 #include "pressio_compressor.h"
 #include "std_compat/memory.h"
 
+namespace libpressio { namespace blosc {
 
 class blosc_plugin: public libpressio_compressor_plugin {
   public:
@@ -167,3 +168,4 @@ class blosc_plugin: public libpressio_compressor_plugin {
 
 static pressio_register compressor_blosc_plugin(compressor_plugins(), "blosc", [](){ return compat::make_unique<blosc_plugin>(); });
 
+}}

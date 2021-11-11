@@ -16,6 +16,7 @@
 #include <vector>
 #include "std_compat/memory.h"
 
+namespace libpressio {
 namespace petsc {
 std::mutex petsc_init_lock;
 
@@ -53,7 +54,6 @@ public:
   PetscBool did_init;
 };
 
-} // namespace
 
 struct petsc_io : public libpressio_io_plugin {
   petsc_io(std::shared_ptr<petsc::petsc_init> &&library) : library(library) {}
@@ -277,3 +277,5 @@ const std::map<std::string, PetscViewerFormat> petsc_io::map_name_to_viewer_form
 static pressio_register io_petsc_plugin(io_plugins(), "petsc", []() {
   return compat::make_unique<petsc_io>(petsc::petsc_init::get_library());
 });
+} // namespace
+}

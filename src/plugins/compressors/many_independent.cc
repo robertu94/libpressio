@@ -19,6 +19,9 @@
 #include <vector>
 #include <mpi.h>
 
+namespace libpressio { namespace  many_independent {
+  
+
 class many_independent_compressor_plugin : public libpressio_compressor_plugin {
 public:
   struct pressio_options get_options_impl() const override
@@ -209,3 +212,5 @@ private:
 static pressio_register compressor_many_fields_plugin(compressor_plugins(), "many_independent", []() {
   return compat::make_unique<many_independent_compressor_plugin>();
 });
+
+} }

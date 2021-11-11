@@ -5,6 +5,7 @@
 #include "libpressio_ext/cpp/pressio.h"
 #include "std_compat/memory.h"
 
+namespace libpressio {namespace printer {
 class printer_plugin : public libpressio_metrics_plugin {
 public:
   int begin_check_options_impl(struct pressio_options const* ) override {
@@ -126,3 +127,4 @@ public:
 
 static pressio_register printer_time_plugin(metrics_plugins(), "printer",
                                             []() { return compat::make_unique<printer_plugin>(); });
+} }

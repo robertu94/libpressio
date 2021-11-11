@@ -12,6 +12,7 @@
 #include "libpressio_ext/cpp/pressio.h"
 #include "std_compat/memory.h"
 
+namespace  libpressio { namespace fpzip { 
 namespace {
   constexpr int INVALID_TYPE = 8;
     auto check_dim = [](size_t dim) {
@@ -184,3 +185,4 @@ class fpzip_plugin: public libpressio_compressor_plugin {
 };
 
 static pressio_register compressor_fpzip_plugin(compressor_plugins(), "fpzip", [](){ return std::make_shared<fpzip_plugin>(); });
+} }

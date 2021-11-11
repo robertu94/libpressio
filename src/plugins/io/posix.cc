@@ -95,6 +95,7 @@ extern "C" {
   }
 }
 
+namespace libpressio { namespace posix {
 struct posix_io : public libpressio_io_plugin {
   virtual struct pressio_data* read_impl(struct pressio_data* data) override {
     errno = 0;
@@ -233,3 +234,4 @@ struct posix_io : public libpressio_io_plugin {
 };
 
 static pressio_register io_posix_plugin(io_plugins(), "posix", [](){ return compat::make_unique<posix_io>(); });
+} }

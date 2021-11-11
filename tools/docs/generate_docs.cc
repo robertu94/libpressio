@@ -44,7 +44,7 @@ std::vector<std::string> metas_list(Func&& get_supported_meta) {
 
 std::string
 trim(std::string const & source) {
-  std::regex r{"\n\\s*"};
+  std::regex r{"\n[ \t]*"};
   std::ostringstream os;
   std::regex_replace(std::ostreambuf_iterator<char>(os),
       source.begin(), source.end(), r, "\n");

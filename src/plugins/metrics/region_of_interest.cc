@@ -9,6 +9,7 @@
 #include "std_compat/memory.h"
 #include "std_compat/numeric.h"
 
+namespace libpressio {
 namespace region_of_interest {
   struct region_of_interest_metrics {
     compat::optional<double> input_avg;
@@ -85,7 +86,6 @@ namespace region_of_interest {
     std::vector<size_t> const data_dims;
     std::vector<size_t> start, stop;
   };
-}
 
 class region_of_interest_plugin : public libpressio_metrics_plugin
 {
@@ -100,8 +100,8 @@ public:
   int end_decompress_impl(struct pressio_data const*,
                       struct pressio_data const* output, int) override
   {
-    err_metrics = pressio_data_for_each<region_of_interest::region_of_interest_metrics>( input_data, *output,
-        region_of_interest::compute_metrics{input_data.dimensions(), start.to_vector<size_t>(), end.to_vector<size_t>()});
+    err_metrics = pressio_data_for_each<region_of_interest_metrics>( input_data, *output,
+        compute_metrics{input_data.dimensions(), start.to_vector<size_t>(), end.to_vector<size_t>()});
     return 0;
   }
 
@@ -160,9 +160,11 @@ private:
   pressio_data input_data = pressio_data::empty(pressio_byte_dtype, {});
   pressio_data start = pressio_data::empty(pressio_uint64_dtype, {}),
                end = pressio_data::empty(pressio_uint64_dtype, {});
-  region_of_interest::region_of_interest_metrics err_metrics;
+  region_of_interest_metrics err_metrics;
 };
 
 static pressio_register metrics_region_of_interest_plugin(metrics_plugins(), "region_of_interest", []() {
   return compat::make_unique<region_of_interest_plugin>();
 });
+}
+}

@@ -11,6 +11,7 @@
 #include <map>
 #include <cmath>
 
+namespace libpressio {
 namespace entropy {
   struct compute_metrics{
     template <class ForwardIt1>
@@ -36,7 +37,6 @@ namespace entropy {
       return -entropy;
     }
   };
-}
 
 class entropy_plugin : public libpressio_metrics_plugin
 {
@@ -94,3 +94,4 @@ private:
 static pressio_register metrics_entropy_plugin(metrics_plugins(), "entropy", []() {
   return compat::make_unique<entropy_plugin>();
 });
+}}

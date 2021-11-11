@@ -11,6 +11,8 @@
 #include "pressio_compressor.h"
 #include "std_compat/memory.h"
 
+namespace libpressio { namespace sz_auto {
+
 class sz_auto_plugin: public libpressio_compressor_plugin {
   public:
     sz_auto_plugin() {
@@ -165,3 +167,4 @@ class sz_auto_plugin: public libpressio_compressor_plugin {
 
 static pressio_register compressor_sz_auto_plugin(compressor_plugins(), "SZauto", [](){return compat::make_unique<sz_auto_plugin>(); });
 
+} }

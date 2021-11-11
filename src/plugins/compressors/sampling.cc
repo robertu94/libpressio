@@ -11,6 +11,7 @@
 #include "pressio_compressor.h"
 #include "std_compat/memory.h"
 
+namespace libpressio { namespace sampling { 
 
 class sample_compressor_plugin: public libpressio_compressor_plugin {
   public:
@@ -149,3 +150,4 @@ class sample_compressor_plugin: public libpressio_compressor_plugin {
 static pressio_register compressor_sampling_plugin(compressor_plugins(), "sample", [](){ return compat::make_unique<sample_compressor_plugin>(); });
 
 
+} }

@@ -18,6 +18,7 @@
 #include "std_compat/memory.h"
 #include "sz_common.h"
 
+namespace libpressio {
 
 int libpressio_type_to_sz_type(pressio_dtype type) {
     switch(type)
@@ -43,7 +44,9 @@ sz_init_handle::sz_init_handle() {
 sz_init_handle::~sz_init_handle() {
   SZ_Finalize();
 }
+std::mutex pressio_get_sz_lock;
 std::shared_ptr<sz_init_handle> pressio_get_sz_init_handle() {
+  std::lock_guard<std::mutex> guard(pressio_get_sz_lock);
   static std::weak_ptr<sz_init_handle> handle;
   std::shared_ptr<sz_init_handle> sp_handle;
   if((sp_handle = handle.lock())) {
@@ -53,4 +56,6 @@ std::shared_ptr<sz_init_handle> pressio_get_sz_init_handle() {
     handle = sp_handle;
     return sp_handle;
   }
+}
+
 }

@@ -8,6 +8,7 @@
 #include "libpressio_ext/cpp/io.h"
 #include "std_compat/memory.h"
 
+namespace libpressio { namespace iota {
 namespace iota_plugin {
   struct apply_iota {
     template <class T> int operator()(T* begin, T* end) {
@@ -83,4 +84,4 @@ struct iota_io : public libpressio_io_plugin {
 };
 
 static pressio_register io_posix_plugin(io_plugins(), "iota", [](){ return compat::make_unique<iota_io>(); });
-
+} }

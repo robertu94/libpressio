@@ -12,6 +12,8 @@
 #include "std_compat/numeric.h"
 #include "std_compat/functional.h"
 
+namespace libpressio { namespace chunking {
+
 class chunking_plugin: public libpressio_compressor_plugin {
   public:
     chunking_plugin() {
@@ -186,7 +188,7 @@ class chunking_plugin: public libpressio_compressor_plugin {
       size_t accum_size = header_size;
       for (size_t i = 0; i < n_buffers; ++i) {
         inputs.emplace_back(pressio_data::nonowning(pressio_byte_dtype, inptr+accum_size, {sizes[i]}));
-        outputs.emplace_back(pressio_data::owning(output->dtype(), chunk_size));
+        outputs.emplace_back(pressio_data::owning(output->dtype(), (chunk_size.empty() ? output->dimensions(): chunk_size )));
         inputs_ptr.emplace_back(&inputs.back());
         outputs_ptr.emplace_back(&outputs.back());
         accum_size+=sizes[i];
@@ -312,3 +314,4 @@ class chunking_plugin: public libpressio_compressor_plugin {
 };
 
 static pressio_register compressor_chunking_plugin(compressor_plugins(), "chunking", [](){return compat::make_unique<chunking_plugin>(); });
+} }

@@ -10,7 +10,8 @@
 #include "std_compat/memory.h"
 #include "std_compat/algorithm.h"
 
-namespace {
+namespace libpressio {
+  namespace kth_error {
   struct kth_error{
     template <class ForwardIt1, class ForwardIt2>
     double operator()(ForwardIt1 input_begin, ForwardIt1 input_end,
@@ -31,7 +32,6 @@ namespace {
     double k;
   };
 
-}
 
 class kth_error_plugin : public libpressio_metrics_plugin
 {
@@ -111,3 +111,5 @@ private:
 static pressio_register metrics_kth_error_plugin(metrics_plugins(), "kth_error", []() {
   return compat::make_unique<kth_error_plugin>();
 });
+}
+}

@@ -9,7 +9,8 @@
 #include "libpressio_ext/cpp/pressio.h"
 #include "std_compat/memory.h"
 
-namespace {
+namespace libpressio {
+namespace spatial_error {
   
 
   struct compute_metrics{
@@ -38,7 +39,6 @@ namespace {
 
     double threshold;
   };
-}
 
 class spatial_error_plugin : public libpressio_metrics_plugin
 {
@@ -111,3 +111,5 @@ private:
 static pressio_register metrics_spatial_error_plugin(metrics_plugins(), "spatial_error", []() {
   return compat::make_unique<spatial_error_plugin>();
 });
+}
+}

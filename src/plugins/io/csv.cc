@@ -14,6 +14,8 @@
 #include "std_compat/memory.h"
 #include "std_compat/algorithm.h"
 
+namespace libpressio { namespace csv {
+
 namespace {
   struct csv_printer {
     csv_printer(std::ofstream& outfile, size_t rows, size_t columns, const char line_delim, const char field_delim):
@@ -52,30 +54,36 @@ struct csv_io : public libpressio_io_plugin
       bad_path(path);
       return nullptr;
     }
-    std::array<size_t,2> sizes {0,0};
-    std::vector<double> builder;
-    for(std::string line; std::getline(in, line, line_delim.front()); sizes[0]++) {
-      if(sizes[0] < skip_rows) continue;
-      std::istringstream line_ss(line);
-      size_t column = 0;
-      for(std::string value; std::getline(line_ss, value,field_delim.front()); ++column) {
-        builder.emplace_back(std::stold(value));
+    if(data) {
+      switch(data->dtype()) {
+        case pressio_int8_dtype:
+          return read_typed<int8_t>(in, data);
+        case pressio_int16_dtype:
+          return read_typed<int16_t>(in, data);
+        case pressio_int32_dtype:
+          return read_typed<int32_t>(in, data);
+        case pressio_int64_dtype:
+          return read_typed<int64_t>(in, data);
+        case pressio_byte_dtype:
+        case pressio_uint8_dtype:
+          return read_typed<uint8_t>(in, data);
+        case pressio_uint16_dtype:
+          return read_typed<uint16_t>(in, data);
+        case pressio_uint32_dtype:
+          return read_typed<uint32_t>(in, data);
+        case pressio_uint64_dtype:
+          return read_typed<uint64_t>(in, data);
+        case pressio_double_dtype:
+          return read_typed<double>(in, data);
+        case pressio_float_dtype:
+          return read_typed<float>(in, data);
+        default:
+          set_error(1, "csv unknown type");
+          return nullptr;
       }
-      sizes[1] = column;
-    }
-    sizes[0] -= skip_rows;
-    if(data && data->has_data() && compat::equal(sizes.begin(), sizes.end(), data->dimensions().begin(), data->dimensions().end()) && data->dtype() == pressio_double_dtype) {
-      auto ret = pressio_data_new_empty(pressio_byte_dtype, 0, nullptr);
-      *ret = std::move(*data);
-      std::copy(builder.begin(), builder.end(), static_cast<double*>(ret->data()));
-      return ret;
+
     } else {
-      return pressio_data_new_copy(
-          pressio_double_dtype,
-          builder.data(),
-          2,
-          sizes.data()
-          );
+      return read_typed<double>(in, data);
     }
   }
 
@@ -144,7 +152,7 @@ struct csv_io : public libpressio_io_plugin
   }
 
   virtual const char* version() const override{
-    return "0.0.1";
+    return "0.0.2";
   }
 
   const char* prefix() const override {
@@ -163,7 +171,37 @@ struct csv_io : public libpressio_io_plugin
   std::vector<std::string> headers;
   std::string line_delim = "\n", field_delim = ",";
   unsigned int skip_rows = 0;
+
+  template <class T>
+  pressio_data* read_typed(std::istream& in, pressio_data* data) {
+    std::array<size_t,2> sizes {0,0};
+    std::vector<T> builder;
+    for(std::string line; std::getline(in, line, line_delim.front()); sizes[0]++) {
+      if(sizes[0] < skip_rows) continue;
+      std::istringstream line_ss(line);
+      size_t column = 0;
+      for(std::string value; std::getline(line_ss, value,field_delim.front()); ++column) {
+        builder.emplace_back(std::stold(value));
+      }
+      sizes[1] = column;
+    }
+    sizes[0] -= skip_rows;
+    if(data && data->has_data() && compat::equal(sizes.begin(), sizes.end(), data->dimensions().begin(), data->dimensions().end()) && data->dtype() == pressio_dtype_from_type<T>()) {
+      auto ret = pressio_data_new_empty(pressio_byte_dtype, 0, nullptr);
+      *ret = std::move(*data);
+      std::copy(builder.begin(), builder.end(), static_cast<T*>(ret->data()));
+      return ret;
+    } else {
+      return pressio_data_new_copy(
+          pressio_dtype_from_type<T>(),
+          builder.data(),
+          2,
+          sizes.data()
+          );
+    }
+  }
 };
 
 static pressio_register io_csv_plugin(io_plugins(), "csv",
                           []() { return compat::make_unique<csv_io>(); });
+} }

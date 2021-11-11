@@ -14,6 +14,8 @@
 
 #define INVALID_TYPE -1
 
+namespace libpressio { namespace bitgroomimg {
+  
 namespace {
   struct bg_iless {
     bool operator()(std::string lhs, std::string rhs) const {
@@ -206,3 +208,4 @@ class bit_grooming_plugin: public libpressio_compressor_plugin {
 };
 
 static pressio_register compressor_bit_grooming_plugin(compressor_plugins(), "bit_grooming", [](){return compat::make_unique<bit_grooming_plugin>(); });
+}} /* libpressio */ 

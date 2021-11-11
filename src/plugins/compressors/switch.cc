@@ -3,6 +3,8 @@
 #include <std_compat/memory.h>
 #include <sstream>
 
+namespace libpressio { namespace switch_plugin {
+
 class switch_compressor: public libpressio_compressor_plugin {
   pressio_options get_options_impl() const override {
     pressio_options opts;
@@ -99,3 +101,5 @@ static pressio_register switch_compressor_register(
       return compat::make_unique<switch_compressor>();
     }
     );
+
+} }

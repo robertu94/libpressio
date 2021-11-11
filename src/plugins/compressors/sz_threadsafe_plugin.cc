@@ -19,6 +19,7 @@
 #include "sz_common.h"
 #include "iless.h"
 
+namespace libpressio { namespace sz_threadsafe {
 
 std::string get_version_sz_threadsafe(){
 	static std::string
@@ -352,3 +353,5 @@ std::string const sz_threadsafe_plugin::sz_version= get_version_sz_threadsafe();
 static pressio_register compressor_sz_threadsafe_plugin(compressor_plugins(), "sz_threadsafe", [](){
     return compat::make_unique<sz_threadsafe_plugin>(pressio_get_sz_init_handle()); 
 });
+
+} } 

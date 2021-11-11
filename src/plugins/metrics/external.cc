@@ -26,12 +26,13 @@
 #include "libpressio_ext/cpp/json.h"
 #endif
 
-
-
 pressio_registry<std::unique_ptr<libpressio_launch_plugin>>& launch_plugins() {
   static pressio_registry<std::unique_ptr<libpressio_launch_plugin>> registry;
   return registry;
 }
+
+namespace libpressio { namespace external_metrics {
+
 
 class external_metric_plugin : public libpressio_metrics_plugin {
 
@@ -390,3 +391,4 @@ class external_metric_plugin : public libpressio_metrics_plugin {
 
 
 static pressio_register metrics_external_plugin(metrics_plugins(), "external", [](){ return compat::make_unique<external_metric_plugin>(); });
+} }

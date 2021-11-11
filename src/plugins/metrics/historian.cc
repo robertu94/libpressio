@@ -5,6 +5,8 @@
 #include "std_compat/memory.h"
 #include "std_compat/string_view.h"
 
+namespace libpressio { namespace historian {
+
 class pressio_historian_metric: public libpressio_metrics_plugin {
 
   //these methods are "private" outside of this file, but need to be public
@@ -289,3 +291,4 @@ static pressio_register register_pressio_historian_metric (
       return compat::make_unique<pressio_historian_metric>();
     }
 );
+} }

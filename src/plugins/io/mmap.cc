@@ -34,6 +34,7 @@ extern "C" {
   }
 }
 
+namespace libpressio { namespace mmap_plugin {
 
 struct mmap_io : public libpressio_io_plugin {
   virtual struct pressio_data* read_impl(struct pressio_data* data) override {
@@ -176,3 +177,5 @@ struct mmap_io : public libpressio_io_plugin {
 };
 
 static pressio_register io_mmap_plugin(io_plugins(), "mmap", [](){ return compat::make_unique<mmap_io>(); });
+
+} } 

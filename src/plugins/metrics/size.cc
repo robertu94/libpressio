@@ -6,6 +6,8 @@
 #include "libpressio_ext/cpp/options.h"
 #include "std_compat/memory.h"
 
+namespace libpressio { namespace size {
+
 class size_plugin : public libpressio_metrics_plugin {
   public:
     int end_compress_impl(struct pressio_data const* input, pressio_data const* output, int) override {
@@ -115,3 +117,4 @@ class size_plugin : public libpressio_metrics_plugin {
 };
 
 static pressio_register metrics_size_plugin(metrics_plugins(), "size", [](){ return compat::make_unique<size_plugin>(); });
+} }

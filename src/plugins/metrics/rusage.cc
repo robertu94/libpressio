@@ -6,6 +6,7 @@
 #include "std_compat/memory.h"
 #include <sys/resource.h>
 
+namespace libpressio {
 namespace memory_metrics{
   struct memory_range{
     uint64_t begin = 0;
@@ -18,7 +19,6 @@ namespace memory_metrics{
     getrusage(RUSAGE_SELF, &r);
     return r.ru_maxrss;
   }
-}
 
 class memory_plugin : public libpressio_metrics_plugin {
   public:
@@ -183,3 +183,5 @@ class memory_plugin : public libpressio_metrics_plugin {
 
 static pressio_register metrics_memory_plugin(metrics_plugins(), "memory", [](){ return compat::make_unique<memory_plugin>(); });
 
+}
+}

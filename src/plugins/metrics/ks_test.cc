@@ -46,7 +46,7 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace {
+namespace libpressio { namespace ks_test {
 template <class ForwardItItems, class ForwardItValues, class OutputIt>
 void cdf(ForwardItItems items_begin, ForwardItItems items_end,
                   ForwardItValues values_begin, ForwardItValues values_end,
@@ -232,7 +232,6 @@ kolmogorov(double x)
     }
   };
 
-}
 
 class ks_test_plugin : public libpressio_metrics_plugin {
 
@@ -301,3 +300,4 @@ private:
 
 static pressio_register metrics_ks_test_plugin(metrics_plugins(), "ks_test",
                           []() { return compat::make_unique<ks_test_plugin>(); });
+} }
