@@ -575,7 +575,7 @@ public:
   qoi::caller_ptr caller_func;
   bool recompute_qoi = true;
   std::vector<size_t> last_shape;
-  std::optional<uint64_t> norm_time;
+  compat::optional<uint64_t> norm_time;
   int32_t execution_mode = static_cast<int32_t>(pressio_mgard_mode::cpu);
   int32_t error_bound_type = static_cast<int32_t>(mgard_cuda::error_bound_type::ABS);
   mgard_cuda::Config config = mgard_cuda::Config();
