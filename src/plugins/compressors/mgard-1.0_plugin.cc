@@ -356,10 +356,19 @@ public:
     set(options, "mgard:cuda:dev_id", config.dev_id);
     set(options, "mgard:cuda:timing", static_cast<int32_t>(config.timing));
     set(options, "mgard:cuda:lossless", static_cast<int32_t>(config.lossless));
+
+    set(options, "mgard:cuda:l_target", config.l_target);
+    set(options, "mgard:cuda:huff_dict_size", config.huff_dict_size);
+    set(options, "mgard:cuda:huff_block_size", config.huff_block_size);
+    set(options, "mgard:cuda:lz4_block_size", config.lz4_block_size);
+    set(options, "mgard:cuda:sync_and_check_all_kernels", static_cast<int32_t>(config.sync_and_check_all_kernels));
+    set(options, "mgard:cuda:profile_kernels", static_cast<int32_t>(config.profile_kernels));
+    set(options, "mgard:cuda:reduce_memory_footprint", static_cast<int32_t>(config.reduce_memory_footprint));
+    set(options, "mgard:cuda:uniform_coord_mode", static_cast<int32_t>(config.uniform_coord_mode));
+
     set_type(options, "mgard:cuda:lossless_str", pressio_option_charptr_type);
     set(options, "mgard:cuda:error_bound_type", error_bound_type);
     set_type(options, "mgard:cuda:error_bound_type_str", pressio_option_charptr_type);
-    set_type(options, "mgard:cuda:lossless_str", pressio_option_charptr_type);
     return options;
   }
 
@@ -396,6 +405,15 @@ public:
     set(options, "mgard:cuda:lossless_str", "which lossless compressors to use for mgard_cuda as a human readable string");
     set(options, "mgard:cuda:error_bound_type", "which error bound mode type to apply");
     set(options, "mgard:cuda:error_bound_type_str", "which error bound mode type to apply as a human readable string");
+
+    set(options, "mgard:cuda:l_target", "mgard cuda's undocumented l_target parameter");
+    set(options, "mgard:cuda:huff_dict_size",  "mgard cuda's undocumented huff_dict_size parameter");
+    set(options, "mgard:cuda:huff_block_size",  "mgard cuda's undocumented huff_block_size parameter");
+    set(options, "mgard:cuda:lz4_block_size",  "mgard cuda's undocumented lz4_block_size parameter");
+    set(options, "mgard:cuda:uniform_coord_mode",  "mgard cuda's undocumented uniform_coord_mode parameter");
+    set(options, "mgard:cuda:sync_and_check_all_kernels",  "mgard cuda's undocumented sync_and_check_all_kernels parameter");
+    set(options, "mgard:cuda:profile_kernels",  "mgard cuda's undocumented profile_kernels parameter");
+    set(options, "mgard:cuda:reduce_memory_footprint",  "mgard cuda's undocumented reduce_memory_footprint parameter");
     return options;
   }
 
@@ -478,6 +496,22 @@ public:
       caller_func = qoi::caller_ptr{};
       recompute_qoi = true;
     }
+
+    get(options, "mgard:cuda:l_target", &config.l_target);
+    get(options, "mgard:cuda:huff_dict_size", &config.huff_dict_size);
+    get(options, "mgard:cuda:huff_block_size", &config.huff_block_size);
+    get(options, "mgard:cuda:lz4_block_size", &config.lz4_block_size);
+    get(options, "mgard:cuda:uniform_coord_mode", &config.uniform_coord_mode);
+    if(get(options, "mgard:cuda:sync_and_check_all_kernels", &use_metric_tmp) == pressio_options_key_set) {
+      config.sync_and_check_all_kernels = use_metric_tmp;
+    }
+    if(get(options, "mgard:cuda:profile_kernels", &use_metric_tmp) == pressio_options_key_set)  {
+      config.profile_kernels = use_metric_tmp;
+    }
+    if(get(options, "mgard:cuda:reduce_memory_footprint", &use_metric_tmp) == pressio_options_key_set) {
+      config.reduce_memory_footprint = use_metric_tmp;
+    }
+
     
     return 0;
   }
