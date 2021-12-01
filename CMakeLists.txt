@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.72.2" LANGUAGES CXX C)
+project(libpressio VERSION "0.73.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -198,6 +198,17 @@ if(LIBPRESSIO_HAS_LINUX)
     )
 endif()
 
+option(LIBPRESSIO_HAS_ARC "build the ARC plugin" OFF)
+if(LIBPRESSIO_HAS_ARC)
+  set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} ARC")
+  find_package(ARC REQUIRED)
+  target_sources(libpressio
+    PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/arc.cc
+    )
+  target_link_libraries(libpressio PRIVATE ARC::arc)
+endif()
+
 option(LIBPRESSIO_HAS_DIGIT_ROUNDING "build the DIGIT ROUNDING plugin" OFF)
 if(LIBPRESSIO_HAS_DIGIT_ROUNDING)
   set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} DR")
@@ -347,6 +358,24 @@ if(LIBPRESSIO_HAS_HDF)
     )
 endif()
 
+option(LIBPRESSIO_HAS_NDZIP "build the ndzip plugin" OFF)
+if(LIBPRESSIO_HAS_NDZIP)
+  set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} ndzip")
+  find_package(NDZip)
+  target_sources(libpressio
+    PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/ndzip.cc
+    )
+  target_link_libraries(libpressio PRIVATE NDZip::ndzip)
+  if(TARGET NDZip::ndzip-cuda)
+    target_link_libraries(libpressio PRIVATE NDZip::ndzip-cuda)
+  endif()
+  if(TARGET NDZip::ndzip-sycl)
+    target_link_libraries(libpressio PRIVATE NDZip::ndzip-sycl)
+  endif()
+
+endif()
+
 option(LIBPRESSIO_HAS_FPZIP "build the fpzip plugin" OFF)
 if(LIBPRESSIO_HAS_FPZIP)
   set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} fpzip")
@@ -427,6 +456,7 @@ if(LIBPRESSIO_HAS_JSON)
   target_sources(libpressio
     PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/pressio_options_json.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/manifest.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/include/libpressio_ext/json/pressio_options_json.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/libpressio_ext/cpp/json.h
     )

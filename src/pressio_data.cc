@@ -151,23 +151,32 @@ pressio_data pressio_data::select(std::vector<size_t> const& start,
     std::vector<size_t> const& stride,
     std::vector<size_t> const& count,
     std::vector<size_t> const& block) const {
-  if(not validate_select_args(start, stride, count, block, dimensions())) {
+  std::vector<size_t> ones(dims.size(), 1);
+  std::vector<size_t> zeros(dims.size(), 0);
+
+  std::vector<size_t> const& real_start = start.empty() ? zeros : start;
+  std::vector<size_t> const& real_stride = stride.empty() ? ones: stride;
+  std::vector<size_t> const& real_count = count.empty() ? ones: count;
+  std::vector<size_t> const& real_block = block.empty() ? ones: block;
+
+
+  if(not validate_select_args(real_start, real_stride, real_count, real_block, dimensions())) {
     return pressio_data::empty(dtype(), dimensions());
   }
 
   //compute output dimensions
-  std::vector<size_t> output_dims(count.size());
-  transform(begin(block), end(block), begin(count), begin(output_dims), compat::multiplies<>{});
+  std::vector<size_t> output_dims(real_count.size());
+  transform(begin(real_block), end(real_block), begin(real_count), begin(output_dims), compat::multiplies<>{});
 
   //allocate output buffer
   auto output = pressio_data::owning(this->dtype(), output_dims);
 
   copy_multi_dims_args args {
     dimensions(),
-    stride,
-    count,
-    block,
-    start
+    real_stride,
+    real_count,
+    real_block,
+    real_start
   };
 
   switch(this->dtype())

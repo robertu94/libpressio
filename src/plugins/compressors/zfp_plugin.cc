@@ -301,26 +301,25 @@ class zfp_plugin: public libpressio_compressor_plugin {
     int convert_pressio_data_to_field(struct pressio_data const* data, zfp_field** field) {
       zfp_type type;
       void* in_data = pressio_data_ptr(data, nullptr);
-      unsigned int r0 = pressio_data_get_dimension(data, 0);
-      unsigned int r1 = pressio_data_get_dimension(data, 1);
-      unsigned int r2 = pressio_data_get_dimension(data, 2);
-      unsigned int r3 = pressio_data_get_dimension(data, 3);
+      std::vector<size_t> dims = data->dimensions();
+      std::vector<size_t> real_dims;
+      std::copy_if(dims.begin(), dims.end(), std::back_inserter(real_dims), [](size_t i){return i != 1;});
       if(libpressio_type(data, &type)) {
         return invalid_type();
       }
-      switch(pressio_data_num_dimensions(data))
+      switch(real_dims.size())
       {
         case 1:
-          *field = zfp_field_1d(in_data, type, r0);
+          *field = zfp_field_1d(in_data, type, real_dims[0]);
           break;
         case 2:
-          *field = zfp_field_2d(in_data, type, r0, r1);
+          *field = zfp_field_2d(in_data, type, real_dims[0], real_dims[1]);
           break;
         case 3:
-          *field = zfp_field_3d(in_data, type, r0, r1, r2);
+          *field = zfp_field_3d(in_data, type, real_dims[0], real_dims[1], real_dims[2]);
           break;
         case 4:
-          *field = zfp_field_4d(in_data, type, r0, r1, r2, r3);
+          *field = zfp_field_4d(in_data, type, real_dims[0], real_dims[1], real_dims[2], real_dims[3]);
           break;
         default:
           *field = nullptr;

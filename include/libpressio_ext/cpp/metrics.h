@@ -147,7 +147,7 @@ class libpressio_metrics_plugin : public pressio_configurable, public pressio_er
   void set_name(std::string const& new_name) override final;
 
   /**
-   * \param passed the metrics from the compressor plugin
+   * \param options the metrics from the compressor plugin
    * \returns a pressio_options structure containing the metrics returned by the provided metrics plugin
    */
   virtual pressio_options get_metrics_results(pressio_options const &options)=0;

@@ -142,6 +142,7 @@ class sz_plugin: public libpressio_compressor_plugin {
     set(options, "sz:sz_mode", "SZ Mode either SZ_BEST_COMPRESSION or SZ_BEST_SPEED");
     set(options, "sz:user_params", "arguments passed to the application specific mode of SZ. Use in conjunction with sz:app");
     set(options, "sz:protect_value_range", "should the value range be preserved during compression");
+    set(options, "sz:constant_flag", "true if constant mode was used");
     return options;
   }
 
@@ -278,21 +279,18 @@ class sz_plugin: public libpressio_compressor_plugin {
 
   int compress_impl(const pressio_data *input, struct pressio_data* output) override {
     compat::shared_lock<compat::shared_mutex> lock(init_handle->sz_init_lock);
-    size_t r1 = pressio_data_get_dimension(input, 0);
-    size_t r2 = pressio_data_get_dimension(input, 1);
-    size_t r3 = pressio_data_get_dimension(input, 2);
-    size_t r4 = pressio_data_get_dimension(input, 3);
-    size_t r5 = pressio_data_get_dimension(input, 4);
+    auto r = input->normalized_dims();
+    r.resize(5);
     int status = SZ_NSCS;
     size_t outsize = 0;
     unsigned char* compressed_data = SZ_compress_customize(app.c_str(), user_params,
         libpressio_type_to_sz_type(pressio_data_dtype(input)),
         pressio_data_ptr(input, nullptr),
-        r5,
-        r4,
-        r3,
-        r2,
-        r1,
+        r[4],
+        r[3],
+        r[2],
+        r[1],
+        r[0],
         &outsize,
         &status
         );
@@ -305,14 +303,8 @@ class sz_plugin: public libpressio_compressor_plugin {
   }
   int decompress_impl(const pressio_data *input, struct pressio_data* output) override {
     compat::shared_lock<compat::shared_mutex> lock(init_handle->sz_init_lock);
-    size_t r[] = {
-     pressio_data_get_dimension(output, 0),
-     pressio_data_get_dimension(output, 1),
-     pressio_data_get_dimension(output, 2),
-     pressio_data_get_dimension(output, 3),
-     pressio_data_get_dimension(output, 4),
-    };
-    size_t ndims = pressio_data_num_dimensions(output);
+    auto r = output->normalized_dims();
+    r.resize(5);
 
     int status = SZ_NSCS;
     pressio_dtype type = pressio_data_dtype(output);
@@ -330,7 +322,7 @@ class sz_plugin: public libpressio_compressor_plugin {
         &status
         );
     if(decompressed_data != nullptr) {
-      *output = pressio_data::move(type, decompressed_data, ndims, r, pressio_data_libc_free_fn, nullptr);
+      *output = pressio_data::move(type, decompressed_data, output->dimensions(), pressio_data_libc_free_fn, nullptr);
       return 0;
     } else {
       return set_error(2, "decompression failed");
@@ -374,6 +366,10 @@ class sz_plugin: public libpressio_compressor_plugin {
     set(sz_metrics, "sz:lorenzo_percent", sz_stat.lorenzoPercent);
     set(sz_metrics, "sz:regression_percent", sz_stat.lorenzoPercent);
     set(sz_metrics, "sz:huffman_compression_ratio", sz_stat.huffmanCompressionRatio);
+
+#if PRESSIO_SZ_VERSION_GREATEREQ(2,1,12,2)
+    set(sz_metrics, "sz:constant_flag", sz_stat.constant_flag);
+#endif
 #endif
     return sz_metrics;
   }

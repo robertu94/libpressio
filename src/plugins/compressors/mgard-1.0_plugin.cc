@@ -564,7 +564,7 @@ public:
       auto decompress = cpu::decompress_operator{output->dimensions()};
       if(output->dtype() == pressio_float_dtype) {
         *output = decompress.operator()<float>(static_cast<unsigned char*>(input->data()), static_cast<unsigned char*>(input->data()) + input->num_elements());
-      } else if (input->dtype() == pressio_double_dtype) {
+      } else if (output->dtype() == pressio_double_dtype) {
         *output = decompress.operator()<double>(static_cast<unsigned char*>(input->data()), static_cast<unsigned char*>(input->data()) + input->num_elements());
       } else {
         return set_error(1, "type not supported");
@@ -573,7 +573,7 @@ public:
       auto decompress = gpu::decompress_operator{output->dimensions(), config};
       if(output->dtype() == pressio_float_dtype) {
         *output = decompress.operator()<float>(static_cast<unsigned char*>(input->data()), static_cast<unsigned char*>(input->data()) + input->num_elements());
-      } else if (input->dtype() == pressio_double_dtype) {
+      } else if (output->dtype() == pressio_double_dtype) {
         *output = decompress.operator()<double>(static_cast<unsigned char*>(input->data()), static_cast<unsigned char*>(input->data()) + input->num_elements());
       } else {
         return set_error(1, "type not supported");

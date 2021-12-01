@@ -98,7 +98,10 @@ static nlohmann::json::value_t array_type(nlohmann::json const& j) {
   auto type = j.type();
   switch(type) {
     case nlohmann::json::value_t::array:
-      return array_type(j.at(0));
+      if(j.size() > 0)
+        return array_type(j.at(0));
+      else
+        return type;
     default:
       return type;
   }
@@ -157,6 +160,9 @@ static void from_json_array(nlohmann::json const& j, pressio_option& option) {
             );
       }
       break;
+    case nlohmann::json::value_t::array:
+      option.set_type(pressio_option_unset_type);
+      break;
     default:
       throw std::runtime_error("unexpected array type");
       break;
@@ -174,55 +180,80 @@ void from_json(nlohmann::json const& j, pressio_option& option) {
     case nlohmann::json::value_t::object:
       {
         pressio_option_type dt = j.at("type").get<pressio_option_type>();
-        switch(dt) {
-          case pressio_option_data_type:
-            {
-              pressio_data d;
-              from_json(j.at("value"), d);
-              option = d;
-            }
-            break;
-          case pressio_option_int8_type:
-            option = int8_t(j.at("value"));
-            break;
-          case pressio_option_int16_type:
-            option = int16_t(j.at("value"));
-            break;
-          case pressio_option_int32_type:
-            option = int32_t(j.at("value"));
-            break;
-          case pressio_option_int64_type:
-            option = int64_t(j.at("value"));
-            break;
-          case pressio_option_uint8_type:
-            option = uint8_t(j.at("value"));
-            break;
-          case pressio_option_uint16_type:
-            option = uint16_t(j.at("value"));
-            break;
-          case pressio_option_uint32_type:
-            option = uint32_t(j.at("value"));
-            break;
-          case pressio_option_uint64_type:
-            option = uint64_t(j.at("value"));
-            break;
-          case pressio_option_float_type:
-            option = float(j.at("value"));
-            break;
-          case pressio_option_double_type:
-            option = double(j.at("value"));
-            break;
-          case pressio_option_charptr_type:
-            option = j.at("value").get<std::string>();
-            break;
-          case pressio_option_charptr_array_type:
-            option = std::vector<std::string>{j.at("value")};
-            break;
-          case pressio_option_unset_type:
-            option = {};
-            break;
-          case pressio_option_userptr_type:
-            throw std::runtime_error("userptr and unset ptr types are not convertible to nlohmann::json");
+        if(j["value"].type() != nlohmann::json::value_t::null) {
+          switch(dt) {
+            case pressio_option_data_type:
+              {
+                pressio_data d;
+                from_json(j.at("value"), d);
+                option = d;
+              }
+              break;
+            case pressio_option_int8_type:
+              option = int8_t(j.at("value"));
+              break;
+            case pressio_option_int16_type:
+              option = int16_t(j.at("value"));
+              break;
+            case pressio_option_int32_type:
+              option = int32_t(j.at("value"));
+              break;
+            case pressio_option_int64_type:
+              option = int64_t(j.at("value"));
+              break;
+            case pressio_option_uint8_type:
+              option = uint8_t(j.at("value"));
+              break;
+            case pressio_option_uint16_type:
+              option = uint16_t(j.at("value"));
+              break;
+            case pressio_option_uint32_type:
+              option = uint32_t(j.at("value"));
+              break;
+            case pressio_option_uint64_type:
+              option = uint64_t(j.at("value"));
+              break;
+            case pressio_option_float_type:
+              option = float(j.at("value"));
+              break;
+            case pressio_option_double_type:
+              option = double(j.at("value"));
+              break;
+            case pressio_option_charptr_type:
+              option = j.at("value").get<std::string>();
+              break;
+            case pressio_option_charptr_array_type:
+              option = std::vector<std::string>{j.at("value")};
+              break;
+            case pressio_option_unset_type:
+              option = {};
+              break;
+            case pressio_option_userptr_type:
+              throw std::runtime_error("userptr and unset ptr types are not convertible to nlohmann::json");
+          }
+        } else {
+          switch(dt) {
+            case pressio_option_data_type:
+            case pressio_option_uint8_type:
+            case pressio_option_uint16_type:
+            case pressio_option_uint32_type:
+            case pressio_option_uint64_type:
+            case pressio_option_int8_type:
+            case pressio_option_int16_type:
+            case pressio_option_int32_type:
+            case pressio_option_int64_type:
+            case pressio_option_float_type:
+            case pressio_option_double_type:
+            case pressio_option_charptr_array_type:
+            case pressio_option_charptr_type:
+            case pressio_option_userptr_type:
+            case pressio_option_unset_type:
+              option.set_type(dt);
+              break;
+            default:
+              throw std::runtime_error("unknown types are not convertible to nlohmann::json");
+          }
+
         }
       }
       break;

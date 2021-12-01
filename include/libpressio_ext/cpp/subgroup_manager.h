@@ -17,7 +17,8 @@
 #include <vector>
 #include <set>
 
-/** \file  
+/** 
+ *  \file
  *  \brief helper for subgroups in meta-objects which support multiple inputs 
  * */
 

@@ -272,8 +272,8 @@ class time_plugin : public libpressio_metrics_plugin {
     return opts;
   }
 
-  pressio_options get_metrics_results(pressio_options const &)  override {
-    struct pressio_options opt;
+  pressio_options get_metrics_results(pressio_options const & parent)  override {
+    struct pressio_options opt = child->get_metrics_results(parent);
 
     auto set_or = [&opt, this](const char* key, time_metrics::timer time) {
       if(time) {

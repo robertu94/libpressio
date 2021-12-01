@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <utility>
+#include <algorithm>
 #include "pressio_data.h"
 #include "libpressio_ext/cpp/dtype.h"
 #include "std_compat/utility.h"
@@ -17,7 +18,18 @@
  * \brief C++ pressio_data interface
  */
 
+/**
+ * \param[in] dimensions the number of dimensions of the data object
+ * \param[in] dims the actual of dimensions of the data object
+ * \returns the size of a data object in elements
+ */
 size_t data_size_in_elements(size_t dimensions, size_t const dims[]);
+/**
+ * \param[in] type the dtype of the data object
+ * \param[in] dimensions the number of dimensions of the data object
+ * \param[in] dims the actual of dimensions of the data object
+ * \returns the size of a data object in bytes
+ */
 size_t data_size_in_bytes(pressio_dtype type, size_t const dimensions, size_t const dims[]);
 
 
@@ -328,6 +340,15 @@ struct pressio_data {
    */
   std::vector<size_t> const& dimensions() const {
     return dims;
+  }
+
+  /**
+   * returns the dimensions normalized to remove 1's
+   */
+  std::vector<size_t> normalized_dims() const {
+    std::vector<size_t> real_dims;
+    std::copy_if(dims.begin(), dims.end(), std::back_inserter(real_dims), [](size_t i){ return i > 1; });
+    return real_dims;
   }
 
   /**

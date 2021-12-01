@@ -67,6 +67,7 @@ struct print_elements_helper{
 
 /**
  * helper to construct the print_elements_helper for printing iterable collections
+ * \param[in] out the stream to write to
  * \internal
  */
 template <class CharT = char, class Traits = std::char_traits<CharT>>
@@ -251,6 +252,11 @@ operator<<(std::basic_ostream<CharT, Traits>& out, enum pressio_dtype type)
   }
 }
 
+/**
+ * human readable debugging IO function for libpressio_compressor_plugin, the format is unspecified
+ * \param[in] out the stream to write to
+ * \param[in] comp the type to print
+ */
 template <class CharT = char, class Traits = std::char_traits<CharT>>
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& out, libpressio_compressor_plugin const& comp) {
