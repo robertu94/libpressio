@@ -34,10 +34,10 @@ namespace libpressio { namespace input_stats_metrics_ns {
             return data->num_dimensions();
           });
       size_t max_length = *std::max_element(lengths.begin(), lengths.end());
-      auto data = pressio_data::owning(pressio_uint64_dtype, {inputs.size(), max_length});
+      auto data = pressio_data::owning(pressio_uint64_dtype, {max_length,inputs.size()});
       uint64_t* dims_info = static_cast<uint64_t*>(data.data());
-      for (size_t i = 0; i < inputs.size(); ++i) {
-        for (size_t j = 0; j < max_length; ++j) {
+      for (size_t j = 0; j < max_length; ++j) {
+        for (size_t i = 0; i < inputs.size(); ++i) {
           dims_info[i*max_length+j] = inputs[i]->get_dimension(j);
         }
       }

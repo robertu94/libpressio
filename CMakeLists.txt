@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.73.0" LANGUAGES CXX C)
+project(libpressio VERSION "0.74.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -341,6 +341,18 @@ if(LIBPRESSIO_HAS_MAGICK)
   target_sources(libpressio
     PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/magick++.cc
+    )
+endif()
+
+option(LIBPRESSIO_HAS_NETCDF "build the netcdf io plugin" OFF)
+if(LIBPRESSIO_HAS_HDF)
+  set(LIBPRESSIO_FEATURES "${LIBPRESSIO_FEATURES} netcdf")
+  find_package(PkgConfig)
+  pkg_search_module(NetCDF REQUIRED IMPORTED_TARGET GLOBAL netcdf)
+  target_link_libraries(libpressio PRIVATE PkgConfig::NetCDF)
+  target_sources(libpressio
+    PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/io/netcdf.cc
     )
 endif()
 

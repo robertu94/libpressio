@@ -20,7 +20,7 @@ const size_t libpressio_numpy_max_v1_length = ~uint16_t{0};
 std::string libpressio_read_data(std::string const& path) {
   std::ifstream infile(path, std::ios::binary);
   if(not (infile.is_open() && infile.good())) {
-    throw std::runtime_error("read_data");
+    throw std::runtime_error("failed to read " + path);
   }
   struct stat buf = {};
   stat(path.c_str(), &buf);
@@ -44,7 +44,8 @@ struct libpressio_npy_data {
 
 int libpressio_write_np(std::ostream& out, struct pressio_data const* data) {
   auto const& dtype = data->dtype();
-  auto const& dims = data->dimensions();
+  auto dims = data->dimensions();
+  std::reverse(dims.begin(), dims.end()); //numpy expects C ordered dimensions
   
   std::stringstream shape;
   if(dims.size() == 0) {
@@ -240,42 +241,48 @@ int parse_header(std::string const& header, libpressio_npy_data& np) {
 
 struct numpy_io : public libpressio_io_plugin {
   virtual struct pressio_data* read_impl(struct pressio_data* buf) override {
-    auto data  = libpressio_read_data(path);
-    libpressio_npy_data np;
-    size_t current = 0;
-    char* ptr = &data[0];
-    np.magic = compat::string_view(ptr, current+=6);
-    np.major_version = *reinterpret_cast<const uint8_t*>(ptr + current++);
-    np.minor_version = *reinterpret_cast<const uint8_t*>(ptr + current++);
-    uint32_t header_len;
-    if(np.major_version == 1) {
-      header_len = *reinterpret_cast<const uint16_t*>(ptr + (current+=2)-2);
-    } else if (np.major_version == 2) {
-      header_len = *reinterpret_cast<const uint32_t*>(ptr + (current+=4)-4);
-    } else {
-      throw std::runtime_error("unsupported major_version");
-    }
-    np.header = compat::string_view(ptr+10, header_len-1);
-    current += header_len;
-    parse_header(std::string(np.header), np);
+    try{
+      auto data  = libpressio_read_data(path);
+      libpressio_npy_data np;
+      size_t current = 0;
+      char* ptr = &data[0];
+      np.magic = compat::string_view(ptr, current+=6);
+      np.major_version = *reinterpret_cast<const uint8_t*>(ptr + current++);
+      np.minor_version = *reinterpret_cast<const uint8_t*>(ptr + current++);
+      uint32_t header_len;
+      if(np.major_version == 1) {
+        header_len = *reinterpret_cast<const uint16_t*>(ptr + (current+=2)-2);
+      } else if (np.major_version == 2) {
+        header_len = *reinterpret_cast<const uint32_t*>(ptr + (current+=4)-4);
+      } else {
+        throw std::runtime_error("unsupported major_version");
+      }
+      np.header = compat::string_view(ptr+10, header_len-1);
+      current += header_len;
+      parse_header(std::string(np.header), np);
 
-    if(buf && buf->dimensions() == np.dims && buf->dtype() == np.type) {
-      pressio_data* out = pressio_data_new_empty(pressio_byte_dtype, 0, nullptr);
-      *out = std::move(*buf);
-      auto mem = out->data();
-      std::memcpy(
-          mem,
+      std::reverse(np.dims.begin(), np.dims.end()); //numpy provides C ordered dimensions
+      if(buf && buf->dimensions() == np.dims && buf->dtype() == np.type) {
+        pressio_data* out = pressio_data_new_empty(pressio_byte_dtype, 0, nullptr);
+        *out = std::move(*buf);
+        auto mem = out->data();
+        std::memcpy(
+            mem,
+            ptr+current,
+            out->size_in_bytes()
+            );
+        return out;
+      } else {
+        return pressio_data_new_copy(
+          np.type,
           ptr+current,
-          out->size_in_bytes()
+          np.dims.size(),
+          np.dims.data()
           );
-      return out;
-    } else {
-      return pressio_data_new_copy(
-        np.type,
-        ptr+current,
-        np.dims.size(),
-        np.dims.data()
-        );
+      }
+    } catch(std::exception const& ex) {
+      set_error(1, ex.what());
+      return nullptr;
     }
   }
 

@@ -273,7 +273,7 @@ TEST_F(PressioDataIOTests, TestWrite) {
 }
 
 TEST_F(PressioDataIOTests, TestWriteCSV) {
-  size_t sizes[] = {2,3};
+  size_t sizes[] = {3,2};
   auto data = pressio_data_new_owning(pressio_int32_dtype, 2, sizes);
   size_t buffer_size;
   int* buffer = static_cast<int*>(pressio_data_ptr(data, &buffer_size));
@@ -287,7 +287,7 @@ TEST_F(PressioDataIOTests, TestWriteCSV) {
       {"io:path", tmpwrite_name},
       {"csv:headers", std::vector<std::string>{"foo", "bar", "sue"}}
   });
-  EXPECT_EQ(pressio_io_write(io, data), 0);
+  EXPECT_EQ(pressio_io_write(io, data), 0) << pressio_io_error_msg(io);
   pressio_data_free(data);
   pressio_io_free(io);
   close(tmpwrite_fd);
@@ -296,7 +296,7 @@ TEST_F(PressioDataIOTests, TestWriteCSV) {
 
 
 TEST_F(PressioDataIOTests, TestReadCSV) {
-  size_t sizes[] = {2,3};
+  size_t sizes[] = {3,2};
   auto data = pressio_data_new_owning(pressio_int32_dtype, 2, sizes);
   size_t buffer_size;
   int* buffer = static_cast<int*>(pressio_data_ptr(data, &buffer_size));
@@ -311,12 +311,13 @@ TEST_F(PressioDataIOTests, TestReadCSV) {
       {"csv:headers", std::vector<std::string>{"foo", "bar", "sue"}},
       {"csv:skip_rows", 1u}
   });
-  EXPECT_EQ(pressio_io_write(io, data), 0);
+  EXPECT_EQ(pressio_io_write(io, data), 0) << pressio_io_error_msg(io);
   pressio_data* read = pressio_io_read(io, nullptr);
 
+  ASSERT_NE(read, nullptr) << pressio_io_error_msg(io);
   EXPECT_EQ(pressio_data_num_dimensions(read), 2);
-  EXPECT_EQ(pressio_data_get_dimension(read, 0), 2);
-  EXPECT_EQ(pressio_data_get_dimension(read, 1), 3);
+  EXPECT_EQ(pressio_data_get_dimension(read, 0), 3);
+  EXPECT_EQ(pressio_data_get_dimension(read, 1), 2);
 
   pressio_data_free(data);
   pressio_data_free(read);

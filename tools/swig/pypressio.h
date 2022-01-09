@@ -44,21 +44,21 @@ _pressio_io_data_from_numpy_1d(T* data, size_t r1) {
 template <class T>
 pressio_data* 
 _pressio_io_data_from_numpy_2d(T* data, size_t r1, size_t r2) {
-  std::vector<size_t> v = {r1, r2};
+  std::vector<size_t> v = {r2, r1}; //numpy presents dimension in C order, reverse them
   return _pressio_io_data_from_numpy_impl(data, v);
 }
 
 template <class T>
 pressio_data* 
 _pressio_io_data_from_numpy_3d(T* data, size_t r1, size_t r2, size_t r3) {
-  std::vector<size_t> v = {r1, r2, r3};
+  std::vector<size_t> v = {r3, r2, r1}; //numpy presents dimension in C order, reverse them
   return _pressio_io_data_from_numpy_impl(data, v);
 }
 
 template <class T>
 pressio_data* 
 _pressio_io_data_from_numpy_4d(T* data, size_t r1, size_t r2, size_t r3, size_t r4) {
-  std::vector<size_t> v = {r1, r2, r3, r4};
+  std::vector<size_t> v = {r4, r3, r2, r1}; //numpy presents dimension in C order, reverse them
   return _pressio_io_data_from_numpy_impl(data, v);
 }
 
@@ -70,25 +70,25 @@ void _pressio_io_data_to_numpy_1d(pressio_data* ptr, T** ptr_argout, long int*r1
 
 template <class T>
 void _pressio_io_data_to_numpy_2d(pressio_data* ptr, T** ptr_argout, long int*r1, long int* r2) {
-  *r1 = ptr->get_dimension(0);
-  *r2 = ptr->get_dimension(1);
+  *r1 = ptr->get_dimension(1);
+  *r2 = ptr->get_dimension(0);
   *ptr_argout = static_cast<T*>(pressio_data_copy(ptr, nullptr));
 }
 
 template <class T>
 void _pressio_io_data_to_numpy_3d(pressio_data* ptr, T** ptr_argout, long int*r1, long int* r2, long int* r3) {
-  *r1 = ptr->get_dimension(0);
+  *r1 = ptr->get_dimension(2);
   *r2 = ptr->get_dimension(1);
-  *r3 = ptr->get_dimension(2);
+  *r3 = ptr->get_dimension(0);
   *ptr_argout = static_cast<T*>(pressio_data_copy(ptr, nullptr));
 }
 
 template <class T>
 void _pressio_io_data_to_numpy_4d(pressio_data* ptr, T** ptr_argout, long int*r1, long int* r2, long int* r3, long int* r4) {
-  *r1 = ptr->get_dimension(0);
-  *r2 = ptr->get_dimension(1);
-  *r3 = ptr->get_dimension(2);
-  *r4 = ptr->get_dimension(3);
+  *r1 = ptr->get_dimension(3);
+  *r2 = ptr->get_dimension(2);
+  *r3 = ptr->get_dimension(1);
+  *r4 = ptr->get_dimension(0);
   *ptr_argout = static_cast<T*>(pressio_data_copy(ptr, nullptr));
 }
 

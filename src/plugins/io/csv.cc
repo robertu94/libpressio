@@ -28,7 +28,6 @@ namespace {
 
     template<class T>
     int operator()(T* begin, T* end) {
-      (void) begin;
       (void) end;
       for (size_t row = 0; row < rows; ++row) {
         for (size_t col = 0; col < columns; ++col) {
@@ -93,14 +92,14 @@ struct csv_io : public libpressio_io_plugin
     if(pressio_data_num_dimensions(data) != 2) return invalid_dimensions();
 
     if(headers.size()) {
-      if(pressio_data_get_dimension(data, 1) != headers.size()) {
+      if(pressio_data_get_dimension(data, 0) != headers.size()) {
         return invalid_headers();
       }
       for (size_t i = 0; i < headers.size(); ++i) {
         outfile << headers[i] << ((i == headers.size()-1)? line_delim.front(): field_delim.front());
       }
     }
-    size_t rows = pressio_data_get_dimension(data, 0), columns = pressio_data_get_dimension(data, 1);
+    size_t rows = pressio_data_get_dimension(data, 1), columns = pressio_data_get_dimension(data, 0);
     pressio_data_for_each<int>(*data, csv_printer{outfile, rows, columns, line_delim.front(), field_delim.front()});
 
     return 0;
@@ -176,16 +175,16 @@ struct csv_io : public libpressio_io_plugin
   pressio_data* read_typed(std::istream& in, pressio_data* data) {
     std::array<size_t,2> sizes {0,0};
     std::vector<T> builder;
-    for(std::string line; std::getline(in, line, line_delim.front()); sizes[0]++) {
-      if(sizes[0] < skip_rows) continue;
+    for(std::string line; std::getline(in, line, line_delim.front()); sizes[1]++) {
+      if(sizes[1] < skip_rows) continue;
       std::istringstream line_ss(line);
-      size_t column = 0;
-      for(std::string value; std::getline(line_ss, value,field_delim.front()); ++column) {
+      size_t columns = 0;
+      for(std::string value; std::getline(line_ss, value,field_delim.front()); ++columns) {
         builder.emplace_back(std::stold(value));
       }
-      sizes[1] = column;
+      sizes[0] = columns;
     }
-    sizes[0] -= skip_rows;
+    sizes[1] -= skip_rows;
     if(data && data->has_data() && compat::equal(sizes.begin(), sizes.end(), data->dimensions().begin(), data->dimensions().end()) && data->dtype() == pressio_dtype_from_type<T>()) {
       auto ret = pressio_data_new_empty(pressio_byte_dtype, 0, nullptr);
       *ret = std::move(*data);

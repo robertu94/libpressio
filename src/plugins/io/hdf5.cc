@@ -7,6 +7,7 @@
 #include <H5Fpublic.h>
 #include <H5public.h>
 #include <std_compat/utility.h>
+#include "cleanup.h"
 
 #if defined(H5_HAVE_PARALLEL) && H5_HAVE_PARALLEL
 #include <H5FDmpi.h>
@@ -97,35 +98,6 @@ namespace {
     }
   }
 
-  /**
-   * this class is a standard c++ idiom for closing resources
-   * it calls the function passed in during the destructor.
-   */
-  class cleanup {
-    public:
-      cleanup() noexcept: cleanup_fn([]{}), do_cleanup(false) {}
-
-      template <class Function>
-      cleanup(Function f) noexcept: cleanup_fn(std::forward<Function>(f)), do_cleanup(true) {}
-      cleanup(cleanup&& rhs) noexcept: cleanup_fn(std::move(rhs.cleanup_fn)), do_cleanup(compat::exchange(rhs.do_cleanup, false)) {}
-      cleanup(cleanup const&)=delete;
-      cleanup& operator=(cleanup const&)=delete;
-      cleanup& operator=(cleanup && rhs) noexcept { 
-        if(&rhs == this) return *this;
-        do_cleanup = compat::exchange(rhs.do_cleanup, false);
-        cleanup_fn = std::move(rhs.cleanup_fn);
-        return *this;
-      }
-      ~cleanup() { if(do_cleanup) cleanup_fn(); }
-
-    private:
-      std::function<void()> cleanup_fn;
-      bool do_cleanup;
-  };
-  template<class Function>
-  cleanup make_cleanup(Function&& f) {
-    return cleanup(std::forward<Function>(f));
-  }
 }
 
 extern "C" {
@@ -237,6 +209,7 @@ struct hdf5_io: public libpressio_io_plugin {
     auto cleanup_type = make_cleanup([&]{ H5Tclose(type);}) ;
 
     {
+      std::reverse(pressio_size.begin(), pressio_size.end()); // hdf5 expects C ordered dimensions
       auto dtype = h5t_to_pressio(type);
       if(dtype) {
         pressio_data* ret;
@@ -319,9 +292,9 @@ struct hdf5_io: public libpressio_io_plugin {
       std::vector<hsize_t> h5_dims(data->num_dimensions());
       if(file_extent.empty()) {
         std::vector<size_t> dims = data->dimensions();
-        std::copy(std::begin(dims), std::end(dims), std::begin(h5_dims));
+        std::copy(compat::rbegin(dims), compat::rend(dims), std::begin(h5_dims));
       } else {
-        std::copy(std::begin(file_extent), std::end(file_extent), std::begin(h5_dims));
+        std::copy(compat::rbegin(file_extent), compat::rend(file_extent), std::begin(h5_dims));
       }
       hid_t creation_filespace = H5Screate_simple(
           h5_dims.size(),
@@ -369,7 +342,7 @@ struct hdf5_io: public libpressio_io_plugin {
 
     //prepare the memspace
     std::vector<size_t> pressio_dims = data->dimensions();
-    std::vector<hsize_t> memspace_dims(std::begin(pressio_dims), std::end(pressio_dims));
+    std::vector<hsize_t> memspace_dims(compat::rbegin(pressio_dims), compat::rend(pressio_dims));
     hid_t memspace = H5Screate_simple(static_cast<int>(memspace_dims.size()), memspace_dims.data(), nullptr);
     if(memspace < 0) {
       return set_error(7, "failed to create memspace");
