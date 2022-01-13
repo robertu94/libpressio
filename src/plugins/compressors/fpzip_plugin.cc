@@ -55,8 +55,8 @@ class fpzip_plugin: public libpressio_compressor_plugin {
   };
 
   int 	set_options_impl (struct pressio_options const& options) override {
-    int tmp;
-    if( get(options, "fpzip:has_header", &tmp) != pressio_options_key_set) {
+    int tmp = has_header;
+    if( get(options, "fpzip:has_header", &tmp) == pressio_options_key_set) {
       has_header = tmp != 0;
     }
 
@@ -149,11 +149,6 @@ class fpzip_plugin: public libpressio_compressor_plugin {
 
   public:
 
-  fpzip_plugin() {
-    std::stringstream ss;
-    ss << fpzip_plugin::major_version() << "." << fpzip_plugin::minor_version() << "." << fpzip_plugin::patch_version();
-    version_str = ss.str();
-  }
   
   int	major_version () const override {
     return FPZIP_VERSION_MAJOR;
@@ -168,7 +163,12 @@ class fpzip_plugin: public libpressio_compressor_plugin {
   }
 
   const char* version() const override {
-    return fpzip_version_string;
+    static std::string version_str = [this]{
+      std::stringstream ss;
+      ss << major_version() << '.' << minor_version() << '.' << patch_version();
+      return ss.str();
+    }();
+    return version_str.c_str();
   }
   const char* prefix() const noexcept override {
     return "fpzip";
@@ -178,11 +178,10 @@ class fpzip_plugin: public libpressio_compressor_plugin {
   }
 
   private:
-  std::string version_str;
-  int has_header = 0;
-  int prec = 0;
+  int has_header{0};
+  int prec{0};
 
 };
 
-static pressio_register compressor_fpzip_plugin(compressor_plugins(), "fpzip", [](){ return std::make_shared<fpzip_plugin>(); });
+static pressio_register compressor_fpzip_plugin(compressor_plugins(), "fpzip", [](){ return std::make_unique<fpzip_plugin>(); });
 } }
