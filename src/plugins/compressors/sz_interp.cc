@@ -157,6 +157,7 @@ public:
   struct pressio_options get_options_impl() const override
   {
     struct pressio_options options;
+    set(options, "pressio:abs", error_bound);
     set(options, "sz_interp:error_bound", error_bound);
     set(options, "sz_interp:interp_block_size", interp_block_size);
     set(options, "sz_interp:intern_op", intern_op);
@@ -184,6 +185,7 @@ public:
 
   int set_options_impl(struct pressio_options const& options) override
   {
+    get(options, "pressio:abs", &error_bound);
     get(options, "sz_interp:error_bound", &error_bound);
     get(options, "sz_interp:interp_block_size", &interp_block_size);
     get(options, "sz_interp:intern_op", &intern_op);

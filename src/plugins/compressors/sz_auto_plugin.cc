@@ -22,6 +22,7 @@ class sz_auto_plugin: public libpressio_compressor_plugin {
     };
     struct pressio_options get_options_impl() const override {
       struct pressio_options options;
+      set(options, "pressio:abs", error_bounds);
       set(options, "SZauto:error_bounds", error_bounds);
       set(options, "SZauto:sample_ratio", sample_ratio);
       return options;
@@ -50,6 +51,7 @@ class sz_auto_plugin: public libpressio_compressor_plugin {
 
 
     int set_options_impl(struct pressio_options const& options) override {
+      get(options, "pressio:abs", &error_bounds);
       get(options, "SZauto:error_bounds", &error_bounds);
       get(options, "SZauto:sample_ratio", &sample_ratio);
       return 0;

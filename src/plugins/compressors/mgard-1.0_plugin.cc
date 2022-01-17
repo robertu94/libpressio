@@ -341,6 +341,11 @@ public:
   struct pressio_options get_options_impl() const override
   {
     struct pressio_options options;
+    if(s == std::numeric_limits<double>::infinity()) {
+      set(options, "pressio:abs", tolerance);
+    } else {
+      set_type(options, "pressio:abs", pressio_option_double_type);
+    }
     set(options, "mgard:s", s);
     set(options, "mgard:tolerance", tolerance);
     set(options, "mgard:coordinates", coordinates);
@@ -420,6 +425,11 @@ public:
 
   int set_options_impl(struct pressio_options const& options) override
   {
+    double abs;
+    if(get(options, "pressio:abs", &abs) == pressio_options_key_set) {
+      s = std::numeric_limits<double>::infinity();
+      tolerance = abs;
+    }
     get(options, "mgard:s", &s);
     get(options, "mgard:tolerance", &tolerance);
     get(options, "mgard:coordinates", &coordinates);

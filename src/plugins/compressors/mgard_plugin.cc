@@ -153,6 +153,11 @@ class mgard_plugin: public libpressio_compressor_plugin {
 
   struct pressio_options	get_options_impl () const override {
     struct pressio_options options;
+    if(!s && tolerance) {
+      set(options, "pressio:abs", tolerance);
+    } else {
+      set_type(options, "pressio:abs", pressio_option_double_type);
+    }
     set(options, "mgard:tolerance",  tolerance);
     set(options, "mgard:s", s);
     set(options, "mgard:norm_of_qoi", norm_of_qoi);
@@ -168,6 +173,11 @@ class mgard_plugin: public libpressio_compressor_plugin {
   };
 
   int 	set_options_impl (struct pressio_options const& options) override {
+    double abs;
+    if(get(options, "pressio:abs", &abs) == pressio_options_key_set) {
+      s = std::numeric_limits<double>::infinity();
+      tolerance = abs;
+    }
     get(options, "mgard:tolerance", &tolerance);
     auto new_s = s;
     if(get(options, "mgard:s", &new_s) == pressio_options_key_set) {

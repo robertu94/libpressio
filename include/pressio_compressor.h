@@ -42,6 +42,8 @@ struct pressio_options* pressio_compressor_get_options(struct pressio_compressor
  * sets the options for the pressio_compressor.  Compressors MAY choose to ignore
  * some subset of options passed in if there valid but conflicting settings
  * (i.e. two settings that adjust the same underlying configuration).
+ * Additionally, if one of the two settings is a generic one (i.e. pressio:abs)
+ * the compressor specific version should prevail.
  * Compressors SHOULD return an error value if configuration
  * failed due to a missing required setting or an invalid one. Users MAY
  * call pressio_compressor_error_msg() to get more information about the warnings or errors

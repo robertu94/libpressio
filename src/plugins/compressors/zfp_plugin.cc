@@ -54,6 +54,7 @@ class zfp_plugin: public libpressio_compressor_plugin {
 
     struct pressio_options get_options_impl() const override {
       struct pressio_options options;
+      set_type(options, "pressio:abs", pressio_option_double_type);
       set(options, "zfp:minbits", zfp->minbits);
       set(options, "zfp:maxbits", zfp->maxbits);
       set(options, "zfp:maxprec", zfp->maxprec);
@@ -110,6 +111,9 @@ class zfp_plugin: public libpressio_compressor_plugin {
       //precision, accuracy, and expert mode settings
       uint32_t mode, precision, reversible; 
       double tolerance, rate; 
+      if(get(options, "pressio:abs", &tolerance) == pressio_options_key_set) {
+        zfp_stream_set_accuracy(zfp, tolerance);
+      }
       if(get(options, "zfp:mode", &mode) == pressio_options_key_set) {
         zfp_stream_set_mode(zfp, mode);
       } else if(get(options, "zfp:precision", &precision) == pressio_options_key_set) {

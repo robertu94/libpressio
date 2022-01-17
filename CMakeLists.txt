@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.75.1" LANGUAGES CXX C)
+project(libpressio VERSION "0.76.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -51,6 +51,7 @@ add_library(libpressio
   #plugins
   ./src/plugins/compressors/compressor_base.cc
   ./src/plugins/compressors/noop.cc
+  ./src/plugins/compressors/pressio.cc
   ./src/plugins/metrics/composite.cc
   ./src/plugins/metrics/external.cc
   ./src/plugins/metrics/metrics_base.cc
@@ -141,6 +142,7 @@ libpressio_optional_component(sampling "build the sampling compressors plugin" /
 libpressio_optional_component(select "build the io selection plugin" /io/select.cc)
 libpressio_optional_component(switch "build the switch comprssor plugin" /compressors/switch.cc)
 libpressio_optional_component(transpose "build the transpose compressor plugin" /compressors/transpose.cc)
+libpressio_optional_component(print_options "print the options passed to set_options" /metrics/print_options.cc)
 
 option(LIBPRESSIO_INTERPROCEDURAL_OPTIMIZATION "Use interprocedural optimization (LTO)" OFF)
 if(LIBPRESSIO_INTERPROCEDURAL_OPTIMIZATION)

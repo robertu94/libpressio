@@ -214,12 +214,14 @@ class pressio_configurable {
       std::string& current_id,
       Wrapper& current_value) {
     std::string new_id;
+    auto ret = pressio_options_key_exists;
     if(get(options, std::forward<StringType>(key), &new_id) == pressio_options_key_set) {
       if (new_id != current_id) {
         auto new_value = registry.build(new_id);
         if(new_value) {
           current_id = std::move(new_id);
           current_value = std::move(new_value);
+          ret = pressio_options_key_set;
         } else {
           return pressio_options_key_does_not_exist;
         }
@@ -229,7 +231,7 @@ class pressio_configurable {
       }
     }
     current_value->set_options(options);
-    return pressio_options_key_exists;
+    return ret;
   }
 
   /**
@@ -250,6 +252,7 @@ class pressio_configurable {
       std::vector<std::string>& current_ids,
       std::vector<Wrapper>& current_values) {
     std::vector<std::string> new_ids;
+    auto ret = pressio_options_key_exists;
     if(get(options, std::forward<StringType>(key), &new_ids) == pressio_options_key_set) {
       if (new_ids != current_ids) {
         std::vector<Wrapper> new_values;
@@ -262,6 +265,7 @@ class pressio_configurable {
         if(all_built) {
           current_ids = std::move(new_ids);
           current_values = std::move(new_values);
+          ret = pressio_options_key_set;
         } else {
           return pressio_options_key_does_not_exist;
         }
@@ -273,7 +277,7 @@ class pressio_configurable {
     for (auto& current_value : current_values) {
       current_value->set_options(options);
     }
-    return pressio_options_key_exists;
+    return ret;
   }
 
   /**

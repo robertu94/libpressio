@@ -189,11 +189,29 @@ class sz_plugin: public libpressio_compressor_plugin {
     set(options, "sz:random_access", confparams_cpr->randomAccess);
 #endif
     set(options, "sz:user_params", user_params);
+
+    if(confparams_cpr->errorBoundMode == ABS) {
+      set(options, "pressio:abs", confparams_cpr->absErrBound);
+    } else {
+      set_type(options, "pressio:abs", pressio_option_double_type);
+    }
+    if(confparams_cpr->errorBoundMode == REL) {
+      set(options, "pressio:rel", confparams_cpr->relBoundRatio);
+    } else {
+      set_type(options, "pressio:rel", pressio_option_double_type);
+    }
     return options;
   }
 
   int set_options_impl(struct pressio_options const& options) override {
     compat::unique_lock<compat::shared_mutex> lock(init_handle->sz_init_lock);
+
+    if(get(options, "pressio:abs", &confparams_cpr->absErrBound) == pressio_options_key_set) {
+      confparams_cpr->errorBoundMode = ABS;
+    }
+    if(get(options, "pressio:rel", &confparams_cpr->relBoundRatio) == pressio_options_key_set) {
+      confparams_cpr->errorBoundMode = REL;
+    }
 
     struct sz_params* sz_param;
     std::string config_file;

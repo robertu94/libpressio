@@ -80,8 +80,11 @@ struct pressio_options libpressio_compressor_plugin::get_documentation() const {
   auto ret = get_documentation_impl();
   set(ret, "pressio:thread_safe", "level of thread safety provided by the compressor");
   set(ret, "pressio:stability", "level of stablity provided by the compressor; see the README for libpressio");
+  set(ret, "pressio:abs", "a pointwise absolute error bound");
+  set(ret, "pressio:rel", "a pointwise value-range relative error bound");
   if(metrics_plugin) { 
     ret.copy_from(metrics_plugin->get_documentation());
+    set_meta_docs(ret, "pressio:metric", "metrics to collect when using the compressor", metrics_plugin);
     set_meta_docs(ret, get_metrics_key_name(), "metrics to collect when using the compressor", metrics_plugin);
     metrics_plugin->end_get_documentation(ret);
   }
@@ -92,6 +95,7 @@ struct pressio_options libpressio_compressor_plugin::get_options() const {
   if(metrics_plugin)
     metrics_plugin->begin_get_options();
   pressio_options opts;
+  set_meta(opts, "pressio:metric", metrics_id, metrics_plugin);
   set_meta(opts, get_metrics_key_name(), metrics_id, metrics_plugin);
   set(opts, "metrics:errors_fatal", metrics_errors_fatal);
   set(opts, "metrics:copy_compressor_results", metrics_copy_impl_results);
@@ -109,6 +113,7 @@ int libpressio_compressor_plugin::set_options(struct pressio_options const& opti
       return error_code();
     }
   }
+  get_meta(options, "pressio:metric", metrics_plugins(), metrics_id, metrics_plugin);
   get_meta(options, get_metrics_key_name(), metrics_plugins(), metrics_id, metrics_plugin);
   get(options, "metrics:errors_fatal", &metrics_errors_fatal);
   get(options, "metrics:copy_compressor_results", &metrics_copy_impl_results);

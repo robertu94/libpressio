@@ -22,6 +22,11 @@ class sz_omp: public libpressio_compressor_plugin {
   pressio_options get_options_impl() const override {
     compat::shared_lock<compat::shared_mutex> lock(init_handle->sz_init_lock);
     struct pressio_options options;
+    if(confparams_cpr->errorBoundMode == ABS) {
+      set(options, "pressio:abs", confparams_cpr->absErrBound);
+    } else {
+      set_type(options, "pressio:abs", pressio_option_double_type);
+    }
     set_type(options, "sz_omp:config_file", pressio_option_charptr_type);
     set_type(options, "sz_omp:config_struct", pressio_option_userptr_type);
 #if PRESSIO_SZ_VERSION_GREATEREQ(2,1,9,0)
@@ -113,6 +118,11 @@ class sz_omp: public libpressio_compressor_plugin {
     return options;
   }
   int set_options_impl(const pressio_options &options) override {
+
+    if(get(options, "pressio:abs", &confparams_cpr->absErrBound) == pressio_options_key_set) {
+      confparams_cpr->errorBoundMode = ABS;
+    }
+
     struct sz_params* sz_param;
     std::string config_file;
     if(get(options, "sz_omp:config_file", &config_file) == pressio_options_key_set) {

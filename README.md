@@ -366,8 +366,8 @@ As of version 1.0.0, LibPressio will follow the following API stability guidelin
 + The functions and modules defined in the low-level python bindings are stable (import `pressio`).
 + The functions and modules defined in the higher-level python bindings are unstable (import `libpressio`).
 + Any functions listed above, in `docs/MetricResults.md` or in `docs/MetricResults.md` as experimental are unstable
-+ Any configurable that has a key `pressio:stability` with a value of `experimental` or `unstable` are unstable.  Modules that are experimental may crash or have other severe deficiencies, modules that are unstable generally will not crash, but may have options changed according to the unstable API garunetees.
-+ Any configurable that has a key `pressio:stability` with a value of `stable` conforms to the LibPressio stability garunetees
++ Any configurable that has a key `pressio:stability` with a value of `experimental` or `unstable` are unstable.  Modules that are experimental may crash or have other severe deficiencies, modules that are unstable generally will not crash, but may have options changed according to the unstable API guarantees.
++ Any configurable that has a key `pressio:stability` with a value of `stable` conforms to the LibPressio stability guarantees
 + Any configurable that has the key `pressio:stability` with a value of `external` indicates that options/configuration returned by this module are controlled by version of the external library that it depends upon and may change at any time without changing the LibPressio version number.
 
 Stable means:
