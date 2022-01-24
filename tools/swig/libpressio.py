@@ -282,7 +282,7 @@ class PressioCompressor(Codec):
             if rc:
                 raise PressioException.from_compressor(self._compressor)
 
-            comp = pressio.io_data_to_bytes(compressed_lp)
+            comp = pressio.io_data_to_numpy(compressed_lp)
         finally:
             pressio.data_free(uncompressed_lp)
             pressio.data_free(compressed_lp)
@@ -298,7 +298,7 @@ class PressioCompressor(Codec):
         compressed_lp = None
         decompressed_lp = None
         try:
-            compressed_lp = pressio.io_data_from_bytes(compressed)
+            compressed_lp = pressio.io_data_from_numpy(compressed)
             decompressed_lp = pressio.io_data_from_numpy(decompressed)
 
             rc = pressio.compressor_decompress(self._compressor, compressed_lp, decompressed_lp)

@@ -83,6 +83,7 @@ applies linear_quantizer encoding to prior to compression and reverses it post d
       step = pressio_data_for_each<double>(*input, linear_quantizer_step_finder{auto_step});
     }
     auto linear_quantizer_encoded = pressio_data_for_each<pressio_data>(*input, linear_quantizer_encoder{step});
+    linear_quantizer_encoded.set_dimensions(std::vector<size_t>(input->dimensions()));
     return meta->compress(&linear_quantizer_encoded, output);
   }
   int decompress_impl(const pressio_data *input, struct pressio_data *output) override {
