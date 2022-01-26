@@ -183,14 +183,28 @@ class zfp_plugin: public libpressio_compressor_plugin {
 
       //create compressed data buffer and stream
       size_t bufsize = zfp_stream_maximum_size(zfp, in_field);
-      void* buffer = malloc(bufsize);
+
+      void* buffer;
+      bool reuse_buffer;
+      if(output->has_data() && output->capacity_in_bytes() >= bufsize) {
+        buffer = output->data();
+        reuse_buffer = true;
+      } else {
+        buffer = malloc(bufsize);
+        reuse_buffer = false;
+      }
       bitstream* stream = stream_open(buffer, bufsize);
       zfp_stream_set_bit_stream(zfp, stream);
       zfp_stream_rewind(zfp);
 
       size_t outsize = zfp_compress(zfp, in_field);
       if(outsize != 0) {
-        *output = pressio_data::move(pressio_byte_dtype, stream_data(stream), 1, &outsize, pressio_data_libc_free_fn, nullptr);
+        if(reuse_buffer) {
+          output->set_dtype(pressio_byte_dtype);
+          output->reshape({outsize});
+        } else {
+          *output = pressio_data::move(pressio_byte_dtype, stream_data(stream), 1, &outsize, pressio_data_libc_free_fn, nullptr);
+        }
         zfp_field_free(in_field);
         stream_close(stream);
         return 0;

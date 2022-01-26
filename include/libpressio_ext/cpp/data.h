@@ -18,6 +18,8 @@
  * \brief C++ pressio_data interface
  */
 
+
+
 /**
  * \param[in] dimensions the number of dimensions of the data object
  * \param[in] dims the actual of dimensions of the data object
@@ -214,7 +216,8 @@ struct pressio_data {
     data_ptr(nullptr),
     metadata_ptr(nullptr),
     deleter(nullptr),
-    dims()
+    dims(),
+    capacity(0)
   {}
 
   ~pressio_data() {
@@ -238,6 +241,7 @@ struct pressio_data {
     metadata_ptr = nullptr;
     deleter = pressio_data_libc_free_fn;
     dims = rhs.dims;
+    capacity = data_size_in_bytes(rhs.dtype(), rhs.dims.size(), rhs.dims.data()); //we only malloc size_in_bytes()
     return *this;
   }
   /**copy-constructor, clones the data
@@ -249,7 +253,8 @@ struct pressio_data {
     data_ptr((rhs.has_data())? malloc(rhs.size_in_bytes()) : nullptr),
     metadata_ptr(nullptr),
     deleter(pressio_data_libc_free_fn),
-    dims(rhs.dims)
+    dims(rhs.dims),
+    capacity(data_size_in_bytes(rhs.dtype(), rhs.dims.size(), rhs.dims.data())) //we only malloc size_in_bytes
   {
     if(rhs.has_data() && rhs.size_in_bytes() > 0) {
       memcpy(data_ptr, rhs.data_ptr, rhs.size_in_bytes());
@@ -266,7 +271,9 @@ struct pressio_data {
     data_ptr(compat::exchange(rhs.data_ptr, nullptr)),
     metadata_ptr(compat::exchange(rhs.metadata_ptr, nullptr)),
     deleter(compat::exchange(rhs.deleter, nullptr)),
-    dims(compat::exchange(rhs.dims, {})) {}
+    dims(compat::exchange(rhs.dims, {})),
+    capacity(compat::exchange(rhs.capacity, 0)) //we take ownership, so take everything
+    {}
   
   /**
    * move-assignment operator
@@ -282,6 +289,7 @@ struct pressio_data {
     metadata_ptr = compat::exchange(rhs.metadata_ptr, nullptr),
     deleter = compat::exchange(rhs.deleter, nullptr),
     dims = compat::exchange(rhs.dims, {});
+    capacity = compat::exchange(rhs.capacity, 0);
     return *this;
   }
 
@@ -324,6 +332,13 @@ struct pressio_data {
   }
 
   /**
+   * \param[in] dtype the data type for the buffer
+   */
+  void set_dtype(pressio_dtype dtype) {
+    data_dtype = dtype;
+  }
+
+  /**
    * \param[in] dtype the new datatype to assign
    * \returns a new pressio_data structure based on the current structure with the new type
    */
@@ -351,10 +366,11 @@ struct pressio_data {
     return real_dims;
   }
 
+
   /**
    * changes the dimensions of the size of the memory
-   * if the resulting buffer is smaller than the current buffer in bytes, nothing else is done
-   * if the resulting buffer is larger than the current buffer in bytes, a realloc-like operation is performed
+   * if the resulting buffer is smaller than the current buffer capacity in bytes, nothing else is done
+   * if the resulting buffer is larger than the current buffer capacity in bytes, a realloc-like operation is performed
    * 
    * \param[in] dims the new dimensions to use
    * \returns the size of the new buffer in bytes, returns 0 if malloc fails
@@ -362,7 +378,7 @@ struct pressio_data {
    */
   size_t set_dimensions(std::vector<size_t>&& dims) {
     size_t new_size = data_size_in_bytes(data_dtype, dims.size(), dims.data());
-    if(size_in_bytes() < new_size) {
+    if(capacity_in_bytes() < new_size) {
       void* tmp = malloc(new_size);
       if(tmp == nullptr) {
         return 0;
@@ -373,6 +389,7 @@ struct pressio_data {
         data_ptr = tmp;
         deleter = pressio_data_libc_free_fn;
         metadata_ptr = nullptr;
+        capacity = new_size;
       }
     } 
     this->dims = std::move(dims);
@@ -396,11 +413,19 @@ struct pressio_data {
   }
 
   /**
+   * \returns the capacity of the buffer in bytes
+   */
+  size_t capacity_in_bytes() const {
+    return capacity;
+  }
+
+  /**
    * \returns the size of the buffer in elements
    */
   size_t num_elements() const {
     return data_size_in_elements(num_dimensions(), dims.data());
   }
+
 
   /**
    * Copies a set of blocks of data from the data stream to a new pressio_data structure
@@ -505,18 +530,45 @@ struct pressio_data {
       void* metadata,
       void (*deleter)(void*, void*),
       size_t const num_dimensions,
-      size_t const dimensions[]):
+      size_t const dimensions[]
+      ):
     data_dtype(dtype),
     data_ptr(data),
     metadata_ptr(metadata),
     deleter(deleter),
-    dims(dimensions, dimensions+num_dimensions)
+    dims(dimensions, dimensions+num_dimensions),
+    capacity(data_size_in_bytes(dtype, num_dimensions, dimensions))
+  {}
+  /**
+   * constructor use the static methods instead
+   * \param dtype the type of the data
+   * \param data the buffer to use
+   * \param metadata the meta data to pass to the deleter function
+   * \param num_dimensions the number of dimensions to represent
+   * \param dimensions of the data
+   * \param capacity of the data
+   */
+  pressio_data(const pressio_dtype dtype,
+      void* data,
+      void* metadata,
+      void (*deleter)(void*, void*),
+      size_t const num_dimensions,
+      size_t const dimensions[],
+      size_t capacity
+      ):
+    data_dtype(dtype),
+    data_ptr(data),
+    metadata_ptr(metadata),
+    deleter(deleter),
+    dims(dimensions, dimensions+num_dimensions),
+    capacity(capacity)
   {}
   pressio_dtype data_dtype;
   void* data_ptr;
   void* metadata_ptr;
   void (*deleter)(void*, void*);
   std::vector<size_t> dims;
+  size_t capacity;
 };
 
 /**

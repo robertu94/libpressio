@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.76.1" LANGUAGES CXX C)
+project(libpressio VERSION "0.77.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -366,6 +366,18 @@ if(LIBPRESSIO_HAS_NETCDF)
   target_sources(libpressio
     PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/io/netcdf.cc
+    )
+endif()
+
+option(LIBPRESSIO_HAS_CUFILE "build the cufile io plugin" OFF)
+if(LIBPRESSIO_HAS_CUFILE)
+  set(LIBPRESSIO_FEATURES "${LIBPRESSIO_FEATURES} cufile")
+  find_package(CUDAToolkit REQUIRED)
+  find_library(CUFile_LIBRARY cufile PATHS ${CUDAToolkit_LIBRARY_DIR} REQUIRED)
+  target_link_libraries(libpressio PRIVATE CUDA::cuda_driver CUDA::cudart ${CUFile_LIBRARY})
+  target_sources(libpressio
+    PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/io/cufile.cc
     )
 endif()
 

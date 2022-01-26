@@ -386,6 +386,10 @@ size_t pressio_data_num_elements(struct pressio_data const* data) {
   return data->num_elements();
 }
 
+size_t pressio_data_get_capacity_in_bytes(struct pressio_data const* data) {
+  return data->capacity_in_bytes();
+}
+
 int pressio_data_reshape(struct pressio_data* data,
     size_t const num_dimensions,
     size_t const dimensions[]

@@ -211,6 +211,13 @@ size_t pressio_data_get_dimension(struct pressio_data const* data, size_t const 
 size_t pressio_data_get_bytes(struct pressio_data const* data);
 
 /**
+ * returns the number of bytes of capacity
+ * \param[in] data the pressio data to query
+ * \returns the number of bytes to represent the data
+ */
+size_t pressio_data_get_capacity_in_bytes(struct pressio_data const* data);
+
+/**
  * returns the total number of elements to represent the data
  * \param[in] data the pressio data to query
  * \returns the total number of elements to represent the data
