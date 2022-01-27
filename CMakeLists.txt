@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.77.0" LANGUAGES CXX C)
+project(libpressio VERSION "0.78.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -245,6 +245,17 @@ if(LIBPRESSIO_HAS_SZ_AUTO)
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/sz_auto_plugin.cc
     )
   target_link_libraries(libpressio PRIVATE szauto::sz_cpp)
+endif()
+
+option(LIBPRESSIO_HAS_MGARDx "build the MGARDx plugin" OFF)
+if(LIBPRESSIO_HAS_MGARDx)
+  set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} MGARDx")
+  find_package(MGARDx)
+  target_sources(libpressio
+    PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/MGARDx_plugin.cc
+    )
+  target_link_libraries(libpressio PRIVATE MGARDx::MGARDx)
 endif()
 
 option(LIBPRESSIO_HAS_MGARD "build the MGARD plugin" OFF)
