@@ -158,6 +158,7 @@ TEST_F(PressioOptionsTests, IterateKeys) {
       case pressio_option_unset_type:
       case pressio_option_charptr_array_type:
       case pressio_option_data_type:
+      case pressio_option_bool_type:
         FAIL();
         break;
     }

@@ -49,6 +49,9 @@ void to_json(nlohmann::json& j, pressio_option const& option){
     case pressio_option_float_type:
       j["value"] = option.get_value<float>();
       break;
+    case pressio_option_bool_type:
+      j = option.get_value<bool>();
+      break;
     case pressio_option_double_type:
       //javascript numbers are IEEE 754 double precision values
       //store them directly
@@ -204,6 +207,9 @@ void from_json(nlohmann::json const& j, pressio_option& option) {
             case pressio_option_uint8_type:
               option = uint8_t(j.at("value"));
               break;
+            case pressio_option_bool_type:
+              option = bool(j.at("value"));
+              break;
             case pressio_option_uint16_type:
               option = uint16_t(j.at("value"));
               break;
@@ -235,6 +241,7 @@ void from_json(nlohmann::json const& j, pressio_option& option) {
           switch(dt) {
             case pressio_option_data_type:
             case pressio_option_uint8_type:
+            case pressio_option_bool_type:
             case pressio_option_uint16_type:
             case pressio_option_uint32_type:
             case pressio_option_uint64_type:
@@ -269,6 +276,8 @@ void from_json(nlohmann::json const& j, pressio_option& option) {
       option = {};
       break;
     case nlohmann::json::value_t::boolean:
+      option = j.get<bool>();
+      break;
     case nlohmann::json::value_t::discarded:
       break;
       

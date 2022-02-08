@@ -43,3 +43,12 @@ pressio.options_get_double(metric_results, b"size:compression_ratio", compressio
 print("compression ratio", pressio.double_value(compression_ratio))
 
 result = pressio.io_data_to_numpy(decompressed_data)
+pressio.delete_double(compression_ratio)
+pressio.data_free(input_data)
+pressio.data_free(compressed_data)
+pressio.data_free(decompressed_data)
+pressio.options_free(sz_options)
+pressio.options_free(metric_results)
+pressio.metrics_free(metrics)
+pressio.compressor_release(compressor)
+pressio.release(library)

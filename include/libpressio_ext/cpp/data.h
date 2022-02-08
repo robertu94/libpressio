@@ -18,6 +18,16 @@
  * \brief C++ pressio_data interface
  */
 
+/**
+ * pressio_data_delete_fn for handling deleting data allocated with new T[];
+ */
+template <class T>
+pressio_data_delete_fn pressio_new_free_fn() {
+  return [](void* data, void*){
+  T* data_t = static_cast<T*>(data);
+  delete[] data_t;
+  };
+}
 
 
 /**

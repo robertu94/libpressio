@@ -49,6 +49,8 @@ namespace {
   pressio_option as_numeric(const pressio_option& option, const enum pressio_option_type to_type, const enum pressio_conversion_safety safety) {
       From d = option.get_value<From>();
       switch (to_type) {
+        case pressio_option_bool_type:
+          return convert_numeric<bool>(d, safety);
         case pressio_option_double_type:
           return convert_numeric<double>(d, safety);
         case pressio_option_float_type:
@@ -111,6 +113,7 @@ bool pressio_option_has_value(struct pressio_option const* option) {
     option->set(value);\
   }
 
+pressio_option_define_type_impl(bool, bool)
 pressio_option_define_type_impl(uinteger8, uint8_t)
 pressio_option_define_type_impl(integer8, int8_t)
 pressio_option_define_type_impl(uinteger16, uint16_t)
@@ -182,6 +185,7 @@ void pressio_option_set_data(struct pressio_option* option, struct pressio_data*
 pressio_option_type pressio_option::type() const {
   if (holds_alternative<std::string>()) return pressio_option_charptr_type;
   else if (holds_alternative<int8_t>()) return pressio_option_int8_type;
+  else if (holds_alternative<bool>()) return pressio_option_bool_type;
   else if (holds_alternative<uint8_t>()) return pressio_option_uint8_type;
   else if (holds_alternative<int16_t>()) return pressio_option_int16_type;
   else if (holds_alternative<uint16_t>()) return pressio_option_uint16_type;
@@ -203,6 +207,8 @@ pressio_option pressio_option::as(const enum pressio_option_type to_type, const 
   }
   switch(type())
   {
+    case pressio_option_bool_type:
+      return as_numeric<bool>(*this, to_type, safety);
     case pressio_option_double_type:
       return as_numeric<double>(*this, to_type, safety);
     case pressio_option_float_type:
@@ -236,6 +242,9 @@ pressio_option pressio_option::as(const enum pressio_option_type to_type, const 
             else return {};
           case pressio_option_int8_type:
             if (allow_special(safety) && !s.empty()) return pressio_option(std::stoi(s));
+            else return {};
+          case pressio_option_bool_type:
+            if (allow_special(safety)) return pressio_option(s=="true");
             else return {};
           case pressio_option_uint8_type:
             if (allow_special(safety) && !s.empty()) return pressio_option(static_cast<uint8_t>(std::stoul(s)));
@@ -288,6 +297,9 @@ pressio_option pressio_option::as(const enum pressio_option_type to_type, const 
               else return {};
             case pressio_option_int8_type:
               if (allow_special(safety) && !s.empty()) return pressio_option(std::stoi(s));
+              else return {};
+            case pressio_option_bool_type:
+              if (allow_special(safety)) return pressio_option(static_cast<bool>(s=="true"));
               else return {};
             case pressio_option_uint8_type:
               if (allow_special(safety) && !s.empty()) return pressio_option(static_cast<uint8_t>(std::stoul(s)));

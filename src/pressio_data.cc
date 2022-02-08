@@ -211,6 +211,9 @@ pressio_data pressio_data::select(std::vector<size_t> const& start,
   case pressio_int64_dtype:
     copy_multi_dims<int64_t>(data(), output.data(), args);
     break;
+  case pressio_bool_dtype:
+    copy_multi_dims<bool>(data(), output.data(), args);
+    break;
   case pressio_byte_dtype:
   default:
     copy_multi_dims<void*>(data(), output.data(), args);

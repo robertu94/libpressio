@@ -198,6 +198,10 @@ int main(int argc, const char *argv[])
     std::cout << "defaulted2=17.1" << std::endl;
     
 
+    pressio_data_free(first_decompressed_buffer);
+    pressio_data_free(second_decompressed_buffer);
+    pressio_data_free(second_input_buffer);
+    pressio_data_free(first_input_buffer);
     pressio_data_free(first_input);
     pressio_data_free(first_output);
     pressio_data_free(second_input);

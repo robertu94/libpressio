@@ -25,6 +25,7 @@ enum pressio_dtype {
   /** 32 bit signed integer */pressio_int32_dtype,
   /** 64 bit signed integer */pressio_int64_dtype,
   /** 8 bit data type */ pressio_byte_dtype,
+  /** 8 bit data type */ pressio_bool_dtype,
 };
 
 /**

@@ -88,8 +88,11 @@ void document_compressor(std::ostream& out, std::string const& compressor_id, co
     out << "thread_safety: " << pressio_thread_safety(thread_safety) << std::endl;
     out << std::endl;
 
+
     //then print the pressio:description entry
     out << trim(std::string(description, (description == nullptr)? 0: strlen(description))) << std::endl << std::endl;
+    free((char*)stability);
+    free((char*)description);
     
     //then print the remaining entries in the docs in a table
     bool first_option = true;
@@ -136,10 +139,12 @@ void document_compressor(std::ostream& out, std::string const& compressor_id, co
           out << "options: ";
           for (int i = 0; i < n_entries; ++i) {
             out << entries[i];
+            free((char*)entries[i]);
             if(i != n_entries -1) {
               out << ", ";
             }
           }
+          free((char*)entries);
           out << std::endl << std::endl;
         }
 
@@ -148,6 +153,7 @@ void document_compressor(std::ostream& out, std::string const& compressor_id, co
         out << std::endl;
         out << std::endl;
 
+        free((char*)func_description);
       }
     });
 
@@ -189,6 +195,8 @@ void document_compressor(std::ostream& out, std::string const& compressor_id, co
         out << "description: " << trim(std::string(func_description, (func_description == nullptr)? 0: strlen(func_description)));
         out << std::endl;
         out << std::endl;
+
+        free((char*)func_description);
 
       }
     });
@@ -239,6 +247,9 @@ void document_metrics(std::ostream& out, const char* metric, pressio_metrics con
     //then print the pressio:description entry
     out << trim(std::string(description, (description == nullptr)? 0: strlen(description))) << std::endl << std::endl;
 
+    free((char*)stability);
+    free((char*)description);
+
     bool first_metric_result = true;
     for_each_options(metrics_results, [&](const char* key, pressio_option* value) {
       if(std::string(key).find("/pressio:") == 0) {
@@ -263,6 +274,7 @@ void document_metrics(std::ostream& out, const char* metric, pressio_metrics con
         }
 
         out << "description: " << trim(std::string(func_description, (func_description == nullptr)? 0: strlen(func_description)));
+        free((char*)func_description);
         out << std::endl << std::endl;
 
 
@@ -304,10 +316,12 @@ void document_metrics(std::ostream& out, const char* metric, pressio_metrics con
           out << "options: ";
           for (int i = 0; i < n_entries; ++i) {
             out << entries[i];
+            free((char*)entries[i]);
             if(i != n_entries -1) {
               out << ", ";
             }
           }
+          free((char*)entries);
           out << std::endl << std::endl;
         }
 
@@ -315,6 +329,7 @@ void document_metrics(std::ostream& out, const char* metric, pressio_metrics con
         out << "description: " << trim(std::string(func_description, (func_description == nullptr)? 0: strlen(func_description)));
         out << std::endl;
         out << std::endl;
+        free((char*)func_description);
 
       }
     });
@@ -459,6 +474,8 @@ void document_io(std::ostream& out, const char* metric, pressio_io const* c) {
 
     //then print the pressio:description entry
     out << trim(std::string(description, (description == nullptr)? 0: strlen(description))) << std::endl << std::endl;
+    free((char*)description);
+    free((char*)stability);
 
     //then print the remaining entries in the docs in a table
     bool first_option = true;
@@ -508,6 +525,7 @@ void document_io(std::ostream& out, const char* metric, pressio_io const* c) {
         out << std::endl;
         out << std::endl;
 
+        free((char*)func_description);
       }
     });
 
@@ -549,6 +567,8 @@ void document_io(std::ostream& out, const char* metric, pressio_io const* c) {
         out << "description: " << trim(std::string(func_description, (func_description == nullptr)? 0: strlen(func_description)));
         out << std::endl;
         out << std::endl;
+
+        free((char*)func_description);
 
       }
     });

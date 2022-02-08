@@ -43,6 +43,7 @@ namespace {
     if(H5Tequal(h5type, H5T_NATIVE_UINT32) > 0) return pressio_uint32_dtype;
     if(H5Tequal(h5type, H5T_NATIVE_UINT64) > 0) return pressio_uint64_dtype;
     if(H5Tequal(h5type, H5T_NATIVE_FLOAT) > 0) return pressio_float_dtype;
+    if(H5Tequal(h5type, H5T_NATIVE_HBOOL) > 0) return pressio_bool_dtype;
     if(H5Tequal(h5type, H5T_NATIVE_DOUBLE) > 0) return pressio_double_dtype;
     return compat::optional<pressio_dtype>{};
   }
@@ -70,6 +71,8 @@ namespace {
         return H5T_NATIVE_INT64;
       case pressio_byte_dtype:
         return H5T_NATIVE_UCHAR;
+      case pressio_bool_dtype:
+        return H5T_NATIVE_HBOOL;
       default:
         assert(false && "unexpected type");
         //shutup gcc

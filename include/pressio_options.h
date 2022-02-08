@@ -9,8 +9,9 @@ extern "C" {
  */
 #define LIBPRESSIO_OPTIONS_H
 #include "pressio_dtype.h"
-#include "stddef.h"
-#include "stdint.h"
+#include <stddef.h>
+#include <stdint.h>
+#include <stdbool.h>
 
 /*! \file pressio_options.h 
  *  \brief A set of options for a compressor
@@ -68,6 +69,7 @@ enum pressio_option_type {
   /** option is a 16 bit signed integer */pressio_option_int16_type=12,
   /** option is a 64 bit unsigned integer */pressio_option_uint64_type=13,
   /** option is a 64 bit signed integer */pressio_option_int64_type=14,
+  /** option is a boolean */pressio_option_bool_type=15,
 };
 
 
@@ -248,6 +250,7 @@ pressio_options_define_type(uinteger, uint32_t)
 pressio_options_define_type(integer, int32_t)
 pressio_options_define_type(float, float)
 pressio_options_define_type(double, double)
+pressio_options_define_type(bool, bool)
 pressio_options_define_type(userptr, void*)
 pressio_options_define_type(data, struct pressio_data*)
 

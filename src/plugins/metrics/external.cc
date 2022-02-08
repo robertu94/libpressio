@@ -278,6 +278,7 @@ class external_metric_plugin : public libpressio_metrics_plugin {
         switch(input_data->dtype()) {
           case pressio_float_dtype: full_command.emplace_back("float"); break;
           case pressio_double_dtype: full_command.emplace_back("double"); break;
+          case pressio_bool_dtype: full_command.emplace_back("bool"); break;
           case pressio_int8_dtype: full_command.emplace_back("int8"); break;
           case pressio_int16_dtype: full_command.emplace_back("int16"); break;
           case pressio_int32_dtype:  full_command.emplace_back("int32"); break;

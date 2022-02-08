@@ -91,6 +91,8 @@ def _python_to_pressio(options, template=None):
             data = pressio.io_data_from_bytes(value)
             op = pressio.option_new_data(data)
             pressio.data_free(data)
+        elif isinstance(value, bool):
+            op = pressio.option_new_bool(value)
         elif isinstance(value, int):
             op = pressio.option_new_integer64(value)
         elif pressio.LIBPRESSIO_HAS_MPI4PY:
@@ -166,6 +168,7 @@ def _from_charptr_array(x):
 
 
 _config_to_option_converters = {
+    pressio.option_bool_type: pressio.option_get_bool,
     pressio.option_int8_type: pressio.option_get_integer8,
     pressio.option_int16_type: pressio.option_get_integer16,
     pressio.option_int32_type: pressio.option_get_integer,

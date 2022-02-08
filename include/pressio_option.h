@@ -12,6 +12,7 @@ extern "C" {
 #define PRESSIO_OPTION
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include "pressio_options.h"
 
 
@@ -102,6 +103,7 @@ pressio_option_define_type(integer, int32_t)
 pressio_option_define_type(uinteger64, uint64_t)
 pressio_option_define_type(integer64, int64_t)
 pressio_option_define_type(float, float)
+pressio_option_define_type(bool, bool)
 pressio_option_define_type(double, double)
 pressio_option_define_type(string, const char*)
 pressio_option_define_type(userptr, void*)

@@ -130,6 +130,8 @@ operator<<(std::basic_ostream<CharT, Traits>& out, enum pressio_option_type type
         return out << "float";
       case pressio_option_double_type:
         return out << "double";
+      case pressio_option_bool_type:
+        return out << "bool";
       case pressio_option_charptr_type:
         return out << "char*";
       case pressio_option_userptr_type:
@@ -161,6 +163,8 @@ operator<<(std::basic_ostream<CharT, Traits>& out, pressio_option const& option)
         return out << int16_t{option.get_value<int8_t>()};
       case pressio_option_uint8_type:
         return out << uint16_t{option.get_value<uint8_t>()};
+      case pressio_option_bool_type:
+        return out << std::boolalpha << option.get_value<bool>();
       case pressio_option_int16_type:
         return out << option.get_value<int16_t>();
       case pressio_option_uint16_type:
@@ -193,8 +197,9 @@ operator<<(std::basic_ostream<CharT, Traits>& out, pressio_option const& option)
       case pressio_option_data_type:
         return out << option.get_value<pressio_data>();
       case pressio_option_unset_type:
-      default:
         return out << "<empty>";
+      default:
+        return out << "<unsupported>";
     }
   } else { 
     return out << "<empty>" ;
@@ -246,6 +251,8 @@ operator<<(std::basic_ostream<CharT, Traits>& out, enum pressio_dtype type)
       return out << "int32_t";
     case pressio_int64_dtype:
       return out << "int64_t";
+    case pressio_bool_dtype:
+      return out << "bool";
     default:
     case pressio_byte_dtype:
       return out << "byte";

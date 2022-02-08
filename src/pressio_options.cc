@@ -73,6 +73,7 @@ size_t pressio_options_num_set(struct pressio_options const* options) {
   pressio_options_define_type_impl_cast(name, type)  \
   pressio_options_define_type_impl_as(name, type) 
 
+pressio_options_define_type_impl(bool, bool)
 pressio_options_define_type_impl(uinteger8, uint8_t)
 pressio_options_define_type_impl(integer8, int8_t)
 pressio_options_define_type_impl(uinteger16, uint16_t)

@@ -54,3 +54,16 @@ with tempfile.NamedTemporaryFile() as tmp:
     pressio.options_get_double(metric_results, b"size:compression_ratio", compression_ratio)
     print("compression ratio", pressio.double_value(compression_ratio))
 
+    pressio.io_free(posix_io)
+    pressio.options_free(posix_options)
+    pressio.options_free(metric_results)
+    pressio.options_free(sz_options)
+    pressio.metrics_free(metrics)
+    pressio.data_free(input_template)
+    pressio.data_free(input_data)
+    pressio.data_free(decompressed_data)
+    pressio.data_free(compressed_data)
+    pressio.delete_double(compression_ratio)
+    pressio.compressor_release(compressor)
+    pressio.release(library)
+

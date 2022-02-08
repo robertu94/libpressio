@@ -128,6 +128,8 @@ int main(int argc, const char *argv[])
 
     pressio_data_free(input);
     pressio_data_free(output);
+    pressio_data_free(input_buffer);
+    pressio_data_free(decompressed_buffer);
   } else {
     std::cout << "dims=0" << std::endl;
     std::cout << "defaulted=2.0" << std::endl;

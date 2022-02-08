@@ -37,6 +37,7 @@ import_array();
 %include <std_vector.i>
 %include <cpointer.i>
 
+%pointer_functions(bool, bool)
 %pointer_functions(int8_t, int8)
 %pointer_functions(uint8_t, uint8)
 %pointer_functions(int16_t, int16)
@@ -54,6 +55,7 @@ import_array();
 #endif
 %include "pypressio.h"
 
+%numpy_typemaps(bool       , NPY_BOOL     , size_t)
 %numpy_typemaps(signed char       , NPY_BYTE     , size_t)
 %numpy_typemaps(unsigned char     , NPY_UBYTE    , size_t)
 %numpy_typemaps(short             , NPY_SHORT    , size_t)
@@ -74,6 +76,7 @@ import_array();
 %numpy_typemaps(std::uint16_t          , NPY_UINT16   , size_t)
 %numpy_typemaps(std::uint32_t          , NPY_UINT32   , size_t)
 %numpy_typemaps(std::uint64_t          , NPY_UINT64   , size_t)
+%numpy_typemaps(bool       , NPY_BOOL     , long int)
 %numpy_typemaps(float             , NPY_FLOAT    , long int)
 %numpy_typemaps(double            , NPY_DOUBLE   , long int)
 %numpy_typemaps(int8_t            , NPY_INT8     , long int)
@@ -118,6 +121,7 @@ namespace std {
   %template( _pressio_io_data_from_numpy_4d_ ## name ) _pressio_io_data_from_numpy_4d< type >;
 %enddef
 
+pressio_numpy_type(bool, bool);
 pressio_numpy_type(float, float);
 pressio_numpy_type(double, double);
 pressio_numpy_type(unsigned char, uint8_t);
@@ -139,6 +143,10 @@ namespace std {
 %pythoncode %{
 import numpy
 __pressio_from_numpy = {
+  (1, numpy.dtype('bool')): _pressio_io_data_from_numpy_1d_bool,
+  (2, numpy.dtype('bool')): _pressio_io_data_from_numpy_2d_bool,
+  (3, numpy.dtype('bool')): _pressio_io_data_from_numpy_3d_bool,
+  (4, numpy.dtype('bool')): _pressio_io_data_from_numpy_4d_bool,
   (1, numpy.dtype('float32')): _pressio_io_data_from_numpy_1d_float,
   (2, numpy.dtype('float32')): _pressio_io_data_from_numpy_2d_float,
   (3, numpy.dtype('float32')): _pressio_io_data_from_numpy_3d_float,
@@ -225,6 +233,10 @@ __pressio_to_numpy = {
   (2, _pressio.uint64_dtype) : _pressio_io_data_to_numpy_2d_uint64_t,
   (3, _pressio.uint64_dtype) : _pressio_io_data_to_numpy_3d_uint64_t,
   (4, _pressio.uint64_dtype) : _pressio_io_data_to_numpy_4d_uint64_t,
+  (1, _pressio.bool_dtype) : _pressio_io_data_to_numpy_1d_bool,
+  (2, _pressio.bool_dtype) : _pressio_io_data_to_numpy_2d_bool,
+  (3, _pressio.bool_dtype) : _pressio_io_data_to_numpy_3d_bool,
+  (4, _pressio.bool_dtype) : _pressio_io_data_to_numpy_4d_bool,
 }
 __pressio_to_np_dtype = {
   _pressio.float_dtype : numpy.float32,
@@ -237,6 +249,7 @@ __pressio_to_np_dtype = {
   _pressio.int32_dtype : numpy.int32,
   _pressio.uint64_dtype : numpy.uint64,
   _pressio.int64_dtype : numpy.int64,
+  _pressio.bool_dtype : bool,
 }
 
 

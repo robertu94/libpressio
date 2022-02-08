@@ -26,6 +26,8 @@ int pressio_dtype_size (enum pressio_dtype dtype) {
       return sizeof(int64_t);
     case pressio_byte_dtype:
       return sizeof(unsigned char);
+    case pressio_bool_dtype:
+      return sizeof(bool);
     default:
       return -1;
   }

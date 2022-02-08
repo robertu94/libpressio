@@ -42,6 +42,9 @@ void print_all_options(struct pressio_options* options) {
         case pressio_option_float_type:
           printf("%s : %f\n", key, pressio_option_get_float(option));
           break;
+        case pressio_option_bool_type:
+          printf("%s : %s\n", key, pressio_option_get_bool(option) ? "true":"false");
+          break;
         default:
           assert(false && "a cleared option can never have a value");
       } 
@@ -91,6 +94,9 @@ void print_all_options(struct pressio_options* options) {
           break;
         case pressio_option_data_type:
           printf("%s <data>: null\n", key);
+          break;
+        case pressio_option_bool_type:
+          printf("%s <bool>: null\n", key);
           break;
       }
     }

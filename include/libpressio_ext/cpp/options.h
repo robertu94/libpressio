@@ -25,6 +25,7 @@
 
 namespace {
 using option_type = compat::variant<compat::monostate,
+      compat::optional<bool>,
       compat::optional<int8_t>,
       compat::optional<uint8_t>,
       compat::optional<int16_t>,
@@ -48,6 +49,7 @@ using option_type = compat::variant<compat::monostate,
 template <class T>
 constexpr enum pressio_option_type pressio_type_to_enum() {
   return 
+    std::is_same<T, bool>() ? pressio_option_bool_type :
     std::is_same<T, int8_t>() ? pressio_option_int8_type :
     std::is_same<T,uint8_t>() ? pressio_option_uint8_type :
     std::is_same<T, int16_t>() ? pressio_option_int16_type :
@@ -178,6 +180,8 @@ struct pressio_option final {
     else {
       switch(type())
       {
+        case pressio_option_bool_type:
+          return (bool)get<bool>();
         case pressio_option_int8_type:
           return (bool)get<int8_t>();
         case pressio_option_uint8_type:
@@ -234,6 +238,9 @@ struct pressio_option final {
         break;
       case pressio_option_userptr_type:
         option = compat::optional<void*>();
+        break;
+      case pressio_option_bool_type:
+        option = compat::optional<bool>();
         break;
       case pressio_option_int8_type:
         option = compat::optional<int8_t>();

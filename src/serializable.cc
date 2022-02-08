@@ -30,6 +30,8 @@ namespace {
         return MPI_UINT64_T;
       case pressio_byte_dtype:
         return MPI_BYTE;
+      case pressio_bool_dtype:
+        return MPI_CXX_BOOL;
       default:
         assert(false && "missing dtype in mpi serializer");
         //return something to satisfy the compiler
@@ -189,6 +191,12 @@ namespace serializer {
           ret |= comm::send(value, dest, tag, comm);
           }
           break;
+        case pressio_option_bool_type:
+          {
+          auto value = option.get_value<bool>();
+          ret |= comm::send(value, dest, tag, comm);
+          }
+          break;
         case pressio_option_charptr_type:
           {
           auto const& value = option.get_value<std::string>();
@@ -257,6 +265,13 @@ namespace serializer {
           option = value;
           }
           break;
+        case pressio_option_bool_type:
+          {
+          bool value;
+          ret |= comm::recv(value, source, tag, comm, s);
+          option = value;
+          }
+          break;
         case pressio_option_charptr_type:
           {
           std::string value;
@@ -312,6 +327,10 @@ namespace serializer {
         switch (type) {
         case pressio_option_int8_type: {
           auto value = option.get_value<int8_t>();
+          ret |= comm::bcast(value, root, comm);
+        } break;
+        case pressio_option_bool_type: {
+          auto value = option.get_value<bool>();
           ret |= comm::bcast(value, root, comm);
         } break;
         case pressio_option_uint8_type: {
@@ -383,6 +402,11 @@ namespace serializer {
 
       if (has_value) {
         switch (type) {
+        case pressio_option_bool_type: {
+          bool value;
+          ret |= comm::bcast(value, root, comm);
+          option = value;
+        } break;
         case pressio_option_int8_type: {
           int8_t value;
           ret |= comm::bcast(value, root, comm);

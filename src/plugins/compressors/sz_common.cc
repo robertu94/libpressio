@@ -34,6 +34,7 @@ int libpressio_type_to_sz_type(pressio_dtype type) {
       case pressio_uint64_dtype: return SZ_UINT64;
       case pressio_int64_dtype: return SZ_INT64;
       case pressio_byte_dtype: return SZ_INT8;
+      case pressio_bool_dtype: throw std::runtime_error("unsupported dtype");
     }
     return -1;
 }

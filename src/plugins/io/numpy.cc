@@ -67,6 +67,9 @@ int libpressio_write_np(std::ostream& out, struct pressio_data const* data) {
     format << '<';
   }
   switch(dtype) {
+    case pressio_bool_dtype:
+      format << "b1";
+      break;
     case pressio_int8_dtype:
       format << "i1";
       break;
@@ -206,6 +209,8 @@ int parse_header(std::string const& header, libpressio_npy_data& np) {
             return pressio_uint64_dtype;
           }
           break;
+        case 'b':
+          return pressio_bool_dtype;
         default:
           break;
         }

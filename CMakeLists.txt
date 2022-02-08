@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.78.0" LANGUAGES CXX C)
+project(libpressio VERSION "0.79.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -8,9 +8,8 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "No build type was set. Setting build type to ${default_build_type}.")
   set(CMAKE_BUILD_TYPE ${default_build_type} CACHE 
     STRING "Choose the type to build" FORCE)
-  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release"
-    "MinSizeRel" "RelWithDebInfo")
 endif()
+set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 
 
 include(CTest)
@@ -22,6 +21,28 @@ option(BUILD_SHARED_LIBS "build libpressio as a shared library" ON)
 include(GNUInstallDirs)
 include(CheckCXXCompilerFlag)
 include(CMakeDependentOption)
+
+
+if(NOT USE_SANITIZER)
+  set(USE_SANITIZER "" CACHE STRING "use a build sanitizer" FORCE)
+endif()
+set_property(CACHE USE_SANITIZER PROPERTY STRINGS "" "Address" "Thread" "Undefined" "Leak" "Memory")
+if (USE_SANITIZER STREQUAL "Address")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
+elseif (USE_SANITIZER STREQUAL "Thread")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=thread")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread")
+elseif (USE_SANITIZER STREQUAL "Undefined")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=undefined")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined")
+elseif (USE_SANITIZER STREQUAL "Leak")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=leak")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=leak")
+elseif (USE_SANITIZER STREQUAL "Memory")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=memory")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=memory")
+endif()
 
 check_cxx_compiler_flag("-fno-omit-frame-pointer" HAVE_NO_OMIT_FRAME_POINTER)
 set(NO_OMIT_FRAME_POINTER_FLAG "")
@@ -60,6 +81,7 @@ add_library(libpressio
   ./src/plugins/io/noop.cc
   ./src/plugins/io/io.cc
   ./src/plugins/io/posix.cc
+  ./src/iless.cc
 
   #public headers
   include/libpressio.h
@@ -143,6 +165,8 @@ libpressio_optional_component(select "build the io selection plugin" /io/select.
 libpressio_optional_component(switch "build the switch comprssor plugin" /compressors/switch.cc)
 libpressio_optional_component(transpose "build the transpose compressor plugin" /compressors/transpose.cc)
 libpressio_optional_component(print_options "print the options passed to set_options" /metrics/print_options.cc)
+set(roibin_sources /compressors/roibin.cc /compressors/binning.cc)
+libpressio_optional_component(roibin "build the roibin metacompressor" "${roibin_sources}")
 
 option(LIBPRESSIO_INTERPROCEDURAL_OPTIMIZATION "Use interprocedural optimization (LTO)" OFF)
 if(LIBPRESSIO_INTERPROCEDURAL_OPTIMIZATION)
@@ -301,7 +325,7 @@ if(LIBPRESSIO_HAS_SZ3)
   find_package(SZ3 REQUIRED)
   target_sources(libpressio
     PRIVATE
-      ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/sz_interp.cc
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/sz3.cc
   )
 target_link_libraries(libpressio PRIVATE SZ3::SZ3)
 endif()
@@ -319,7 +343,6 @@ if(LIBPRESSIO_HAS_SZ)
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/sz_omp.cc
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/sz_threadsafe_plugin.cc
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/sz_common.cc
-      ${CMAKE_CURRENT_SOURCE_DIR}/src/iless.cc
   )
   target_link_libraries(libpressio PRIVATE SZ)
   target_include_directories(libpressio PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors)
