@@ -200,6 +200,16 @@ class sz_plugin: public libpressio_compressor_plugin {
     } else {
       set_type(options, "pressio:rel", pressio_option_double_type);
     }
+    if(confparams_cpr->errorBoundMode == PW_REL) {
+      set(options, "pressio:pw_rel", confparams_cpr->pw_relBoundRatio);
+    } else {
+      set_type(options, "pressio:pw_rel", pressio_option_double_type);
+    }
+    if(confparams_cpr->errorBoundMode == ABS && confparams_cpr->absErrBound == 0) {
+      set(options, "pressio:lossless", 0);
+    } else {
+      set_type(options, "pressio:lossless", pressio_option_int32_type);
+    }
     return options;
   }
 
@@ -211,6 +221,14 @@ class sz_plugin: public libpressio_compressor_plugin {
     }
     if(get(options, "pressio:rel", &confparams_cpr->relBoundRatio) == pressio_options_key_set) {
       confparams_cpr->errorBoundMode = REL;
+    }
+    if(get(options, "pressio:pw_rel", &confparams_cpr->pw_relBoundRatio) == pressio_options_key_set) {
+      confparams_cpr->errorBoundMode = PW_REL;
+    }
+    int32_t tmp = 0;
+    if(get(options, "pressio:lossless", &tmp) == pressio_options_key_set) {
+      confparams_cpr->errorBoundMode = ABS;
+      confparams_cpr->absErrBound = 0.0;
     }
 
     struct sz_params* sz_param;

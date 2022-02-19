@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.79.0" LANGUAGES CXX C)
+project(libpressio VERSION "0.80.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -136,6 +136,7 @@ function(libpressio_optional_component name description file_names)
   endif()
 endfunction()
 
+libpressio_optional_component(pw_rel "build the pw_rel compressor plugin" /compressors/pw_rel.cc)
 libpressio_optional_component(csv "build the CSV io plugin" /io/csv.cc)
 libpressio_optional_component(numpy "build the numpy io plugin" /io/numpy.cc)
 libpressio_optional_component(size "build the size metrics plugin" /metrics/size.cc)

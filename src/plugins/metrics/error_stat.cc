@@ -19,6 +19,8 @@ namespace error_stat {
     double max_error;
     double min_rel_error;
     double max_rel_error;
+    double min_pw_rel_error;
+    double max_pw_rel_error;
     double average_difference;
     double average_error;
     double difference_range;
@@ -40,6 +42,8 @@ namespace error_stat {
       double sum_of_error = 0;
       double sum_of_values_squared =0;
       double sum = 0;
+      double min_pw_rel_error = std::numeric_limits<double>::max();
+      double max_pw_rel_error = std::numeric_limits<double>::lowest();
       if(input_begin != nullptr && input2_begin != nullptr) {
         double value_min = *input_begin; 
         double value_max = *input_begin;
@@ -61,8 +65,15 @@ namespace error_stat {
           value_max = std::max(value_max, static_cast<double>(*input_begin));
           diff_min = std::min(diff, diff_min);
           diff_max = std::max(diff, diff_max);
+          diff_max = std::max(diff, diff_max);
           error_max = std::max(error, error_max);
           error_min = std::min(error, error_min);
+          if (*input_begin != 0) {
+            double pw_rel_error = std::abs(double(diff)/(*input_begin));
+            min_pw_rel_error = std::min(min_pw_rel_error, pw_rel_error);
+            max_pw_rel_error = std::max(max_pw_rel_error, pw_rel_error);
+          }
+
           ++m.num_elements;
 
           ++input_begin;
@@ -86,6 +97,8 @@ namespace error_stat {
         m.max_error = error_max;
         m.min_rel_error = error_min/m.value_range;
         m.max_rel_error = error_max/m.value_range;
+        m.min_pw_rel_error = min_pw_rel_error;
+        m.max_pw_rel_error = max_pw_rel_error;
 
         m.psnr = -20.0*log10(sqrt(m.mse)/m.value_range);
       }
@@ -129,6 +142,8 @@ class error_stat_plugin : public libpressio_metrics_plugin {
       set(opt, "error_stat:max_error", "the maximum absolute difference");
       set(opt, "error_stat:min_rel_error", "the minimum absolute difference relative to the input value range");
       set(opt, "error_stat:max_rel_error", "the maximum absolute difference relative to the input value range");
+      set(opt, "error_stat:min_pw_rel_error", "the minimum absolute difference relative to each data point");
+      set(opt, "error_stat:max_pw_rel_error", "the maximum absolute difference relative to each data point");
       set(opt, "error_stat:average_difference", "the average difference");
       set(opt, "error_stat:average_error", "the average absolute difference");
       set(opt, "error_stat:difference_range", "the range of the differences");
@@ -151,6 +166,8 @@ class error_stat_plugin : public libpressio_metrics_plugin {
         set(opt, "error_stat:max_error", (*err_metrics).max_error);
         set(opt, "error_stat:min_rel_error", (*err_metrics).min_rel_error);
         set(opt, "error_stat:max_rel_error", (*err_metrics).max_rel_error);
+        set(opt, "error_stat:min_pw_rel_error", (*err_metrics).min_pw_rel_error);
+        set(opt, "error_stat:max_pw_rel_error", (*err_metrics).max_pw_rel_error);
         set(opt, "error_stat:average_difference", (*err_metrics).average_difference);
         set(opt, "error_stat:average_error", (*err_metrics).average_error);
         set(opt, "error_stat:difference_range", (*err_metrics).difference_range);
@@ -170,6 +187,8 @@ class error_stat_plugin : public libpressio_metrics_plugin {
         set_type(opt, "error_stat:max_error", pressio_option_double_type);
         set_type(opt, "error_stat:min_rel_error", pressio_option_double_type);
         set_type(opt, "error_stat:max_rel_error", pressio_option_double_type);
+        set_type(opt, "error_stat:min_pw_rel_error", pressio_option_double_type);
+        set_type(opt, "error_stat:max_pw_rel_error", pressio_option_double_type);
         set_type(opt, "error_stat:average_difference", pressio_option_double_type);
         set_type(opt, "error_stat:average_error", pressio_option_double_type);
         set_type(opt, "error_stat:difference_range", pressio_option_double_type);

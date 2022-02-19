@@ -184,12 +184,25 @@ class sz_threadsafe_plugin: public libpressio_compressor_plugin {
     } else {
       set_type(options, "pressio:rel", pressio_option_double_type);
     }
+    if(threadsafe_params.errorBoundMode == ABS && threadsafe_params.absErrBound == 0) {
+      set(options, "pressio:lossless", 0);
+    } else {
+      set_type(options, "pressio:lossless", pressio_option_int32_type);
+    }
     return options;
   }
 
   int set_options_impl(struct pressio_options const& options) override {
     if(get(options, "pressio:abs", &threadsafe_params.absErrBound) == pressio_options_key_set) {
       threadsafe_params.errorBoundMode = ABS;
+    }
+    if(get(options, "pressio:rel", &threadsafe_params.relBoundRatio) == pressio_options_key_set) {
+      threadsafe_params.errorBoundMode = REL;
+    }
+    int32_t tmp = 0;
+    if(get(options, "pressio:lossless", &tmp) == pressio_options_key_set) {
+      threadsafe_params.errorBoundMode = ABS;
+      threadsafe_params.absErrBound = 0.0;
     }
 
     struct sz_params* sz_threadsafe_param;

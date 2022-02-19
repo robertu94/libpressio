@@ -8,7 +8,9 @@ namespace libpressio { namespace pressio_ns {
 
   enum class pressio_mode {
     abs,
-    rel
+    rel,
+    pw_rel,
+    passthrough
   };
 
   struct compute_value_range {
@@ -39,6 +41,7 @@ public:
         set_type(options, "pressio:rel", pressio_option_double_type);
       }
     }
+    set_type(options, "pressio:reset_mode", pressio_option_bool_type);
 
     return options;
   }
@@ -56,6 +59,7 @@ public:
     struct pressio_options options;
     set_meta_docs(options, "pressio:compressor", "the underlying compressor to use", comp);
     set(options, "pressio:description", R"(a set of helpers to convert between common error bounds)");
+    set(options, "pressio:reset_mode", "reset mode back to none");
     return options;
   }
 
@@ -63,6 +67,11 @@ public:
   int set_options_impl(struct pressio_options const& options) override
   {
     get_meta(options, "pressio:compressor", compressor_plugins(), comp_id, comp);
+    bool reset_mode = false;
+    get(options, "pressio:reset_mode", &reset_mode);
+    if(reset_mode) {
+      mode = pressio_mode::passthrough;
+    }
 
     auto child = comp->get_options();
     if(child_supports_mode(child, "pressio:abs")) {
@@ -82,6 +91,9 @@ public:
   {
     auto child = comp->get_options();
     switch(mode) {
+      case pressio_mode::passthrough:
+        //don't set modify configuration in this mode
+        break;
       case pressio_mode::abs:
         if(child_supports_mode(child, "pressio:abs")) {
           //should already be set by inheritance, ignore
@@ -97,6 +109,13 @@ public:
           double value_range = pressio_data_for_each<double>(*input, compute_value_range{});
           set(options, "pressio:abs", target*value_range);
           comp->set_options(options);
+        }
+        break;
+      case pressio_mode::pw_rel:
+        if(child_supports_mode(child, "pressio:pw_rel")) {
+          //should already be supported by inheritance, ignore
+        } else {
+          return set_error(2, "pressio:pw_rel is not supported for " + comp_id);
         }
         break;
       default:
@@ -142,7 +161,7 @@ private:
       return child.key_status(comp->get_name(), mode_str) <= pressio_options_key_exists;
   }
 
-  pressio_mode mode;
+  pressio_mode mode = pressio_mode::passthrough;
   double target;
   std::string comp_id = "noop";
   pressio_compressor comp = compressor_plugins().build("noop");
@@ -153,4 +172,3 @@ static pressio_register compressor_many_fields_plugin(compressor_plugins(), "pre
 });
 
 } }
-

@@ -78,10 +78,40 @@ struct pressio_options libpressio_compressor_plugin::get_documentation() const {
   if(metrics_plugin)
     metrics_plugin->begin_get_documentation();
   auto ret = get_documentation_impl();
-  set(ret, "pressio:thread_safe", "level of thread safety provided by the compressor");
-  set(ret, "pressio:stability", "level of stablity provided by the compressor; see the README for libpressio");
-  set(ret, "pressio:abs", "a pointwise absolute error bound");
-  set(ret, "pressio:rel", "a pointwise value-range relative error bound");
+  set(ret, "pressio:thread_safe", R"(level of thread safety provided by the compressor
+
+  pressio_thread_safety_single = 0, indicates not thread safe
+  pressio_thread_safety_serialized = 1, indicates individual handles may be called from different threads sequentially
+  pressio_thread_safety_multiple = 2, indicates individual handles may be called from different threads concurrently
+  )");
+  set(ret, "pressio:stability", R"(level of stablity provided by the compressor
+
+  + experimental: Modules that are experimental may crash or have other severe deficiencies,
+  + unstable: modules that are unstable generally will not crash, but may have options changed according to the unstable API guarantees.
+  + stable: conforms to the LibPressio stability guarantees
+  + external: indicates that options/configuration returned by this module are controlled by version of the external library that it depends upon and may change at any time without changing the LibPressio version number.
+  )");
+  set(ret, "pressio:abs", R"(a pointwise absolute error bound
+
+  compressors may provide this value without supporting abs=0.
+  compressors that support abs=0, additionally should also define pressio:lossless
+  )");
+  set(ret, "pressio:rel", R"(a pointwise value-range relative error bound
+
+  compressors may provide this value without supporting rel=0.
+  compressors that support rel=0, additionally should also define pressio:lossless
+  )");
+  set(ret, "pressio:pw_rel", R"(a pointwise relative error bound
+
+  compressors may provide this value without supporting pw_rel=0.
+  compressors that support pw_rel=0, additionally should also define pressio:lossless
+  )");
+  set(ret, "pressio:lossless", R"(use lossless compression,
+    the smaller the number the more biased towards speed,
+    the larger the number the more biased towards compression
+
+    at this time (may change in the future), individual lossless compressors may internet values less than 1 or greater than 9 differently
+  )");
   if(metrics_plugin) { 
     ret.copy_from(metrics_plugin->get_documentation());
     set_meta_docs(ret, "pressio:metric", "metrics to collect when using the compressor", metrics_plugin);

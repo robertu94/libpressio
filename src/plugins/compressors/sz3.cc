@@ -67,6 +67,11 @@ std::vector<K> keys(std::map<K,V,Sort> const& map) {
 
 class sz3_compressor_plugin : public libpressio_compressor_plugin {
 public:
+  sz3_compressor_plugin() {
+    config.absErrorBound = 1e-6;
+    config.errorBoundMode = SZ::EB_ABS;
+  }
+
   struct pressio_options get_options_impl() const override
   {
     struct pressio_options options;
@@ -139,6 +144,9 @@ public:
     set(options, "sz3:quant_bin_size", "number of quantization bins");
     set(options, "sz3:stride", "stride between items");
     set(options, "sz3:pred_dim", "prediction dimension");
+    set(options, "sz3:algorithm_str", "compression algorithm");
+    set(options, "sz3:error_bound_mode_str", "error bound");
+    set(options, "sz3:intrep_algo_str", "interpolation algorithm mode");
     return options;
   }
 

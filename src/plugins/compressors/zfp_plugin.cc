@@ -55,6 +55,7 @@ class zfp_plugin: public libpressio_compressor_plugin {
     struct pressio_options get_options_impl() const override {
       struct pressio_options options;
       set_type(options, "pressio:abs", pressio_option_double_type);
+      set_type(options, "pressio:lossless", pressio_option_int32_type);
       set(options, "zfp:minbits", zfp->minbits);
       set(options, "zfp:maxbits", zfp->maxbits);
       set(options, "zfp:maxprec", zfp->maxprec);
@@ -71,6 +72,7 @@ class zfp_plugin: public libpressio_compressor_plugin {
       set_type(options, "zfp:wra", pressio_option_int32_type);
       set_type(options, "zfp:mode", pressio_option_uint32_type);
       set_type(options, "zfp:reversible", pressio_option_uint32_type);
+      set_type(options, "pressio:lossless", pressio_option_int32_type);
       return options;
     }
 
@@ -131,7 +133,7 @@ class zfp_plugin: public libpressio_compressor_plugin {
         } else {
           return invalid_rate();
         }
-      } else if (get(options, "zfp:reversible", &reversible) == pressio_options_key_set) { 
+      } else if (get(options, "zfp:reversible", &reversible) == pressio_options_key_set || get(options, "pressio:lossless", &reversible) == pressio_options_key_set) { 
         zfp_stream_set_reversible(zfp);
       } else {
         get(options, "zfp:minbits", &zfp->minbits);

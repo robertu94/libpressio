@@ -17,6 +17,7 @@ class blosc_plugin: public libpressio_compressor_plugin {
   public:
     struct pressio_options get_options_impl() const override {
       struct pressio_options options;
+      set(options, "pressio:lossless", clevel);
       set(options, "blosc:clevel", clevel);
       set(options, "blosc:numinternalthreads", numinternalthreads);
       set(options, "blosc:doshuffle", doshuffle);
@@ -59,6 +60,7 @@ class blosc_plugin: public libpressio_compressor_plugin {
     }
 
     int set_options_impl(struct pressio_options const& options) override {
+      get(options, "pressio:lossless", &clevel);
       get(options, "blosc:clevel", &clevel);
       get(options, "blosc:numinternalthreads", &numinternalthreads);
       get(options, "blosc:doshuffle", &doshuffle);
@@ -155,7 +157,7 @@ class blosc_plugin: public libpressio_compressor_plugin {
 
 
   private:
-    int internal_error(int rc) { std::stringstream ss; ss << "interal error " << rc; return set_error(1, ss.str()); }
+    int internal_error(int rc) { std::stringstream ss; ss << "internal error " << rc; return set_error(1, ss.str()); }
     int reshape_error() { return set_error(2, "failed to reshape array after compression"); }
 
     int clevel;
