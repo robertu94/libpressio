@@ -561,7 +561,7 @@ public:
     } else {
         return set_error(2, "mode not supported");
     }
-    } catch(std::domain_error const& ex) {
+    } catch(std::exception const& ex) {
       return set_error(3, ex.what());
     }
     return 0;
@@ -570,27 +570,32 @@ public:
   int decompress_impl(const pressio_data* input,
                       struct pressio_data* output) override
   {
-    if(execution_mode == static_cast<int32_t>(pressio_mgard_mode::cpu)) {
-      auto decompress = cpu::decompress_operator{output->dimensions()};
-      if(output->dtype() == pressio_float_dtype) {
-        *output = decompress.operator()<float>(static_cast<unsigned char*>(input->data()), static_cast<unsigned char*>(input->data()) + input->num_elements());
-      } else if (output->dtype() == pressio_double_dtype) {
-        *output = decompress.operator()<double>(static_cast<unsigned char*>(input->data()), static_cast<unsigned char*>(input->data()) + input->num_elements());
+    try {
+      if(execution_mode == static_cast<int32_t>(pressio_mgard_mode::cpu)) {
+        auto decompress = cpu::decompress_operator{output->dimensions()};
+        if(output->dtype() == pressio_float_dtype) {
+          *output = decompress.operator()<float>(static_cast<unsigned char*>(input->data()), static_cast<unsigned char*>(input->data()) + input->num_elements());
+        } else if (output->dtype() == pressio_double_dtype) {
+          *output = decompress.operator()<double>(static_cast<unsigned char*>(input->data()), static_cast<unsigned char*>(input->data()) + input->num_elements());
+        } else {
+          return set_error(1, "type not supported");
+        }
+      } else if(execution_mode == static_cast<int32_t>(pressio_mgard_mode::gpu)) {
+        auto decompress = gpu::decompress_operator{output->dimensions(), config};
+        if(output->dtype() == pressio_float_dtype) {
+          *output = decompress.operator()<float>(static_cast<unsigned char*>(input->data()), static_cast<unsigned char*>(input->data()) + input->num_elements());
+        } else if (output->dtype() == pressio_double_dtype) {
+          *output = decompress.operator()<double>(static_cast<unsigned char*>(input->data()), static_cast<unsigned char*>(input->data()) + input->num_elements());
+        } else {
+          return set_error(1, "type not supported");
+        }
       } else {
-        return set_error(1, "type not supported");
-      }
-    } else if(execution_mode == static_cast<int32_t>(pressio_mgard_mode::gpu)) {
-      auto decompress = gpu::decompress_operator{output->dimensions(), config};
-      if(output->dtype() == pressio_float_dtype) {
-        *output = decompress.operator()<float>(static_cast<unsigned char*>(input->data()), static_cast<unsigned char*>(input->data()) + input->num_elements());
-      } else if (output->dtype() == pressio_double_dtype) {
-        *output = decompress.operator()<double>(static_cast<unsigned char*>(input->data()), static_cast<unsigned char*>(input->data()) + input->num_elements());
-      } else {
-        return set_error(1, "type not supported");
-      }
-    } else {
-        return set_error(2, "mode not supported");
+          return set_error(2, "mode not supported");
+      } 
+    } catch (std::exception const& ex){
+      return set_error(3, ex.what());
     }
+
     return 0;
   }
 
