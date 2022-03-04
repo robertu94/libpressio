@@ -7,6 +7,8 @@
 #include <stdexcept>
 #include <iterator>
 
+#include <libpressio_ext/cpp/data.h>
+
 #include <std_compat/type_traits.h>
 #include <std_compat/iterator.h>
 #include <std_compat/functional.h>
@@ -21,13 +23,20 @@ struct basic_indexer {
 
   basic_indexer(std::array<SizeType,N> args) noexcept: max_dims(args) {}
 
+  basic_indexer(std::initializer_list<SizeType> args) noexcept: max_dims([](std::initializer_list<SizeType> args){
+        std::array<SizeType,N> dims;
+        std::copy(args.begin(), args.end(), dims.begin());
+        return dims;
+      }(args)) {}
+
   template <class It>
   basic_indexer(It first, It second) noexcept:
     max_dims([](It first, It second){
         std::array<SizeType,N> dims;
         std::copy(first, second, dims.begin());
         return dims;
-      }(first, second)) {}
+      }(first, second)) {
+    }
 
   template <class... T>
   typename std::enable_if<compat::conjunction<std::is_integral<typename std::decay<T>::type>...>::value && sizeof...(T) >= 1,std::size_t>::type
@@ -75,49 +84,186 @@ array_type<T, N> as(array_type<V,N> const& in) {
 }
 
 
-
-
-template <std::size_t N, class T>
+template <class T>
 void copy_center(
-    indexer<N> const &id,
-    indexer<N> const &roi_size,
-    indexer<N+1> const &roi,
-    std::array<std::size_t, N> const &center,
+    indexer<1> const &id,
+    indexer<1> const &roi_size,
+    indexer<2> const &roi,
+    std::size_t const* center_ptr,
     std::size_t const center_idx,
     T const* origin,
     T * roi_mem) {
   auto s_roi = as<ssize_t>(roi);
   auto s_roi_size = as<ssize_t>(roi_size);
+  std::array<size_t,1> center{center_ptr[0]};
   auto s_center = as<ssize_t>(center);
   auto s_id = as<ssize_t>(id);
 
+  //i,j,k
+  for (ssize_t mem_i = 0; mem_i < s_roi[0]; ++mem_i) {
+    const ssize_t i = mem_i - s_roi_size[0] + s_center[0];
+    if(i >= 0 && i < s_id[0]) {
+      roi_mem[roi(mem_i, center_idx)] = origin[id(i)];
+    } else {
+      roi_mem[roi(mem_i, center_idx)] = 0;
+    }
+  }
+}
 
+template <class T>
+void copy_center(
+    indexer<2> const &id,
+    indexer<2> const &roi_size,
+    indexer<3> const &roi,
+    std::size_t const* center_ptr,
+    std::size_t const center_idx,
+    T const* origin,
+    T * roi_mem) {
+  auto s_roi = as<ssize_t>(roi);
+  auto s_roi_size = as<ssize_t>(roi_size);
+  std::array<size_t,2> center{center_ptr[0], center_ptr[1]};
+  auto s_center = as<ssize_t>(center);
+  auto s_id = as<ssize_t>(id);
+
+  //i,j,k
   for (ssize_t mem_j = 0; mem_j < s_roi[1]; ++mem_j) {
-    for (ssize_t mem_i = 0; mem_i < s_roi[1]; ++mem_i) {
-      ssize_t i = mem_i - (s_roi_size[0]) + s_center[0];
-      ssize_t j = mem_j - (s_roi_size[1]) + s_center[1];
-      if((i >= 0 && i < s_id[0]) && (j >= 0 && j < s_id[1])) {
-        roi_mem[roi(mem_i,mem_j,0,0,center_idx)] = origin[id(i,j, center[2], center[3])];
-      } else {
-        roi_mem[roi(mem_i,mem_j,0,0,center_idx)] = 0;
+    const ssize_t j = mem_j - s_roi_size[1] + s_center[1];
+    if(j >= 0 && j < s_id[1]) {
+      for (ssize_t mem_i = 0; mem_i < s_roi[0]; ++mem_i) {
+        const ssize_t i = mem_i - s_roi_size[0] + s_center[0];
+        if(i >= 0 && i < s_id[0]) {
+          roi_mem[roi(mem_i, mem_j, center_idx)] = origin[id(i,j)];
+        } else {
+          roi_mem[roi(mem_i, mem_j, center_idx)] = 0;
+        }
+      }
+    } else {
+      for (ssize_t mem_i = 0; mem_i < s_roi[0]; ++mem_i) {
+        roi_mem[roi(mem_i, mem_j,center_idx)] = 0;
       }
     }
   }
 }
 
-template <class T, std::size_t N, class CentersRange>
+template <class T>
+void copy_center(
+    indexer<3> const &id,
+    indexer<3> const &roi_size,
+    indexer<4> const &roi,
+    size_t const* center_ptr,
+    std::size_t const center_idx,
+    T const* origin,
+    T * roi_mem) {
+  auto s_roi = as<ssize_t>(roi);
+  auto s_roi_size = as<ssize_t>(roi_size);
+  std::array<size_t,3> center{center_ptr[0], center_ptr[1], center_ptr[2]};
+  auto s_center = as<ssize_t>(center);
+  auto s_id = as<ssize_t>(id);
+
+  //i,j,k
+  for (ssize_t mem_k = 0; mem_k < s_roi[2]; ++mem_k) {
+    const ssize_t k = mem_k - s_roi_size[2] + s_center[2];
+    if(k >= 0 && k < s_id[2]) {
+      for (ssize_t mem_j = 0; mem_j < s_roi[1]; ++mem_j) {
+        const ssize_t j = mem_j - s_roi_size[1] + s_center[1];
+        if(j >= 0 && j < s_id[1]) {
+          for (ssize_t mem_i = 0; mem_i < s_roi[0]; ++mem_i) {
+            const ssize_t i = mem_i - s_roi_size[0] + s_center[0];
+            if(i >= 0 && i < s_id[0]) {
+              roi_mem[roi(mem_i, mem_j, mem_k, center_idx)] = origin[id(i, j, k)];
+            } else {
+              roi_mem[roi(mem_i, mem_j, mem_k, center_idx)] = 0;
+            }
+          }
+        } else {
+          for (ssize_t mem_i = 0; mem_i < s_roi[0]; ++mem_i) {
+            roi_mem[roi(mem_i, mem_j, mem_k, center_idx)] = 0;
+          }
+        }
+      }
+    } else {
+      for (ssize_t mem_j = 0; mem_j < s_roi[1]; ++mem_j) {
+        for (ssize_t mem_i = 0; mem_i < s_roi[0]; ++mem_i) {
+          roi_mem[roi(mem_i, mem_j, mem_k, center_idx)] = 0;
+        }
+      }
+    }
+  }
+}
+
+template <class T>
+void copy_center(
+    indexer<4> const &id,
+    indexer<4> const &roi_size,
+    indexer<5> const &roi,
+    size_t const* center_ptr,
+    std::size_t const center_idx,
+    T const* origin,
+    T * roi_mem) {
+  auto s_roi = as<ssize_t>(roi);
+  auto s_roi_size = as<ssize_t>(roi_size);
+  std::array<size_t,4> center{center_ptr[0], center_ptr[1], center_ptr[2], center_ptr[3]};
+  auto s_center = as<ssize_t>(center);
+  auto s_id = as<ssize_t>(id);
+
+  //i,j,k,l
+  for (ssize_t mem_l = 0; mem_l < s_roi[3]; ++mem_l) {
+    const ssize_t l = mem_l - s_roi_size[3] + s_center[3];
+    if(l >= 0 && l < s_id[3]) {
+      for (ssize_t mem_k = 0; mem_k < s_roi[2]; ++mem_k) {
+        const ssize_t k = mem_k - s_roi_size[2] + s_center[2];
+        if(k >= 0 && k < s_id[2]) {
+          for (ssize_t mem_j = 0; mem_j < s_roi[1]; ++mem_j) {
+            const ssize_t j = mem_j - s_roi_size[1] + s_center[1];
+            if(j >= 0 && j < s_id[1]) {
+              for (ssize_t mem_i = 0; mem_i < s_roi[0]; ++mem_i) {
+                const ssize_t i = mem_i - s_roi_size[0] + s_center[0];
+                if(i >= 0 && i < s_id[0]) {
+                  roi_mem[roi(mem_i, mem_j, mem_k, mem_l, center_idx)] = origin[id(i, j, k, l)];
+                } else {
+                  roi_mem[roi(mem_i, mem_j, mem_k, mem_l, center_idx)] = 0;
+                }
+              }
+            } else {
+              for (ssize_t mem_i = 0; mem_i < s_roi[0]; ++mem_i) {
+                roi_mem[roi(mem_i, mem_j, mem_k, mem_l ,center_idx)] = 0;
+              }
+            }
+          }
+        } else {
+          for (ssize_t mem_j = 0; mem_j < s_roi[1]; ++mem_j) {
+            for (ssize_t mem_i = 0; mem_i < s_roi[0]; ++mem_i) {
+              roi_mem[roi(mem_i, mem_j, mem_k, mem_l ,center_idx)] = 0;
+            }
+          }
+        }
+      }
+    } else {
+      for (ssize_t mem_k = 0; mem_k < s_roi[2]; ++mem_k) {
+          for (ssize_t mem_j = 0; mem_j < s_roi[1]; ++mem_j) {
+            for (ssize_t mem_i = 0; mem_i < s_roi[0]; ++mem_i) {
+              roi_mem[roi(mem_i, mem_j, mem_k, mem_l ,center_idx)] = 0;
+            }
+          }
+      }
+    }
+  }
+}
+
+template <class T, std::size_t N>
 void roi_save(indexer<N> const &id,
               indexer<N> const &roi_size,
               indexer<N+1> const &roi,
-              CentersRange const& centers_range,
+              pressio_data const& centers_range,
               T const* origin,
-              T * roi_mem) {
-  auto centers_begin = std::begin(centers_range);
-  auto centers_size = compat::size(centers_range);
+              T * roi_mem,
+              size_t n_threads) {
+  auto centers_width = centers_range.get_dimension(0);
+  auto centers_size = centers_range.get_dimension(1);
 
-#pragma omp parallel for
+#pragma omp parallel for num_threads(n_threads)
   for (size_t i = 0; i < centers_size; ++i) {
-    copy_center(id, roi_size, roi, *std::next(centers_begin, i), i, origin, roi_mem);
+    copy_center(id, roi_size, roi, static_cast<const size_t*>(centers_range.data()) + i*centers_width, i, origin, roi_mem);
   }
 }
 
@@ -132,107 +278,362 @@ indexer<N+1> to_roimem(indexer<N> const& roi_size, std::size_t centers) {
 
 }
 
-template <std::size_t N, class T>
+template <class T>
 void restore_center(
-    indexer<N> const &id,
-    indexer<N> const &roi_size,
-    indexer<N+1> const &roi,
-    std::array<std::size_t, N> const &center,
+    indexer<1> const &id,
+    indexer<1> const &roi_size,
+    indexer<2> const &roi,
+    size_t const* center_ptr,
     std::size_t const center_idx,
     T * origin,
     T const* roi_mem) {
   auto s_roi = as<ssize_t>(roi);
   auto s_roi_size = as<ssize_t>(roi_size);
+  std::array<size_t,1> center{center_ptr[0]};
   auto s_center = as<ssize_t>(center);
   auto s_id = as<ssize_t>(id);
 
+  for (ssize_t mem_i = 0; mem_i < s_roi[0]; ++mem_i) {
+    const ssize_t i = mem_i - s_roi_size[0] + s_center[0];
+    if(i >= 0 && i < s_id[0]) {
+      origin[id(i)] = roi_mem[roi(mem_i, center_idx)];
+    } 
+  }
+}
+
+template <class T>
+void restore_center(
+    indexer<2> const &id,
+    indexer<2> const &roi_size,
+    indexer<3> const &roi,
+    size_t const* center_ptr,
+    std::size_t const center_idx,
+    T * origin,
+    T const* roi_mem) {
+  auto s_roi = as<ssize_t>(roi);
+  auto s_roi_size = as<ssize_t>(roi_size);
+  std::array<size_t,2> center{center_ptr[0], center_ptr[1]};
+  auto s_center = as<ssize_t>(center);
+  auto s_id = as<ssize_t>(id);
 
   for (ssize_t mem_j = 0; mem_j < s_roi[1]; ++mem_j) {
-    for (ssize_t mem_i = 0; mem_i < s_roi[1]; ++mem_i) {
-      ssize_t i = mem_i - (s_roi_size[0]) + s_center[0];
-      ssize_t j = mem_j - (s_roi_size[1]) + s_center[1];
-      if((i >= 0 && i < s_id[0]) && (j >= 0 && j < s_id[1])) {
-        origin[id(i,j, center[2], center[3])] = roi_mem[roi(mem_i,mem_j,0,0,center_idx)];
+    const ssize_t j = mem_j - s_roi_size[1] + s_center[1];
+    if(j >= 0 && j < s_id[1]) {
+      for (ssize_t mem_i = 0; mem_i < s_roi[0]; ++mem_i) {
+        const ssize_t i = mem_i - s_roi_size[0] + s_center[0];
+        if(i >= 0 && i < s_id[0]) {
+          origin[id(i, j)] = roi_mem[roi(mem_i, mem_j, center_idx)];
+        } 
+      }
+    } 
+  }
+}
+template <class T>
+void restore_center(
+    indexer<3> const &id,
+    indexer<3> const &roi_size,
+    indexer<4> const &roi,
+    std::size_t const* center_ptr,
+    std::size_t const center_idx,
+    T * origin,
+    T const* roi_mem) {
+  auto s_roi = as<ssize_t>(roi);
+  auto s_roi_size = as<ssize_t>(roi_size);
+  std::array<size_t,3> center{center_ptr[0], center_ptr[1], center_ptr[2]};
+  auto s_center = as<ssize_t>(center);
+  auto s_id = as<ssize_t>(id);
+
+  for (ssize_t mem_k = 0; mem_k < s_roi[2]; ++mem_k) {
+    const ssize_t k = mem_k - s_roi_size[2] + s_center[2];
+    if(k >= 0 && k < s_id[2]) {
+      for (ssize_t mem_j = 0; mem_j < s_roi[1]; ++mem_j) {
+        const ssize_t j = mem_j - s_roi_size[1] + s_center[1];
+        if(j >= 0 && j < s_id[1]) {
+          for (ssize_t mem_i = 0; mem_i < s_roi[0]; ++mem_i) {
+            const ssize_t i = mem_i - s_roi_size[0] + s_center[0];
+            if(i >= 0 && i < s_id[0]) {
+              origin[id(i, j, k)] = roi_mem[roi(mem_i, mem_j, mem_k, center_idx)];
+            } 
+          }
+        } 
+      }
+    }
+  }
+}
+template <class T>
+void restore_center(
+    indexer<4> const &id,
+    indexer<4> const &roi_size,
+    indexer<5> const &roi,
+    std::size_t const* center_ptr,
+    std::size_t const center_idx,
+    T * origin,
+    T const* roi_mem) {
+  auto s_roi = as<ssize_t>(roi);
+  auto s_roi_size = as<ssize_t>(roi_size);
+  std::array<size_t,4> center{center_ptr[0], center_ptr[1], center_ptr[2], center_ptr[3]};
+  auto s_center = as<ssize_t>(center);
+  auto s_id = as<ssize_t>(id);
+
+  for (ssize_t mem_l = 0; mem_l < s_roi[3]; ++mem_l) {
+    const ssize_t l = mem_l - s_roi_size[3] + s_center[3];
+    if(l >= 0 && l < s_id[3]) {
+      for (ssize_t mem_k = 0; mem_k < s_roi[2]; ++mem_k) {
+        const ssize_t k = mem_k - s_roi_size[2] + s_center[2];
+        if(k >= 0 && k < s_id[2]) {
+          for (ssize_t mem_j = 0; mem_j < s_roi[1]; ++mem_j) {
+            const ssize_t j = mem_j - s_roi_size[1] + s_center[1];
+            if(j >= 0 && j < s_id[1]) {
+              for (ssize_t mem_i = 0; mem_i < s_roi[0]; ++mem_i) {
+                const ssize_t i = mem_i - s_roi_size[0] + s_center[0];
+                if(i >= 0 && i < s_id[0]) {
+                  origin[id(i, j, k, l)] = roi_mem[roi(mem_i, mem_j, mem_k, mem_l, center_idx)];
+                } 
+              }
+            } 
+          }
+        }
       }
     }
   }
 }
 
-template <class T, std::size_t N, class CentersRange>
+template <class T, std::size_t N>
 void roi_restore(indexer<N> const &id,
               indexer<N> const &roi_size,
               indexer<N+1> const &roi,
-              CentersRange const& centers_range,
+              pressio_data const& centers_range,
               T const* roi_mem,
-              T * restored
+              T * restored,
+              size_t n_threads
               ) {
 
-  auto centers_begin = std::begin(centers_range);
-  auto centers_size = compat::size(centers_range);
+  auto centers_size = centers_range.get_dimension(1);
+  auto centers_width = centers_range.get_dimension(0);
 
-#pragma omp parallel for
+#pragma omp parallel for num_threads(n_threads)
   for (size_t i = 0; i < centers_size; ++i) {
-    restore_center(id, roi_size, roi, *std::next(centers_begin, i), i, restored, roi_mem);
+    restore_center(id, roi_size, roi, static_cast<size_t*>(centers_range.data()) + centers_width*i, i, restored, roi_mem);
   }
 }
 
-template <class T, std::size_t N>
-auto bin_omp(indexer<N> const& id,  indexer<N> const& binned_storage, indexer<N> const& bins, T const* v, T* binned) {
-  #pragma omp parallel for collapse(2)
-    for (std::size_t l = 0; l < id[3]; ++l) {
-    for (std::size_t k = 0; k < id[2]; ++k) {
-      for (std::size_t r = 0; r < binned_storage[1] ; ++r) {
-      for (std::size_t c = 0; c < binned_storage[0]; ++c) {
-        double sum = 0;
-        unsigned n = 0;
-        if(bins[0]*c*2 < id[0] && bins[1]*r*2 < id[1]) {
-          //in bounds the whole time
-          n = bins[0] *  bins[1];
-          for (std::size_t ri = 0; ri < bins[1]; ++ri) {
-          for (std::size_t ci = 0; ci < bins[0]; ++ci) {
-              auto idx = id(c*bins[0]+ci, r*bins[1]+ri, k, l);
-              sum += v[idx];
-          }}
-        } else {
-          for (std::size_t ri = 0; ri < bins[1]; ++ri) {
-          for (std::size_t ci = 0; ci < bins[0]; ++ci) {
-            if(c*bins[0]+ci < id[0] && r*bins[1]+ri < id[1]) {
-              auto idx = id(c*bins[0]+ci, r*bins[1]+ri, k, l);
-              sum += v[idx];
-              n++;
-            }
-          }}
+
+template <class T>
+auto bin_omp(indexer<1> const& id,  indexer<1> const& binned_storage, indexer<1> const& bins, T const* v, T* binned, size_t n_threads) {
+#pragma omp parallel for  num_threads(n_threads)
+    for (size_t i_s = 0; i_s < binned_storage[0]; i_s++) {
+      size_t i = i_s * bins[0];
+      T sum = 0;
+      size_t n = 0;
+      for (size_t b_i = 0; b_i < bins[0]; ++b_i) {
+        if (b_i + i < id[0]) {
+          ++n;
+          sum += v[id(i + b_i)];
         }
-        auto binned_idx = binned_storage(c,r,k,l);
-        binned[binned_idx] = sum/n;
-      }}
-    }}
+      }
+      binned[binned_storage(i_s)] = sum / n;
+    }
 }
 
-template <class T, std::size_t N>
-auto restore_omp(indexer<N> const& id,  indexer<N> const& binned_storage, indexer<N> const& bins, T const* binned, T* restored) {
-  #pragma omp parallel for collapse(2)
-    for (std::size_t l = 0; l < id[3]; ++l) {
-    for (std::size_t k = 0; k < id[2]; ++k) {
-      for (std::size_t r = 0; r < binned_storage[1] ; ++r) {
-      for (std::size_t c = 0; c < binned_storage[0]; ++c) {
-        auto binned_value = binned[binned_storage(c,r,k,l)];
-        if(bins[0]*c*2 < id[0] && bins[1]*r*2 < id[1]) {
-          //in bounds the whole time
-          for (std::size_t ri = 0; ri < bins[1]; ++ri) {
-          for (std::size_t ci = 0; ci < bins[0]; ++ci) {
-              restored[id(c*bins[0]+ci, r*bins[1]+ri, k, l)] = binned_value;
-          }}
-        } else {
-          for (std::size_t ri = 0; ri < bins[1]; ++ri) {
-          for (std::size_t ci = 0; ci < bins[0]; ++ci) {
-            if(c*bins[0]+ci < id[0] && r*bins[1]+ri < id[1]) {
-              restored[id(c*bins[0]+ci, r*bins[1]+ri, k, l)] = binned_value;
+template <class T>
+auto bin_omp(indexer<2> const& id,  indexer<2> const& binned_storage, indexer<2> const& bins, T const* v, T* binned, size_t n_threads) {
+#pragma omp parallel for collapse(2) num_threads(n_threads)
+  for (size_t j_s = 0; j_s < binned_storage[1]; j_s++) {
+    for (size_t i_s = 0; i_s < binned_storage[0]; i_s++) {
+      size_t j = j_s * bins[1];
+      size_t i = i_s * bins[0];
+      T sum = 0;
+      size_t n = 0;
+      for (size_t b_j = 0; b_j < bins[1]; ++b_j) {
+        if (b_j + j < id[1]) {
+          for (size_t b_i = 0; b_i < bins[0]; ++b_i) {
+            if (b_i + i < id[0]) {
+              ++n;
+              sum += v[id(i + b_i, j + b_j)];
             }
-          }}
+          }
         }
-      }}
-    }}
+      }
+      binned[binned_storage(i_s, j_s)] = sum / n;
+    }
+  }
+}
+
+template <class T>
+auto bin_omp(indexer<3> const& id,  indexer<3> const& binned_storage, indexer<3> const& bins, T const* v, T* binned, size_t n_threads) {
+#pragma omp parallel for collapse(3) num_threads(n_threads)
+  for (size_t k_s = 0; k_s < binned_storage[2]; k_s++) {
+    for (size_t j_s = 0; j_s < binned_storage[1]; j_s++) {
+      for (size_t i_s = 0; i_s < binned_storage[0]; i_s++) {
+        size_t k = k_s * bins[2];
+        size_t j = j_s * bins[1];
+        size_t i = i_s * bins[0];
+        T sum = 0;
+        size_t n = 0;
+        for (size_t b_k = 0; b_k < bins[2]; ++b_k) {
+          if (b_k + k < id[2]) {
+            for (size_t b_j = 0; b_j < bins[1]; ++b_j) {
+              if (b_j + j < id[1]) {
+                for (size_t b_i = 0; b_i < bins[0]; ++b_i) {
+                  if (b_i + i < id[0]) {
+                    ++n;
+                    sum += v[id(i + b_i, j + b_j, k + b_k)];
+                  }
+                }
+              }
+            }
+          }
+        }
+        binned[binned_storage(i_s, j_s, k_s)] = sum / n;
+      }
+    }
+  }
+}
+
+template <class T>
+auto bin_omp(indexer<4> const& id,  indexer<4> const& binned_storage, indexer<4> const& bins, T const* v, T* binned, size_t n_threads) {
+#pragma omp parallel for collapse(4) num_threads(n_threads)
+  for (size_t l_s = 0; l_s < binned_storage[3]; l_s++) {
+    for (size_t k_s = 0; k_s < binned_storage[2]; k_s++) {
+      for (size_t j_s = 0; j_s < binned_storage[1]; j_s++) {
+        for (size_t i_s = 0; i_s < binned_storage[0]; i_s++) {
+          size_t l = l_s * bins[3];
+          size_t k = k_s * bins[2];
+          size_t j = j_s * bins[1];
+          size_t i = i_s * bins[0];
+          T sum = 0;
+          size_t n = 0;
+          for (size_t b_l = 0; b_l < bins[3]; ++b_l) {
+            if (b_l + l < id[3]) {
+              for (size_t b_k = 0; b_k < bins[2]; ++b_k) {
+                if (b_k + k < id[2]) {
+                  for (size_t b_j = 0; b_j < bins[1]; ++b_j) {
+                    if (b_j + j < id[1]) {
+                      for (size_t b_i = 0; b_i < bins[0]; ++b_i) {
+                        if (b_i + i < id[0]) {
+                          ++n;
+                          sum += v[id(i + b_i, j + b_j, k + b_k, l+b_l)];
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+              binned[binned_storage(i_s, j_s, k_s, l_s)] = sum / n;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+template <class T>
+void restore_omp(indexer<1> const& id,  indexer<1> const& binned_storage, indexer<1> const& bins, T const* binned, T* restored, size_t n_threads) {
+#pragma omp parallel for num_threads(n_threads)
+  for (size_t i_s = 0; i_s < binned_storage[0]; i_s++) {
+    size_t i = i_s * bins[0];
+    auto value = binned[binned_storage(i_s)];
+    for (size_t b_l = 0; b_l < bins[3]; ++b_l) {
+      for (size_t b_k = 0; b_k < bins[2]; ++b_k) {
+        for (size_t b_i = 0; b_i < bins[0]; ++b_i) {
+          if (b_i + i < id[0]) {
+            restored[id(i + b_i)] = value;
+          }
+        }
+      }
+    }
+  }
+}
+
+template <class T>
+void restore_omp(indexer<2> const& id,  indexer<2> const& binned_storage, indexer<2> const& bins, T const* binned, T* restored, size_t n_threads) {
+#pragma omp parallel for collapse(2) num_threads(n_threads)
+  for (size_t j_s = 0; j_s < binned_storage[1]; j_s++) {
+    for (size_t i_s = 0; i_s < binned_storage[0]; i_s++) {
+      size_t j = j_s * bins[1];
+      size_t i = i_s * bins[0];
+      auto value = binned[binned_storage(i_s, j_s)];
+      for (size_t b_l = 0; b_l < bins[3]; ++b_l) {
+        for (size_t b_k = 0; b_k < bins[2]; ++b_k) {
+          for (size_t b_j = 0; b_j < bins[1]; ++b_j) {
+            if (b_j + j < id[1]) {
+              for (size_t b_i = 0; b_i < bins[0]; ++b_i) {
+                if (b_i + i < id[0]) {
+                  restored[id(i + b_i, j + b_j)] = value;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+template <class T>
+void restore_omp(indexer<3> const& id,  indexer<3> const& binned_storage, indexer<3> const& bins, T const* binned, T* restored, size_t n_threads) {
+#pragma omp parallel for collapse(3) num_threads(n_threads)
+  for (size_t k_s = 0; k_s < binned_storage[2]; k_s++) {
+    for (size_t j_s = 0; j_s < binned_storage[1]; j_s++) {
+      for (size_t i_s = 0; i_s < binned_storage[0]; i_s++) {
+        size_t k = k_s * bins[2];
+        size_t j = j_s * bins[1];
+        size_t i = i_s * bins[0];
+        auto value = binned[binned_storage(i_s, j_s, k_s)];
+        for (size_t b_l = 0; b_l < bins[3]; ++b_l) {
+          for (size_t b_k = 0; b_k < bins[2]; ++b_k) {
+            if (b_k + k < id[2]) {
+              for (size_t b_j = 0; b_j < bins[1]; ++b_j) {
+                if (b_j + j < id[1]) {
+                  for (size_t b_i = 0; b_i < bins[0]; ++b_i) {
+                    if (b_i + i < id[0]) {
+                      restored[id(i + b_i, j + b_j, k + b_k)] = value;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+template <class T>
+void restore_omp(indexer<4> const& id,  indexer<4> const& binned_storage, indexer<4> const& bins, T const* binned, T* restored, size_t n_threads) {
+#pragma omp parallel for collapse(4) num_threads(n_threads)
+  for (size_t l_s = 0; l_s < binned_storage[3]; l_s++) {
+    for (size_t k_s = 0; k_s < binned_storage[2]; k_s++) {
+      for (size_t j_s = 0; j_s < binned_storage[1]; j_s++) {
+        for (size_t i_s = 0; i_s < binned_storage[0]; i_s++) {
+          size_t l = l_s * bins[3];
+          size_t k = k_s * bins[2];
+          size_t j = j_s * bins[1];
+          size_t i = i_s * bins[0];
+          auto value = binned[binned_storage(i_s, j_s, k_s, l_s)];
+          for (size_t b_l = 0; b_l < bins[3]; ++b_l) {
+            if (b_l + l < id[3]) {
+              for (size_t b_k = 0; b_k < bins[2]; ++b_k) {
+                if (b_k + k < id[2]) {
+                  for (size_t b_j = 0; b_j < bins[1]; ++b_j) {
+                    if (b_j + j < id[1]) {
+                      for (size_t b_i = 0; b_i < bins[0]; ++b_i) {
+                        if (b_i + i < id[0]) {
+                          restored[id(i + b_i, j + b_j, k + b_k, l+b_l)] = value;
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 template <size_t N>

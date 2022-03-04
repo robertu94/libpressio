@@ -236,15 +236,17 @@ class zfp_plugin: public libpressio_compressor_plugin {
       zfp_stream_set_bit_stream(zfp, stream);
       zfp_stream_rewind(zfp);
 
-      enum pressio_dtype dtype = pressio_data_dtype(output);
-      size_t dim = pressio_data_num_dimensions(output);
-      size_t dims[] = {
-        pressio_data_get_dimension(output, 0),
-        pressio_data_get_dimension(output, 1),
-        pressio_data_get_dimension(output, 2),
-        pressio_data_get_dimension(output, 3),
-      };
-      *output = pressio_data::owning(dtype, dim, dims);
+      if(!output->has_data()) {
+        enum pressio_dtype dtype = pressio_data_dtype(output);
+        size_t dim = pressio_data_num_dimensions(output);
+        size_t dims[] = {
+          pressio_data_get_dimension(output, 0),
+          pressio_data_get_dimension(output, 1),
+          pressio_data_get_dimension(output, 2),
+          pressio_data_get_dimension(output, 3),
+        };
+        *output = pressio_data::owning(dtype, dim, dims);
+      }
       zfp_field* out_field;
 
       if(int ret = convert_pressio_data_to_field(output, &out_field)) {

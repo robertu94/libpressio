@@ -86,7 +86,11 @@ class fpzip_plugin: public libpressio_compressor_plugin {
     fpz->nx = check_dim(input->get_dimension(0));
     fpz->ny = check_dim(input->get_dimension(1));
     fpz->nz = check_dim(input->get_dimension(2));
-    fpz->nf = check_dim(input->get_dimension(3));
+    int highest = check_dim(input->get_dimension(3));
+    for (size_t i = 4; i < input->num_dimensions(); ++i) {
+      highest *= check_dim(input->get_dimension(i));
+    }
+    fpz->nf = static_cast<int>(highest);
     fpz->type = type;
     fpz->prec = prec;
 
@@ -120,12 +124,19 @@ class fpzip_plugin: public libpressio_compressor_plugin {
       fpz->nx = check_dim(output->get_dimension(0));
       fpz->ny = check_dim(output->get_dimension(1));
       fpz->nz = check_dim(output->get_dimension(2));
-      fpz->nf = check_dim(output->get_dimension(3));
+      int highest = check_dim(output->get_dimension(3));
+      for (size_t i = 4; i < output->num_dimensions(); ++i) {
+        highest *= check_dim(output->get_dimension(i));
+      }
+      fpz->nf = highest;
       fpz->type = type;
       fpz->prec = prec;
     }
-    fpzip_read(fpz, pressio_data_ptr(output, nullptr));
+    size_t read = fpzip_read(fpz, pressio_data_ptr(output, nullptr));
     fpzip_read_close(fpz);
+    if(read == 0) {
+      return fpzip_error();
+    }
 
      return 0;
    }

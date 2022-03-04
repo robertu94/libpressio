@@ -14,10 +14,9 @@ public:
     struct pressio_options options;
     set_meta(options, "roibin:roi", roi_id, roi);
     set_meta(options, "roibin:background", background_id, background);
-    set(options, "roibin:rows", peak_rows);
-    set(options, "roibin:cols", peak_cols);
-    set(options, "roibin:segs", peak_segs);
+    set(options, "roibin:centers", centers);
     set(options, "roibin:roi_size", roi_size);
+    set(options, "roibin:nthreads", n_threads);
     return options;
   }
 
@@ -39,10 +38,9 @@ public:
     )");
     set_meta_docs(options, "roibin:roi", "region of interest compression", roi);
     set_meta_docs(options, "roibin:background", "background compression", background);
-    set(options, "roibin:rows", "row locations");
-    set(options, "roibin:cols", "column locations");
-    set(options, "roibin:segs", "segment locations");
+    set(options, "roibin:centers", "centers of the region of interest");
     set(options, "roibin:roi_size", "region of interest size");
+    set(options, "roibin:nthreads", "number of threads for region of interest");
     return options;
   }
 
@@ -51,10 +49,14 @@ public:
   {
     get_meta(options, "roibin:roi", compressor_plugins(), roi_id, roi);
     get_meta(options, "roibin:background", compressor_plugins(), background_id, background);
-    get(options, "roibin:rows", &peak_rows);
-    get(options, "roibin:cols", &peak_cols);
-    get(options, "roibin:segs", &peak_segs);
+    get(options, "roibin:centers", &centers);
     get(options, "roibin:roi_size", &roi_size);
+    uint32_t tmp;
+    if(get(options, "roibin:nthreads", &tmp) == pressio_options_key_set) {
+      if(tmp > 0) {
+        n_threads = tmp;
+      }
+    }
     return 0;
   }
 
@@ -65,14 +67,16 @@ public:
       pressio_data roi_data = save_roi(*input);
       pressio_data roi_compressed = pressio_data::empty(pressio_byte_dtype, {});
       pressio_data background_compressed = pressio_data::empty(pressio_byte_dtype, {});
-      int ec = roi->compress(&roi_data, &roi_compressed);
-      if(ec < 0) {
-        set_error(ec, roi->error_msg());
-      } else if (ec > 0) {
-        return set_error(ec, roi->error_msg());
+      if(roi_data.size_in_bytes() > 0) {
+        int ec = roi->compress(&roi_data, &roi_compressed);
+        if(ec < 0) {
+          set_error(ec, roi->error_msg());
+        } else if (ec > 0) {
+          return set_error(ec, roi->error_msg());
+        }
       }
 
-      ec = background->compress(input, &background_compressed);
+      int ec = background->compress(input, &background_compressed);
       if(ec < 0) {
         set_error(ec, background->error_msg());
       } else if (ec > 0) {
@@ -104,28 +108,37 @@ public:
     pressio_data backround_compressed = pressio_data::nonowning(pressio_byte_dtype, 
         static_cast<uint8_t*>(input->data()) + sizes[0] + 2*sizeof(size_t),
         {sizes[1]}); 
-    size_t regions = std::min(peak_rows.get_dimension(0), std::min(peak_cols.get_dimension(0), peak_segs.get_dimension(0)));
-    pressio_data roi_decompressed = pressio_data::owning(output->dtype(), roi_dims(output->get_dimension(3) * regions));
-    
-    int ec = roi->decompress(&roi_compressed, &roi_decompressed);
-    if(ec < 0) {
-      set_error(ec, roi->error_msg());
-    } else if (ec > 0) {
-      return set_error(ec, roi->error_msg());
+    if(roi_compressed.size_in_bytes() > 0) {
+      size_t regions = centers.get_dimension(1);
+      pressio_data roi_decompressed = pressio_data::owning(output->dtype(), roi_dims(regions));
+      
+      int ec = roi->decompress(&roi_compressed, &roi_decompressed);
+      if(ec < 0) {
+        set_error(ec, roi->error_msg());
+      } else if (ec > 0) {
+        return set_error(ec, roi->error_msg());
+      }
+      ec = background->decompress(&backround_compressed, output);
+      if(ec < 0) {
+        set_error(ec, background->error_msg());
+      } else if (ec > 0) {
+        return set_error(ec, background->error_msg());
+      }
+
+      try {
+        restore_roi(*output, roi_decompressed);
+      } catch (std::exception const& ex) {
+        return set_error(2, ex.what());
+      }
+    } else {
+      int ec = background->decompress(&backround_compressed, output);
+      if(ec < 0) {
+        set_error(ec, background->error_msg());
+      } else if (ec > 0) {
+        return set_error(ec, background->error_msg());
+      }
     }
 
-    ec = background->decompress(&backround_compressed, output);
-    if(ec < 0) {
-      set_error(ec, background->error_msg());
-    } else if (ec > 0) {
-      return set_error(ec, background->error_msg());
-    }
-
-    try {
-      restore_roi(*output, roi_decompressed);
-    } catch (std::exception const& ex) {
-      return set_error(2, ex.what());
-    }
 
     return 0;
 
@@ -154,10 +167,6 @@ public:
   }
 
   pressio_data save_roi(pressio_data const& data) {
-    auto roi_size = this->roi_size.to_vector<size_t>();
-    if(roi_size.at(3) != 0 || roi_size.at(2) != 0 || roi_size.at(1) == 0 || roi_size.at(0) == 0) {
-        throw std::runtime_error("unsupported roi_size");
-    }
     switch(data.dtype()) {
       case pressio_bool_dtype:
         return save_roi_typed<bool>(data);
@@ -187,46 +196,61 @@ public:
     
   }
 
-  std::vector<std::array<size_t, 4>> centers(size_t events) const {
-    std::vector<std::array<size_t, 4>> centers;
-    auto rows = peak_rows.to_vector<size_t>();
-    auto cols = peak_cols.to_vector<size_t>();
-    auto segs = peak_segs.to_vector<size_t>();
-    size_t regions = std::min(rows.size(), std::min(cols.size(), segs.size()));
-
-    centers.resize(regions * events);
-    for (size_t i = 0; i < regions; ++i) {
-      for (size_t j = 0; j < events; ++j) {
-        centers[i*events+j][0] = rows[i];
-        centers[i*events+j][1] = cols[i];
-        centers[i*events+j][2] = segs[i];
-        centers[i*events+j][3] = j;
-      }
-    }
-    return centers;
-  }
 
   template <class T>
   pressio_data save_roi_typed(pressio_data const& data) {
-    indexer<4> id{
-      data.get_dimension(0),
-      data.get_dimension(1),
-      data.get_dimension(2),
-      data.get_dimension(3)
-    };
-
-    auto centers = this->centers(data.get_dimension(3));
     auto roi_size_v = this->roi_size.to_vector<size_t>();
-    indexer<4> roi_size{roi_size_v.begin(), roi_size_v.end()};
-    indexer<5> roi = to_roimem(roi_size, centers.size());
-    pressio_data roi_mem = pressio_data::owning(data.dtype(), roi.as_vec());
-    roi_save(id, roi_size, roi, centers, static_cast<T const*>(data.data()), static_cast<T*>(roi_mem.data()));
-    return roi_mem;
+    if(data.num_dimensions() != roi_size_v.size()) {
+      throw std::runtime_error("roi_size must match data size");
+    }
+    if(data.num_dimensions() != centers.get_dimension(0) && centers.num_elements() > 0) {
+      throw std::runtime_error("centers dimension must match num_dimensions of input data or be empty");
+    }
+    switch(data.num_dimensions()) {
+      case 1:
+        {
+          indexer<1> id{data.get_dimension(0)};
+          indexer<1> roi_size(roi_size_v.begin(), roi_size_v.end());
+          indexer<2> roi_mem = to_roimem(roi_size, centers.get_dimension(1));
+          pressio_data roi_mem_data = pressio_data::owning(data.dtype(), roi_mem.as_vec());
+          roi_save(id, roi_size, roi_mem, centers, static_cast<T const*>(data.data()), static_cast<T*>(roi_mem_data.data()), n_threads);
+          return roi_mem_data;
+        }
+      case 2:
+        {
+          indexer<2> id{data.get_dimension(0), data.get_dimension(1)};
+          indexer<2> roi_size(roi_size_v.begin(), roi_size_v.end());
+          indexer<3> roi_mem = to_roimem(roi_size, centers.get_dimension(1));
+          pressio_data roi_mem_data = pressio_data::owning(data.dtype(), roi_mem.as_vec());
+          roi_save(id, roi_size, roi_mem, centers, static_cast<T const*>(data.data()), static_cast<T*>(roi_mem_data.data()), n_threads);
+          return roi_mem_data;
+        }
+      case 3:
+        {
+          indexer<3> id{data.get_dimension(0), data.get_dimension(1), data.get_dimension(2)};
+          indexer<3> roi_size(roi_size_v.begin(), roi_size_v.end());
+          indexer<4> roi_mem = to_roimem(roi_size, centers.get_dimension(1));
+          pressio_data roi_mem_data = pressio_data::owning(data.dtype(), roi_mem.as_vec());
+          roi_save(id, roi_size, roi_mem, centers, static_cast<T const*>(data.data()), static_cast<T*>(roi_mem_data.data()), n_threads);
+          return roi_mem_data;
+        }
+      case 4:
+        {
+          indexer<4> id{data.get_dimension(0), data.get_dimension(1), data.get_dimension(2), data.get_dimension(3)};
+          indexer<4> roi_size(roi_size_v.begin(), roi_size_v.end());
+          indexer<5> roi_mem = to_roimem(roi_size, centers.get_dimension(1));
+          pressio_data roi_mem_data = pressio_data::owning(data.dtype(), roi_mem.as_vec());
+          roi_save(id, roi_size, roi_mem, centers, static_cast<T const*>(data.data()), static_cast<T*>(roi_mem_data.data()), n_threads);
+          return roi_mem_data;
+        }
+      default:
+        throw std::runtime_error("unsupported dimension " + std::to_string(data.num_dimensions()));
+    }
   }
 
   void restore_roi(pressio_data& data, pressio_data const& roi) {
     auto roi_size = this->roi_size.to_vector<size_t>();
-    if(roi_size.at(3) != 0 || roi_size.at(2) != 0 || roi_size.at(1) == 0 || roi_size.at(0) == 0) {
+    if(roi_size.size() != data.num_dimensions()) {
         throw std::runtime_error("unsupported roi_size");
     }
     switch(data.dtype()) {
@@ -267,36 +291,53 @@ public:
 
   template <class T>
   void restore_roi_typed(pressio_data & restored, pressio_data const& roi_mem) {
-    indexer<4> id{
-      restored.get_dimension(0),
-      restored.get_dimension(1),
-      restored.get_dimension(2),
-      restored.get_dimension(3)
-    };
-
-    auto roi_size_v = this->roi_size.to_vector<size_t>();
-    auto centers = this->centers(restored.get_dimension(3));
-    indexer<4> roi_size{roi_size_v.begin(), roi_size_v.end()};
-    indexer<5> roi = to_roimem(roi_size, centers.size());
-    roi_restore(id, roi_size, roi, centers, static_cast<T const*>(roi_mem.data()), static_cast<T*>(restored.data()));
+    switch(restored.num_dimensions()){
+      case 1:
+        restore_roi_sized<T,1>(restored, roi_mem);
+        break;
+      case 2:
+        restore_roi_sized<T,2>(restored, roi_mem);
+        break;
+      case 3:
+        restore_roi_sized<T,3>(restored, roi_mem);
+        break;
+      case 4:
+        restore_roi_sized<T,4>(restored, roi_mem);
+        break;
+      default:
+        throw std::runtime_error("unsupported number of dimensions " + std::to_string(restored.num_dimensions()));
+    }
   }
 
-  std::vector<size_t> roi_dims(size_t events) {
+  template <class T, size_t N>
+  void restore_roi_sized(pressio_data& restored, pressio_data const& roi_mem) {
+    auto restored_v = restored.dimensions();
+    indexer<N> id(restored_v.begin(), restored_v.end());
+
     auto roi_size_v = this->roi_size.to_vector<size_t>();
-    indexer<4> roi_size{roi_size_v.begin(), roi_size_v.end()};
-    indexer<5> roi = to_roimem(roi_size, events);
-    std::vector<size_t> v(5);
-    for (int i = 0; i < 5; ++i) {
-      v[i] = roi[i];
+    indexer<N> roi_size{roi_size_v.begin(), roi_size_v.end()};
+    indexer<N+1> roi = to_roimem(roi_size, centers.get_dimension(1));
+    roi_restore(id, roi_size, roi, centers, static_cast<T const*>(roi_mem.data()), static_cast<T*>(restored.data()), n_threads);
+
+  }
+
+  std::vector<size_t> roi_dims(size_t num_centers) {
+    auto roi_size_v = this->roi_size.to_vector<size_t>();
+    std::vector<size_t> dims(roi_size_v.size() + 1);
+    for (size_t i = 0; i < roi_size_v.size(); ++i) {
+      dims[i] = roi_size_v[i]*2 +1;
     }
-    return v;
+    dims.back() = num_centers;
+    return dims;
   }
 
   std::string background_id = "noop";
   std::string roi_id = "noop";
   pressio_compressor background = compressor_plugins().build("noop");
   pressio_compressor roi = compressor_plugins().build("noop");
-  pressio_data peak_rows, peak_segs, peak_cols, roi_size{5,5,0,0};
+  pressio_data roi_size{5,5,0,0};
+  pressio_data centers;
+  uint32_t n_threads = 1;
 };
 
 static pressio_register compressor_many_fields_plugin(compressor_plugins(), "roibin", []() {

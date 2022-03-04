@@ -13,7 +13,7 @@ auto product(Rng const& rng) -> typename std::iterator_traits<decltype(rng.begin
 
 int main()
 {
-  std::vector<std::size_t> dims{500,500,100,4};
+  std::vector<std::size_t> dims{500,500,100};
   std::vector<float> v(product(dims));
   std::iota(v.begin(), v.end(), 0);
   auto input = pressio_data::nonowning(pressio_float_dtype, v.data(), dims);
@@ -24,29 +24,37 @@ int main()
   std::mt19937 gen{seed};
   std::uniform_int_distribution<size_t> dist_row(0,dims[0]-1);
   std::uniform_int_distribution<size_t> dist_col(0,dims[1]-1);
-  std::uniform_int_distribution<size_t> dist_seg(0,dims[2]-1);
+  std::uniform_int_distribution<size_t> dist_event(0,dims[2]-1);
   auto rnd_row = [&]{ return dist_row(gen); };
   auto rnd_col = [&]{ return dist_col(gen); };
-  auto rnd_seg = [&]{ return dist_seg(gen); };
+  auto rnd_event = [&]{ return dist_event(gen); };
 
-  std::vector<size_t> rows, cols, segs;
   constexpr std::size_t N_roi =  500;
-  std::generate_n(std::back_inserter(rows), N_roi, rnd_row);
-  std::generate_n(std::back_inserter(cols), N_roi, rnd_col);
-  std::generate_n(std::back_inserter(segs), N_roi, rnd_seg);
+  pressio_data centers = pressio_data::owning(pressio_uint64_dtype, {3, 500});
+  uint64_t* centers_ptr = static_cast<uint64_t*>(centers.data());
+  for (size_t i = 0; i < N_roi; ++i) {
+    centers_ptr[3*i] = rnd_row();
+    centers_ptr[3*i+1] = rnd_col();
+    centers_ptr[3*i+2] = rnd_event();
+  }
 
   pressio library;
   pressio_compressor roibin = library.get_compressor("roibin");
   pressio_options options {
     {"roibin:background", "binning"},
     {"roibin:roi", "fpzip"},
+    {"roibin:nthreads", 6u},
+    {"blosc:compressor", "zstd"},
+    {"blosc:clevel", 6},
+    {"fpzip:prec", 0},
     {"pressio:metric", "composite"},
     {"composite:plugins", std::vector<std::string>{"size", "time"}},
     {"binning:compressor", "sz"},
+    {"binning:shape", pressio_data{2,2,1}},
+    {"binning:nthreads", 6u},
     {"pressio:abs", 1e-4},
-    {"roibin:rows", pressio_data(rows.begin(), rows.end())},
-    {"roibin:cols", pressio_data(cols.begin(), cols.end())},
-    {"roibin:segs", pressio_data(segs.begin(), segs.end())}
+    {"roibin:centers", centers},
+    {"roibin:roi_size", pressio_data{8,8,0}}
   };
 
   roibin->set_options(options);
@@ -54,8 +62,15 @@ int main()
   std::cout << "settings" << std::endl;
   std::cout << roibin->get_options() << std::endl;
 
-  roibin->compress(&input, &compressed);
-  roibin->decompress(&compressed, &decompressed);
+  if(roibin->compress(&input, &compressed)) {
+    std::cerr << roibin->error_msg() << std::endl;
+    exit(roibin->error_code());
+  }
+
+  if(roibin->decompress(&compressed, &decompressed)) {
+    std::cerr << roibin->error_msg() << std::endl;
+    exit(roibin->error_code());
+  }
 
 
   std::cout << "metrics" << std::endl;
