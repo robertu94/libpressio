@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.81.0" LANGUAGES CXX C)
+project(libpressio VERSION "0.82.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -246,6 +246,18 @@ if(LIBPRESSIO_HAS_DIGIT_ROUNDING)
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/digit_rounding_plugin.cc
     )
   target_link_libraries(libpressio PRIVATE dround ZLIB::ZLIB)
+endif()
+
+option(LIBPRESSIO_HAS_BZIP2 "build the BZIP plugin" OFF)
+if(LIBPRESSIO_HAS_BZIP2)
+  set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} BZIP2")
+  find_package(PkgConfig REQUIRED)
+  pkg_search_module(BZIP2 IMPORTED_TARGET GLOBAL bzip2)
+  target_sources(libpressio
+    PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/bzip2.cc
+    )
+  target_link_libraries(libpressio PRIVATE PkgConfig::BZIP2)
 endif()
 
 option(LIBPRESSIO_HAS_BIT_GROOMING "build the BIT GROOMING plugin" OFF)
