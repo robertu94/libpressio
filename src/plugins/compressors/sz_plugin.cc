@@ -406,6 +406,9 @@ class sz_plugin: public libpressio_compressor_plugin {
 #if PRESSIO_SZ_VERSION_GREATEREQ(2,1,12,2)
     set(sz_metrics, "sz:constant_flag", sz_stat.constant_flag);
 #endif
+#if PRESSIO_SZ_VERSION_GREATEREQ(2,1,12,3)
+    set(sz_metrics, "sz:quantization_intervals", sz_stat.quantization_intervals);
+#endif
 #endif
     return sz_metrics;
   }
