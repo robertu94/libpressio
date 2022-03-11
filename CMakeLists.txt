@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.82.1" LANGUAGES CXX C)
+project(libpressio VERSION "0.82.2" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -251,13 +251,12 @@ endif()
 option(LIBPRESSIO_HAS_BZIP2 "build the BZIP plugin" OFF)
 if(LIBPRESSIO_HAS_BZIP2)
   set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} BZIP2")
-  find_package(PkgConfig REQUIRED)
-  pkg_search_module(BZIP2 IMPORTED_TARGET GLOBAL bzip2)
+  find_package(BZip2 REQUIRED)
   target_sources(libpressio
     PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/bzip2.cc
     )
-  target_link_libraries(libpressio PRIVATE PkgConfig::BZIP2)
+  target_link_libraries(libpressio PRIVATE BZip2::BZip2)
 endif()
 
 option(LIBPRESSIO_HAS_BIT_GROOMING "build the BIT GROOMING plugin" OFF)
