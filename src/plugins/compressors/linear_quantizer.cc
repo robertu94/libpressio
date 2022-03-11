@@ -47,6 +47,7 @@ class linear_quantizer: public libpressio_compressor_plugin {
   pressio_options get_options_impl() const override {
     pressio_options opts;
     set_meta(opts, "linear_quantizer:compressor", meta_id, meta);
+    set(opts, "pressio:abs", step);
     set(opts, "linear_quantizer:step", step);
     set(opts, "linear_quantizer:auto_step", auto_step);
     return opts;
@@ -74,6 +75,7 @@ applies linear_quantizer encoding to prior to compression and reverses it post d
   }
   int set_options_impl(const pressio_options &options) override {
     get_meta(options, "linear_quantizer:compressor", compressor_plugins(), meta_id, meta);
+    get(options, "pressio:abs", &step);
     get(options, "linear_quantizer:step", &step);
     get(options, "linear_quantizer:auto_step", &auto_step);
     return 0;
