@@ -627,7 +627,7 @@ struct pressio_options final {
    * \param[in] o the options to copy from
    */
   void copy_from(pressio_options const& o) {
-    insert(o.begin(), o.end());
+    insert_or_assign(o.begin(), o.end());
   }
 
   private:
@@ -670,6 +670,19 @@ struct pressio_options final {
   template <class InputIt>
   void insert(InputIt begin, InputIt end){
     options.insert(begin, end);
+  }
+
+  /**
+   * insert or assign a collection from an iterator
+   *
+   * \param[in] begin the iterator to the beginning
+   * \param[in] end the iterator to the end
+   */
+  template <class InputIt>
+  void insert_or_assign(InputIt begin, InputIt end){
+    std::for_each(begin, end, [this](decltype(options)::const_reference it) {
+        options[it.first] = it.second;
+    });
   }
 
 

@@ -77,7 +77,12 @@ struct pressio_options libpressio_compressor_plugin::get_configuration() const {
 struct pressio_options libpressio_compressor_plugin::get_documentation() const {
   if(metrics_plugin)
     metrics_plugin->begin_get_documentation();
-  auto ret = get_documentation_impl();
+  pressio_options ret;
+  if(metrics_plugin) { 
+    ret.copy_from(metrics_plugin->get_documentation());
+    set_meta_docs(ret, "pressio:metric", "metrics to collect when using the compressor", metrics_plugin);
+    set_meta_docs(ret, get_metrics_key_name(), "metrics to collect when using the compressor", metrics_plugin);
+  }
   set(ret, "pressio:thread_safe", R"(level of thread safety provided by the compressor
 
   pressio_thread_safety_single = 0, indicates not thread safe
@@ -112,10 +117,8 @@ struct pressio_options libpressio_compressor_plugin::get_documentation() const {
 
     at this time (may change in the future), individual lossless compressors may internet values less than 1 or greater than 9 differently
   )");
+  ret.copy_from(get_documentation_impl());
   if(metrics_plugin) { 
-    ret.copy_from(metrics_plugin->get_documentation());
-    set_meta_docs(ret, "pressio:metric", "metrics to collect when using the compressor", metrics_plugin);
-    set_meta_docs(ret, get_metrics_key_name(), "metrics to collect when using the compressor", metrics_plugin);
     metrics_plugin->end_get_documentation(ret);
   }
   return ret;

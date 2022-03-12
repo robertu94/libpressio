@@ -31,13 +31,13 @@ public:
   struct pressio_options get_documentation_impl() const override
   {
     struct pressio_options options;
+    set_meta_docs(options, "roibin:roi", "region of interest compression", roi);
+    set_meta_docs(options, "roibin:background", "background compression", background);
     set(options, "pressio:description", R"(ROIBIN metacompressor
     
     This module treats compression as two tasks: region of interest saving + background saving
     Each is then forwarded on to a separate compressor for additional compression.
     )");
-    set_meta_docs(options, "roibin:roi", "region of interest compression", roi);
-    set_meta_docs(options, "roibin:background", "background compression", background);
     set(options, "roibin:centers", "centers of the region of interest");
     set(options, "roibin:roi_size", "region of interest size");
     set(options, "roibin:nthreads", "number of threads for region of interest");

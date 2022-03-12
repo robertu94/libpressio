@@ -45,13 +45,13 @@ public:
   struct pressio_options get_documentation_impl() const override
   {
     struct pressio_options options;
-    set(options, "pressio:description", R"(Uses MPI to compress multiple buffers in parallel using results of previously
-      successful compressions to guide future compressions)");
     set_meta_docs(options, "many_dependent:compressor", "the name of the compressor to pipeline over using MPI", compressor);
-    set(options, "many_dependent:to_names", "list of options to set on each launch");
-    set(options, "many_dependent:from_names", "list of metrics to pull the next set of configurations from");
     options.copy_from(manager.get_documentation());
     options.copy_from(subgroups.get_documentation());
+    set(options, "pressio:description", R"(Uses MPI to compress multiple buffers in parallel using results of previously
+      successful compressions to guide future compressions)");
+    set(options, "many_dependent:to_names", "list of options to set on each launch");
+    set(options, "many_dependent:from_names", "list of metrics to pull the next set of configurations from");
     return options;
   }
 
