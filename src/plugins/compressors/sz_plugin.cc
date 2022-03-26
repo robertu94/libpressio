@@ -400,7 +400,7 @@ class sz_plugin: public libpressio_compressor_plugin {
     set(sz_metrics, "sz:unpredict_count", (unsigned int)sz_stat.unpredictCount);
 
     set(sz_metrics, "sz:lorenzo_percent", sz_stat.lorenzoPercent);
-    set(sz_metrics, "sz:regression_percent", sz_stat.lorenzoPercent);
+    set(sz_metrics, "sz:regression_percent", sz_stat.regressionPercent);
     set(sz_metrics, "sz:huffman_compression_ratio", sz_stat.huffmanCompressionRatio);
 
 #if PRESSIO_SZ_VERSION_GREATEREQ(2,1,12,2)
