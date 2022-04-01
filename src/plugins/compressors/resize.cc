@@ -69,6 +69,9 @@ public:
   int decompress_impl(const pressio_data* input,
                       struct pressio_data* output) override
   {
+    if(!compressed_dims.empty()) {
+      output->reshape(compressed_dims);
+    }
     auto ret = compressor->decompress(input, output);
     if(!decompressed_dims.empty()) {
       output->reshape(decompressed_dims);
