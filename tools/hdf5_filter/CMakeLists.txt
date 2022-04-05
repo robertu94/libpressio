@@ -3,9 +3,11 @@ add_library(libpressio_hdf5_filter
   ./src/libpressio_hdf5_props.cc
   ./include/libpressio_hdf5_filter.h
   )
+target_link_libraries(libpressio_hdf5_filter PUBLIC ${HDF5_C_LIBRARIES})
+target_include_directories(libpressio_hdf5_filter PUBLIC ${HDF5_C_INCLUDE_DIRS})
+target_compile_definitions(libpressio_hdf5_filter PUBLIC ${HDF5_C_DEFINITIONS})
 target_link_libraries(libpressio_hdf5_filter PRIVATE
   libpressio
-  hdf5::hdf5
   nlohmann_json::nlohmann_json
   )
 target_include_directories(libpressio_hdf5_filter 
