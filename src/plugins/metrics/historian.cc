@@ -194,6 +194,7 @@ class pressio_historian_metric: public libpressio_metrics_plugin {
   }
   pressio_options get_configuration() const override {
     pressio_options opts;
+    opts.copy_from(metrics->get_configuration());
     set(opts, "pressio:thread_safe", static_cast<int32_t>(get_threadsafe(*metrics)));
     set(opts, "pressio:stability", "unstable");
     const static std::vector<std::string> events_types {

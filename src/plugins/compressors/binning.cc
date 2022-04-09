@@ -93,7 +93,7 @@ public:
   struct pressio_options get_configuration_impl() const override
   {
     struct pressio_options options;
-    set_meta_docs(options, "binning:compressor", "compressor to apply after binning", comp);
+    options.copy_from(comp->get_configuration());
     set(options, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
     set(options, "pressio:stability", "experimental");
     return options;
@@ -200,7 +200,11 @@ public:
   const char* prefix() const override { return "binning"; }
 
   void set_name_impl(std::string const& new_name) override {
-    comp->set_name(new_name + "/" + comp->prefix());
+    if(new_name != "") {
+    comp->set_name(new_name + "/" + comp->prefix()); 
+    } else {
+    comp->set_name(new_name); 
+    }
   }
 
   pressio_options get_metrics_results_impl() const override {

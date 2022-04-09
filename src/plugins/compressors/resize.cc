@@ -28,6 +28,7 @@ public:
   struct pressio_options get_configuration_impl() const override
   {
     struct pressio_options options;
+    options.copy_from(compressor->get_configuration());
     set(options, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
     set(options, "pressio:stability", "stable");
     return options;
@@ -88,7 +89,11 @@ public:
   const char* prefix() const override { return "resize"; }
 
   void set_name_impl(std::string const& name) override {
+    if(name != "") {
     compressor->set_name(name + "/" + compressor->prefix());
+    } else {
+    compressor->set_name(name );
+    }
   }
 
   pressio_options get_metrics_results_impl() const override {

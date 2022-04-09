@@ -1,5 +1,6 @@
 #ifndef LIBPRESSIO_VERSIONABLE_H
 #define LIBPRESSIO_VERSIONABLE_H
+#include <cstdint>
 
 /** \file 
  * \brief interface for versionable types */
@@ -18,6 +19,13 @@ class pressio_versionable {
    * \see pressio_io_version for the semantics this function should obey
    */
   virtual const char* version() const=0;
+
+  /** a LibPressio version specific version number incremented whenever the major version does not reliably
+   * reflect backwards incompatability, it is never reset to a lower value.  It defaults to 0.
+   * \see pressio_io_major_version for the semantics this function should obey
+   */
+  virtual uint64_t epoch_version() const;
+
   /** get the major version, default version returns 0
    * \see pressio_io_major_version for the semantics this function should obey
    */

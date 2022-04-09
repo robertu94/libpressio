@@ -84,6 +84,10 @@ class external_metric_plugin : public libpressio_metrics_plugin {
 
     struct pressio_options get_configuration() const override {
       pressio_options opts;
+      for (size_t i = 0; i < std::min(io_modules.size(), field_names.size()); ++i) {
+        opts.copy_from(io_modules[i]->get_configuration());
+      }
+      opts.copy_from(launcher->get_configuration());
       set(opts, "pressio:stability", "unstable");
       set(opts, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
       return opts;
@@ -161,10 +165,17 @@ class external_metric_plugin : public libpressio_metrics_plugin {
     }
 
     void set_name_impl(std::string const& new_name) override {
-      for (size_t i = 0; i < std::min(io_modules.size(), field_names.size()); ++i) {
-        io_modules[i]->set_name(new_name + "/" + field_names[i]);
+      if (new_name != "") {
+        for (size_t i = 0; i < std::min(io_modules.size(), field_names.size()); ++i) {
+          io_modules[i]->set_name(new_name + "/" + field_names[i]);
+        }
+        launcher->set_name(new_name + "/" + launcher->prefix());
+      } else {
+        for (size_t i = 0; i < std::min(io_modules.size(), field_names.size()); ++i) {
+          io_modules[i]->set_name(new_name);
+        }
+        launcher->set_name(new_name);
       }
-      launcher->set_name(new_name + "/" + launcher->prefix());
     }
 
     std::unique_ptr<libpressio_metrics_plugin> clone() override {

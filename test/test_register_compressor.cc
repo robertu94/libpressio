@@ -92,7 +92,11 @@ class log_transform : public libpressio_compressor_plugin {
 
   private:
   void set_name_impl(std::string const& new_name) override {
-    compressor->set_name(new_name + "/" + compressor->prefix());
+    if(new_name != "") {
+      compressor->set_name(new_name + "/" + compressor->prefix());
+    } else {
+      compressor->set_name(new_name);
+    }
   }
 
   int check_error(int rc) { 

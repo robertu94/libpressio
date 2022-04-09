@@ -23,6 +23,8 @@ public:
   struct pressio_options get_configuration_impl() const override
   {
     struct pressio_options options;
+    options.copy_from(background->get_configuration());
+    options.copy_from(roi->get_configuration());
     set(options, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
     set(options, "pressio:stability", "experimental");
     return options;
@@ -151,8 +153,13 @@ public:
   const char* prefix() const override { return "roibin"; }
 
   void set_name_impl(std::string const& new_name) override {
-    roi->set_name(new_name + "/roi");
-    background->set_name(new_name + "/background");
+    if(new_name != "") {
+      roi->set_name(new_name + "/roi");
+      background->set_name(new_name + "/background");
+    } else {
+      roi->set_name(new_name);
+      background->set_name(new_name);
+    }
   }
 
   pressio_options get_metrics_results_impl() const override {

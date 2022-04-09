@@ -235,6 +235,7 @@ class time_plugin : public libpressio_metrics_plugin {
 
   struct pressio_options get_configuration() const override {
     pressio_options opts;
+    opts.copy_from(child->get_configuration());
     set(opts, "pressio:stability", "stable");
     set(opts, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
     return opts;
@@ -321,7 +322,11 @@ class time_plugin : public libpressio_metrics_plugin {
   }
 
   void set_name_impl(std::string const& new_name) override {
+    if(new_name != "") {
     child->set_name(new_name + "/" + child->prefix());
+    } else {
+    child->set_name(new_name);
+    }
   }
 
   private:

@@ -18,6 +18,7 @@ struct select_io: public libpressio_io_plugin {
 
   struct pressio_options get_configuration_impl() const override{
     pressio_options opts;
+    opts.copy_from(impl->get_configuration());
     set(opts, "pressio:stability",  "unstable");
     set(opts, "pressio:thread_safe",  static_cast<int32_t>(pressio_thread_safety_single));
     return opts;
@@ -74,7 +75,11 @@ struct select_io: public libpressio_io_plugin {
   }
 
   void set_name_impl(std::string const& new_name) override {
-    impl->set_name(new_name + "/" + impl->prefix());
+    if(new_name != "") {
+      impl->set_name(new_name + "/" + impl->prefix());
+    } else {
+      impl->set_name(new_name);
+    }
   }
 
   std::shared_ptr<libpressio_io_plugin> clone() override {

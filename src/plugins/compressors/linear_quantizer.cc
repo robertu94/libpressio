@@ -69,6 +69,7 @@ applies linear_quantizer encoding to prior to compression and reverses it post d
   }
   pressio_options get_configuration_impl() const override {
     pressio_options opts;
+    opts.copy_from(meta->get_configuration());
     set(opts, "pressio:thread_safe", static_cast<int32_t>(get_threadsafe(*meta)));
     set(opts, "pressio:stability", "experimental");
     return opts;
@@ -109,7 +110,11 @@ applies linear_quantizer encoding to prior to compression and reverses it post d
     return meta->get_metrics_results();
   }
   void set_name_impl(std::string const& new_name) override {
-    meta->set_name(new_name + "/" + meta->prefix());
+    if(new_name != "") {
+      meta->set_name(new_name + "/" + meta->prefix());
+    } else {
+      meta->set_name(new_name);
+    }
   }
   const char* prefix() const override { return "linear_quantizer"; }
   const char* version() const override { 

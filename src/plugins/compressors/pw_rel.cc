@@ -257,8 +257,13 @@ public:
   }
 
   void set_name_impl(std::string const& new_name) override {
-    abs_comp->set_name(new_name + "/logs");
-    signs_comp->set_name(new_name + "/signs");
+    if(new_name != "") {
+      abs_comp->set_name(new_name + "/logs");
+      signs_comp->set_name(new_name + "/signs");
+    } else {
+      abs_comp->set_name(new_name);
+      signs_comp->set_name(new_name);
+    }
   }
 
   std::shared_ptr<libpressio_compressor_plugin> clone() override

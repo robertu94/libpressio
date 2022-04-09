@@ -35,7 +35,7 @@ struct caller {
 
 struct caller_ptr {
   caller_ptr(): ptr() {}
-  caller_ptr(caller_ptr const& lhs): ptr(lhs.ptr->clone()) {}
+  caller_ptr(caller_ptr const& lhs): ptr(lhs.ptr? lhs.ptr->clone(): std::unique_ptr<caller>()) {}
   caller_ptr(caller_ptr && lhs) noexcept: ptr(std::move(lhs.ptr)) {}
   caller_ptr& operator=(caller_ptr const& lhs) {
     if(this == &lhs) return *this;

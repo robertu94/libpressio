@@ -50,6 +50,7 @@ public:
   struct pressio_options get_configuration_impl() const override
   {
     struct pressio_options options;
+    options.copy_from(impl->get_configuration());
     set(options, "pressio:thread_safe", static_cast<int32_t>(get_threadsafe(*impl)));
     set(options, "pressio:stability", "experimental");
     return options;
@@ -161,7 +162,11 @@ public:
   const char* prefix() const override { return "arc"; }
 
   void set_name_impl(std::string const& new_name) override {
+    if(new_name != "") {
     impl->set_name(new_name + '/' + impl->prefix());
+    } else {
+    impl->set_name(new_name);
+    }
   }
 
   pressio_options get_metrics_results_impl() const override {

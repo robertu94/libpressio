@@ -67,6 +67,11 @@ struct pressio_options libpressio_compressor_plugin::get_configuration() const {
   if(metrics_plugin)
     metrics_plugin->begin_get_configuration();
   auto ret = get_configuration_impl();
+  set(ret, "pressio:version_epoch", epoch_version());
+  set(ret, "pressio:version_major", major_version());
+  set(ret, "pressio:version_minor", minor_version());
+  set(ret, "pressio:version_patch", patch_version());
+  set(ret, "pressio:version", version());
   if(metrics_plugin) { 
     ret.copy_from(metrics_plugin->get_configuration());
     metrics_plugin->end_get_configuration(ret);
@@ -96,6 +101,12 @@ struct pressio_options libpressio_compressor_plugin::get_documentation() const {
   + stable: conforms to the LibPressio stability guarantees
   + external: indicates that options/configuration returned by this module are controlled by version of the external library that it depends upon and may change at any time without changing the LibPressio version number.
   )");
+  set(ret, "pressio:version_epoch", R"(the epoch version number; this is a libpressio specific value used if the major_version does not accurately reflect backward incompatibility)");
+  set(ret, "pressio:version_major", R"(the major version number)");
+  set(ret, "pressio:version_minor", R"(the minor version number)");
+  set(ret, "pressio:version_patch", R"(the patch version number)");
+  set(ret, "pressio:version", R"(the version string from the compressor)");
+
   set(ret, "pressio:abs", R"(a pointwise absolute error bound
 
   compressors may provide this value without supporting abs=0.
@@ -267,6 +278,11 @@ int libpressio_compressor_plugin::decompress_many_impl(compat::span<const pressi
 
 
 void libpressio_compressor_plugin::set_name(std::string const& new_name) {
+  if (new_name != "") {
     pressio_configurable::set_name(new_name);
     metrics_plugin->set_name(new_name + "/" + metrics_plugin->prefix());
+  } else {
+    pressio_configurable::set_name(new_name);
+    metrics_plugin->set_name(new_name);
+  }
 }

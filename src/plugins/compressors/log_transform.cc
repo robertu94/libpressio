@@ -59,6 +59,7 @@ y[0] = log(x[0]);
   }
   pressio_options get_configuration_impl() const override {
     pressio_options opts;
+    opts.copy_from(meta->get_configuration());
     set(opts, "pressio:thread_safe", static_cast<int32_t>(get_threadsafe(*meta)));
     set(opts, "pressio:stability", "experimental");
     return opts;
@@ -77,7 +78,11 @@ y[0] = log(x[0]);
     return ret;
   }
   void set_name_impl(std::string const& new_name) override {
+    if(new_name != "") {
     meta->set_name(new_name + "/" + meta->prefix());
+    } else {
+    meta->set_name(new_name);
+    }
   }
   const char* prefix() const override { return "log_transform"; }
   const char* version() const override { 

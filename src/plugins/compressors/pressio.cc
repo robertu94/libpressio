@@ -49,6 +49,7 @@ public:
   struct pressio_options get_configuration_impl() const override
   {
     struct pressio_options options;
+    options.copy_from(comp->get_configuration());
     set(options, "pressio:thread_safe", static_cast<int32_t>(get_threadsafe(*comp)));
     set(options, "pressio:stability", "experimental");
     return options;
@@ -138,7 +139,11 @@ public:
   }
 
   void set_name_impl(std::string const& name) override {
+    if(name != "") {
     comp->set_name(name + '/' + comp->prefix());
+    } else {
+    comp->set_name(name);
+    }
   }
 
   int major_version() const override { return 0; }

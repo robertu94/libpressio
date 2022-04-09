@@ -32,6 +32,7 @@ class chunking_plugin: public libpressio_compressor_plugin {
     struct pressio_options get_configuration_impl() const override {
       struct pressio_options options;
       int compressor_thread_safety=pressio_thread_safety_single;
+      options.copy_from(compressor->get_configuration());
       compressor->get_configuration().get("pressio:thread_safe", &compressor_thread_safety);
       set(options, "pressio:thread_safe", static_cast<int>(compressor_thread_safety));
       set(options, "pressio:stability", "experimental");
@@ -69,7 +70,11 @@ class chunking_plugin: public libpressio_compressor_plugin {
 
 
     void set_name_impl(std::string const& new_name) override {
+      if(new_name != "") {
       compressor->set_name(new_name + "/" + compressor->prefix());
+      } else {
+      compressor->set_name(new_name);
+      }
     }
 
 

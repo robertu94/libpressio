@@ -26,6 +26,9 @@ class switch_compressor: public libpressio_compressor_plugin {
   }
   pressio_options get_configuration_impl() const override {
     pressio_options opts;
+    if(!compressors.empty()) {
+      opts.copy_from(compressors.at(active_id)->get_configuration());
+    }
     try {
       set(opts, "pressio:thread_safe", static_cast<int32_t>( pressio_configurable::get_threadsafe(*compressors.at(active_id))));
     } catch(std::out_of_range const&) {

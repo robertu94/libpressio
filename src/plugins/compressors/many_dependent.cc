@@ -35,6 +35,7 @@ public:
   struct pressio_options get_configuration_impl() const override
   {
     struct pressio_options options;
+    options.copy_from(compressor->get_configuration());
     set(options, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
     set(options, "pressio:stability", "experimental");
     options.copy_from(manager.get_configuration());
@@ -233,7 +234,11 @@ public:
   const char* prefix() const override { return "many_dependent"; }
 
   void set_name_impl(std::string const& name) override {
+    if(name != "") {
     compressor->set_name(name + "/" + compressor->prefix());
+    } else {
+    compressor->set_name(name );
+    }
     manager.set_name(name);
     subgroups.set_name(name);
   }
