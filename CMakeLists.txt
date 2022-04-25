@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.83.4" LANGUAGES CXX C)
+project(libpressio VERSION "0.84.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -341,6 +341,18 @@ if(LIBPRESSIO_HAS_SZ3)
   )
 target_link_libraries(libpressio PRIVATE SZ3::SZ3)
 endif()
+
+option(LIBPRESSIO_HAS_QoZ "build the QoZ plugin" OFF)
+if(LIBPRESSIO_HAS_QoZ)
+  set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} sz3")
+  find_package(QoZ REQUIRED)
+  target_sources(libpressio
+    PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/qoz.cc
+  )
+target_link_libraries(libpressio PRIVATE QoZ::QoZ)
+endif()
+
 
 option(LIBPRESSIO_HAS_SZ "build the SZ plugin" OFF)
 if(LIBPRESSIO_HAS_SZ)

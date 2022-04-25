@@ -581,7 +581,6 @@ void restore_omp(indexer<3> const& id,  indexer<3> const& binned_storage, indexe
         size_t j = j_s * bins[1];
         size_t i = i_s * bins[0];
         auto value = binned[binned_storage(i_s, j_s, k_s)];
-        for (size_t b_l = 0; b_l < bins[3]; ++b_l) {
           for (size_t b_k = 0; b_k < bins[2]; ++b_k) {
             if (b_k + k < id[2]) {
               for (size_t b_j = 0; b_j < bins[1]; ++b_j) {
@@ -594,7 +593,6 @@ void restore_omp(indexer<3> const& id,  indexer<3> const& binned_storage, indexe
                 }
               }
             }
-          }
         }
       }
     }
