@@ -153,7 +153,7 @@ public:
 
       impl->decompress(&real_input, output);
       if(record_on_decompress) {
-        lineage = sv;
+        lineage = static_cast<std::string>(sv);
       }
     } else {
       return set_error(1, "unsuported version");
