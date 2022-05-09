@@ -32,6 +32,7 @@ class sz_omp: public libpressio_compressor_plugin {
 #if PRESSIO_SZ_VERSION_GREATEREQ(2,1,9,0)
     set(options, "sz_omp:protect_value_range", confparams_cpr->protectValueRange);
 #endif
+    set(options, "sz_omp:nthreads", nthreads);
     set(options, "sz_omp:max_quant_intervals", confparams_cpr->max_quant_intervals);
     set(options, "sz_omp:quantization_intervals", confparams_cpr->quantization_intervals);
     set(options, "sz_omp:sol_id", confparams_cpr->sol_ID);
@@ -56,6 +57,7 @@ class sz_omp: public libpressio_compressor_plugin {
     struct pressio_options options;
     set(options, "pressio:description", R"(SZ is an error bounded lossy compressor that uses prediction 
       based methods to compress data. This is SZ's native multi-threaded compression support)");
+    set(options, "sz_omp:nthreads", "number of threads to use for parallel compression and decompression");
     set(options, "sz_omp:random_access_enabled", "true if SZ was compiled in random access mode");
     set(options, "sz_omp:timecmpr", "true if SZ if SZ is compiled in time based compression mode");
     set(options, "sz_omp:pastri", "true if PASTRI mode was built");
@@ -144,6 +146,7 @@ class sz_omp: public libpressio_compressor_plugin {
     get(options, "sz_omp:pred_threshold", &confparams_cpr->predThreshold);
     get(options, "sz_omp:sz_mode", &confparams_cpr->szMode);
     get(options, "sz_omp:gzip_mode", &confparams_cpr->gzipMode);
+    get(options, "sz_omp:nthreads", &nthreads);
 
     std::string error_bound_mode_str;
     if(get(options, "sz_omp:error_bound_mode_str", &error_bound_mode_str) == pressio_options_key_set) {
@@ -184,11 +187,14 @@ class sz_omp: public libpressio_compressor_plugin {
 
     confparams_cpr->dataType = SZ_FLOAT;
     unsigned char* bytes;
+    auto old_threads = omp_get_num_threads();
+    omp_set_num_threads(nthreads);
     switch(input->num_dimensions()) {
         case 3:
 					bytes = SZ_compress_float_3D_MDQ_openmp(static_cast<float*>(input->data()), r3, r2, r1, static_cast<float>(confparams_cpr->absErrBound), &outSize);
           break;
     }
+    omp_set_num_threads(old_threads);
     confparams_cpr->dataType = old_dtype;
     if(bytes != nullptr) {
       *output = pressio_data::move(pressio_byte_dtype, bytes, 1, &outSize, pressio_data_libc_free_fn, nullptr);
@@ -217,11 +223,14 @@ class sz_omp: public libpressio_compressor_plugin {
     size_t r1 = pressio_data_get_dimension(output, 0);
     size_t r2 = pressio_data_get_dimension(output, 1);
     size_t r3 = pressio_data_get_dimension(output, 2);
+    auto old_threads = omp_get_num_threads();
+    omp_set_num_threads(nthreads);
     switch(output->num_dimensions()) {
       case 3:
 					decompressDataSeries_float_3D_openmp(&output_data, r3, r2, r1, bytes + 1+3+MetaDataByteLength);
           break;
     }
+    omp_set_num_threads(old_threads);
     confparams_cpr->dataType = old_dtype;
     if(output_data != nullptr) {
       *output = pressio_data::move(pressio_float_dtype, output_data, output->dimensions(), pressio_data_libc_free_fn, nullptr);
@@ -245,6 +254,7 @@ class sz_omp: public libpressio_compressor_plugin {
   }
 
   std::shared_ptr<sz_init_handle> init_handle;
+  int32_t nthreads = 1;
 };
 
 static pressio_register sz_omp_register(

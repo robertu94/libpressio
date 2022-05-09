@@ -22,6 +22,7 @@ target_compile_options(libpressio_hdf5_filter PRIVATE
   )
 
 export(TARGETS libpressio_hdf5_filter NAMESPACE libpressio_hdf5_filter:: FILE libpressio_hdf5_filter.cmake)
+install(FILES ./include/libpressio_hdf5_filter.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libpressio)
 install(TARGETS libpressio_hdf5_filter EXPORT libpressio_hdf5_filter
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}

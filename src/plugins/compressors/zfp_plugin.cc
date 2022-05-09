@@ -66,13 +66,12 @@ class zfp_plugin: public libpressio_compressor_plugin {
       set(options, "zfp:omp_chunk_size", zfp_stream_omp_chunk_size(zfp));
       set_type(options, "zfp:precision", pressio_option_uint32_type);
       set_type(options, "zfp:accuracy", pressio_option_double_type);
-      set_type(options, "zfp:rate", pressio_option_double_type);
+      set(options, "zfp:wra", dynamic_wra);
+      set(options, "zfp:rate", dynamic_rate);
       set_type(options, "zfp:type", pressio_option_uint32_type);
       set_type(options, "zfp:dims", pressio_option_uint32_type);
-      set_type(options, "zfp:wra", pressio_option_int32_type);
       set_type(options, "zfp:mode", pressio_option_uint32_type);
       set_type(options, "zfp:reversible", pressio_option_uint32_type);
-      set_type(options, "pressio:lossless", pressio_option_int32_type);
       return options;
     }
 
@@ -89,7 +88,7 @@ class zfp_plugin: public libpressio_compressor_plugin {
       set(options, "zfp:maxprec", "maximum number of bit planes to store");
       set(options, "zfp:minbits", "minimum number of bits to store per block");
       set(options, "zfp:minexp", "minimum floating point bit plane number to store");
-      set(options, "zfp:mode", "a compact encoding of compressor parmeters");
+      set(options, "zfp:mode", "a compact encoding of compressor parameters");
       set(options, "zfp:omp_chunk_size", "OpenMP chunk size used in OpenMP mode");
       set(options, "zfp:omp_threads", "number of OpenMP threads to use in OpenMP mode");
       set(options, "zfp:precision", "The precision specifies how many uncompressed bits per value to store, and indirectly governs the relative error");
@@ -111,16 +110,26 @@ class zfp_plugin: public libpressio_compressor_plugin {
     int set_options_impl(struct pressio_options const& options) override {
       
       //precision, accuracy, and expert mode settings
+      int32_t is_lossless;
       uint32_t mode, precision, reversible; 
       double tolerance, rate; 
       if(get(options, "pressio:abs", &tolerance) == pressio_options_key_set) {
         zfp_stream_set_accuracy(zfp, tolerance);
+      } else if(get(options, "pressio:lossless", &is_lossless) == pressio_options_key_set) {
+        zfp_stream_set_reversible(zfp);
       }
+
       if(get(options, "zfp:mode", &mode) == pressio_options_key_set) {
+        dynamic_rate = compat::nullopt;
+        dynamic_wra = compat::nullopt;
         zfp_stream_set_mode(zfp, mode);
       } else if(get(options, "zfp:precision", &precision) == pressio_options_key_set) {
+        dynamic_rate = compat::nullopt;
+        dynamic_wra = compat::nullopt;
         zfp_stream_set_precision(zfp, precision);
       } else if (get(options, "zfp:accuracy", &tolerance) == pressio_options_key_set) {
+        dynamic_rate = compat::nullopt;
+        dynamic_wra = compat::nullopt;
         zfp_stream_set_accuracy(zfp, tolerance);
       } else if (get(options, "zfp:rate", &rate) == pressio_options_key_set) {
         unsigned int type, dims;
@@ -129,13 +138,28 @@ class zfp_plugin: public libpressio_compressor_plugin {
             get(options, "zfp:type", &type) == pressio_options_key_set &&
             get(options, "zfp:dims", &dims) == pressio_options_key_set &&
             get(options, "zfp:wra", &wra) == pressio_options_key_set) {
+          dynamic_rate = compat::nullopt;
           zfp_stream_set_rate(zfp, rate, (zfp_type)type, dims, wra);
-        } else {
+        } else if(
+            !(get(options, "zfp:type", &type) == pressio_options_key_set ||
+            get(options, "zfp:dims", &dims) == pressio_options_key_set) &&
+            get(options, "zfp:wra", &wra) == pressio_options_key_set)
+           {
+          dynamic_rate = rate;
+          dynamic_wra = wra;
+        } else if(
+            get(options, "zfp:type", &type) == pressio_options_key_set ||
+            get(options, "zfp:dims", &dims) == pressio_options_key_set ||
+            get(options, "zfp:wra", &wra) == pressio_options_key_set)
+           {
           return invalid_rate();
+        } else {
+          dynamic_rate = rate;
         }
       } else if (get(options, "zfp:reversible", &reversible) == pressio_options_key_set || get(options, "pressio:lossless", &reversible) == pressio_options_key_set) { 
         zfp_stream_set_reversible(zfp);
       } else {
+        dynamic_rate = compat::nullopt;
         get(options, "zfp:minbits", &zfp->minbits);
         get(options, "zfp:maxbits", &zfp->maxbits);
         get(options, "zfp:maxprec", &zfp->maxprec);
@@ -181,6 +205,12 @@ class zfp_plugin: public libpressio_compressor_plugin {
       zfp_field* in_field;
       if(int ret = convert_pressio_data_to_field(input, &in_field)) {
         return ret;
+      }
+
+      if(dynamic_rate) {
+        zfp_type type;
+        libpressio_type(input, &type);
+        zfp_stream_set_rate(zfp, dynamic_rate.value(), type, input->normalized_dims().size(), dynamic_wra.value_or(0));
       }
 
       //create compressed data buffer and stream
@@ -365,6 +395,8 @@ class zfp_plugin: public libpressio_compressor_plugin {
     }
     
     zfp_stream* zfp;
+    compat::optional<double> dynamic_rate;
+    compat::optional<int> dynamic_wra;
 };
 
 static pressio_register compressor_zfp_plugin(compressor_plugins(), "zfp", [](){ return compat::make_unique<zfp_plugin>(); });
