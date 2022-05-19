@@ -7,10 +7,12 @@
 namespace libpressio { namespace pressio_ns {
 
   enum class pressio_mode {
-    abs,
-    rel,
-    pw_rel,
-    passthrough
+    abs,        /*absolute error bound emulation*/
+    rel,        /*value-range relative emulation*/
+    pw_rel,     /*point-wise relative emulation*/
+    passthrough,/*do nothing to modify the settings*/
+    forward,    /*when pressio:bound is set, set pressio:bound_name; useful for giving a
+                  consistent name to a setting for applications like z-checker*/
   };
 
   struct compute_value_range {
@@ -41,6 +43,13 @@ public:
         set_type(options, "pressio:rel", pressio_option_double_type);
       }
     }
+    set(options, "pressio:bound_name", bound_name);
+    if(bound_name) {
+      auto status = child.key_status(*bound_name);
+      if(status == pressio_options_key_set || status == pressio_options_key_exists) {
+        set(options, "pressio:bound", child.get(bound_name));
+      }
+    }
     set_type(options, "pressio:reset_mode", pressio_option_bool_type);
 
     return options;
@@ -61,13 +70,33 @@ public:
     set_meta_docs(options, "pressio:compressor", "the underlying compressor to use", comp);
     set(options, "pressio:description", R"(a set of helpers to convert between common error bounds)");
     set(options, "pressio:reset_mode", "reset mode back to none");
+    set(options, "pressio:bound", "forward the bound that is provided to pressio:bound_name");
+    set(options, "pressio:bound_name", "passthrough the bound that is provided");
     return options;
   }
 
 
   int set_options_impl(struct pressio_options const& options) override
   {
+    get(options, "pressio:bound_name", &bound_name);
     get_meta(options, "pressio:compressor", compressor_plugins(), comp_id, comp);
+    if(bound_name && options.key_status(get_name(), "pressio:bound") == pressio_options_key_set) {
+      pressio_options const& child_options = comp->get_options();
+      auto status = child_options.key_status(*bound_name);
+      if(status == pressio_options_key_set || status == pressio_options_key_exists) {
+        pressio_option const& child_option = child_options.get(*bound_name);
+        pressio_option const& bound = options.get("pressio:bound");
+
+        pressio_options new_options;
+        new_options.set(*bound_name, child_option);
+        new_options.cast_set(*bound_name, bound, pressio_conversion_special);
+
+        comp->set_options(new_options);
+        mode= pressio_mode::forward;
+      } else {
+        return set_error(1, "option does not exist: " + *bound_name);
+      }
+    }
     bool reset_mode = false;
     get(options, "pressio:reset_mode", &reset_mode);
     if(reset_mode) {
@@ -93,6 +122,7 @@ public:
     auto child = comp->get_options();
     switch(mode) {
       case pressio_mode::passthrough:
+      case pressio_mode::forward:
         //don't set modify configuration in this mode
         break;
       case pressio_mode::abs:
@@ -168,6 +198,7 @@ private:
 
   pressio_mode mode = pressio_mode::passthrough;
   double target;
+  compat::optional<std::string> bound_name;
   std::string comp_id = "noop";
   pressio_compressor comp = compressor_plugins().build("noop");
 };
