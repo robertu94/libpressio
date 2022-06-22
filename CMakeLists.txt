@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.84.4" LANGUAGES CXX C)
+project(libpressio VERSION "0.85.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -57,6 +57,7 @@ set(LIBPRESSIO_COMPRESSORS "noop")
 add_library(libpressio
   #core implementation
   ./src/pressio.cc
+  ./src/userptr.cc
   ./src/pressio_posix.cc
   ./src/pressio_configurable.cc
   ./src/pressio_versionable.cc
@@ -335,6 +336,7 @@ option(LIBPRESSIO_HAS_SZ3 "build the SZ3 plugin" OFF)
 if(LIBPRESSIO_HAS_SZ3)
   set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} sz3")
   find_package(SZ3 REQUIRED)
+  pkg_search_module(ZSTD IMPORTED_TARGET GLOBAL libzstd)
   target_sources(libpressio
     PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/sz3.cc
@@ -346,6 +348,7 @@ option(LIBPRESSIO_HAS_QoZ "build the QoZ plugin" OFF)
 if(LIBPRESSIO_HAS_QoZ)
   set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} qoz")
   find_package(QoZ REQUIRED)
+  pkg_search_module(ZSTD IMPORTED_TARGET GLOBAL libzstd)
   target_sources(libpressio
     PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/qoz.cc
@@ -462,7 +465,7 @@ endif()
 option(LIBPRESSIO_HAS_NDZIP "build the ndzip plugin" OFF)
 if(LIBPRESSIO_HAS_NDZIP)
   set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} ndzip")
-  find_package(NDZip)
+  find_package(NDZip REQUIRED)
   target_sources(libpressio
     PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/ndzip.cc
@@ -611,13 +614,27 @@ if(USE_INCLUDE_WHAT_YOU_USE)
 endif()
 
 
-export(TARGETS libpressio NAMESPACE LibPressio:: FILE LibPressio.cmake)
-install(TARGETS libpressio EXPORT LibPressioConfig
+install(TARGETS libpressio EXPORT LibPressioTargets
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   )
-install(EXPORT LibPressioConfig NAMESPACE LibPressio:: DESTINATION share/LibPressio/cmake)
+install(EXPORT LibPressioTargets NAMESPACE LibPressio:: DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/LibPressio/)
+include(CMakePackageConfigHelpers)
+configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/LibPressioConfig.cmake.in
+  "${CMAKE_CURRENT_BINARY_DIR}/LibPressioConfig.cmake"
+  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/LibPressio
+)
+write_basic_package_version_file(
+  "${CMAKE_CURRENT_BINARY_DIR}/LibPressioConfigVersion.cmake"
+  VERSION "${PROJECT_VERSION}"
+  COMPATIBILITY AnyNewerVersion
+)
+install(FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/LibPressioConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/LibPressioConfigVersion.cmake"
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/LibPressio
+)
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libpressio)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/pressio_version.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libpressio)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libpressio.pc DESTINATION ${CMAKE_INSTALL_PREFIX}/share/pkgconfig)

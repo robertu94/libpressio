@@ -86,6 +86,17 @@ pressio_options_define_type_impl(float, float)
 pressio_options_define_type_impl(double, double)
 pressio_options_define_type_impl(userptr, void*)
 
+//special case: userptr managed
+void pressio_options_set_userptr_managed(struct pressio_options* options,
+    const char* key,
+    void* value,
+    void* metadata,
+    void(*deleter)(void*, void*),
+    void(*copy)(void**, void**, const void*, const void*)
+    ) {
+  options->set(key, userdata(value, metadata, deleter, copy));
+}
+
 //special case: string -- for memory management
 void pressio_options_set_string(struct pressio_options* options, const char* key, const char* value) { \
   std::string value_tmp = value;

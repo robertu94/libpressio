@@ -110,6 +110,35 @@ pressio_option_define_type(userptr, void*)
 
 /**
   Creates a new pressio_option containing the specified value
+  \param[in] value the value to use to create the object
+  \param[in] metadata to use to manage the allocation of value
+  \param[in] deleter deletes the value
+  \param[in] copy copies the value
+  \returns a pointer to a new pressio option set to value passed in
+ */
+struct pressio_option* pressio_option_new_userptr_managed(
+    void* value,
+    void* metadata,
+    void(*deleter)(void*, void*),
+    void(*copy)(void**, void**, const void*, const void*));
+
+/**
+  Set a pressio_option containing the specified value
+  \param[in] option the option structure to set
+  \param[in] value the value to use to create the object
+  \param[in] metadata to use to manage the allocation of value
+  \param[in] deleter deletes the value
+  \param[in] copy copies the value
+  \returns a pointer to a new pressio option set to value passed in
+ */
+void pressio_option_set_userptr_managed(struct pressio_option* option,
+    void* value,
+    void* metadata,
+    void(*deleter)(void*, void*),
+    void(*copy)(void**, void**, const void*, const void*));
+
+/**
+  Creates a new pressio_option containing the specified value
   \param[in] values the value to use to create the object
   \param[in] size the length of the array
   \returns a pointer to a new pressio option set to value passed in

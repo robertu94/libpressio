@@ -157,7 +157,15 @@ private:
           auto output_data_ptrs = subgroups.get_output_group(outputs, idx);
 
           pressio_options sub_options;
-          sub_options.set(compressor->get_name(), "distributed:mpi_comm", (void*)task_manager.get_subcommunicator());
+          sub_options.set(compressor->get_name(),
+              "distributed:mpi_comm",
+              userdata(
+                (void*)new MPI_Comm(*task_manager.get_subcommunicator()),
+                nullptr,
+                newdelete_deleter<MPI_Comm>(),
+                newdelete_copy<MPI_Comm>()
+                )
+            );
           compressor->set_options(sub_options);
 
           //run the action: either compression or decompression

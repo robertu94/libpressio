@@ -21,13 +21,9 @@ target_compile_options(libpressio_hdf5_filter PRIVATE
   $<$<CONFIG:RelWithDebInfo>: ${NO_OMIT_FRAME_POINTER_FLAG}>
   )
 
-export(TARGETS libpressio_hdf5_filter NAMESPACE libpressio_hdf5_filter:: FILE libpressio_hdf5_filter.cmake)
 install(FILES ./include/libpressio_hdf5_filter.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libpressio)
-install(TARGETS libpressio_hdf5_filter EXPORT libpressio_hdf5_filter
+install(TARGETS libpressio_hdf5_filter EXPORT LibPressioTargets
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   )
-install(EXPORT libpressio_hdf5_filter NAMESPACE libpressio_hdf5_filter:: DESTINATION share/libpressio_hdf5_filter/cmake)
-
-

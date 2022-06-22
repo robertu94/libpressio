@@ -260,6 +260,23 @@ pressio_options_define_type_set(string, const char*)
 pressio_options_define_type_as(string, char*)
 pressio_options_define_type_cast(string, char*)
 
+/**
+  Creates a new pressio_option containing the specified value
+  \param[in] options the options structure to set
+  \param[in] key the value to use to create the object
+  \param[in] value the value to use to create the object
+  \param[in] metadata to use to manage the allocation of value
+  \param[in] deleter deletes the value
+  \param[in] copy copies the value
+  \returns a pointer to a new pressio option set to value passed in
+ */
+void pressio_options_set_userptr_managed(struct pressio_options* options,
+    const char* key,
+    void* value,
+    void* metadata,
+    void(*deleter)(void*, void*),
+    void(*copy)(void**, void**, const void*, const void*));
+
 //special case strings -- to also pass/get length information
 /** Sets an particular key in an options structure with the given key to a value
  \param[in] options the options structure to modify

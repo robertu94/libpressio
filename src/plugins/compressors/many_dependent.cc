@@ -108,7 +108,13 @@ public:
           std::vector<pressio_data> output_data;
           auto index = std::get<0>(request);
           auto request_options = std::move(std::get<1>(request));
-          request_options.set(compressor->get_name(), "distributed:mpi_comm", (void*)task_manager.get_subcommunicator());
+          request_options.set(compressor->get_name(), "distributed:mpi_comm", 
+              userdata(
+                (void*)new MPI_Comm(*task_manager.get_subcommunicator()),
+                nullptr,
+                newdelete_deleter<MPI_Comm>(),
+                newdelete_copy<MPI_Comm>()
+                ));
 
           if(compressor->set_options(request_options)) {
             return response_t{index, pressio_options{}, output_data, compressor->error_code(), compressor->error_msg()};

@@ -413,7 +413,10 @@ struct hdf5_io: public libpressio_io_plugin {
     }
 #if defined(H5_HAVE_PARALLEL) && H5_HAVE_PARALLEL
     get(options, "hdf5:use_parallel", &use_parallel);
-    get(options, "hdf5:mpi_comm", (void**)(&comm));
+    MPI_Comm* tmp_comm;
+    if(get(options, "hdf5:mpi_comm", (void**)(&tmp_comm)) == pressio_options_key_set) {
+      comm = *tmp_comm;
+    }
 #endif
     return 0;
   }
@@ -450,7 +453,7 @@ struct hdf5_io: public libpressio_io_plugin {
     set(opts, "hdf5:file_extent", to_uint64v(file_extent));
 #if defined(H5_HAVE_PARALLEL) && H5_HAVE_PARALLEL
     set(opts, "hdf5:use_parallel", use_parallel);
-    set(opts, "hdf5:mpi_comm", (void*)(comm));
+    set(opts, "hdf5:mpi_comm", (void*)(&comm));
 #endif
     return opts;
   }

@@ -135,7 +135,7 @@ public:
   struct pressio_options get_documentation_impl() const override
   {
     struct pressio_options options;
-    set(options, "pressio:description", R"(SZ3 is a modular compressor framework)");
+    set(options, "pressio:description", R"(QoZ is the evolution of SZ3 a modular compression framework)");
     set(options, "qoz:abs_error_bound", "absolute error bound");
     set(options, "qoz:rel_error_bound", "value range relative error bound");
     set(options, "qoz:psnr_error_bound", "psnr error bound");

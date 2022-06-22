@@ -156,7 +156,7 @@ class pressio_distributed_manager: public pressio_configurable, public pressio_e
   struct pressio_options 	get_options () const override {
     pressio_options opts;
     set(opts, "distributed:root", root);
-    set(opts, "distributed:mpi_comm", (void*)comm);
+    set(opts, "distributed:mpi_comm", (void*)&comm);
     if(max_masters > 1 || max_masters == 0) {
       set(opts, "distributed:n_masters", n_masters);
     }
@@ -174,7 +174,11 @@ class pressio_distributed_manager: public pressio_configurable, public pressio_e
    */
   virtual int	set_options (struct pressio_options const &options) override {
     get(options, "distributed:root", &root);
-    get(options, "distributed:mpi_comm", (void**)&comm);
+    MPI_Comm* tmp_comm;
+    if(get(options, "distributed:mpi_comm", (void**)&tmp_comm) == pressio_options_key_set) {
+      comm = *tmp_comm;
+    }
+
     int size;
     MPI_Comm_size(comm, &size);
 

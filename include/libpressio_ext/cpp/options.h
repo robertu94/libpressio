@@ -10,6 +10,7 @@
 #include <initializer_list>
 #include "pressio_options.h"
 #include "pressio_option.h"
+#include "userptr.h"
 #include "libpressio_ext/cpp/data.h"
 #include "std_compat/string_view.h"
 #include "std_compat/optional.h"
@@ -37,7 +38,7 @@ using option_type = compat::variant<compat::monostate,
       compat::optional<float>,
       compat::optional<double>,
       compat::optional<std::string>,
-      compat::optional<void*>,
+      compat::optional<userdata>,
       compat::optional<std::vector<std::string>>,
       compat::optional<pressio_data>
       >;
@@ -142,9 +143,17 @@ struct pressio_option final {
   /** 
    * \returns returns true if the option holds the current type
    */
-  template <class T, typename std::enable_if<!std::is_same<T,compat::monostate>::value,int>::type = 0>
+  template <class T, typename std::enable_if<!(std::is_same<T,compat::monostate>::value || std::is_same<T,void*>::value),int>::type = 0>
   bool holds_alternative() const {
     return compat::holds_alternative<compat::optional<T>>(option);
+  }
+
+  /** Specialization for the compat::monostate singleton
+   * \returns true if the option has no specified type or value
+   */
+  template <class T, typename std::enable_if<std::is_same<T,void*>::value,int>::type = 0>
+  bool holds_alternative() const {
+    return compat::holds_alternative<compat::optional<userdata>>(option);
   }
 
   /** Specialization for the compat::monostate singleton
@@ -167,7 +176,12 @@ struct pressio_option final {
    * This function has unspecified effects if the option contains no value \see has_value
    * \returns the value contained by the option
    */
-  template <class T>
+  template <class T, typename std::enable_if<std::is_same<T, void*>::value, int>::type = 0>
+  void* get_value() const{
+    return get<userdata>()->get();
+  }
+
+  template <class T, typename std::enable_if<!std::is_same<T, void*>::value, int>::type = 0>
   T const& get_value() const{
     return *get<T>();
   }
@@ -205,7 +219,7 @@ struct pressio_option final {
         case pressio_option_charptr_type:
           return (bool)get<std::string>();
         case pressio_option_userptr_type:
-          return (bool)get<void*>();
+          return (bool)get<userdata>();
         case pressio_option_charptr_array_type:
           return (bool)get<std::vector<std::string>>();
         case pressio_option_data_type:
@@ -237,7 +251,7 @@ struct pressio_option final {
         option = compat::optional<std::string>();
         break;
       case pressio_option_userptr_type:
-        option = compat::optional<void*>();
+        option = compat::optional<userdata>();
         break;
       case pressio_option_bool_type:
         option = compat::optional<bool>();

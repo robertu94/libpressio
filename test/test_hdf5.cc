@@ -168,6 +168,7 @@ TEST_F(PressioIOHDFTests, partial_read_write) {
   }
   ASSERT_EQ(io->write(partial_data), 0);
   pressio_data_free(partial_data);
+  pressio_data_free(data);
 
   //read back the entire dataset
   pressio_data* after_change = pressio_io_data_path_h5read(test_file, "partial");
@@ -183,4 +184,5 @@ TEST_F(PressioIOHDFTests, partial_read_write) {
 
     EXPECT_EQ(actual, expected);
   }
+  pressio_data_free(after_change);
 }

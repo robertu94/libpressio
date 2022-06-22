@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include "libpressio_ext/cpp/dtype.h"
 #include "pressio_option.h"
+#include "libpressio_ext/cpp/userptr.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/printers.h"
 #include "std_compat/std_compat.h"
@@ -126,6 +127,23 @@ pressio_option_define_type_impl(float, float)
 pressio_option_define_type_impl(double, double)
 pressio_option_define_type_impl(userptr, void*)
 
+//special case userptr managed
+struct pressio_option* pressio_option_new_userptr_managed(
+    void* value,
+    void* metadata,
+    void(*deleter)(void*, void*),
+    void(*copy)(void**, void**, const void*, const void*)) {
+  return new pressio_option(userdata(value, metadata, deleter, copy));
+}
+
+//special case userptr managed
+void pressio_option_set_userptr_managed(struct pressio_option* option,
+    void* value,
+    void* metadata,
+    void(*deleter)(void*, void*),
+    void(*copy)(void**, void**, const void*, const void*)) {
+  option->set(userdata(value, metadata, deleter, copy));
+}
 
 //special case string
 const char* pressio_option_get_string(struct pressio_option const* option) {
@@ -195,7 +213,7 @@ pressio_option_type pressio_option::type() const {
   else if (holds_alternative<uint64_t>()) return pressio_option_uint64_type;
   else if (holds_alternative<double>()) return pressio_option_double_type;
   else if (holds_alternative<float>()) return pressio_option_float_type;
-  else if (holds_alternative<void*>()) return pressio_option_userptr_type;
+  else if (holds_alternative<userdata>()) return pressio_option_userptr_type;
   else if (holds_alternative<std::vector<std::string>>()) return pressio_option_charptr_array_type;
   else if (holds_alternative<pressio_data>()) return pressio_option_data_type;
   else return pressio_option_unset_type;

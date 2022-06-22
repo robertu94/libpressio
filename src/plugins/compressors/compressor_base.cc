@@ -64,16 +64,18 @@ int libpressio_compressor_plugin::check_options(struct pressio_options const& op
 }
 
 struct pressio_options libpressio_compressor_plugin::get_configuration() const {
-  if(metrics_plugin)
+  pressio_options ret;
+  if(metrics_plugin){
+    ret.copy_from(metrics_plugin->get_configuration());
     metrics_plugin->begin_get_configuration();
-  auto ret = get_configuration_impl();
+  }
+  ret.copy_from(get_configuration_impl());
   set(ret, "pressio:version_epoch", epoch_version());
   set(ret, "pressio:version_major", major_version());
   set(ret, "pressio:version_minor", minor_version());
   set(ret, "pressio:version_patch", patch_version());
   set(ret, "pressio:version", version());
   if(metrics_plugin) { 
-    ret.copy_from(metrics_plugin->get_configuration());
     metrics_plugin->end_get_configuration(ret);
   }
   return ret;

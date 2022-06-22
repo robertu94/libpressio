@@ -184,7 +184,7 @@ operator<<(std::basic_ostream<CharT, Traits>& out, pressio_option const& option)
       case pressio_option_charptr_type:
         return out << "\"" << option.get_value<std::string>() << "\"";
       case pressio_option_userptr_type:
-        return out << option.get_value<void*>();
+        return out << option.get_value<userdata>();
       case pressio_option_charptr_array_type:
         {
           auto const& values = option.get_value<std::vector<std::string>>();

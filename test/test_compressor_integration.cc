@@ -6,6 +6,10 @@
 
 std::set<std::tuple<std::string, std::string>> skip_list {
   {"SZauto", "3d float zeros"},
+  {"qoz", "1d float"},
+  {"qoz", "1d int"},
+  {"qoz", "3d int"},
+  {"qoz", "3d float zeros"},
 };
 
 template <class Func>

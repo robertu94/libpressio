@@ -41,6 +41,12 @@ class fpzip_plugin: public libpressio_compressor_plugin {
     set(options, "fpzip:data_model", "the FPZip data model");
     set(options, "fpzip:has_header", "output a header on compression");
     set(options, "fpzip:prec", "the precision to use");
+    if(prec == 0) {
+      set(options, "pressio:lossless", 1);
+    } else {
+      set_type(options, "pressio:lossless", pressio_option_int32_type);
+    }
+
     return options;
   };
 
@@ -61,6 +67,10 @@ class fpzip_plugin: public libpressio_compressor_plugin {
     }
 
     get(options, "fpzip:prec", &prec);
+    int lossless = -1;
+    if(get(options, "pressio:lossless", &lossless) == pressio_options_key_set) {
+      prec = 0;
+    }
     return 0;
   }
 
