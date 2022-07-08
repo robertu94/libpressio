@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.85.0" LANGUAGES CXX C)
+project(libpressio VERSION "0.86.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -330,6 +330,18 @@ if(LIBPRESSIO_HAS_ZFP)
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/zfp_plugin.cc
     )
   target_link_libraries(libpressio PRIVATE zfp::zfp)
+endif()
+
+option(LIBPRESSIO_HAS_CUSZ "build the CUSz plugin" OFF)
+if(LIBPRESSIO_HAS_CUSZ)
+  enable_language(CUDA)
+  set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} cusz")
+  find_package(CUSZ REQUIRED)
+  target_sources(libpressio
+    PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/cusz.cc
+  )
+target_link_libraries(libpressio PRIVATE CUSZ::cusz)
 endif()
 
 option(LIBPRESSIO_HAS_SZ3 "build the SZ3 plugin" OFF)
