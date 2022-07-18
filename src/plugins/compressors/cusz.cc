@@ -229,20 +229,19 @@ public:
     cudaStream_t stream;
     lp_check_cuda_error(cudaStreamCreate(&stream));
     size_t      compressed_len;
-    cusz_framework* framework = new cusz_custom_framework{
-        /*datatype*/to_cusz_datatype(input->dtype()),
-        /*pipeline*/to_cusz_pipelinetype(pipeline_type),
-        /*predictor*/cusz_custom_predictor{to_cusz_predictor_type(predictor_type), predictor_anchor, predictor_nondestructive},
-        /*quantization*/cusz_custom_quantization{quantization_radius, quantization_delayed},
-        /*codec*/cusz_custom_codec{to_cusz_codec_type(codec_type), codec_variable_length, codec_presumed_density},
-        /*huffman_codec*/cusz_custom_huffman_codec{to_cusz_booktype(huffman_codec_booktype), to_cusz_execution_type(huffman_execution_type), to_cusz_coding_type(huffman_coding), huffman_booklen, huffman_coarse_pardeg}
-    };
+    auto framework = compat::make_unique<cusz_custom_framework>();
+    framework->datatype = to_cusz_datatype(input->dtype());
+    framework->pipeline = to_cusz_pipelinetype(pipeline_type);
+    framework->predictor = cusz_custom_predictor{to_cusz_predictor_type(predictor_type), predictor_anchor, predictor_nondestructive};
+    framework->quantization = cusz_custom_quantization{quantization_radius, quantization_delayed};
+    framework->codec = cusz_custom_codec{to_cusz_codec_type(codec_type), codec_variable_length, codec_presumed_density};
+    framework->huffman = cusz_custom_huffman_codec{to_cusz_booktype(huffman_codec_booktype), to_cusz_execution_type(huffman_execution_type), to_cusz_coding_type(huffman_coding), huffman_booklen, huffman_coarse_pardeg};
 
     std::vector<size_t> norm_dims = input->normalized_dims();
     norm_dims.resize(4);
     std::replace(norm_dims.begin(), norm_dims.end(), 0, 1);
 
-    cusz_compressor* comp       = cusz_create(framework, to_cusz_datatype(input->dtype()));
+    cusz_compressor* comp       = cusz_create(framework.get(), to_cusz_datatype(input->dtype()));
     cusz_config*     config     = new cusz_config{err_bnd, to_cusz_mode(eb_mode)};
     cusz_len         uncomp_len = cusz_len{{norm_dims.at(0)}, {norm_dims.at(1)}, {norm_dims.at(2)}, {norm_dims.at(3)}, cusz_len_factor};
     auto ec = cusz_compress(
@@ -283,14 +282,13 @@ public:
     lp_check_cuda_error(cudaMalloc(&d_decompressed, output->size_in_bytes()));
     lp_check_cuda_error(cudaMemcpy(d_compressed, static_cast<uint8_t*>(input->data()) + sizeof(cusz_header), input->size_in_bytes() - sizeof(cusz_header), cudaMemcpyHostToDevice));
 
-    cusz_framework* framework = new cusz_custom_framework{
-        /*datatype*/to_cusz_datatype(output->dtype()),
-        /*pipeline*/to_cusz_pipelinetype(pipeline_type),
-        /*predictor*/cusz_custom_predictor{to_cusz_predictor_type(predictor_type), predictor_anchor, predictor_nondestructive},
-        /*quantization*/cusz_custom_quantization{quantization_radius, quantization_delayed},
-        /*codec*/cusz_custom_codec{to_cusz_codec_type(codec_type), codec_variable_length, codec_presumed_density},
-        /*huffman_codec*/cusz_custom_huffman_codec{to_cusz_booktype(huffman_codec_booktype), to_cusz_execution_type(huffman_execution_type), to_cusz_coding_type(huffman_coding), huffman_booklen, huffman_coarse_pardeg}
-    };
+    auto framework =  compat::make_unique<cusz_custom_framework>();
+    framework->datatype = to_cusz_datatype(input->dtype());
+    framework->pipeline = to_cusz_pipelinetype(pipeline_type);
+    framework->predictor = cusz_custom_predictor{to_cusz_predictor_type(predictor_type), predictor_anchor, predictor_nondestructive};
+    framework->quantization = cusz_custom_quantization{quantization_radius, quantization_delayed};
+    framework->codec = cusz_custom_codec{to_cusz_codec_type(codec_type), codec_variable_length, codec_presumed_density};
+    framework->huffman = cusz_custom_huffman_codec{to_cusz_booktype(huffman_codec_booktype), to_cusz_execution_type(huffman_execution_type), to_cusz_coding_type(huffman_coding), huffman_booklen, huffman_coarse_pardeg};
 
     std::vector<size_t> norm_dims = output->normalized_dims();
     norm_dims.resize(4);
@@ -298,7 +296,7 @@ public:
 
     cusz_header header;
     memcpy(&header, input->data(), sizeof(cusz_header));
-    cusz_compressor* comp       = cusz_create(framework, to_cusz_datatype(output->dtype()));
+    cusz_compressor* comp       = cusz_create(framework.get(), to_cusz_datatype(output->dtype()));
     cusz_len         decomp_len = cusz_len{{norm_dims.at(0)}, {norm_dims.at(1)}, {norm_dims.at(2)}, {norm_dims.at(3)}, cusz_len_factor};
 
     auto ec = cusz_decompress(
