@@ -72,8 +72,7 @@ TEST(hdffilter, filter_runs) {
 
     const char* compressor_id = "sz";
     pressio_options options {
-        {"sz:abs_err_bound", 1e-4},
-        {"sz:error_bound_mode_str", "abs"},
+        {"pressio:abs", 1e-4},
     };
 
     if(H5Pset_libpressio(dcpl, compressor_id, &options) < 0) {

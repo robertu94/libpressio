@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.86.2" LANGUAGES CXX C)
+project(libpressio VERSION "0.86.3" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -607,6 +607,13 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/libpressio_cxx.pc
   @ONLY
   )
+if(LIBPRESSIO_HAS_HDF)
+  configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/libpressio_hdf5.pc.in
+  ${CMAKE_CURRENT_BINARY_DIR}/libpressio_hdf5.pc
+  @ONLY
+  )
+endif()
 target_sources(libpressio
   PRIVATE
   ${CMAKE_CURRENT_BINARY_DIR}/include/pressio_version.h
@@ -652,6 +659,9 @@ install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libpressio)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/pressio_version.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libpressio)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libpressio.pc DESTINATION ${CMAKE_INSTALL_PREFIX}/share/pkgconfig)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libpressio_cxx.pc DESTINATION ${CMAKE_INSTALL_PREFIX}/share/pkgconfig)
+if(LIBPRESSIO_HAS_HDF)
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libpressio_hdf5.pc DESTINATION ${CMAKE_INSTALL_PREFIX}/share/pkgconfig)
+endif()
 
 if(BUILD_TESTING)
   add_subdirectory(test)

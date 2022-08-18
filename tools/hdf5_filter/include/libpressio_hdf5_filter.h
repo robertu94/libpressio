@@ -1,4 +1,5 @@
 #include <H5PLextern.h>
+#include <pressio_options.h>
 
 #ifdef __cplusplus
 extern "C" {

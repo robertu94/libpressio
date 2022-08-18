@@ -1,0 +1,9 @@
+includedir=@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_INCLUDEDIR@/libpressio
+libdir=@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_LIBDIR@
+
+Name: Libpressio HDF5 Filter
+Description: An HDF5 filter that abstracts between different pressio compressors
+Version: @PROJECT_VERSION@
+Cflags: -I${includedir}
+Libs: -L${libdir} -llibpressio_hdf5_filter
+Requires: std_compat libpressio
