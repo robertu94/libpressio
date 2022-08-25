@@ -6,6 +6,10 @@ add_library(libpressio_hdf5_filter
 target_link_libraries(libpressio_hdf5_filter PUBLIC ${HDF5_C_LIBRARIES})
 target_include_directories(libpressio_hdf5_filter PUBLIC ${HDF5_C_INCLUDE_DIRS})
 target_compile_definitions(libpressio_hdf5_filter PUBLIC ${HDF5_C_DEFINITIONS})
+if(${HDF5_IS_PARALLEL})
+  find_package(MPI REQUIRED)
+  target_link_libraries(libpressio_hdf5_filter PUBLIC MPI::MPI_CXX)
+endif()
 target_link_libraries(libpressio_hdf5_filter PRIVATE
   libpressio
   nlohmann_json::nlohmann_json

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.86.3" LANGUAGES CXX C)
+project(libpressio VERSION "0.86.4" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -168,6 +168,7 @@ libpressio_optional_component(switch "build the switch comprssor plugin" /compre
 libpressio_optional_component(transpose "build the transpose compressor plugin" /compressors/transpose.cc)
 libpressio_optional_component(print_options "print the options passed to set_options" /metrics/print_options.cc)
 libpressio_optional_component(data_gap "compute the data_gap" /metrics/data_gap.cc)
+libpressio_optional_component(clipping "compute the number of values that exceed an absolute error bound" /metrics/clipping.cc)
 set(roibin_sources /compressors/roibin.cc /compressors/binning.cc)
 libpressio_optional_component(roibin "build the roibin metacompressor" "${roibin_sources}")
 
@@ -468,6 +469,10 @@ if(LIBPRESSIO_HAS_HDF)
   target_link_libraries(libpressio PRIVATE ${HDF5_C_LIBRARIES})
   target_include_directories(libpressio PRIVATE ${HDF5_C_INCLUDE_DIRS})
   target_compile_definitions(libpressio PRIVATE ${HDF5_C_DEFINITIONS})
+  if(${HDF5_IS_PARALLEL})
+    find_package(MPI REQUIRED)
+    target_link_libraries(libpressio PRIVATE MPI::MPI_CXX)
+  endif()
   target_sources(libpressio
     PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/io/hdf5.cc
