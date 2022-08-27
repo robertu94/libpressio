@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.86.4" LANGUAGES CXX C)
+project(libpressio VERSION "0.86.5" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -169,6 +169,7 @@ libpressio_optional_component(transpose "build the transpose compressor plugin" 
 libpressio_optional_component(print_options "print the options passed to set_options" /metrics/print_options.cc)
 libpressio_optional_component(data_gap "compute the data_gap" /metrics/data_gap.cc)
 libpressio_optional_component(clipping "compute the number of values that exceed an absolute error bound" /metrics/clipping.cc)
+libpressio_optional_component(write_debug_inputs "metric that writes output buffers for testing" /metrics/write_debug_inputs.cc)
 set(roibin_sources /compressors/roibin.cc /compressors/binning.cc)
 libpressio_optional_component(roibin "build the roibin metacompressor" "${roibin_sources}")
 

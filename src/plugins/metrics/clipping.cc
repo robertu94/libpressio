@@ -64,6 +64,8 @@ class clipping_plugin : public libpressio_metrics_plugin {
     pressio_options opt;
     set(opt, "pressio:description", "measures the number of values that exceed an absolute threshold");
     set(opt, "clipping:abs", "threshold for error");
+    set(opt, "pressio:abs", "threshold for error");
+    set(opt, "clipping:clips", "the number of clips that occur");
     return opt;
   }
 

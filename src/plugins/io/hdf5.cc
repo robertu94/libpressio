@@ -526,7 +526,7 @@ struct hdf5_io: public libpressio_io_plugin {
   }
 
   std::string filename;
-  std::string dataset_name;
+  std::string dataset_name = "dataset";
   std::vector<hsize_t> file_block, file_start, file_count, file_stride, file_extent;
 #if defined(H5_HAVE_PARALLEL) && H5_HAVE_PARALLEL
   int use_parallel = false;
