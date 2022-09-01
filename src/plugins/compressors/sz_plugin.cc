@@ -143,6 +143,7 @@ class sz_plugin: public libpressio_compressor_plugin {
     set(options, "sz:user_params", "arguments passed to the application specific mode of SZ. Use in conjunction with sz:app");
     set(options, "sz:protect_value_range", "should the value range be preserved during compression");
     set(options, "sz:constant_flag", "true if constant mode was used");
+    set(options, "sz:pre_encoding_size", "size of SZ compressed data prior to the final lossless encoding");
     return options;
   }
 
@@ -408,6 +409,9 @@ class sz_plugin: public libpressio_compressor_plugin {
 #endif
 #if PRESSIO_SZ_VERSION_GREATEREQ(2,1,12,3)
     set(sz_metrics, "sz:quantization_intervals", sz_stat.quantization_intervals);
+#endif
+#if PRESSIO_SZ_VERSION_GREATEREQ(2,1,12,4)
+    set(sz_metrics, "sz:pre_encoding_size", sz_stat.pre_encoding_size);
 #endif
 #endif
     return sz_metrics;
