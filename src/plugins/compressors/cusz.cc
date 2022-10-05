@@ -283,7 +283,7 @@ public:
     lp_check_cuda_error(cudaMemcpy(d_compressed, static_cast<uint8_t*>(input->data()) + sizeof(cusz_header), input->size_in_bytes() - sizeof(cusz_header), cudaMemcpyHostToDevice));
 
     auto framework =  compat::make_unique<cusz_custom_framework>();
-    framework->datatype = to_cusz_datatype(input->dtype());
+    framework->datatype = to_cusz_datatype(output->dtype());
     framework->pipeline = to_cusz_pipelinetype(pipeline_type);
     framework->predictor = cusz_custom_predictor{to_cusz_predictor_type(predictor_type), predictor_anchor, predictor_nondestructive};
     framework->quantization = cusz_custom_quantization{quantization_radius, quantization_delayed};
