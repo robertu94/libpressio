@@ -59,7 +59,7 @@ public:
   {
     struct pressio_options options;
     options.copy_from(comp->get_configuration());
-    set(options, "pressio:thread_safe", static_cast<int32_t>(get_threadsafe(*comp)));
+    set(options, "pressio:thread_safe", get_threadsafe(*comp));
     set(options, "pressio:stability", "experimental");
     return options;
   }

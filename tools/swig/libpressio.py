@@ -4,7 +4,13 @@ from numcodecs.abc import Codec
 from numcodecs.compat import ndarray_copy
 if pressio.LIBPRESSIO_HAS_MPI4PY:
     from mpi4py import MPI
+import ctypes
 
+try:
+    lib = ctypes.cdll.LoadLibrary("liblibpressio_meta.so")
+    lib.libpressio_register_all()
+except OSError:
+    pass
 
 def supported_io():
     """returns the list of valid io modules"""

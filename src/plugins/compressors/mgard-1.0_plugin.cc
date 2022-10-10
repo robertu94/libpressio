@@ -380,7 +380,7 @@ public:
   struct pressio_options get_configuration_impl() const override
   {
     struct pressio_options options;
-    set(options, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_single));
+    set(options, "pressio:thread_safe", pressio_thread_safety_single);
     set(options, "pressio:stability", "experimental");
     set(options, "mgard:execution_mode_str", std::vector<std::string>{"cpu", "gpu", "cuda"});
     set(options, "mgard:cuda:lossless_str", std::vector<std::string>{"cpu_lossless", "gpu_huffman", "gpu_huffman_lz4"});

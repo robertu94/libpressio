@@ -134,6 +134,10 @@ operator<<(std::basic_ostream<CharT, Traits>& out, enum pressio_option_type type
         return out << "bool";
       case pressio_option_charptr_type:
         return out << "char*";
+      case pressio_option_threadsafety_type:
+        return out << "threadsafety";
+      case pressio_option_dtype_type:
+        return out << "dtype";
       case pressio_option_userptr_type:
         return out << "void*";
       case pressio_option_charptr_array_type:
@@ -196,6 +200,10 @@ operator<<(std::basic_ostream<CharT, Traits>& out, pressio_option const& option)
         }
       case pressio_option_data_type:
         return out << option.get_value<pressio_data>();
+      case pressio_option_threadsafety_type:
+        return out << option.get_value<pressio_thread_safety>();
+      case pressio_option_dtype_type:
+        return out << option.get_value<pressio_dtype>();
       case pressio_option_unset_type:
         return out << "<empty>";
       default:

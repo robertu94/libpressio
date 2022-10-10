@@ -57,7 +57,7 @@ public:
   struct pressio_options get_configuration_impl() const override
   {
     struct pressio_options options;
-    set(options, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+    set(options, "pressio:thread_safe", pressio_thread_safety_multiple);
     set(options, "pressio:stability", "experimental");
     set(options, "szx:err_bound_mode_str", keys(ERR_MODES));
     set(options, "szx:fast_mode_str", keys(COMP_MODES));
@@ -109,8 +109,7 @@ public:
   {
     try {
     size_t outsize = 0;
-    auto dims = input->normalized_dims();
-    dims.resize(5);
+    auto dims = input->normalized_dims(5);
     unsigned char* bytes = SZ_fast_compress_args(
         fastMode,
         to_szx_type(input->dtype()),
@@ -140,8 +139,7 @@ public:
                       struct pressio_data* output) override
   {
     try {
-    auto dims = output->normalized_dims();
-    dims.resize(5);
+    auto dims = output->normalized_dims(5);
     void* output_bytes = SZ_fast_decompress(
         fastMode,
         to_szx_type(output->dtype()),

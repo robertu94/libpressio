@@ -51,7 +51,7 @@ public:
   {
     struct pressio_options options;
     set(options, "cusz:mode_str", std::vector<std::string>{"abs", "r2r"});
-    set(options, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+    set(options, "pressio:thread_safe", pressio_thread_safety_multiple);
     set(options, "pressio:stability", "experimental");
     return options;
   }
@@ -237,9 +237,7 @@ public:
     framework->codec = cusz_custom_codec{to_cusz_codec_type(codec_type), codec_variable_length, codec_presumed_density};
     framework->huffman = cusz_custom_huffman_codec{to_cusz_booktype(huffman_codec_booktype), to_cusz_execution_type(huffman_execution_type), to_cusz_coding_type(huffman_coding), huffman_booklen, huffman_coarse_pardeg};
 
-    std::vector<size_t> norm_dims = input->normalized_dims();
-    norm_dims.resize(4);
-    std::replace(norm_dims.begin(), norm_dims.end(), 0, 1);
+    std::vector<size_t> norm_dims = input->normalized_dims(4, 1);
 
     cusz_compressor* comp       = cusz_create(framework.get(), to_cusz_datatype(input->dtype()));
     cusz_config*     config     = new cusz_config{err_bnd, to_cusz_mode(eb_mode)};
@@ -290,9 +288,7 @@ public:
     framework->codec = cusz_custom_codec{to_cusz_codec_type(codec_type), codec_variable_length, codec_presumed_density};
     framework->huffman = cusz_custom_huffman_codec{to_cusz_booktype(huffman_codec_booktype), to_cusz_execution_type(huffman_execution_type), to_cusz_coding_type(huffman_coding), huffman_booklen, huffman_coarse_pardeg};
 
-    std::vector<size_t> norm_dims = output->normalized_dims();
-    norm_dims.resize(4);
-    std::replace(norm_dims.begin(), norm_dims.end(), 0, 1);
+    std::vector<size_t> norm_dims = output->normalized_dims(4,1);
 
     cusz_header header;
     memcpy(&header, input->data(), sizeof(cusz_header));

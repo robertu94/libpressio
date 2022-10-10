@@ -216,7 +216,7 @@ TEST_P(PressioLaunchIntegrationConfigOnly, IsDocumented) {
 void test_has_configuration(pressio_configurable& c) {
   auto config = c.get_configuration();
 
-  int32_t thread_safe = 9;
+  pressio_thread_safety thread_safe;
   std::string stability;
   EXPECT_EQ(config.key_status("pressio:thread_safe"), pressio_options_key_set) << config;
   EXPECT_EQ(config.key_status("pressio:stability"), pressio_options_key_set) << config;

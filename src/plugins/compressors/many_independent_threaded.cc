@@ -42,7 +42,7 @@ public:
     for (auto& compressor : compressors) {
       options.copy_from(compressor->get_configuration());
     }
-    set(options, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+    set(options, "pressio:thread_safe", pressio_thread_safety_multiple);
     set(options, "pressio:stability", "experimental");
     return options;
   }
@@ -223,7 +223,7 @@ private:
       if(collect_metrics) {
 #pragma omp critical
         {
-          tmp_metrics_results.copy_from(thread_local_compressor->get_metrics_results());
+          tmp_metrics_results.copy_from(thread_local_compressor->get_metrics_results(), /*ignore_empty*/true);
         }
       }
 

@@ -15,10 +15,6 @@
 namespace  libpressio { namespace fpzip { 
 namespace {
   constexpr int INVALID_TYPE = 8;
-    auto check_dim = [](size_t dim) {
-      if(dim == 0) return 1ul;
-      else return dim;
-    };
 }
 
 class fpzip_plugin: public libpressio_compressor_plugin {
@@ -52,7 +48,7 @@ class fpzip_plugin: public libpressio_compressor_plugin {
 
   struct pressio_options 	get_configuration_impl () const override {
     pressio_options options;
-    set(options, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+    set(options, "pressio:thread_safe", pressio_thread_safety_multiple);
     set(options, "pressio:stability", "stable");
     set(options, "fpzip:codec_version", fpzip_codec_version);
     set(options, "fpzip:library_version", fpzip_library_version);
@@ -93,14 +89,11 @@ class fpzip_plugin: public libpressio_compressor_plugin {
     );
 
 
-    fpz->nx = check_dim(input->get_dimension(0));
-    fpz->ny = check_dim(input->get_dimension(1));
-    fpz->nz = check_dim(input->get_dimension(2));
-    int highest = check_dim(input->get_dimension(3));
-    for (size_t i = 4; i < input->num_dimensions(); ++i) {
-      highest *= check_dim(input->get_dimension(i));
-    }
-    fpz->nf = static_cast<int>(highest);
+    auto norm_dim = input->normalized_dims(4,1);
+    fpz->nx = static_cast<int>(norm_dim[0]);
+    fpz->ny = static_cast<int>(norm_dim[1]);
+    fpz->nz = static_cast<int>(norm_dim[2]);
+    fpz->nf = static_cast<int>(norm_dim[3]);
     fpz->type = type;
     fpz->prec = prec;
 
@@ -131,14 +124,11 @@ class fpzip_plugin: public libpressio_compressor_plugin {
     if(has_header) {
       fpzip_read_header(fpz);
     } else {
-      fpz->nx = check_dim(output->get_dimension(0));
-      fpz->ny = check_dim(output->get_dimension(1));
-      fpz->nz = check_dim(output->get_dimension(2));
-      int highest = check_dim(output->get_dimension(3));
-      for (size_t i = 4; i < output->num_dimensions(); ++i) {
-        highest *= check_dim(output->get_dimension(i));
-      }
-      fpz->nf = highest;
+      auto norm_dim = output->normalized_dims(4,1);
+      fpz->nx = static_cast<int>(norm_dim[0]);
+      fpz->ny = static_cast<int>(norm_dim[1]);
+      fpz->nz = static_cast<int>(norm_dim[2]);
+      fpz->nf = static_cast<int>(norm_dim[3]);
       fpz->type = type;
       fpz->prec = prec;
     }

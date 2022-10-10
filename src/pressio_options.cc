@@ -84,6 +84,8 @@ pressio_options_define_type_impl(uinteger, uint32_t)
 pressio_options_define_type_impl(integer, int32_t)
 pressio_options_define_type_impl(float, float)
 pressio_options_define_type_impl(double, double)
+pressio_options_define_type_impl(dtype, enum pressio_dtype)
+pressio_options_define_type_impl(threadsafety, enum pressio_thread_safety)
 pressio_options_define_type_impl(userptr, void*)
 
 //special case: userptr managed
