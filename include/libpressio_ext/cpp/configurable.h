@@ -313,7 +313,7 @@ class pressio_configurable {
    * \returns that returns the thread_safe configuration parameter
    */
   static pressio_thread_safety get_threadsafe(pressio_configurable const& c) {
-    int32_t thread_safe = pressio_thread_safety_single;
+    pressio_thread_safety thread_safe = pressio_thread_safety_single;
     c.get_configuration().get("pressio:thread_safe", &thread_safe);
     return pressio_thread_safety(thread_safe);
   }

@@ -183,7 +183,7 @@ public:
     struct pressio_options options;
     options.copy_from(abs_comp->get_configuration());
     options.copy_from(signs_comp->get_configuration());
-    set(options, "pressio:thread_safe", std::min(static_cast<int32_t>(get_threadsafe(*abs_comp)), static_cast<int32_t>(get_threadsafe(*signs_comp))));
+    set(options, "pressio:thread_safe", std::min(get_threadsafe(*abs_comp), get_threadsafe(*signs_comp)));
     set(options, "pressio:stability", "experimental");
     return options;
   }

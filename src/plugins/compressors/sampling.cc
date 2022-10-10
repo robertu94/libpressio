@@ -25,7 +25,7 @@ class sample_compressor_plugin: public libpressio_compressor_plugin {
 
     struct pressio_options get_configuration_impl() const override {
       struct pressio_options options;
-      set(options,"pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+      set(options,"pressio:thread_safe", pressio_thread_safety_multiple);
       set(options,"pressio:stability", "unstable");
       set(options, "sample:mode", std::vector<std::string>{"wr", "wor", "decimate"});
       return options;

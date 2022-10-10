@@ -88,7 +88,7 @@ class bit_grooming_plugin: public libpressio_compressor_plugin {
 
     struct pressio_options get_configuration_impl() const override {
       struct pressio_options options;
-      set(options, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+      set(options, "pressio:thread_safe", pressio_thread_safety_multiple);
       set(options, "pressio:stability", "stable");
       set(options, "bit_grooming:mode", bg_keys(bitgroom_mode_str_to_code));
       set(options, "bit_grooming:error_control_mode", bg_keys(bitgroom_ec_mode_str_to_code));

@@ -25,7 +25,7 @@ public:
     struct pressio_options options;
     options.copy_from(background->get_configuration());
     options.copy_from(roi->get_configuration());
-    set(options, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+    set(options, "pressio:thread_safe", pressio_thread_safety_multiple);
     set(options, "pressio:stability", "experimental");
     return options;
   }

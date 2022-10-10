@@ -75,17 +75,17 @@ void document_compressor(std::ostream& out, std::string const& compressor_id, co
 
     const char* stability = nullptr;
     const char* description=nullptr;
-    int32_t thread_safety = 0;
+    pressio_thread_safety thread_safety = pressio_thread_safety_single;
     pressio_options_get_string(configuration, "/pressio:pressio:stability", &stability);
     pressio_options_get_string(docs, "/pressio:pressio:description", &description);
-    pressio_options_get_integer(configuration, "/pressio:pressio:thread_safe", &thread_safety);
+    pressio_options_get_threadsafety(configuration, "/pressio:pressio:thread_safe", &thread_safety);
 
     //print the id first and version information
     out << "## " << compressor_id << std::endl;
     out << std::endl;
     out << "version: " << pressio_compressor_version(c) << std::endl << std::endl;
     out << "stability: " << std::string(stability, (stability == nullptr)? 0: strlen(stability)) << std::endl << std::endl;
-    out << "thread_safety: " << pressio_thread_safety(thread_safety) << std::endl;
+    out << "thread_safety: " << thread_safety << std::endl;
     out << std::endl;
 
 
@@ -232,16 +232,16 @@ void document_metrics(std::ostream& out, const char* metric, pressio_metrics con
 
     const char* stability = nullptr;
     const char* description=nullptr;
-    int32_t thread_safety = 0;
+    pressio_thread_safety thread_safety = pressio_thread_safety_single;
     pressio_options_get_string(configuration, "/pressio:pressio:stability", &stability);
     pressio_options_get_string(docs, "/pressio:pressio:description", &description);
-    pressio_options_get_integer(configuration, "/pressio:pressio:thread_safe", &thread_safety);
+    pressio_options_get_threadsafety(configuration, "/pressio:pressio:thread_safe", &thread_safety);
 
     //print the id first and version information
     out << "## " << metric << std::endl;
     out << std::endl;
     out << "stability: " << std::string(stability, (stability == nullptr)? 0: strlen(stability)) << std::endl << std::endl;
-    out << "thread_safety: " << pressio_thread_safety(thread_safety) << std::endl;
+    out << "thread_safety: " << thread_safety << std::endl;
     out << std::endl;
 
     //then print the pressio:description entry
@@ -460,16 +460,16 @@ void document_io(std::ostream& out, const char* metric, pressio_io const* c) {
 
     const char* stability = nullptr;
     const char* description=nullptr;
-    int32_t thread_safety = 0;
+    pressio_thread_safety thread_safety = pressio_thread_safety_single;
     pressio_options_get_string(configuration, "/pressio:pressio:stability", &stability);
     pressio_options_get_string(docs, "/pressio:pressio:description", &description);
-    pressio_options_get_integer(configuration, "/pressio:pressio:thread_safe", &thread_safety);
+    pressio_options_get_threadsafety(configuration, "/pressio:pressio:thread_safe", &thread_safety);
 
     //print the id first and version information
     out << "## " << metric << std::endl;
     out << std::endl;
     out << "stability: " << std::string(stability, (stability == nullptr)? 0: strlen(stability)) << std::endl << std::endl;
-    out << "thread_safety: " << pressio_thread_safety(thread_safety) << std::endl;
+    out << "thread_safety: " << thread_safety << std::endl;
     out << std::endl;
 
     //then print the pressio:description entry

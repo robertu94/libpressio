@@ -9,6 +9,7 @@ extern "C" {
  */
 #define LIBPRESSIO_OPTIONS_H
 #include "pressio_dtype.h"
+#include "pressio_compressor.h"
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -70,6 +71,8 @@ enum pressio_option_type {
   /** option is a 64 bit unsigned integer */pressio_option_uint64_type=13,
   /** option is a 64 bit signed integer */pressio_option_int64_type=14,
   /** option is a boolean */pressio_option_bool_type=15,
+  /** option is a pressio_dtype */pressio_option_dtype_type=16,
+  /** option is a threadsafety */pressio_option_threadsafety_type=17,
 };
 
 
@@ -252,6 +255,8 @@ pressio_options_define_type(float, float)
 pressio_options_define_type(double, double)
 pressio_options_define_type(bool, bool)
 pressio_options_define_type(userptr, void*)
+pressio_options_define_type(dtype, enum pressio_dtype)
+pressio_options_define_type(threadsafety, enum pressio_thread_safety)
 pressio_options_define_type(data, struct pressio_data*)
 
 //special case string -- prefer const on get/set

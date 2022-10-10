@@ -127,7 +127,7 @@ public:
   struct pressio_options get_configuration_impl() const override
   {
     struct pressio_options options;
-    set(options, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+    set(options, "pressio:thread_safe", pressio_thread_safety_multiple);
     set(options, "pressio:stability", "experimental");
     set(options, "ndzip:has_mt_cpu", NDZIP_OPENMP_SUPPORT);
     set(options, "ndzip:has_cuda", NDZIP_CUDA_SUPPORT);

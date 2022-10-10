@@ -58,7 +58,7 @@ class sz_plugin: public libpressio_compressor_plugin {
 
   struct pressio_options get_configuration_impl() const override {
     struct pressio_options options;
-    set(options, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_serialized));
+    set(options, "pressio:thread_safe", pressio_thread_safety_serialized);
     set(options, "pressio:stability", "stable");
 #ifdef HAVE_RANDOMACCESS
     set(options, "sz:random_access_enabled", 1u);
@@ -316,8 +316,7 @@ class sz_plugin: public libpressio_compressor_plugin {
 
   int compress_impl(const pressio_data *input, struct pressio_data* output) override {
     compat::shared_lock<compat::shared_mutex> lock(init_handle->sz_init_lock);
-    auto r = input->normalized_dims();
-    r.resize(5);
+    auto r = input->normalized_dims(5,0);
     int status = SZ_NSCS;
     size_t outsize = 0;
     unsigned char* compressed_data = SZ_compress_customize(app.c_str(), user_params,

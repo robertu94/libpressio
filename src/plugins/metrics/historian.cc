@@ -215,7 +215,7 @@ class pressio_historian_metric: public libpressio_metrics_plugin {
   };
   pressio_options get_documentation_impl() const override {
     pressio_options opts;
-    set_meta_docs(opts, "historian:metrics", "what events should trigger a record event", metrics);
+    set_meta_docs(opts, "historian:metrics", "what metrics should be recorded by the metric", metrics);
     set(opts, "pressio:description", "records metrics results after designated events");
     set(opts, "historian:idx", "the current index for this repetition");
     set(opts, "historian:events", "what events should trigger a record event");

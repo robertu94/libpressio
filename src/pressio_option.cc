@@ -125,6 +125,8 @@ pressio_option_define_type_impl(uinteger64, uint64_t)
 pressio_option_define_type_impl(integer64, int64_t)
 pressio_option_define_type_impl(float, float)
 pressio_option_define_type_impl(double, double)
+pressio_option_define_type_impl(dtype, enum pressio_dtype)
+pressio_option_define_type_impl(threadsafety, enum pressio_thread_safety)
 pressio_option_define_type_impl(userptr, void*)
 
 //special case userptr managed
@@ -216,6 +218,8 @@ pressio_option_type pressio_option::type() const {
   else if (holds_alternative<userdata>()) return pressio_option_userptr_type;
   else if (holds_alternative<std::vector<std::string>>()) return pressio_option_charptr_array_type;
   else if (holds_alternative<pressio_data>()) return pressio_option_data_type;
+  else if (holds_alternative<pressio_dtype>()) return pressio_option_dtype_type;
+  else if (holds_alternative<pressio_thread_safety>()) return pressio_option_threadsafety_type;
   else return pressio_option_unset_type;
 }
 
@@ -284,6 +288,31 @@ pressio_option pressio_option::as(const enum pressio_option_type to_type, const 
             else return {};
           case pressio_option_uint64_type:
             if (allow_special(safety) && !s.empty()) return pressio_option(static_cast<uint64_t>(std::stoull(s)));
+            else return {};
+          case pressio_option_threadsafety_type:
+            if (allow_special(safety)) {
+              if (s == "single") return pressio_option(pressio_thread_safety_single);
+              else if (s == "multiple") return pressio_option(pressio_thread_safety_multiple);
+              else if (s == "serialized") return pressio_option(pressio_thread_safety_serialized);
+              else return {};
+            }
+            else return {};
+          case pressio_option_dtype_type:
+            if (allow_special(safety)) {
+              if (s == "int8") return pressio_option(pressio_int8_dtype);
+              else if (s == "uint8") return pressio_option(pressio_uint8_dtype);
+              else if (s == "int16") return pressio_option(pressio_int16_dtype);
+              else if (s == "uint16") return pressio_option(pressio_uint16_dtype);
+              else if (s == "int32") return pressio_option(pressio_int32_dtype);
+              else if (s == "uint32") return pressio_option(pressio_uint32_dtype);
+              else if (s == "int64") return pressio_option(pressio_int64_dtype);
+              else if (s == "uint64") return pressio_option(pressio_uint64_dtype);
+              else if (s == "float") return pressio_option(pressio_float_dtype);
+              else if (s == "double") return pressio_option(pressio_double_dtype);
+              else if (s == "bool") return pressio_option(pressio_bool_dtype);
+              else if (s == "byte") return pressio_option(pressio_byte_dtype);
+              else return {};
+            }
             else return {};
           case pressio_option_charptr_type:
             return s;
@@ -378,6 +407,54 @@ pressio_option pressio_option::as(const enum pressio_option_type to_type, const 
         }
         return {};
       }
+    case pressio_option_threadsafety_type:
+      if(to_type == pressio_option_threadsafety_type) return get_value<pressio_thread_safety>();
+      if(to_type == pressio_option_charptr_type) {
+        switch(get_value<pressio_thread_safety>()) {
+          case pressio_thread_safety_serialized:
+            return pressio_option(std::string("serialized"));
+          case pressio_thread_safety_multiple:
+            return pressio_option(std::string("multiple"));
+          case pressio_thread_safety_single:
+            return pressio_option(std::string("single"));
+          default:
+            return {};
+        }
+      }
+      else return {};
+    case pressio_option_dtype_type:
+      if(to_type == pressio_option_dtype_type) return get_value<pressio_dtype>();
+      if(to_type == pressio_option_charptr_type) {
+        switch(get_value<pressio_dtype>()) {
+          case pressio_bool_dtype:
+            return pressio_option(std::string("bool"));
+          case pressio_byte_dtype:
+            return pressio_option(std::string("byte"));
+          case pressio_float_dtype:
+            return pressio_option(std::string("float"));
+          case pressio_double_dtype:
+            return pressio_option(std::string("double"));
+          case pressio_int8_dtype:
+            return pressio_option(std::string("int8"));
+          case pressio_uint8_dtype:
+            return pressio_option(std::string("uint8"));
+          case pressio_int16_dtype:
+            return pressio_option(std::string("int16"));
+          case pressio_uint16_dtype:
+            return pressio_option(std::string("uint16"));
+          case pressio_int32_dtype:
+            return pressio_option(std::string("int32"));
+          case pressio_uint32_dtype:
+            return pressio_option(std::string("uint32"));
+          case pressio_int64_dtype:
+            return pressio_option(std::string("int64"));
+          case pressio_uint64_dtype:
+            return pressio_option(std::string("uint64"));
+          default:
+            return {};
+        }
+      }
+      else return {};
     case pressio_option_userptr_type:
       if(to_type == pressio_option_userptr_type) return get_value<void*>();
       else return {};

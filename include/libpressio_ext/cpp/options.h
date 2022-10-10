@@ -10,6 +10,7 @@
 #include <initializer_list>
 #include "pressio_options.h"
 #include "pressio_option.h"
+#include "pressio_compressor.h"
 #include "userptr.h"
 #include "libpressio_ext/cpp/data.h"
 #include "std_compat/string_view.h"
@@ -40,7 +41,9 @@ using option_type = compat::variant<compat::monostate,
       compat::optional<std::string>,
       compat::optional<userdata>,
       compat::optional<std::vector<std::string>>,
-      compat::optional<pressio_data>
+      compat::optional<pressio_data>,
+      compat::optional<pressio_dtype>,
+      compat::optional<pressio_thread_safety>
       >;
 
 
@@ -66,6 +69,7 @@ constexpr enum pressio_option_type pressio_type_to_enum() {
     std::is_same<T,const char**>() ? pressio_option_charptr_array_type :
     std::is_same<T,std::vector<std::string>>() ? pressio_option_charptr_array_type :
     std::is_same<T,pressio_data>() ? pressio_option_data_type :
+    std::is_same<T,pressio_dtype>() ? pressio_option_dtype_type :
     pressio_option_userptr_type;
     ;
 }
@@ -84,6 +88,7 @@ struct pressio_option final {
     !std::is_same<T, pressio_conversion_safety>::value &&
     !std::is_same<T, pressio_option>::value &&
     !std::is_same<T, const char*>::value &&
+    !std::is_same<T, void*>::value &&
     !std::is_same<T, compat::monostate>::value
     >::type>
   pressio_option(compat::optional<T> const& value): option(value) {}
@@ -95,6 +100,7 @@ struct pressio_option final {
     !std::is_same<T, pressio_conversion_safety>::value &&
     !std::is_same<T, pressio_option>::value &&
     !std::is_same<T, const char*>::value &&
+    !std::is_same<T, void*>::value &&
     !std::is_same<T, compat::monostate>::value
     >::type>
   pressio_option(compat::optional<T> && value): option(value) {}
@@ -110,6 +116,7 @@ struct pressio_option final {
     >::type>
   pressio_option(T const& value): option(compat::optional<T>(value)) {}
 
+  pressio_option(void* value): option(compat::optional<userdata>(userdata(value))) {}
 
   /** specialization for option to reset the type to hold no type or value
    * \param[in] value the monostate singleton
@@ -224,6 +231,10 @@ struct pressio_option final {
           return (bool)get<std::vector<std::string>>();
         case pressio_option_data_type:
           return (bool)get<pressio_data>();
+        case pressio_option_dtype_type:
+          return (bool)get<pressio_dtype>();
+        case pressio_option_threadsafety_type:
+          return (bool)get<pressio_thread_safety>();
         case pressio_option_unset_type:
         default:
           return false;
@@ -235,9 +246,13 @@ struct pressio_option final {
    * set the option to a new value
    * \param[in] v the value to set the option to
    */
-  template <class T>
+  template <class T, typename std::enable_if<!std::is_same<T, void*>::value, bool>::type = false>
   void set(T v) {
     option = compat::optional<T>(v);
+  }
+
+  void set(void* v) {
+    option = compat::optional<userdata>(userdata(v));
   }
 
   /**
@@ -294,6 +309,12 @@ struct pressio_option final {
         break;
       case pressio_option_data_type:
         option = compat::optional<pressio_data>();
+        break;
+      case pressio_option_threadsafety_type:
+        option = compat::optional<pressio_thread_safety>();
+        break;
+      case pressio_option_dtype_type:
+        option = compat::optional<pressio_dtype>();
         break;
     }
   }
@@ -640,8 +661,8 @@ struct pressio_options final {
    * copies all of the options from o
    * \param[in] o the options to copy from
    */
-  void copy_from(pressio_options const& o) {
-    insert_or_assign(o.begin(), o.end());
+  void copy_from(pressio_options const& o, bool ignore_empty=false) {
+    insert_or_assign(o.begin(), o.end(), ignore_empty);
   }
 
   private:
@@ -693,8 +714,9 @@ struct pressio_options final {
    * \param[in] end the iterator to the end
    */
   template <class InputIt>
-  void insert_or_assign(InputIt begin, InputIt end){
-    std::for_each(begin, end, [this](decltype(options)::const_reference it) {
+  void insert_or_assign(InputIt begin, InputIt end, bool ignore_empty){
+    std::for_each(begin, end, [this, ignore_empty](decltype(options)::const_reference it) {
+        if(ignore_empty && not it.second.has_value()) return;
         options[it.first] = it.second;
     });
   }

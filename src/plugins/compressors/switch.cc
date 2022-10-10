@@ -30,9 +30,9 @@ class switch_compressor: public libpressio_compressor_plugin {
       opts.copy_from(compressors.at(active_id)->get_configuration());
     }
     try {
-      set(opts, "pressio:thread_safe", static_cast<int32_t>( pressio_configurable::get_threadsafe(*compressors.at(active_id))));
+      set(opts, "pressio:thread_safe", pressio_configurable::get_threadsafe(*compressors.at(active_id)));
     } catch(std::out_of_range const&) {
-      set(opts, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_single));
+      set(opts, "pressio:thread_safe", pressio_thread_safety_single);
     }
     set(opts, "pressio:stability", "experimental");
     return opts;

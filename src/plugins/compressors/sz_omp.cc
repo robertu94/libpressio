@@ -86,7 +86,7 @@ class sz_omp: public libpressio_compressor_plugin {
   }
   pressio_options get_configuration_impl() const override {
     pressio_options options;
-    set(options, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_serialized));
+    set(options, "pressio:thread_safe", pressio_thread_safety_serialized);
     set(options, "pressio:stability", "experimental");
 #ifdef HAVE_RANDOMACCESS
     set(options, "sz_omp:random_access_enabled", 1u);

@@ -67,6 +67,12 @@ void to_json(nlohmann::json& j, pressio_option const& option){
       //store them directly
       j = option.get_value<std::vector<std::string>>();
       break;
+    case pressio_option_dtype_type:
+      j["value"] = option.get_value<pressio_dtype>();
+      break;
+    case pressio_option_threadsafety_type:
+      j["value"] = option.get_value<pressio_thread_safety>();
+      break;
     case pressio_option_unset_type:
       j["value"] = nullptr;
       break;
@@ -224,6 +230,12 @@ void from_json(nlohmann::json const& j, pressio_option& option) {
               break;
             case pressio_option_double_type:
               option = double(j.at("value"));
+              break;
+            case pressio_option_dtype_type:
+              option = pressio_dtype(j.at("value"));
+              break;
+            case pressio_option_threadsafety_type:
+              option = pressio_thread_safety(j.at("value"));
               break;
             case pressio_option_charptr_type:
               option = j.at("value").get<std::string>();
