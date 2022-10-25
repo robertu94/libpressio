@@ -507,7 +507,7 @@ namespace serializer {
   int serializer<pressio_options>::bcast(pressio_options& options, int root, MPI_Comm comm) {
     int ret = 0;
     int rank;
-    MPI_Comm_size(comm, &rank);
+    MPI_Comm_rank(comm, &rank);
     std::vector<std::pair<std::string, pressio_option>> options_v;
 
     if(rank == root) {

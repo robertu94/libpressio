@@ -1,4 +1,5 @@
 #include "libpressio_hdf5_filter.h"
+#include "libpressio_hdf5_filter_impl.h"
 #include <std_compat/span.h>
 #include <libpressio_ext/cpp/libpressio.h>
 #include <libpressio_ext/cpp/json.h>
@@ -6,13 +7,6 @@
 #include <vector>
 #include <string>
 #include <endian.h>
-
-struct compression_options {
-  pressio_dtype dtype;
-  std::vector<size_t> dims;
-  std::string compressor_id;
-  pressio_options options;
-};
 
 compression_options get_options_from_cd_values(size_t cd_nelmts, const unsigned int* cd_values) {
   compression_options options;
@@ -41,7 +35,7 @@ compression_options get_options_from_cd_values(size_t cd_nelmts, const unsigned 
   return options;
 }
 
-static std::vector<unsigned int> get_cd_values_from_options(compression_options const& options) {
+std::vector<unsigned int> get_cd_values_from_options(compression_options const& options) {
   std::vector<unsigned int> ret;
   auto push_word = [&ret](uint64_t value) {
     ret.push_back(value & 0x0000FFFF);
