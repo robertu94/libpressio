@@ -44,6 +44,25 @@ namespace distributed {
 namespace comm {
 namespace serializer {
 
+  int serializer<pressio_thread_safety>::send(pressio_thread_safety const& ts, int dest, int tag, MPI_Comm comm) {
+    int32_t ts_i = static_cast<int32_t>(ts);
+    return comm::send(ts_i, dest, tag, comm);
+  }
+  int serializer<pressio_thread_safety>::recv(pressio_thread_safety& ts, int dest, int tag, MPI_Comm comm, MPI_Status* status) {
+    MPI_Status local_status;
+    MPI_Status* s = (status == MPI_STATUS_IGNORE) ? &local_status: status;
+    int32_t ts_i;
+    int ret = comm::recv(ts_i, dest, tag, comm, s);
+    ts = static_cast<pressio_thread_safety>(ts_i);
+    return ret;
+  }
+  int serializer<pressio_thread_safety>::bcast(pressio_thread_safety& ts, int root, MPI_Comm comm) {
+    int32_t ts_i = static_cast<int32_t>(ts);
+    int ret = comm::bcast(ts_i, root, comm);
+    ts = static_cast<pressio_thread_safety>(ts_i);
+    return ret;
+  }
+
   int serializer<pressio_data>::send(pressio_data const& data, int dest, int tag, MPI_Comm comm) {
     int ret = 0;
     ret |= comm::send(data.dtype(), dest, tag, comm);
@@ -215,6 +234,18 @@ namespace serializer {
           ret |= comm::send(value, dest, tag, comm);
           }
           break;
+        case pressio_option_threadsafety_type:
+          {
+          auto const& value = option.get_value<pressio_thread_safety>();
+          ret |= comm::send(value, dest, tag, comm);
+          }
+          break;
+        case pressio_option_dtype_type:
+          {
+          auto const& value = option.get_value<pressio_dtype>();
+          ret |= comm::send(value, dest, tag, comm);
+          }
+          break;
 
         case pressio_option_unset_type:
           //intensional no-op
@@ -237,16 +268,58 @@ namespace serializer {
     ret |= comm::recv(has_value, source, tag, comm, s);
     if(has_value) {
       switch(type) {
+        case pressio_option_int8_type:
+            {
+            int8_t value;
+            ret |= comm::recv(value, source, tag, comm, s);
+            option = value;
+            }
+            break;
+        case pressio_option_int16_type:
+            {
+            int16_t value;
+            ret |= comm::recv(value, source, tag, comm, s);
+            option = value;
+            }
+            break;
         case pressio_option_int32_type:
           {
-          int value;
+          int32_t value;
           ret |= comm::recv(value, source, tag, comm, s);
           option = value;
           }
           break;
+        case pressio_option_int64_type:
+          {
+          int64_t value;
+          ret |= comm::recv(value, source, tag, comm, s);
+          option = value;
+          }
+          break;
+        case pressio_option_uint8_type:
+            {
+            uint8_t value;
+            ret |= comm::recv(value, source, tag, comm, s);
+            option = value;
+            }
+            break;
+        case pressio_option_uint16_type:
+            {
+            uint16_t value;
+            ret |= comm::recv(value, source, tag, comm, s);
+            option = value;
+            }
+            break;
         case pressio_option_uint32_type:
           {
           unsigned int value;
+          ret |= comm::recv(value, source, tag, comm, s);
+          option = value;
+          }
+          break;
+        case pressio_option_uint64_type:
+          {
+          uint64_t value;
           ret |= comm::recv(value, source, tag, comm, s);
           option = value;
           }
@@ -289,6 +362,20 @@ namespace serializer {
         case pressio_option_data_type:
           {
           pressio_data value;
+          ret |= comm::recv(value, source, tag, comm, s);
+          option = std::move(value);
+          }
+          break;
+        case pressio_option_threadsafety_type:
+          {
+          pressio_thread_safety value;
+          ret |= comm::recv(value, source, tag, comm, s);
+          option = std::move(value);
+          }
+          break;
+        case pressio_option_dtype_type:
+          {
+          pressio_dtype value;
           ret |= comm::recv(value, source, tag, comm, s);
           option = std::move(value);
           }
@@ -382,6 +469,14 @@ namespace serializer {
           pressio_data value_ref = pressio_data::nonowning(value.dtype(), value.data(), value.dimensions());
           ret |= comm::bcast(value_ref, root, comm);
         } break;
+        case pressio_option_dtype_type: {
+          auto value = option.get_value<pressio_dtype>();
+          ret |= comm::bcast(value, root, comm);
+        } break;
+        case pressio_option_threadsafety_type: {
+          auto value = option.get_value<pressio_thread_safety>();
+          ret |= comm::bcast(value, root, comm);
+        } break;
 
         case pressio_option_unset_type:
           // intensional no-op
@@ -454,6 +549,16 @@ namespace serializer {
         } break;
         case pressio_option_double_type: {
           double value;
+          ret |= comm::bcast(value, root, comm);
+          option = value;
+        } break;
+        case pressio_option_dtype_type: {
+          pressio_dtype value;
+          ret |= comm::bcast(value, root, comm);
+          option = value;
+        } break;
+        case pressio_option_threadsafety_type: {
+          pressio_thread_safety value;
           ret |= comm::bcast(value, root, comm);
           option = value;
         } break;

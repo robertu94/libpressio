@@ -7,6 +7,7 @@
 
 #include <libdistributed/libdistributed_comm.h>
 #include <pressio_dtype.h>
+#include <pressio_compressor.h>
 
 struct pressio_data;
 struct pressio_option;
@@ -16,6 +17,46 @@ struct pressio_options;
 namespace distributed {
 namespace comm {
 namespace serializer {
+
+/**
+ * serializer for pressio_dtypes tyeps
+ */
+template <>
+struct serializer<pressio_thread_safety> {
+  /** is the type representable with mpi_types */
+  using mpi_type = std::false_type;
+  /** type MPI_Datatype when mpi_type is true */
+  static MPI_Datatype dtype() { return MPI_INT; }
+  /** name of the data type */
+  static std::string name() { return "pressio_thread_safety"; }
+  /** 
+   * send the value
+   * \param[in] dtype the datatype to serialize
+   * \param[in] dest the destination to send to
+   * \param[in] tag the tag to use
+   * \param[in] comm the comm to serialize to
+   * \returns an error code
+   * */
+  static int send(pressio_thread_safety const& dtype, int dest, int tag, MPI_Comm comm);
+  /** 
+   * recv the value
+   * \param[out] dtype the datatype to serialize
+   * \param[in] source the destination to send to
+   * \param[in] tag the tag to use
+   * \param[in] comm the comm to serialize to
+   * \param[out] status the optional status to receive
+   * \returns an error code
+   * */
+  static int recv(pressio_thread_safety& dtype, int source, int tag, MPI_Comm comm, MPI_Status* status);
+  /**
+   * broadcast a value
+   *
+   * \param[in] dtype the datatype to broadcast
+   * \param[in] root the root to broadcast from
+   * \param[in] comm the communicator to use
+   */
+  static int bcast(pressio_thread_safety& dtype, int root, MPI_Comm comm);
+};
 
 /**
  * serializer for pressio_dtypes tyeps
