@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.88.2" LANGUAGES CXX C)
+project(libpressio VERSION "0.88.3" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -76,6 +76,7 @@ add_library(libpressio
   ./src/plugins/compressors/pressio.cc
   ./src/plugins/metrics/composite.cc
   ./src/plugins/metrics/external.cc
+  ./src/plugins/metrics/error_stat.cc
   ./src/plugins/metrics/metrics_base.cc
   ./src/plugins/launch/external_forkexec.cc
   ./src/plugins/metrics/noop.cc
@@ -148,7 +149,6 @@ libpressio_optional_component(delta_encoding "build the delta_encoding compresso
 libpressio_optional_component(diff_pdf "build the difference probability distribution function metric" /metrics/diff_pdf.cc)
 libpressio_optional_component(empty "build the empty IO plugin" /io/empty.cc)
 libpressio_optional_component(entropy "build the entropy metrics plugin" /metrics/entropy.cc)
-libpressio_optional_component(error_stat "build the error_stat metrics plugin" /metrics/error_stat.cc)
 libpressio_optional_component(historian "build the historian metrics plugin" /metrics/historian.cc)
 libpressio_optional_component(input_stats "build the input_stats metrics plugin" /metrics/input_stats.cc)
 libpressio_optional_component(iota "build the iota io plugin" /io/iota.cc)
@@ -662,6 +662,7 @@ install(TARGETS libpressio EXPORT LibPressioTargets
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   )
 install(EXPORT LibPressioTargets NAMESPACE LibPressio:: DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/LibPressio/)
+export(EXPORT LibPressioTargets FILE ${CMAKE_CURRENT_BINARY_DIR}/cmake/LibPressioTargets.cmake NAMESPACE LibPressio::)
 include(CMakePackageConfigHelpers)
 configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/LibPressioConfig.cmake.in
   "${CMAKE_CURRENT_BINARY_DIR}/LibPressioConfig.cmake"

@@ -90,6 +90,7 @@ if(LIBPRESSIO_HAS_SZ)
   target_link_libraries(test_register_compressor PRIVATE SZ)
 endif()
 
+add_subdirectory(smoke_test)
 
 if(LIBPRESSIO_HAS_LIBDISTRIBUTED AND LIBPRESSIO_HAS_MPI)
   find_package(MPI)
