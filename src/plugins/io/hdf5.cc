@@ -376,7 +376,7 @@ struct hdf5_io: public libpressio_io_plugin {
   virtual struct pressio_options get_configuration_impl() const override{
     pressio_options options;
     set(options, "pressio:stability", "stable");
-    set(options, "pressio:thread_safe",  static_cast<int32_t>(pressio_thread_safety_single));
+    set(options, "pressio:thread_safe",  pressio_thread_safety_single);
     set(options, "hdf5:parallel",  static_cast<int32_t>(
 #ifdef H5_HAVE_PARALLEL
        H5_HAVE_PARALLEL

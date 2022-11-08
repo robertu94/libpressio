@@ -53,6 +53,14 @@ public:
     set(options, "cusz:mode_str", std::vector<std::string>{"abs", "r2r"});
     set(options, "pressio:thread_safe", pressio_thread_safety_multiple);
     set(options, "pressio:stability", "experimental");
+    set(options, "cusz:pipeline_type", std::vector<std::string>{"auto", "dense", "sparse"});
+    set(options, "cusz:predictor_type", std::vector<std::string>{"lorenzo0", "lorenzo1", "lorenzoi", "lorenzo2", "lorenzoii", "spline3"});
+    set(options, "cusz:codec_type", std::vector<std::string>{"huffman", "runlength", "nvcompcascade", "nvcomplz4", "nvcompsnappy"});
+    set(options, "cusz:codec_type", std::vector<std::string>{"huffman", "runlength", "nvcompcascade", "nvcomplz4", "nvcompsnappy"});
+    set(options, "cusz:huffman_codec_booktype", std::vector<std::string>{"tree", "canonical"});
+    set(options, "cusz:huffman_codec_booktype", std::vector<std::string>{"tree", "canonical"});
+    set(options, "cusz:huffman_execution_type", std::vector<std::string>{"host", "device", "none"});
+    set(options, "cusz:huffman_coding", std::vector<std::string>{"coarse", "fine"});
     return options;
   }
 
@@ -60,6 +68,23 @@ public:
   {
     struct pressio_options options;
     set(options, "pressio:description", R"(A GPU based implementation of SZ for Nvidia GPUs)");
+    set(options, "cusz:mode_str", "error bound mode");
+    set(options, "cusz:bound", "bound of the error bound");
+    set(options, "cusz:pipeline_type", "pipeline type");
+    set(options, "cusz:cusz_len_factor", "length factor controls how much memory is over-allocated");
+    set(options, "cusz:predictor_anchor", "is prediction anchored?");
+    set(options, "cusz:predictor_nondestructive", "is the predictor non-destructuive; effects memory use");
+    set(options, "cusz:predictor_type", "what predictor type to use");
+    set(options, "cusz:quantization_radius", "the quantization_radius effects quality");
+    set(options, "cusz:quantization_delayed", "is quantization_delayed effects speed");
+    set(options, "cusz:codec_type", "what compression codec is used");
+    set(options, "cusz:codec_variable_length", "use variable length encoding to improve rate for speed");
+    set(options, "cusz:codec_presumed_density", "assumed density of the code, affects speed");
+    set(options, "cusz:huffman_codec_booktype", "what type of book is used");
+    set(options, "cusz:huffman_execution_type", "where to execute huffman encoding");
+    set(options, "cusz:huffman_coding", "what type of coding to use");
+    set(options, "cusz:huffman_booklen", "huffman encoding book length");
+    set(options, "cusz:huffman_coarse_pardeg", "huffman encoding coarse par degree");
     return options;
   }
 

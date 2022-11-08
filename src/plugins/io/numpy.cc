@@ -298,7 +298,7 @@ struct numpy_io : public libpressio_io_plugin {
 
   virtual struct pressio_options get_configuration_impl() const override{
     pressio_options opts;
-    set(opts, "pressio:thread_safe",  static_cast<int32_t>(pressio_thread_safety_single));
+    set(opts, "pressio:thread_safe",  pressio_thread_safety_single);
     set(opts, "pressio:stability", "stable");
     return opts;
   }

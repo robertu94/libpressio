@@ -90,7 +90,11 @@ if(LIBPRESSIO_HAS_SZ)
   target_link_libraries(test_register_compressor PRIVATE SZ)
 endif()
 
-add_subdirectory(smoke_test)
+# the CMakeLists file in the sub directory is only for spack
+# build here to ensure things work
+add_executable(pressio_smoke_tests smoke_test/smoke_test.cc)
+target_link_libraries(pressio_smoke_tests libpressio)
+install(TARGETS pressio_smoke_tests)
 
 if(LIBPRESSIO_HAS_LIBDISTRIBUTED AND LIBPRESSIO_HAS_MPI)
   find_package(MPI)
