@@ -66,9 +66,11 @@ if(LIBPRESSIO_HAS_SZ)
   target_link_libraries(sz_cpp PRIVATE libpressio  SZ)
   add_test(sz_cpp_test sz_cpp)
 
+  if(${LIBPRESSIO_BUILD_MODE} STREQUAL FULL)
   add_executable(metrics metrics.c make_input_data.cc)
   target_link_libraries(metrics PRIVATE libpressio  SZ)
   add_test(metrics_test metrics)
+  endif()
 
   add_executable(test_external_helper test_external_helper.cc)
   add_executable(test_external_helper_multi_file test_external_helper_multi_file.cc)
@@ -102,7 +104,7 @@ if(LIBPRESSIO_HAS_LIBDISTRIBUTED AND LIBPRESSIO_HAS_MPI)
   target_link_libraries(test_distributed PRIVATE MPI::MPI_CXX)
 endif()
 
-if(BUILD_PYTHON_WRAPPER AND LIBPRESSIO_HAS_SZ)
+if(BUILD_PYTHON_WRAPPER AND LIBPRESSIO_HAS_SZ AND ${LIBPRESSIO_BUILD_MODE} STREQUAL FULL)
   find_package(Python3)
   add_test(test_python_wrapper 
     ${Python3_EXECUTABLE}

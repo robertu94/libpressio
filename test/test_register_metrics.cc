@@ -85,6 +85,9 @@ TEST(ExternalPlugin, TestMetricCounts) {
   //test the new one and the old ones
   const char* metrics_ids[] = {"mycounts", "size"};
   pressio_metrics metrics = library.get_metrics(std::begin(metrics_ids), std::end(metrics_ids));
+  if(!metrics) {
+    GTEST_SKIP() << "build with FULL mode to get the size metric for testing";
+  }
 
 
   auto compressor = library.get_compressor("sz");

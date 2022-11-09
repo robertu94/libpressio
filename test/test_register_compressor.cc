@@ -150,7 +150,7 @@ TEST(ExternalPlugin, TestLogCompressor) {
 TEST(ExternalPlugin, TestNames) {
   pressio library;
   auto log_compressor = library.get_compressor("log");
-  log_compressor->set_options({{"log:compressor", "sample"}});
+  log_compressor->set_options({{"log:compressor", "pressio"}});
   log_compressor->set_name("log_example");
 
   auto options = log_compressor->get_options();
@@ -166,10 +166,7 @@ TEST(ExternalPlugin, TestNames) {
   std::vector<std::string> expected_names{
     "/log_example:log:compressor",
     "/log_example:log:metric",
-    "/log_example/sample:sample:seed",
-    "/log_example/sample:sample:rate",
-    "/log_example/sample:sample:mode",
-    "/log_example/sample:sample:metric"
+    "/log_example/pressio:pressio:bound_name",
   };
   EXPECT_THAT(actual_names, ::testing::IsSupersetOf(expected_names));
 
@@ -178,9 +175,8 @@ TEST(ExternalPlugin, TestNames) {
   std::vector<std::string> actual_names2;
   std::vector<std::string> expected_names2{
     "/log_example2:log:compressor",
-    "/log_example2/sample:sample:seed",
-    "/log_example2/sample:sample:rate",
-    "/log_example2/sample:sample:mode"
+    "/log_example2:log:metric",
+    "/log_example2/pressio:pressio:bound_name",
   };
   {
     auto options = log_compressor->get_options();

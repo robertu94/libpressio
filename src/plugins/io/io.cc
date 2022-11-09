@@ -11,7 +11,9 @@ pressio_registry<std::unique_ptr<libpressio_io_plugin>>& io_plugins() {
 
 extern "C" {
 struct pressio_io* pressio_get_io(struct pressio* library, const char* io_module) {
-  return new pressio_io(library->get_io(io_module));
+  auto plugin = library->get_io(io_module);
+  if(plugin) return new pressio_io(std::move(plugin));
+  else return nullptr;
 }
 void pressio_io_free(struct pressio_io* io) {
   delete io;

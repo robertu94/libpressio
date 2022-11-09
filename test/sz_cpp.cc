@@ -8,7 +8,7 @@ int main()
 {
   pressio library;
   auto compressor = library.get_compressor("sz");
-  const char* metrics_ids[] = {"time"};
+  const char* metrics_ids[] = {"noop"};
   auto metrics = pressio_metrics(library.get_metrics(std::begin(metrics_ids), std::end(metrics_ids)));
 
   compressor->set_metrics(metrics);
