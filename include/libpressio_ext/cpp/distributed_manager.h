@@ -180,7 +180,11 @@ class pressio_distributed_manager: public pressio_configurable, public pressio_e
     }
 
     int size;
-    MPI_Comm_size(comm, &size);
+    int initialized;
+    MPI_Initialized(&initialized);
+    if(initialized) {
+      MPI_Comm_size(comm, &size);
+    }
 
     pressio_data groups_data;
     auto workers_set = get(options, "distributed:n_worker_groups", &n_workers);

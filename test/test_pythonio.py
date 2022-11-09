@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import sys
 import tempfile
 #kind of ugly hack to load the path to the library without installing it

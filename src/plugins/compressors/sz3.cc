@@ -280,7 +280,7 @@ public:
 
   int major_version() const override { return SZ3_VER_MAJOR; }
   int minor_version() const override { return SZ3_VER_MINOR; }
-  int patch_version() const override { return SZ3_VER_TWEAK; }
+  int patch_version() const override { return SZ3_VER_PATCH; }
   const char* version() const override { return SZ3_VER; }
   const char* prefix() const override { return "sz3"; }
 

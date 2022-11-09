@@ -275,7 +275,11 @@ class PressioCompressor(Codec):
             pressio.release(library)
 
     def __del__(self):
-        pressio.compressor_release(self._compressor)
+        # works around a bug in swig 4.0 where during shutdown pressio is set to None
+        # indicating that the shared library has been unloaded.  Just let the OS
+        # clean up in this case.
+        if pressio:
+            pressio.compressor_release(self._compressor)
 
     def encode(self, uncompressed):
         """perform compression
@@ -427,7 +431,11 @@ class PressioIO:
             pressio.options_free(config_lp_template)
 
     def __del__(self):
-        pressio.io_free(self._io)
+        # works around a bug in swig 4.0 where during shutdown pressio is set to None
+        # indicating that the shared library has been unloaded.  Just let the OS
+        # clean up in this case.
+        if pressio:
+            pressio.io_free(self._io)
 
     def read(self, template=None):
         """reads a data buffer from a file
@@ -547,7 +555,11 @@ class PressioMetrics:
             pressio.options_free(config_lp_template)
 
     def __del__(self):
-        pressio.metrics_free(self._metric)
+        # works around a bug in swig 4.0 where during shutdown pressio is set to None
+        # indicating that the shared library has been unloaded.  Just let the OS
+        # clean up in this case.
+        if pressio:
+            pressio.metrics_free(self._metric)
 
     def evaluate(self, input=None, compressed=None, output=None):
         results_lp = None

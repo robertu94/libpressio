@@ -20,7 +20,7 @@ struct select_io: public libpressio_io_plugin {
     pressio_options opts;
     opts.copy_from(impl->get_configuration());
     set(opts, "pressio:stability",  "unstable");
-    set(opts, "pressio:thread_safe",  static_cast<int32_t>(pressio_thread_safety_single));
+    set(opts, "pressio:thread_safe",  pressio_thread_safety_single);
     return opts;
   }
 

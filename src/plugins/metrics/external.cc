@@ -89,7 +89,7 @@ class external_metric_plugin : public libpressio_metrics_plugin {
       }
       opts.copy_from(launcher->get_configuration());
       set(opts, "pressio:stability", "unstable");
-      set(opts, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+      set(opts, "pressio:thread_safe", pressio_thread_safety_multiple);
       return opts;
     }
 

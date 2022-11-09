@@ -121,6 +121,8 @@ public:
   {
     struct pressio_options options;
     set(options, "ndzip:executor", executor);
+    int ignored = 0; // only supports one kind of lossless compression; this is a dummy setting
+    set(options, "pressio:lossless", ignored);
     return options;
   }
 
@@ -150,7 +152,10 @@ public:
   struct pressio_options get_documentation_impl() const override
   {
     struct pressio_options options;
-    set(options, "pressio:description", R"(A High-Throughput Parallel Lossless Compressor for Scientific Data)");
+    set(options, "pressio:description", R"(A High-Throughput Parallel Lossless Compressor for Scientific Data
+
+    only supports 1 type of compression, different values of pressio:lossless are indistinguishable
+    )");
     set(options, "ndzip:executor", "which executor to use");
     set(options, "ndzip:has_mt_cpu", "compiled with OpenMP support");
     set(options, "ndzip:has_cuda", "compiled with Cuda support");
@@ -162,6 +167,9 @@ public:
   int set_options_impl(struct pressio_options const& options) override
   {
     get(options, "ndzip:executor", &executor);
+    int ignored = 0; // only supports one kind of lossless compression; this is a dummy setting to let
+                     // users know this is a lossless compressor
+    get(options, "pressio:lossless", &ignored);
     return 0;
   }
 

@@ -57,7 +57,7 @@ class mask_metrics: public libpressio_metrics_plugin {
     pressio_options opts;
     opts.copy_from(plugin->get_configuration());
     set(opts, "pressio:stability", "stable");
-    set(opts, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+    set(opts, "pressio:thread_safe", pressio_thread_safety_multiple);
     return opts;
   }
 

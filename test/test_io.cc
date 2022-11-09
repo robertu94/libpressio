@@ -283,6 +283,9 @@ TEST_F(PressioDataIOTests, TestWriteCSV) {
   auto tmpwrite_fd = mkstemp(const_cast<char*>(tmpwrite_name.data()));
 
   auto io = pressio_get_io(&library, "csv");
+  if(!io) {
+    GTEST_SKIP() << "skipping csv tests when not built";
+  }
   (*io)->set_options({
       {"io:path", tmpwrite_name},
       {"csv:headers", std::vector<std::string>{"foo", "bar", "sue"}}
@@ -306,6 +309,9 @@ TEST_F(PressioDataIOTests, TestReadCSV) {
   auto tmpwrite_fd = mkstemp(const_cast<char*>(tmpwrite_name.data()));
 
   auto io = pressio_get_io(&library, "csv");
+  if(!io) {
+    GTEST_SKIP() << "skipping csv tests when not built";
+  }
   (*io)->set_options({
       {"io:path", tmpwrite_name},
       {"csv:headers", std::vector<std::string>{"foo", "bar", "sue"}},
