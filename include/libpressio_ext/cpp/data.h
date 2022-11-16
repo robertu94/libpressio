@@ -371,26 +371,7 @@ struct pressio_data {
   /**
    * returns the dimensions normalized to remove 1's
    */
-  std::vector<size_t> normalized_dims(compat::optional<size_t> n={}, size_t fill=0) const {
-    std::vector<size_t> real_dims;
-    std::copy_if(dims.begin(), dims.end(), std::back_inserter(real_dims), [](size_t i){ return i > 1; });
-    size_t N = n.value_or(real_dims.size());
-    if(real_dims.size() < N) {
-      real_dims.resize(N, fill);
-    } else if (N < real_dims.size()) {
-      size_t excess_size = real_dims.size() - N;
-      size_t first = 1;
-      for(size_t i = 0; i < excess_size; ++i) {
-        first *= real_dims[i];
-      }
-      real_dims[0] = first;
-      for (size_t i = excess_size; i < real_dims.size(); ++i) {
-        real_dims[i-excess_size+1] = real_dims[i];
-      }
-      real_dims.resize(N);
-    }
-    return real_dims;
-  }
+  std::vector<size_t> normalized_dims(compat::optional<size_t> n={}, size_t fill=0) const;
 
 
   /**
