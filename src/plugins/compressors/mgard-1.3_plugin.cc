@@ -179,7 +179,22 @@ Reference [6] covers the design and implementation on GPU heterogeneous systems.
       s = std::numeric_limits<double>::infinity();
       bound_type = mgard_x::error_bound_type::ABS;
     }
-    get(options, "mgard:nthreads", &nthreads);
+    {
+      uint32_t tmp;
+      if(get(options, "pressio:nthreads", &tmp) == pressio_options_key_set){
+        if(tmp > 0) {
+          config.dev_type = mgard_x::device_type::OPENMP;
+          nthreads = tmp;
+        }
+        else return set_error(1, "nthreads must be positive");
+      }
+      if(get(options, "mgard:nthreads", &tmp) == pressio_options_key_set){
+        if(tmp > 0) {
+          nthreads = tmp;
+        }
+        else return set_error(1, "nthreads must be positive");
+      }
+    }
     uint8_t tmp;
     if(get(options, "mgard:dev_type", &tmp) == pressio_options_key_set)  {
       config.dev_type = static_cast<mgard_x::device_type>(tmp);
