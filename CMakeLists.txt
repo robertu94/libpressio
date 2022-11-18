@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.88.3" LANGUAGES CXX C)
+project(libpressio VERSION "0.90.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -318,7 +318,13 @@ option(LIBPRESSIO_HAS_MGARD "build the MGARD plugin" OFF)
 if(LIBPRESSIO_HAS_MGARD)
   set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} mgard")
   find_package(mgard REQUIRED)
-    if(DEFINED mgard_VERSION_MAJOR AND ${mgard_VERSION_MAJOR} GREATER_EQUAL 1)
+  if(DEFINED mgard_VERSION_MAJOR AND (${mgard_VERSION_MAJOR} EQUAL 1 AND ${mgard_VERSION_MINOR} GREATER_EQUAL 3) OR ${mgard_VERSION_MAJOR} GREATER_EQUAL 2)
+      target_sources(libpressio
+        PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/mgard-1.3_plugin.cc
+        )
+      target_link_libraries(libpressio PRIVATE mgard::mgard)
+    elseif(DEFINED mgard_VERSION_MAJOR AND ${mgard_VERSION_MAJOR} EQUAL 1 )
       target_sources(libpressio
         PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/mgard-1.0_plugin.cc
