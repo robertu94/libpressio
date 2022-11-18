@@ -28,6 +28,7 @@ public:
     set_meta_many(options, "many_independent_threaded:compressors", compressor_ids, compressors);
     set_type(options, "many_independent_threaded:compressor", pressio_option_charptr_type);
     options.copy_from(subgroups.get_options());
+    set(options, "pressio:nthreads", nthreads);
     set(options, "many_independent_threaded:nthreads", nthreads);
     set(options, "many_independent_threaded:collect_metrics_on_compression", collect_metrics_on_compression);
     set(options, "many_independent_threaded:collect_metrics_on_decompression", collect_metrics_on_decompression);
@@ -81,7 +82,14 @@ public:
       get_meta(options, "many_independent_threaded:compressor", compressor_plugins(), compressor_ids[0], compressors[0]);
     }
     subgroups.set_options(options);
-    auto tmp_threads = nthreads;
+    uint32_t tmp_threads = nthreads;
+    if (get(options, "pressio:nthreads", &tmp_threads) == pressio_options_key_set) {
+      if(tmp_threads >= 1) {
+        nthreads = tmp_threads;
+      } else {
+        return set_error(1, "invalid thread count");
+      }
+    }
     if (get(options, "many_independent_threaded:nthreads", &tmp_threads) == pressio_options_key_set) {
       if(tmp_threads >= 1) {
         nthreads = tmp_threads;

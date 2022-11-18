@@ -24,6 +24,7 @@ class chunking_plugin: public libpressio_compressor_plugin {
     struct pressio_options get_options_impl() const override {
       struct pressio_options options;
       set_meta(options, "chunking:compressor", compressor_id, compressor);
+      set(options, "pressio:nthreads", static_cast<uint32_t>(nthreads));
       set(options, "chunking:size", pressio_data(chunk_size.begin(), chunk_size.end()));
       set(options, "chunking:chunk_nthreads", nthreads);
       return options;
@@ -48,11 +49,22 @@ class chunking_plugin: public libpressio_compressor_plugin {
 
     int set_options_impl(struct pressio_options const& options) override {
       get_meta(options, "chunking:compressor", compressor_plugins(), compressor_id, compressor);
+
+      uint32_t tmp;
+      if(get(options, "pressio:nthreads", &tmp) == pressio_options_key_set) {
+        if(tmp > 0) {
+          nthreads = tmp;
+        } else {
+          return set_error(1,"nthreads must be positive");
+        }
+      }
+
       pressio_data d;
       if (get(options, "chunking:size", &d) == pressio_options_key_set) {
         chunk_size = d.to_vector<size_t>();
       }
       get(options, "chunking:chunk_nthreads", &nthreads);
+
 
       return 0;
     }

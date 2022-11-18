@@ -16,6 +16,7 @@ public:
     set_meta(options, "roibin:background", background_id, background);
     set(options, "roibin:centers", centers);
     set(options, "roibin:roi_size", roi_size);
+    set(options, "pressio:nthreads", n_threads);
     set(options, "roibin:nthreads", n_threads);
     return options;
   }
@@ -54,9 +55,18 @@ public:
     get(options, "roibin:centers", &centers);
     get(options, "roibin:roi_size", &roi_size);
     uint32_t tmp;
+    if(get(options, "pressio:nthreads", &tmp) == pressio_options_key_set) {
+      if(tmp > 0) {
+        n_threads = tmp;
+      } else {
+        return set_error(1, "nthreads must be positive");
+      }
+    }
     if(get(options, "roibin:nthreads", &tmp) == pressio_options_key_set) {
       if(tmp > 0) {
         n_threads = tmp;
+      } else {
+        return set_error(1, "nthreads must be positive");
       }
     }
     return 0;

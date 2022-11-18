@@ -3,9 +3,13 @@
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
+#include "cleanup.h"
 #include <sstream>
 #include <mgard/compress_x.hpp>
 #include <mgard/MGARDConfig.hpp>
+#if MGARD_ENABLE_OPENMP
+#include <omp.h>
+#endif
 
 namespace libpressio { namespace mgard_ns {
 
@@ -70,6 +74,14 @@ public:
   struct pressio_options get_options_impl() const override
   {
     struct pressio_options options;
+
+    if(s == std::numeric_limits<double>::infinity() && bound_type == mgard_x::error_bound_type::ABS) {
+      set(options, "pressio:abs", tolerance);
+    } else {
+      set_type(options, "pressio:abs", pressio_option_double_type);
+    }
+    set(options, "pressio:nthreads", nthreads);
+    set(options, "mgard:nthreads", nthreads);
     set(options, "mgard:dev_type", static_cast<uint8_t>(config.dev_type));
     set(options, "mgard:dev_type_str", mgard_dev_type_to_string(config.dev_type));
     set(options, "mgard:dev_id", config.dev_id);
@@ -99,6 +111,11 @@ public:
     set(options, "mgard:decomposition_str", to_names(decomp_types));
     set(options, "mgard:lossless_type_str", to_names(lossless_types));
     set(options, "mgard:error_bound_type_str", to_names(bound_types));
+    set(options, "mgard:serial_enabled", MGARD_ENABLE_SERIAL);
+    set(options, "mgard:openmp_enabled", MGARD_ENABLE_OPENMP);
+    set(options, "mgard:cuda_enabled", MGARD_ENABLE_CUDA);
+    set(options, "mgard:hip_enabled", MGARD_ENABLE_HIP);
+    set(options, "mgard:sycl_enabled", MGARD_ENABLE_SYCL);
     set(options, "pressio:stability", "experimental");
     return options;
   }
@@ -128,6 +145,7 @@ Reference [6] covers the design and implementation on GPU heterogeneous systems.
 [unstructured]: https://doi.org/10.1137/19M1267878
 [gpu]: https://arxiv.org/pdf/2007.04457
     )");
+    set(options, "mgard:nthreads", "number of CPU threads when using dev_type_str==\"openmp\"");
     set(options, "mgard:dev_type", "device execution type");
     set(options, "mgard:dev_type_str", "device execution type name");
     set(options, "mgard:dev_id", "execution device id");
@@ -146,12 +164,22 @@ Reference [6] covers the design and implementation on GPU heterogeneous systems.
     set(options, "mgard:tolerance", "tolerance level");
     set(options, "mgard:error_bound_type", "error bound type");
     set(options, "mgard:error_bound_type_str", "error_bound_type name");
+    set(options, "mgard:serial_enabled", "mgard with built with serial execution");
+    set(options, "mgard:openmp_enabled", "mgard was built with openmp execution");
+    set(options, "mgard:cuda_enabled", "mgard was built with cuda execution");
+    set(options, "mgard:hip_enabled", "mgard was built with hip execution");
+    set(options, "mgard:sycl_enabled", "mgard was built with sycl execution");
     return options;
   }
 
 
   int set_options_impl(struct pressio_options const& options) override
   {
+    if(get(options, "pressio:abs", &tolerance) == pressio_options_key_set) {
+      s = std::numeric_limits<double>::infinity();
+      bound_type = mgard_x::error_bound_type::ABS;
+    }
+    get(options, "mgard:nthreads", &nthreads);
     uint8_t tmp;
     if(get(options, "mgard:dev_type", &tmp) == pressio_options_key_set)  {
       config.dev_type = static_cast<mgard_x::device_type>(tmp);
@@ -207,6 +235,11 @@ Reference [6] covers the design and implementation on GPU heterogeneous systems.
                     struct pressio_data* output) override
   {
     try {
+#if MGARD_ENABLE_OPENMP
+      int save_threads = omp_get_num_threads();
+      omp_set_num_threads(nthreads);
+      cleanup restore_threads([save_threads]{omp_set_num_threads(save_threads);});
+#endif
       void* output_data = output->data();
       size_t compressed_size;
       bool pre_allocated = output->has_data();
@@ -236,6 +269,11 @@ Reference [6] covers the design and implementation on GPU heterogeneous systems.
   int decompress_impl(const pressio_data* input,
                       struct pressio_data* output) override
   {
+#if MGARD_ENABLE_OPENMP
+      int save_threads = omp_get_num_threads();
+      omp_set_num_threads(nthreads);
+      cleanup restore_threads([save_threads]{omp_set_num_threads(save_threads);});
+#endif
     void* output_data = output->data();
     bool pre_allocated = output->has_data();
     mgard_x::decompress(input->data(), input->size_in_bytes(),
@@ -267,9 +305,21 @@ Reference [6] covers the design and implementation on GPU heterogeneous systems.
     return compat::make_unique<mgard_compressor_plugin>(*this);
   }
 
+  uint32_t nthreads = 1;
   double tolerance = 1e-4, s=std::numeric_limits<double>::infinity();
   mgard_x::error_bound_type bound_type = mgard_x::error_bound_type::ABS;
-  mgard_x::Config config;
+  mgard_x::Config config = []{
+    //prefer serial on the CPU if possible
+    mgard_x::Config config;
+    if(MGARD_ENABLE_SERIAL) {
+      config.dev_type = mgard_x::device_type::SERIAL;
+    } else if(MGARD_ENABLE_OPENMP) {
+      config.dev_type = mgard_x::device_type::OPENMP;
+    } else {
+      config.dev_type = mgard_x::device_type::AUTO;
+    }
+    return config;
+  }();
 };
 
 static pressio_register compressor_many_fields_plugin(compressor_plugins(), "mgard", []() {

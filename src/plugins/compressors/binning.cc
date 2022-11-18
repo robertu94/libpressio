@@ -86,6 +86,7 @@ public:
     struct pressio_options options;
     set_meta(options, "binning:compressor", comp_id, comp);
     set(options, "binning:shape", bins);
+    set(options, "pressio:nthreads", n_threads);
     set(options, "binning:nthreads", n_threads);
     return options;
   }
@@ -114,12 +115,24 @@ public:
   {
     get_meta(options, "binning:compressor", compressor_plugins(), comp_id, comp);
     get(options, "binning:shape", &bins);
-    uint32_t tmp;
-    if(get(options, "binning:nthreads", &tmp) == pressio_options_key_set) {
-      if(tmp > 0) {
-        n_threads = tmp;
-      } else {
-        return set_error(1, "threads must be positive");
+    {
+      uint32_t tmp;
+      if(get(options, "pressio:nthreads", &tmp) == pressio_options_key_set) {
+        if(tmp > 0) {
+          n_threads = tmp;
+        } else {
+          return set_error(1, "threads must be positive");
+        }
+      }
+    }
+    {
+      uint32_t tmp;
+      if(get(options, "binning:nthreads", &tmp) == pressio_options_key_set) {
+        if(tmp > 0) {
+          n_threads = tmp;
+        } else {
+          return set_error(1, "threads must be positive");
+        }
       }
     }
     return 0;

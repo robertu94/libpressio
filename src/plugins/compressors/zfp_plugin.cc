@@ -62,6 +62,7 @@ class zfp_plugin: public libpressio_compressor_plugin {
       set(options, "zfp:minexp", zfp->minexp);
       set(options, "zfp:execution", static_cast<int32_t>(zfp_stream_execution(zfp)));
       set_type(options, "zfp:execution_name", pressio_option_charptr_type);
+      set(options, "pressio:nthreads", zfp_stream_omp_threads(zfp));
       set(options, "zfp:omp_threads", zfp_stream_omp_threads(zfp));
       set(options, "zfp:omp_chunk_size", zfp_stream_omp_chunk_size(zfp));
       set_type(options, "zfp:precision", pressio_option_uint32_type);
@@ -186,8 +187,12 @@ class zfp_plugin: public libpressio_compressor_plugin {
           return error_code();
         }
       }
+      unsigned int threads;
+      if(get(options, "pressio:nthreads", &threads) == pressio_options_key_set) {
+        set_execution(zfp_exec_omp);
+        zfp_stream_set_omp_threads(zfp, threads);
+      }
       if(zfp_stream_execution(zfp) == zfp_exec_omp) {
-        unsigned int threads;
         if(get(options, "zfp:omp_threads", &threads) == pressio_options_key_set) {
           zfp_stream_set_omp_threads(zfp, threads);
         }

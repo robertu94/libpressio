@@ -32,6 +32,7 @@ class sz_omp: public libpressio_compressor_plugin {
 #if PRESSIO_SZ_VERSION_GREATEREQ(2,1,9,0)
     set(options, "sz_omp:protect_value_range", confparams_cpr->protectValueRange);
 #endif
+    set(options, "pressio:nthreads", static_cast<uint32_t>(nthreads));
     set(options, "sz_omp:nthreads", nthreads);
     set(options, "sz_omp:max_quant_intervals", confparams_cpr->max_quant_intervals);
     set(options, "sz_omp:quantization_intervals", confparams_cpr->quantization_intervals);
@@ -146,7 +147,21 @@ class sz_omp: public libpressio_compressor_plugin {
     get(options, "sz_omp:pred_threshold", &confparams_cpr->predThreshold);
     get(options, "sz_omp:sz_mode", &confparams_cpr->szMode);
     get(options, "sz_omp:gzip_mode", &confparams_cpr->gzipMode);
-    get(options, "sz_omp:nthreads", &nthreads);
+    uint32_t tmp;
+    if(get(options, "pressio:nthreads", &tmp) == pressio_options_key_set) {
+      if(tmp > 0) {
+        nthreads = tmp;
+      } else {
+        return set_error(1, "num_threads must be positive");
+      }
+    }
+    if(get(options, "sz_omp:nthreads", &tmp) == pressio_options_key_set) {
+      if(tmp > 0) {
+        nthreads = tmp;
+      } else {
+        return set_error(1, "num_threads must be positive");
+      }
+    }
 
     std::string error_bound_mode_str;
     if(get(options, "sz_omp:error_bound_mode_str", &error_bound_mode_str) == pressio_options_key_set) {
@@ -254,7 +269,7 @@ class sz_omp: public libpressio_compressor_plugin {
   }
 
   std::shared_ptr<sz_init_handle> init_handle;
-  int32_t nthreads = 1;
+  uint32_t nthreads = 1;
 };
 
 static pressio_register sz_omp_register(

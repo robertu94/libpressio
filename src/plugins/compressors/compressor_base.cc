@@ -109,6 +109,7 @@ struct pressio_options libpressio_compressor_plugin::get_documentation() const {
   set(ret, "pressio:version_patch", R"(the patch version number)");
   set(ret, "pressio:version", R"(the version string from the compressor)");
 
+  set(ret, "pressio:nthreads", R"(number of threads to use)");
   set(ret, "pressio:abs", R"(a pointwise absolute error bound
 
   compressors may provide this value without supporting abs=0.

@@ -19,7 +19,8 @@ class blosc_plugin: public libpressio_compressor_plugin {
       struct pressio_options options;
       set(options, "pressio:lossless", clevel);
       set(options, "blosc:clevel", clevel);
-      set(options, "blosc:numinternalthreads", numinternalthreads);
+      set(options, "pressio:nthreads", numinternalthreads);
+      set(options, "blosc:numinternalthreads", static_cast<int32_t>(numinternalthreads));
       set(options, "blosc:doshuffle", doshuffle);
       set(options, "blosc:blocksize", blocksize);
       set(options, "blosc:compressor", compressor);
@@ -62,7 +63,22 @@ class blosc_plugin: public libpressio_compressor_plugin {
     int set_options_impl(struct pressio_options const& options) override {
       get(options, "pressio:lossless", &clevel);
       get(options, "blosc:clevel", &clevel);
-      get(options, "blosc:numinternalthreads", &numinternalthreads);
+      uint32_t tmp;
+      if(get(options, "pressio:nthreads", &tmp) == pressio_options_key_set) {
+        if(tmp > 0) {
+          numinternalthreads = tmp;
+        } else {
+          return set_error(1, "number of threads must be positive");
+        }
+      }
+      int32_t itmp;
+      if(get(options, "blosc:numinternalthreads", &itmp) == pressio_options_key_set) {
+        if(itmp > 0) {
+          numinternalthreads = itmp;
+        } else {
+          return set_error(1, "number of threads must be positive");
+        }
+      }
       get(options, "blosc:doshuffle", &doshuffle);
       get(options, "blosc:blocksize", &blocksize);
       get(options, "blosc:compressor", &compressor);
@@ -87,7 +103,7 @@ class blosc_plugin: public libpressio_compressor_plugin {
           destsize,
           compressor.c_str(),
           blocksize,
-          numinternalthreads
+          static_cast<int32_t>(numinternalthreads)
           );
       //deliberately ignoring warnings from reshape since new size guaranteed to be smaller
       size_t compressed_size = ret;
@@ -122,7 +138,7 @@ class blosc_plugin: public libpressio_compressor_plugin {
           src,
           dest,
           destsize,
-          numinternalthreads
+          static_cast<int32_t>(numinternalthreads)
           );
 
       if(ret >= 0) {
@@ -161,7 +177,7 @@ class blosc_plugin: public libpressio_compressor_plugin {
     int reshape_error() { return set_error(2, "failed to reshape array after compression"); }
 
     int clevel;
-    int numinternalthreads = 1;
+    uint32_t numinternalthreads = 1;
     int doshuffle = BLOSC_NOSHUFFLE;
     unsigned int blocksize = 0;
     std::string compressor{BLOSC_BLOSCLZ_COMPNAME};
