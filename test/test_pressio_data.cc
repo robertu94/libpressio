@@ -32,6 +32,29 @@ class PressioDataTests: public ::testing::Test {
     std::vector<int> data;
 };
 
+TEST_F(PressioDataTests, NormalizeDims) {
+  {
+  auto orig = pressio_data::nonowning(pressio_int32_dtype, data.data(), {dims[0], dims[1]});
+  EXPECT_EQ(orig.normalized_dims(1), std::vector<size_t>{6});
+  EXPECT_EQ(orig.normalized_dims(2), (std::vector<size_t>{2,3}));
+  EXPECT_EQ(orig.normalized_dims(3), (std::vector<size_t>{2,3,0}));
+  EXPECT_EQ(orig.normalized_dims(3, 1), (std::vector<size_t>{2,3,1}));
+  EXPECT_EQ(orig.normalized_dims(3, 0), (std::vector<size_t>{2,3,0}));
+  }
+
+  {
+  auto orig2 = pressio_data::empty(pressio_int32_dtype, {2, 3, 4});
+  EXPECT_EQ(orig2.normalized_dims(1), std::vector<size_t>{24});
+  EXPECT_EQ(orig2.normalized_dims(2), (std::vector<size_t>{6,4}));
+  EXPECT_EQ(orig2.normalized_dims(3), (std::vector<size_t>{2,3,4}));
+  EXPECT_EQ(orig2.normalized_dims(3, 1), (std::vector<size_t>{2,3,4}));
+  EXPECT_EQ(orig2.normalized_dims(3, 0), (std::vector<size_t>{2,3,4}));
+  EXPECT_EQ(orig2.normalized_dims(4), (std::vector<size_t>{2,3,4,0}));
+  EXPECT_EQ(orig2.normalized_dims(4, 0), (std::vector<size_t>{2,3,4,0}));
+  EXPECT_EQ(orig2.normalized_dims(4, 1), (std::vector<size_t>{2,3,4,1}));
+  }
+
+}
 TEST_F(PressioDataTests, Transpose) {
   auto original = pressio_data_new_nonowning(pressio_int32_dtype, data.data(), 2, dims);
   auto transposed = pressio_data_transpose(original, nullptr);

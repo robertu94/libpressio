@@ -81,6 +81,7 @@ add_library(libpressio
   ./src/plugins/launch/external_forkexec.cc
   ./src/plugins/metrics/noop.cc
   ./src/plugins/io/noop.cc
+  ./src/plugins/io/by_extension.cc
   ./src/plugins/io/io.cc
   ./src/plugins/io/posix.cc
   ./src/iless.cc
