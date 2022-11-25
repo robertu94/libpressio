@@ -1,0 +1,13 @@
+# This is a Spack Environment file.
+#
+# It describes a set of packages to be installed, along with
+# configuration settings.
+spack:
+  # add package specs to the `specs` list
+  packages:
+    all:
+      target: [x86_64_v4]
+  specs: [libpressio-tools+error_injector+hdf5+opt+tthresh+sperr+adios2+rcpp ^libpressio+lua+sz+sz3+zfp+bitgrooming+blosc+core+bzip2+mpi+openmp+petsc+python+qoz+remote+unix+mgard+ndzip+mgardx]
+  view: true
+  concretizer:
+    unify: true
