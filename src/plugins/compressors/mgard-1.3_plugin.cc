@@ -106,7 +106,7 @@ public:
   struct pressio_options get_configuration_impl() const override
   {
     struct pressio_options options;
-    set(options, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+    set(options, "pressio:thread_safe", pressio_thread_safety_multiple);
     set(options, "mgard:dev_type_str", to_names(dev_types));
     set(options, "mgard:decomposition_str", to_names(decomp_types));
     set(options, "mgard:lossless_type_str", to_names(lossless_types));

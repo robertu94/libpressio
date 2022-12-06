@@ -180,7 +180,11 @@ public:
   {
     try { 
       run_compress_script(inputs, outputs, lambda_fn_event::compress);
-      return compressor->compress_many(inputs.data(), inputs.size(), outputs.data(), outputs.size());
+      int ret = compressor->compress_many(inputs.data(), inputs.size(), outputs.data(), outputs.size());
+      if(ret) {
+        set_error(ret, compressor->error_msg());
+      }
+      return ret;
     } catch(std::exception const& ex) {
       return set_error(1, ex.what());
     }
@@ -190,7 +194,11 @@ public:
   {
     try {
       run_compress_script(inputs, outputs, lambda_fn_event::decompress);
-      return compressor->decompress_many(inputs.data(), inputs.size(), outputs.data(), outputs.size());
+      int ret = compressor->decompress_many(inputs.data(), inputs.size(), outputs.data(), outputs.size());
+      if(ret) {
+        set_error(ret, compressor->error_msg());
+      }
+      return ret;
     } catch (std::exception const& ex) {
       return set_error(2, ex.what());
     }

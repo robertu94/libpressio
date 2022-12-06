@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.90.2" LANGUAGES CXX C)
+project(libpressio VERSION "0.91.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -473,6 +473,18 @@ if(LIBPRESSIO_HAS_NETCDF)
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/io/netcdf.cc
     )
 endif()
+
+option(LIBPRESSIO_HAS_CUDA "build the cuda_device_selector compressor plugin" OFF)
+if(LIBPRESSIO_HAS_CUDA)
+  set(LIBPRESSIO_FEATURES "${LIBPRESSIO_FEATURES} cuda")
+  find_package(CUDAToolkit REQUIRED)
+  target_link_libraries(libpressio PRIVATE CUDA::cuda_driver CUDA::cudart)
+  target_sources(libpressio
+    PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/cuda_device_selector.cc
+    )
+endif()
+
 
 option(LIBPRESSIO_HAS_CUFILE "build the cufile io plugin" OFF)
 if(LIBPRESSIO_HAS_CUFILE)

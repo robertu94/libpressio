@@ -96,7 +96,7 @@ class by_extension_plugin : public libpressio_io_plugin {
     pressio_options opts;
     opts.copy_from(plugin->get_configuration());
     set(opts, "pressio:stability", "stable");
-    set(opts, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
+    set(opts, "pressio:thread_safe", pressio_thread_safety_multiple);
     return opts;
   }
 
@@ -104,6 +104,8 @@ class by_extension_plugin : public libpressio_io_plugin {
     pressio_options opt;
     set_meta_docs(opt, "by_extension:plugin", "io plugin to delegate to", plugin);
     set(opt, "pressio:description", "a \"by_extension\" data loader that chooses an appropriate io plugin based on file extension");
+    set(opt, "by_extension:keys", "extensions to map");
+    set(opt, "by_extension:values", "io plugins to map to");
     return opt;
   }
   void set_name_impl(std::string const& new_name) override {

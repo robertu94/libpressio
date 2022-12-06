@@ -30,16 +30,18 @@ class zfp_plugin: public libpressio_compressor_plugin {
     ~zfp_plugin() {
       zfp_stream_close(zfp);
     }
-    zfp_plugin(zfp_plugin const& rhs): libpressio_compressor_plugin(rhs), zfp(zfp_stream_open(NULL)) {
+    zfp_plugin(zfp_plugin const& rhs): libpressio_compressor_plugin(rhs), zfp(zfp_stream_open(NULL)), dynamic_rate(rhs.dynamic_rate), dynamic_wra(rhs.dynamic_wra) {
       zfp_stream_set_params(zfp, rhs.zfp->minbits, rhs.zfp->maxbits, rhs.zfp->maxprec, rhs.zfp->minexp);
       zfp_stream_set_omp_threads(zfp, zfp_stream_omp_threads(rhs.zfp));
       zfp_stream_set_omp_chunk_size(zfp, zfp_stream_omp_chunk_size(rhs.zfp));
       zfp_stream_set_execution(zfp, zfp_stream_execution(rhs.zfp));
     }
-    zfp_plugin(zfp_plugin && rhs) noexcept: zfp(compat::exchange(rhs.zfp, zfp_stream_open(NULL))) {}
+    zfp_plugin(zfp_plugin && rhs) noexcept: zfp(compat::exchange(rhs.zfp, zfp_stream_open(NULL))), dynamic_rate(rhs.dynamic_rate), dynamic_wra(rhs.dynamic_wra) {}
     zfp_plugin& operator=(zfp_plugin && rhs) noexcept {
       if(this != &rhs) return *this;
       zfp = compat::exchange(rhs.zfp, zfp_stream_open(NULL));
+      dynamic_rate = rhs.dynamic_rate;
+      dynamic_wra = rhs.dynamic_wra;
       return *this;
     }
 
@@ -49,6 +51,8 @@ class zfp_plugin: public libpressio_compressor_plugin {
       zfp_stream_set_omp_threads(zfp, zfp_stream_omp_threads(rhs.zfp));
       zfp_stream_set_omp_chunk_size(zfp, zfp_stream_omp_chunk_size(rhs.zfp));
       zfp_stream_set_execution(zfp, zfp_stream_execution(rhs.zfp));
+      dynamic_rate = rhs.dynamic_rate;
+      dynamic_wra = rhs.dynamic_wra;
       return *this;
     }
 
@@ -160,11 +164,15 @@ class zfp_plugin: public libpressio_compressor_plugin {
       } else if (get(options, "zfp:reversible", &reversible) == pressio_options_key_set || get(options, "pressio:lossless", &reversible) == pressio_options_key_set) { 
         zfp_stream_set_reversible(zfp);
       } else {
-        dynamic_rate = compat::nullopt;
-        get(options, "zfp:minbits", &zfp->minbits);
-        get(options, "zfp:maxbits", &zfp->maxbits);
-        get(options, "zfp:maxprec", &zfp->maxprec);
-        get(options, "zfp:minexp", &zfp->minexp);
+        bool expert_mode_set = false;
+        expert_mode_set |= (get(options, "zfp:minbits", &zfp->minbits) == pressio_options_key_set);
+        expert_mode_set |= (get(options, "zfp:maxbits", &zfp->maxbits) == pressio_options_key_set);
+        expert_mode_set |= (get(options, "zfp:maxprec", &zfp->maxprec) == pressio_options_key_set);
+        expert_mode_set |= (get(options, "zfp:minexp", &zfp->minexp) == pressio_options_key_set);
+        if(expert_mode_set) {
+          dynamic_rate = compat::nullopt;
+          dynamic_wra = compat::nullopt;
+        }
       }
 
       int execution;
@@ -259,7 +267,15 @@ class zfp_plugin: public libpressio_compressor_plugin {
       //
       //currently only serial supports all modes, and cuda supports fixed rate decompression
       zfp_exec_policy policy = zfp_stream_execution(zfp);
-      zfp_mode zfp_zmode = zfp_stream_compression_mode(zfp);
+      zfp_mode zfp_zmode;
+      if(dynamic_rate) {
+        zfp_zmode = zfp_mode_fixed_rate;
+        zfp_type type;
+        libpressio_type(output, &type);
+        zfp_stream_set_rate(zfp, dynamic_rate.value(), type, output->normalized_dims().size(), dynamic_wra.value_or(0));
+      } else {
+        zfp_stream_compression_mode(zfp);
+      }
       if(!  (policy == zfp_exec_serial || (zfp_zmode == zfp_mode_fixed_rate && policy == zfp_exec_cuda))) {
         zfp_stream_set_execution(zfp, zfp_exec_serial);
       }

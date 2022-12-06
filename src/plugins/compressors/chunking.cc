@@ -218,6 +218,9 @@ class chunking_plugin: public libpressio_compressor_plugin {
           outputs_ptr.data(),
           outputs_ptr.size()
           );
+      if(rc) {
+        set_error(rc, compressor->error_msg());
+      }
 
       auto dechunk_begin = std::chrono::steady_clock::now();
       //join the buffers
