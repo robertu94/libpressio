@@ -9,6 +9,7 @@ class switch_compressor: public libpressio_compressor_plugin {
   pressio_options get_options_impl() const override {
     pressio_options opts;
     set_meta_many(opts, "switch:compressors", compressor_ids, compressors);
+    set(opts, "switch:names", names);
     set(opts, "switch:active_id", active_id);
     set_type(opts, "switch:clear_invocations", pressio_option_int32_type);
     return opts;
@@ -22,6 +23,7 @@ class switch_compressor: public libpressio_compressor_plugin {
     )");
     set(opts, "switch:clear_invocations", "*write-only* clear the invocation count metric");
     set(opts, "switch:active_id", "the compressor to actually use");
+    set(opts, "switch:names", "allows naming sub-compressors");
     return opts;
   }
   pressio_options get_configuration_impl() const override {
@@ -38,6 +40,7 @@ class switch_compressor: public libpressio_compressor_plugin {
     return opts;
   }
   int set_options_impl(const pressio_options &options) override {
+    get(options, "switch:names", &names);
     get_meta_many(options, "switch:compressors", compressor_plugins(), compressor_ids, compressors);
     get(options, "switch:active_id", &active_id);
     int32_t clear = 0;
@@ -52,14 +55,18 @@ class switch_compressor: public libpressio_compressor_plugin {
   int compress_impl(const pressio_data *input, struct pressio_data *output) override {
     try {
     compression_invocations.at(active_id)++;
-    return compressors.at(active_id)->compress(input, output);
+    int ret = compressors.at(active_id)->compress(input, output);
+    if(ret) set_error(ret, compressors.at(active_id)->error_msg());
+    return ret;
     } catch(std::out_of_range& ex) {
       return set_error(1, std::string("invalid active_id: ") + ex.what());
     }
   }
   int decompress_impl(const pressio_data *input, struct pressio_data *output) override {
     try {
-    return compressors.at(active_id)->decompress(input, output);
+    int ret = compressors.at(active_id)->decompress(input, output);
+    if(ret) set_error(ret, compressors.at(active_id)->error_msg());
+    return ret;
     } catch(std::out_of_range& ex) {
       return set_error(1, std::string("invalid active_id: ") + ex.what());
     }
