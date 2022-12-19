@@ -64,8 +64,8 @@ public:
   pressio_options get_documentation_impl() const override {
     pressio_options opts;
     set(opts, "pressio:description", "computes the entropy of the input data and output data");
-    set(opts, "entropy:input", "the entropy of the input data");
-    set(opts, "entropy:decompressed", "the entropy of the decompressed data");
+    set(opts, "entropy:input", "the entropy of the input data (shannon)");
+    set(opts, "entropy:decompressed", "the entropy of the decompressed data (shannon)");
     return opts;
   }
 

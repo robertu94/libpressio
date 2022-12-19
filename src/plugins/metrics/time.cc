@@ -244,32 +244,32 @@ class time_plugin : public libpressio_metrics_plugin {
   struct pressio_options get_documentation_impl() const override {
     pressio_options opts;
     set(opts, "pressio:description", "records time used in each operation in ms");
-    set(opts, "time:check_options", "time in check_options");
-    set(opts, "time:set_options", "time in set options");
-    set(opts, "time:get_options", "time in get options");
-    set(opts, "time:get_configuration", "time in get configuration");
-    set(opts, "time:compress", "time in compress");
-    set(opts, "time:decompress", "time in decompress");
-    set(opts, "time:compress_many", "time in compress_many");
-    set(opts, "time:decompress_many", "time in decompress_many");
-    set(opts, "time:metric", "time a child metrics plugin");
+    set(opts, "time:check_options", "time in check_options (ms)");
+    set(opts, "time:set_options", "time in set options (ms)");
+    set(opts, "time:get_options", "time in get options (ms)");
+    set(opts, "time:get_configuration", "time in get configuration (ms)");
+    set(opts, "time:compress", "time in compress (ms)");
+    set(opts, "time:decompress", "time in decompress (ms)");
+    set(opts, "time:compress_many", "time in compress_many (ms)");
+    set(opts, "time:decompress_many", "time in decompress_many (ms)");
+    set(opts, "time:metric", "time a child metrics plugin (ms)");
 
-    set(opts, "time:begin_check_options", "time for child's begin_check_options");
-    set(opts, "time:begin_set_options", "time for child's begin_set_options");
-    set(opts, "time:begin_get_options", "time for child's begin_get_options");
-    set(opts, "time:begin_compress", "time for child's begin_compress");
-    set(opts, "time:begin_get_configuration", "time for child's begin_get_configuration");
-    set(opts, "time:begin_decompress", "time for child's begin_decompress");
-    set(opts, "time:begin_compress_many", "time for child's begin_compress_many");
-    set(opts, "time:begin_decompress_many", "time for child's begin_decompress_many");
-    set(opts, "time:end_check_options", "time for child's end_check_options");
-    set(opts, "time:end_set_options", "time for child's end_set_options");
-    set(opts, "time:end_get_options", "time for child's end_get_options");
-    set(opts, "time:end_compress", "time for child's end_compress");
-    set(opts, "time:end_get_configuration", "time for child's end_get_configuration");
-    set(opts, "time:end_decompress", "time for child's end_decompress");
-    set(opts, "time:end_compress_many", "time for child's end_compress_many");
-    set(opts, "time:end_decompress_many", "time for child's end_decompress_many");
+    set(opts, "time:begin_check_options", "time for child's begin_check_options (ms)");
+    set(opts, "time:begin_set_options", "time for child's begin_set_options (ms)");
+    set(opts, "time:begin_get_options", "time for child's begin_get_options (ms)");
+    set(opts, "time:begin_compress", "time for child's begin_compress (ms)");
+    set(opts, "time:begin_get_configuration", "time for child's begin_get_configuration (ms)");
+    set(opts, "time:begin_decompress", "time for child's begin_decompress (ms)");
+    set(opts, "time:begin_compress_many", "time for child's begin_compress_many (ms)");
+    set(opts, "time:begin_decompress_many", "time for child's begin_decompress_many (ms)");
+    set(opts, "time:end_check_options", "time for child's end_check_options (ms)");
+    set(opts, "time:end_set_options", "time for child's end_set_options (ms)");
+    set(opts, "time:end_get_options", "time for child's end_get_options (ms)");
+    set(opts, "time:end_compress", "time for child's end_compress (ms)");
+    set(opts, "time:end_get_configuration", "time for child's end_get_configuration (ms)");
+    set(opts, "time:end_decompress", "time for child's end_decompress (ms)");
+    set(opts, "time:end_compress_many", "time for child's end_compress_many (ms)");
+    set(opts, "time:end_decompress_many", "time for child's end_decompress_many (ms)");
     return opts;
   }
 

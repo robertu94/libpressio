@@ -194,10 +194,10 @@ class composite_plugin : public libpressio_metrics_plugin {
   pressio_options get_documentation_impl() const override {
     pressio_options options;
     set_meta_many_docs(options, "composite:plugins",  "plugins used for gathering metrics", plugins);
-    set(options, "composite:compression_rate", "compression rate for the compress method, activated by size and time");
-    set(options, "composite:compression_rate_many", "compression rate for the compress_many method, activated by size and time");
-    set(options, "composite:decompression_rate", "decompression rate for the compress method, activated by size and time");
-    set(options, "composite:decompression_rate_many", "decompression rate for the compress_many method, activated by size and time");
+    set(options, "composite:compression_rate", "compression rate for the compress method, activated by size and time (kB/s)");
+    set(options, "composite:compression_rate_many", "compression rate for the compress_many method, activated by size and time (kB/s)");
+    set(options, "composite:decompression_rate", "decompression rate for the compress method, activated by size and time (kB/s)");
+    set(options, "composite:decompression_rate_many", "decompression rate for the compress_many method, activated by size and time (kB/s)");
     set(options, "composite:names", "the names to use for the constructed metrics plugins");
     set(options, "composite:scripts", "a lua script used to compute metrics from other metrics that have been previously computed");
     set(options, "pressio:description", "meta-metric that runs a set of metrics in sequence");
