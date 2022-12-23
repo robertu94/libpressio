@@ -5,7 +5,11 @@
 #include "libpressio_ext/cpp/pressio.h"
 #include "roibin_impl.h"
 
+#include "basic_indexer.h"
+
 namespace libpressio { namespace roibin_ns {
+
+    using namespace utilities;
 
 class roibin_compressor_plugin : public libpressio_compressor_plugin {
 public:

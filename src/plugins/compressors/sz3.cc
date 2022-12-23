@@ -4,6 +4,7 @@
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
 #include "iless.h"
+#include "cleanup.h"
 
 #include <SZ3/api/sz.hpp>
 
@@ -85,6 +86,7 @@ public:
     } else {
       set_type(options, "pressio:rel", pressio_option_double_type);
     }
+    set(options, "pressio:nthreads", nthreads);
     set(options, "sz3:abs_error_bound", config.absErrorBound);
     set(options, "sz3:rel_error_bound", config.relErrorBound);
     set(options, "sz3:psnr_error_bound", config.psnrErrorBound);
@@ -159,6 +161,18 @@ public:
     if(get(options, "pressio:rel", &config.relErrorBound) == pressio_options_key_set) {
       config.errorBoundMode = SZ::EB_REL;
     } 
+    uint32_t tmp_nthreads;
+    if(get(options, "pressio:nthreads", &tmp_nthreads) == pressio_options_key_set) {
+        if(tmp_nthreads > 1) {
+            nthreads = tmp_nthreads;
+            config.openmp = true;
+        } else if(tmp_nthreads == 1) {
+            nthreads = tmp_nthreads;
+            config.openmp = false;
+        } else {
+            return set_error(1, "unsupported nthreads");
+        }
+    }
     get(options, "sz3:abs_error_bound", &config.absErrorBound);
     get(options, "sz3:rel_error_bound", &config.relErrorBound);
     get(options, "sz3:psnr_error_bound", &config.psnrErrorBound);
@@ -198,6 +212,13 @@ public:
   int compress_impl(const pressio_data* input,
                     struct pressio_data* output) override
   {
+    cleanup restore_threads;
+    if(config.openmp) {
+        int32_t old_threads = omp_get_num_threads();
+        omp_set_num_threads(static_cast<int32_t>(nthreads));
+        restore_threads = [old_threads]{ omp_set_num_threads(old_threads);};
+    }
+
     auto reg_dims = input->normalized_dims();
     std::reverse(reg_dims.begin(), reg_dims.end());
     config.dims = reg_dims;
@@ -211,6 +232,13 @@ public:
   int decompress_impl(const pressio_data* input,
                       struct pressio_data* output) override
   {
+    cleanup restore_threads;
+    if(config.openmp) {
+        int32_t old_threads = omp_get_num_threads();
+        omp_set_num_threads(static_cast<int32_t>(nthreads));
+        restore_threads = [old_threads]{ omp_set_num_threads(old_threads);};
+    }
+
     switch(output->dtype()) {
       case pressio_float_dtype:
         {
@@ -293,6 +321,7 @@ public:
     return compat::make_unique<sz3_compressor_plugin>(*this);
   }
 
+  uint32_t nthreads = 1;
   SZ::Config config;
 };
 

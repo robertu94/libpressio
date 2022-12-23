@@ -7,6 +7,8 @@
 
 namespace libpressio { namespace binning_ns {
 
+    using namespace utilities;
+
   struct bin_op {
     template<class T>
     pressio_data operator()(T const* t, T const*) {
@@ -18,27 +20,27 @@ namespace libpressio { namespace binning_ns {
       switch(dims.size()) {
         case 1:
           {
-          roibin_ns::indexer<1> id{dims.at(0)};
-          roibin_ns::indexer<1> bins{bins_v.begin(), bins_v.end()};
-          roibin_ns::indexer<1> binned_storage = roibin_ns::to_binned_index(id, bins);
+          indexer<1> id{dims.at(0)};
+          indexer<1> bins{bins_v.begin(), bins_v.end()};
+          indexer<1> binned_storage = roibin_ns::to_binned_index(id, bins);
           pressio_data binned = pressio_data::owning( pressio_dtype_from_type<T>(), {binned_storage[0]});
           roibin_ns::bin_omp(id, binned_storage, bins, static_cast<T const*>(t), static_cast<T*>(binned.data()), n_threads);
           return binned;
           }
         case 2:
           {
-          roibin_ns::indexer<2> id{dims.at(0), dims.at(1)};
-          roibin_ns::indexer<2> bins{bins_v.begin(), bins_v.end()};
-          roibin_ns::indexer<2> binned_storage = roibin_ns::to_binned_index(id, bins);
+          indexer<2> id{dims.at(0), dims.at(1)};
+          indexer<2> bins{bins_v.begin(), bins_v.end()};
+          indexer<2> binned_storage = roibin_ns::to_binned_index(id, bins);
           pressio_data binned = pressio_data::owning( pressio_dtype_from_type<T>(), {binned_storage[0], binned_storage[1]});
           roibin_ns::bin_omp(id, binned_storage, bins, static_cast<T const*>(t), static_cast<T*>(binned.data()), n_threads);
           return binned;
           }
         case 3:
           {
-          roibin_ns::indexer<3> id{dims.at(0), dims.at(1), dims.at(2)};
-          roibin_ns::indexer<3> bins{bins_v.begin(), bins_v.end()};
-          roibin_ns::indexer<3> binned_storage = roibin_ns::to_binned_index(id, bins);
+          indexer<3> id{dims.at(0), dims.at(1), dims.at(2)};
+          indexer<3> bins{bins_v.begin(), bins_v.end()};
+          indexer<3> binned_storage = roibin_ns::to_binned_index(id, bins);
           pressio_data binned = pressio_data::owning(
               pressio_dtype_from_type<T>(), {binned_storage[0], binned_storage[1], binned_storage[2]});
           roibin_ns::bin_omp(id, binned_storage, bins, static_cast<T const*>(t), static_cast<T*>(binned.data()), n_threads);
@@ -46,9 +48,9 @@ namespace libpressio { namespace binning_ns {
           }
         case 4:
           {
-          roibin_ns::indexer<4> id{ dims.at(0), dims.at(1), dims.at(2), dims.at(3) };
-          roibin_ns::indexer<4> bins{bins_v.begin(), bins_v.end()};
-          roibin_ns::indexer<4> binned_storage = roibin_ns::to_binned_index(id, bins);
+          indexer<4> id{ dims.at(0), dims.at(1), dims.at(2), dims.at(3) };
+          indexer<4> bins{bins_v.begin(), bins_v.end()};
+          indexer<4> binned_storage = roibin_ns::to_binned_index(id, bins);
           pressio_data binned = pressio_data::owning( pressio_dtype_from_type<T>(),
               {binned_storage[0], binned_storage[1], binned_storage[2], binned_storage[3]});
           roibin_ns::bin_omp(id, binned_storage, bins, static_cast<T const*>(t), static_cast<T*>(binned.data()), n_threads);
@@ -69,13 +71,13 @@ namespace libpressio { namespace binning_ns {
   struct restore_op {
     template <class T, class V>
     int operator()(T * input_data, T *, V* output_data) {
-      roibin_ns::restore_omp(id, binned_storage, bins, input_data, reinterpret_cast<T*>(output_data), n_threads);
+        roibin_ns::restore_omp(id, binned_storage, bins, input_data, reinterpret_cast<T*>(output_data), n_threads);
       return 0;
     }
 
-    roibin_ns::indexer<N> id;
-    roibin_ns::indexer<N> bins;
-    roibin_ns::indexer<N> binned_storage;
+    indexer<N> id;
+    indexer<N> bins;
+    indexer<N> binned_storage;
     uint32_t n_threads;
   };
 
@@ -162,15 +164,15 @@ public:
       if (dims_v.size() != N) {
         throw std::runtime_error("mismatch in size in dims");
       }
-      roibin_ns::indexer<N> id(dims_v.begin(), dims_v.end());
+      indexer<N> id(dims_v.begin(), dims_v.end());
 
       auto bins_v = this->bins.to_vector<size_t>();
       if (bins_v.size() != N) {
         throw std::runtime_error("mismatch in size in bins");
       }
-      roibin_ns::indexer<N> bins{bins_v.begin(), bins_v.end()};
+      indexer<N> bins{bins_v.begin(), bins_v.end()};
 
-      roibin_ns::indexer<N> binned_storage = roibin_ns::to_binned_index(id, bins);
+      indexer<N> binned_storage = roibin_ns::to_binned_index(id, bins);
       pressio_data tmp_out = pressio_data::owning(output->dtype(), binned_storage.as_vec());
       int rc = comp->decompress(input, &tmp_out);
 

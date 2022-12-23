@@ -8,62 +8,12 @@
 #include "std_compat/functional.h"
 #include <numeric>
 
+#include "basic_indexer.h"
+
 namespace libpressio { namespace data_gap_metrics_ns {
 //assume dims are fastest to slowest
-template <class SizeType, SizeType N>
-struct basic_indexer {
-  template <class... T, typename std::enable_if<compat::conjunction<std::is_integral<typename std::decay<T>::type>...>::value,int>::type = 0>
-  basic_indexer(T&&... args) noexcept: max_dims{static_cast<SizeType>(args)...} {}
 
-  basic_indexer(std::array<SizeType,N> args) noexcept: max_dims(args) {}
-
-  basic_indexer(std::initializer_list<SizeType> args) noexcept: max_dims([](std::initializer_list<SizeType> args){
-        std::array<SizeType,N> dims;
-        std::copy(args.begin(), args.end(), dims.begin());
-        return dims;
-      }(args)) {}
-
-  template <class It>
-  basic_indexer(It first, It second) noexcept:
-    max_dims([](It first, It second){
-        std::array<SizeType,N> dims;
-        std::copy(first, second, dims.begin());
-        return dims;
-      }(first, second)) {
-    }
-
-  template <class... T>
-  typename std::enable_if<compat::conjunction<std::is_integral<typename std::decay<T>::type>...>::value && sizeof...(T) >= 1,std::size_t>::type
-  operator()(T&&... args) const noexcept {
-    std::array<SizeType, sizeof...(T)> dims{static_cast<SizeType>(args)...};
-    return operator()(dims);
-  }
-  SizeType operator()(std::array<SizeType, N> const idxs) const noexcept {
-    SizeType idx = idxs.back();
-    SizeType i = N-1;
-    do  {
-      i--;
-      idx*= max_dims[i]; 
-      idx+= idxs[i];
-    } while (i);
-    return idx;
-  }
-
-  SizeType operator[](std::size_t i) const noexcept {
-    return max_dims[i]; }
-  SizeType size() const noexcept {
-    return std::accumulate(max_dims.begin(), max_dims.end(), SizeType{1}, compat::multiplies<>{});
-  }
-
-  std::vector<SizeType> as_vec() {
-    return std::vector<SizeType>(max_dims.begin(), max_dims.end());
-  }
-
-  std::array<SizeType, N> const max_dims;
-};
-
-template <size_t N>
-using indexer = basic_indexer<size_t, N>;
+    using namespace utilities;
 
 class data_gap_plugin : public libpressio_metrics_plugin {
   public:
