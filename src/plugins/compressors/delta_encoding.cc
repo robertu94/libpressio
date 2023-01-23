@@ -62,7 +62,7 @@ y[i] = x[i] - x[i-1];
   }
   pressio_options get_configuration_impl() const override {
     pressio_options opts;
-    opts.copy_from(meta->get_configuration());
+    set_meta_configuration(opts, "delta_encoding:compressor", compressor_plugins(), meta);
     set(opts, "pressio:thread_safe", get_threadsafe(*meta));
     set(opts, "pressio:stability", "experimental");
     return opts;

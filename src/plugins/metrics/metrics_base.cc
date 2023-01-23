@@ -3,8 +3,7 @@
 #include "libpressio_ext/cpp/options.h"
 
 libpressio_metrics_plugin::libpressio_metrics_plugin():
-  pressio_configurable(),
-  pressio_errorable()
+  pressio_configurable()
 {}
 
 struct pressio_options libpressio_metrics_plugin::get_documentation() const {

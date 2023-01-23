@@ -1,3 +1,8 @@
+#ifndef LIBPRESSIO_SZ_COMMON_H_QC5YZGML
+#define LIBPRESSIO_SZ_COMMON_H_QC5YZGML
+
+
+
 #include <memory>
 #include <string>
 #include <std_compat/shared_mutex.h>
@@ -28,3 +33,4 @@ struct sz_init_handle {
 
 std::shared_ptr<sz_init_handle> pressio_get_sz_init_handle();
 }
+#endif /* end of include guard: LIBPRESSIO_SZ_COMMON_H_QC5YZGML */

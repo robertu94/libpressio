@@ -1,9 +1,9 @@
+#include "std_compat/cmath.h"
 #include "std_compat/memory.h"
 #include "libpressio_ext/cpp/compressor.h"
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
-#include <cmath>
 
 #include "basic_indexer.h"
 
@@ -28,7 +28,7 @@ public:
   struct pressio_options get_configuration_impl() const override
   {
     struct pressio_options options;
-    options.copy_from(comp->get_configuration());
+    set_meta_configuration(options, "mask_interpolation:compressor", compressor_plugins(), comp);
     set(options, "pressio:thread_safe", get_threadsafe(*comp));
     set(options, "pressio:stability", "experimental");
     set(options, "mask_interpolation:mask_mode", std::vector<std::string>{"fill", "interp"});
@@ -38,9 +38,9 @@ public:
   struct pressio_options get_documentation_impl() const override
   {
     struct pressio_options options;
-    set(options, "pressio:description", R"(apply interpolation to replace masked values)");
     set_meta_docs(options, "mask_interpolation:compressor", "compressor to use after masking", comp);
-    set(options, "mask_interpolation:mask", "mask of values to replace !=0 means replace");
+    set(options, "pressio:description", R"(apply interpolation to replace masked values)");
+    set(options, "mask_interpolation:mask", "mask of values to replace true means replace");
     set(options, "mask_interpolation:fill", "for values that cannot be interpolated, what value to fill with");
     set(options, "mask_interpolation:mask_mode", "type of interpolation to use for masked values");
     set(options, "mask_interpolation:nthreads", "number of execution threads");
@@ -116,7 +116,7 @@ public:
                       } else if (right_pos == 0) {
                           output_ptr[idx(i)] = left;
                       } else {
-                          return std::lerp(left, right, static_cast<double>(left_pos)/static_cast<double>(left_pos+right_pos));
+                          return compat::lerp(left, right, static_cast<double>(left_pos)/static_cast<double>(left_pos+right_pos));
                       }
                   }
               }
@@ -172,12 +172,12 @@ public:
 
                       if(left_pos) {
                           if(right_pos) {
-                              auto left_right = std::lerp(left, right, static_cast<double>(left_pos)/static_cast<double>(left_pos+right_pos));
+                              auto left_right = compat::lerp(left, right, static_cast<double>(left_pos)/static_cast<double>(left_pos+right_pos));
                               if(top_pos) {
                                   if(bot_pos) {
                                       //left, right, top, bot -> interp lrtb
-                                      auto top_bot = std::lerp(top, bot, static_cast<double>(top_pos)/static_cast<double>(top_pos+bot_pos));
-                                      output_ptr[idx(i,j)] = std::lerp(left_right, top_bot, static_cast<double>(top_pos+bot_pos)/static_cast<double>(left_pos+right_pos+top_pos+bot_pos));
+                                      auto top_bot = compat::lerp(top, bot, static_cast<double>(top_pos)/static_cast<double>(top_pos+bot_pos));
+                                      output_ptr[idx(i,j)] = compat::lerp(left_right, top_bot, static_cast<double>(top_pos+bot_pos)/static_cast<double>(left_pos+right_pos+top_pos+bot_pos));
                                   } else {
                                       //left, right, top, ~bot -> interp lr
                                       output_ptr[idx(i,j)] = left_right;
@@ -191,7 +191,7 @@ public:
                               if(top_pos) {
                                   if(bot_pos) {
                                       //left, ~right, top, bot -> interp lt
-                                      auto top_bot = std::lerp(top, bot, static_cast<double>(top_pos)/static_cast<double>(top_pos+bot_pos));
+                                      auto top_bot = compat::lerp(top, bot, static_cast<double>(top_pos)/static_cast<double>(top_pos+bot_pos));
                                       output_ptr[idx(i,j)] = top_bot;
                                   } else {
                                       //left, ~right, top, ~bot -> avg lt
@@ -215,7 +215,7 @@ public:
                           if(right_pos) {
                               if(top_pos) {
                                   if(bot_pos) {
-                                      auto top_bot = std::lerp(top, bot, static_cast<double>(top_pos)/static_cast<double>(top_pos+bot_pos));
+                                      auto top_bot = compat::lerp(top, bot, static_cast<double>(top_pos)/static_cast<double>(top_pos+bot_pos));
                                       //~left, right, top, bot
                                       output_ptr[idx(i,j)] = top_bot;
                                   } else {
@@ -238,7 +238,7 @@ public:
                           } else {
                               if(top_pos) {
                                   if(bot_pos) {
-                                      auto top_bot = std::lerp(top, bot, static_cast<double>(top_pos)/static_cast<double>(top_pos+bot_pos));
+                                      auto top_bot = compat::lerp(top, bot, static_cast<double>(top_pos)/static_cast<double>(top_pos+bot_pos));
                                       //~left, ~right, top, bot -> interp tb
                                       output_ptr[idx(i,j)] = top_bot;
                                   } else {
@@ -256,32 +256,6 @@ public:
                               }
                           }
                       }
-
-                      /*if(left_pos == 0 && right_pos == 0 && top_pos == 0 && bot_pos == 0) {
-                          output_ptr[idx(i,j)] = fill;
-                      } else if (left_pos == 0 && right_pos == 0) {
-                          if (top_pos == 0) {
-                              output_ptr[idx(i,j)] = bot;
-                          } else if (bot_pos == 0) {
-                              output_ptr[idx(i,j)] = top;
-                          } else {
-                              output_ptr[idx(i,j)] = std::lerp(top, bot, static_cast<double>(top_pos)/static_cast<double>(top_pos+bot_pos));
-                          }
-                      } else if (top_pos == 0 && bot_pos == 0) {
-                          if (left_pos == 0) {
-                              output_ptr[idx(i,j)] = right;
-                          } else if (right_pos == 0) {
-                              output_ptr[idx(i,j)] = left;
-                          } else {
-                              output_ptr[idx(i,j)] = std::lerp(left, right, static_cast<double>(left_pos)/static_cast<double>(left_pos+right_pos));
-                          }
-                      } else if(top_pos != 0 && bot_pos != 0 && left_pos != 0 && right_pos != 0) {
-                          auto left_right = std::lerp(left, right, static_cast<double>(left_pos)/static_cast<double>(left_pos+right_pos));
-                          auto top_bot = std::lerp(top, bot, static_cast<double>(top_pos)/static_cast<double>(top_pos+bot_pos));
-                          output_ptr[idx(i,j)] = std::lerp(left_right, top_bot, static_cast<double>(top_pos+bot_pos)/static_cast<double>(left_pos+right_pos+top_pos+bot_pos));
-                      } else {
-
-                      }*/
                   }
               }}
           } else {

@@ -4,5 +4,6 @@ add_executable(generate_docs
 target_link_libraries(generate_docs
   PRIVATE
   libpressio
+  ${CMAKE_DL_LIBS}
   )
 

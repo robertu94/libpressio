@@ -92,6 +92,10 @@ struct pressio_registry {
     return factories.find(key);
   }
 
+  size_t size() const {
+      return factories.size();
+  }
+
 };
 
 /**

@@ -181,8 +181,8 @@ public:
   struct pressio_options get_configuration_impl() const override
   {
     struct pressio_options options;
-    options.copy_from(abs_comp->get_configuration());
-    options.copy_from(signs_comp->get_configuration());
+    set_meta_configuration(options, "pw_rel:abs_comp", compressor_plugins(), abs_comp);
+    set_meta_configuration(options, "pw_rel:sign_comp", compressor_plugins(), signs_comp);
     set(options, "pressio:thread_safe", std::min(get_threadsafe(*abs_comp), get_threadsafe(*signs_comp)));
     set(options, "pressio:stability", "experimental");
     return options;

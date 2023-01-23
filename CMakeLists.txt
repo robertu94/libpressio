@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.92.0" LANGUAGES CXX C)
+project(libpressio VERSION "0.93.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -69,6 +69,7 @@ add_library(libpressio
   ./src/pressio_option.cc
   ./src/pressio_options.cc
   ./src/pressio_options_iter.cc
+  ./src/pressio_highlevel.cc
 
   #plugins
   ./src/plugins/compressors/compressor_base.cc
@@ -173,7 +174,7 @@ libpressio_optional_component(print_options "print the options passed to set_opt
 libpressio_optional_component(data_gap "compute the data_gap" /metrics/data_gap.cc)
 libpressio_optional_component(clipping "compute the number of values that exceed an absolute error bound" /metrics/clipping.cc)
 libpressio_optional_component(write_debug_inputs "metric that writes output buffers for testing" /metrics/write_debug_inputs.cc)
-set(roibin_sources /compressors/roibin.cc /compressors/binning.cc)
+set(roibin_sources /compressors/roibin.cc /compressors/binning.cc /compressors/masked_binning.cc)
 libpressio_optional_component(roibin "build the roibin metacompressor" "${roibin_sources}")
 
 option(LIBPRESSIO_INTERPROCEDURAL_OPTIMIZATION "Use interprocedural optimization (LTO)" OFF)
@@ -733,6 +734,8 @@ if(BUILD_DOCS)
     set(DOXYGEN_MAN_LINKS NO)
   endif()
   set(DOXYGEN_GENERATE_MAN YES)
+  set(DOXYGEN_HTML_EXTRA_STYLESHEET "${CMAKE_CURRENT_SOURCE_DIR}/docs/doxygen-awesome.css" )
+  set(DOXYGEN_HTML_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/docs/head.html")
   set(DOXYGEN_GENERATE_HTML YES)
   set(DOXYGEN_EXTRACT_LOCAL_METHODS YES)
   set(DOXYGEN_EXTRACT_STATIC YES)

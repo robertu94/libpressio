@@ -48,7 +48,7 @@ struct extern_proc_results {
 /**
  * an extension point for launching processes
  */
-struct libpressio_launch_plugin: public pressio_configurable, public pressio_errorable {
+struct libpressio_launch_plugin: public pressio_configurable {
   virtual ~libpressio_launch_plugin()=default;
   /**
    * launch the process

@@ -20,6 +20,11 @@ Thanks for you interest in LibPressio!  Here are a few things you can do to spee
 
 ## Plugins
 
+LibPressio uses a key-value system to refer to configuration settings.
+
+Each compressor may find specific configuration settings for its specific compressor with settings beginning with its compressor id as prefix (i.e. configurations for SZ begin with `sz:`).  [Refer to the specific compressors documentation](@ref compressors) for further documentation for each settings.
+
++ Use the `io:`, `metrics:` and `pressio:` where appropriate.
 + Avoid unnecessary casts.  Prefer C++ style casts where required.
 + Prefer full names to abbreviations.
 + Do not contribute dead code or code that has been commented out.

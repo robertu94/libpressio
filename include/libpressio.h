@@ -8,3 +8,4 @@
 #include "pressio_option.h"
 #include "pressio_data.h"
 #include "pressio_metrics.h"
+#include "libpressio_ext/io/pressio_io.h"

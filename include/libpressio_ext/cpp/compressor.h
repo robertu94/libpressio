@@ -19,7 +19,7 @@ class libpressio_metrics_plugin;
 /**
  * plugin to provide a new compressor
  */
-class libpressio_compressor_plugin :public pressio_configurable, public pressio_versionable, public pressio_errorable {
+class libpressio_compressor_plugin :public pressio_configurable, public pressio_versionable {
   public:
 
   libpressio_compressor_plugin() noexcept;
@@ -29,7 +29,6 @@ class libpressio_compressor_plugin :public pressio_configurable, public pressio_
    */
   libpressio_compressor_plugin(libpressio_compressor_plugin const& plugin):
     pressio_configurable(plugin),
-    pressio_errorable(plugin),
     metrics_plugin((plugin.metrics_plugin)?plugin.metrics_plugin->clone(): nullptr)
   {}
   /**
@@ -39,7 +38,6 @@ class libpressio_compressor_plugin :public pressio_configurable, public pressio_
   libpressio_compressor_plugin& operator=(libpressio_compressor_plugin const& plugin)
   {
     pressio_configurable::operator=(plugin);
-    pressio_errorable::operator=(plugin);
     metrics_plugin = plugin.metrics_plugin->clone();
     return *this;
   }
@@ -49,7 +47,6 @@ class libpressio_compressor_plugin :public pressio_configurable, public pressio_
    */
   libpressio_compressor_plugin(libpressio_compressor_plugin&& plugin) noexcept:
     pressio_configurable(plugin),
-    pressio_errorable(plugin),
     metrics_plugin(std::move(plugin.metrics_plugin))
     {}
   /**
@@ -59,7 +56,6 @@ class libpressio_compressor_plugin :public pressio_configurable, public pressio_
   libpressio_compressor_plugin& operator=(libpressio_compressor_plugin&& plugin) noexcept
   {
     pressio_configurable::operator=(plugin);
-    pressio_errorable::operator=(plugin);
     metrics_plugin = std::move(plugin.metrics_plugin);
     return *this;
   }

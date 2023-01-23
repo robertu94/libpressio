@@ -28,8 +28,8 @@ public:
   struct pressio_options get_configuration_impl() const override
   {
     struct pressio_options options;
-    options.copy_from(background->get_configuration());
-    options.copy_from(roi->get_configuration());
+    set_meta_configuration(options, "roibin:background", compressor_plugins(), background);
+    set_meta_configuration(options, "roibin:roi", compressor_plugins(), roi);
     set(options, "pressio:thread_safe", pressio_thread_safety_multiple);
     set(options, "pressio:stability", "experimental");
     return options;
@@ -56,7 +56,11 @@ public:
   {
     get_meta(options, "roibin:roi", compressor_plugins(), roi_id, roi);
     get_meta(options, "roibin:background", compressor_plugins(), background_id, background);
-    get(options, "roibin:centers", &centers);
+    if(get(options, "roibin:centers", &centers) != pressio_options_key_set) {
+        if(centers.dtype() != pressio_uint64_dtype) {
+            centers = centers.cast(pressio_uint64_dtype);
+        }
+    }
     get(options, "roibin:roi_size", &roi_size);
     uint32_t tmp;
     if(get(options, "pressio:nthreads", &tmp) == pressio_options_key_set) {

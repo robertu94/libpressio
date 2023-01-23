@@ -258,7 +258,7 @@ Reference [6] covers the design and implementation on GPU heterogeneous systems.
       void* output_data = output->data();
       size_t compressed_size;
       bool pre_allocated = output->has_data();
-      auto const& dims = input->dimensions();
+      auto const& dims = input->normalized_dims();
       mgard_x::compress(dims.size(), to_mgard_type(input->dtype()), dims, tolerance, s,
                       bound_type, input->data(),
                       output_data, compressed_size, config, pre_allocated);

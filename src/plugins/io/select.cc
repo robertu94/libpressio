@@ -18,7 +18,7 @@ struct select_io: public libpressio_io_plugin {
 
   struct pressio_options get_configuration_impl() const override{
     pressio_options opts;
-    opts.copy_from(impl->get_configuration());
+    set_meta_configuration(opts, "select:io", io_plugins(), impl);
     set(opts, "pressio:stability",  "unstable");
     set(opts, "pressio:thread_safe",  pressio_thread_safety_single);
     return opts;

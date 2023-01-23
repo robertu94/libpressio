@@ -32,7 +32,7 @@ class chunking_plugin: public libpressio_compressor_plugin {
 
     struct pressio_options get_configuration_impl() const override {
       struct pressio_options options;
-      options.copy_from(compressor->get_configuration());
+      set_meta_configuration(options, "chunking:compressor", compressor_plugins(), compressor);
       set(options, "pressio:thread_safe", get_threadsafe(*compressor));
       set(options, "pressio:stability", "experimental");
       return options;

@@ -13,7 +13,6 @@
 
 libpressio_compressor_plugin::libpressio_compressor_plugin() noexcept :
   pressio_configurable(),
-  pressio_errorable(),
   metrics_plugin(metrics_plugins().build("noop")),
   metrics_id("noop")
 {}
@@ -66,7 +65,8 @@ int libpressio_compressor_plugin::check_options(struct pressio_options const& op
 struct pressio_options libpressio_compressor_plugin::get_configuration() const {
   pressio_options ret;
   if(metrics_plugin){
-    ret.copy_from(metrics_plugin->get_configuration());
+    set_meta_configuration(ret, "pressio:metric", metrics_plugins(), metrics_plugin);
+    set_meta_configuration(ret, get_metrics_key_name(), metrics_plugins(), metrics_plugin);
     metrics_plugin->begin_get_configuration();
   }
   ret.copy_from(get_configuration_impl());
@@ -86,7 +86,6 @@ struct pressio_options libpressio_compressor_plugin::get_documentation() const {
     metrics_plugin->begin_get_documentation();
   pressio_options ret;
   if(metrics_plugin) { 
-    ret.copy_from(metrics_plugin->get_documentation());
     set_meta_docs(ret, "pressio:metric", "metrics to collect when using the compressor", metrics_plugin);
     set_meta_docs(ret, get_metrics_key_name(), "metrics to collect when using the compressor", metrics_plugin);
   }

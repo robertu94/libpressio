@@ -17,7 +17,7 @@ struct pressio_data;
 /**
  * plugin extension base class for io modules
  */
-struct libpressio_io_plugin: public pressio_configurable, public pressio_versionable, public pressio_errorable {
+struct libpressio_io_plugin: public pressio_configurable, public pressio_versionable {
   public:
 
   virtual ~libpressio_io_plugin()=default;

@@ -1,3 +1,4 @@
+find_package(GTest)
 configure_file(GTestCMakeLists.txt.in googletest-download/CMakeLists.txt)
 
 execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
@@ -38,6 +39,7 @@ add_gtest(test_pressio_data.cc)
 target_include_directories(test_pressio_data PRIVATE ${CMAKE_SOURCE_DIR}/src)
 add_gtest(test_pressio_options.cc)
 add_gtest(test_io.cc)
+add_gtest(test_highlevel.cc)
 
 add_executable(test_compressor_integration ./test_compressor_integration.cc mpi_test_main.cc)
 target_link_libraries(test_compressor_integration PRIVATE libpressio gtest gmock)

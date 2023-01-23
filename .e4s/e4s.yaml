@@ -1,0 +1,7 @@
+- e4s_product: libpressio
+  docs:  [README.md, COPYRIGHT.txt]
+  Area: "Compression"
+  Description: "Generic Compression of Dense Tensors"
+  website: "https://robertu94.github.io/libpressio"
+  MemberProduct: False
+  Accelerable: True

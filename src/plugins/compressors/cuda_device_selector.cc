@@ -127,7 +127,7 @@ public:
     return compat::make_unique<cuda_device_selector_compressor_plugin>(*this);
   }
 
-  void set_name_impl(std::string const& new_name) {
+  void set_name_impl(std::string const& new_name) override {
     impl->set_name(new_name + '/' + impl->prefix());
   }
 

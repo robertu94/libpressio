@@ -5,7 +5,7 @@
 #include "libpressio_ext/cpp/pressio.h"
 #include "roibin_impl.h"
 
-namespace libpressio { namespace binning_ns {
+namespace libpressio { namespace mask_binning_ns {
 
     using namespace utilities;
 
@@ -16,6 +16,7 @@ namespace libpressio { namespace binning_ns {
       if(bins_v.size() != dims.size()) {
         throw std::runtime_error("dims size does not match bins size");
       }
+      auto mask_ptr = static_cast<const bool*>(mask.data());
 
       switch(dims.size()) {
         case 1:
@@ -24,7 +25,7 @@ namespace libpressio { namespace binning_ns {
           indexer<1> bins{bins_v.begin(), bins_v.end()};
           indexer<1> binned_storage = roibin_ns::to_binned_index(id, bins);
           pressio_data binned = pressio_data::owning( pressio_dtype_from_type<T>(), {binned_storage[0]});
-          roibin_ns::bin_omp(id, binned_storage, bins, static_cast<T const*>(t), static_cast<T*>(binned.data()), n_threads);
+          roibin_ns::mask_bin_omp(id, binned_storage, bins, static_cast<T const*>(t), static_cast<T*>(binned.data()), mask_ptr, n_threads);
           return binned;
           }
         case 2:
@@ -33,7 +34,7 @@ namespace libpressio { namespace binning_ns {
           indexer<2> bins{bins_v.begin(), bins_v.end()};
           indexer<2> binned_storage = roibin_ns::to_binned_index(id, bins);
           pressio_data binned = pressio_data::owning( pressio_dtype_from_type<T>(), {binned_storage[0], binned_storage[1]});
-          roibin_ns::bin_omp(id, binned_storage, bins, static_cast<T const*>(t), static_cast<T*>(binned.data()), n_threads);
+          roibin_ns::mask_bin_omp(id, binned_storage, bins, static_cast<T const*>(t), static_cast<T*>(binned.data()), mask_ptr, n_threads);
           return binned;
           }
         case 3:
@@ -43,7 +44,7 @@ namespace libpressio { namespace binning_ns {
           indexer<3> binned_storage = roibin_ns::to_binned_index(id, bins);
           pressio_data binned = pressio_data::owning(
               pressio_dtype_from_type<T>(), {binned_storage[0], binned_storage[1], binned_storage[2]});
-          roibin_ns::bin_omp(id, binned_storage, bins, static_cast<T const*>(t), static_cast<T*>(binned.data()), n_threads);
+          roibin_ns::mask_bin_omp(id, binned_storage, bins, static_cast<T const*>(t), static_cast<T*>(binned.data()), mask_ptr, n_threads);
           return binned;
           }
         case 4:
@@ -53,17 +54,18 @@ namespace libpressio { namespace binning_ns {
           indexer<4> binned_storage = roibin_ns::to_binned_index(id, bins);
           pressio_data binned = pressio_data::owning( pressio_dtype_from_type<T>(),
               {binned_storage[0], binned_storage[1], binned_storage[2], binned_storage[3]});
-          roibin_ns::bin_omp(id, binned_storage, bins, static_cast<T const*>(t), static_cast<T*>(binned.data()), n_threads);
+          roibin_ns::mask_bin_omp(id, binned_storage, bins, static_cast<T const*>(t), static_cast<T*>(binned.data()), mask_ptr, n_threads);
           return binned;
           }
         default:
-          throw std::runtime_error("unsupported binning dimension " + std::to_string(dims.size()));
+          throw std::runtime_error("unsupported mask_binning dimension " + std::to_string(dims.size()));
       }
 
     }
 
     std::vector<size_t> const& dims;
     pressio_data const& bins;
+    pressio_data const& mask;
     uint32_t n_threads;
   };
 
@@ -86,17 +88,18 @@ public:
   struct pressio_options get_options_impl() const override
   {
     struct pressio_options options;
-    set_meta(options, "binning:compressor", comp_id, comp);
-    set(options, "binning:shape", bins);
+    set_meta(options, "mask_binning:compressor", comp_id, comp);
+    set(options, "mask_binning:shape", bins);
     set(options, "pressio:nthreads", n_threads);
-    set(options, "binning:nthreads", n_threads);
+    set(options, "mask_binning:nthreads", n_threads);
+    set(options, "mask_binning:mask", mask);
     return options;
   }
 
   struct pressio_options get_configuration_impl() const override
   {
     struct pressio_options options;
-    set_meta_configuration(options, "binning:compressor", compressor_plugins(), comp);
+    set_meta_configuration(options, "mask_binning:compressor", compressor_plugins(), comp);
     set(options, "pressio:thread_safe", pressio_thread_safety_multiple);
     set(options, "pressio:stability", "experimental");
     return options;
@@ -105,18 +108,19 @@ public:
   struct pressio_options get_documentation_impl() const override
   {
     struct pressio_options options;
-    set_meta_docs(options, "binning:compressor", comp_id, comp);
-    set(options, "pressio:description", R"(preforms a binning operation on the input data on compression and extrapolates on decompression)");
-    set(options, "binning:shape", "shape of the bins to apply");
-    set(options, "binning:nthreads", "number of cpu threads to use for binning");
+    set_meta_docs(options, "mask_binning:compressor", comp_id, comp);
+    set(options, "pressio:description", R"(preforms a mask_binning operation on the input data on compression and extrapolates on decompression)");
+    set(options, "mask_binning:shape", "shape of the bins to apply");
+    set(options, "mask_binning:nthreads", "number of cpu threads to use for mask_binning");
+    set(options, "mask_binning:mask", "boolean mask to apply, true means ignore");
     return options;
   }
 
 
   int set_options_impl(struct pressio_options const& options) override
   {
-    get_meta(options, "binning:compressor", compressor_plugins(), comp_id, comp);
-    get(options, "binning:shape", &bins);
+    get_meta(options, "mask_binning:compressor", compressor_plugins(), comp_id, comp);
+    get(options, "mask_binning:shape", &bins);
     {
       uint32_t tmp;
       if(get(options, "pressio:nthreads", &tmp) == pressio_options_key_set) {
@@ -129,13 +133,18 @@ public:
     }
     {
       uint32_t tmp;
-      if(get(options, "binning:nthreads", &tmp) == pressio_options_key_set) {
+      if(get(options, "mask_binning:nthreads", &tmp) == pressio_options_key_set) {
         if(tmp > 0) {
           n_threads = tmp;
         } else {
           return set_error(1, "threads must be positive");
         }
       }
+    }
+    if(get(options, "mask_binning:mask", &mask) == pressio_options_key_set) {
+        if(mask.dtype() != pressio_bool_dtype) {
+            mask = mask.cast(pressio_bool_dtype);
+        }
     }
     return 0;
   }
@@ -144,7 +153,7 @@ public:
                     struct pressio_data* output) override
   {
     try {
-      auto tmp = pressio_data_for_each<pressio_data>(*input, bin_op{input->dimensions(), bins, n_threads});
+      auto tmp = pressio_data_for_each<pressio_data>(*input, bin_op{input->dimensions(), bins, mask, n_threads});
       int rc = comp->compress(&tmp, output);
       if(rc) {
         return set_error(comp->error_code(), comp->error_msg());
@@ -212,7 +221,7 @@ public:
   int minor_version() const override { return 0; }
   int patch_version() const override { return 1; }
   const char* version() const override { return "0.0.1"; }
-  const char* prefix() const override { return "binning"; }
+  const char* prefix() const override { return "mask_binning"; }
 
   void set_name_impl(std::string const& new_name) override {
     if(new_name != "") {
@@ -232,12 +241,13 @@ public:
   }
 
   pressio_data bins{2,2,1,1};
+  pressio_data mask = pressio_data::empty(pressio_bool_dtype, {});
   pressio_compressor comp = compressor_plugins().build("noop");
   std::string comp_id = "noop";
   uint32_t n_threads = 1;
 };
 
-static pressio_register compressor_many_fields_plugin(compressor_plugins(), "binning", []() {
+static pressio_register compressor_many_fields_plugin(compressor_plugins(), "mask_binning", []() {
   return compat::make_unique<binning_compressor_plugin>();
 });
 

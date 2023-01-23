@@ -94,7 +94,7 @@ class by_extension_plugin : public libpressio_io_plugin {
   
   struct pressio_options get_configuration_impl() const override {
     pressio_options opts;
-    opts.copy_from(plugin->get_configuration());
+    set_meta_configuration(opts, "by_extension:plugin", io_plugins(), plugin);
     set(opts, "pressio:stability", "stable");
     set(opts, "pressio:thread_safe", pressio_thread_safety_multiple);
     return opts;

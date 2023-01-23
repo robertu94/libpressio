@@ -4,6 +4,7 @@
 #include <utility>
 #include "options.h"
 #include "pressio_compressor.h"
+#include "errorable.h"
 
 /**
  * \file
@@ -13,7 +14,7 @@
 /**
  * Base interface for configurable objects in libpressio
  */
-class pressio_configurable {
+class pressio_configurable : public pressio_errorable {
   public:
   virtual ~pressio_configurable()=default;
   pressio_configurable()=default;
@@ -161,6 +162,51 @@ class pressio_configurable {
   }
 
   /**
+   * helper function to set docs on a pressio_options structure the configuration associated with a meta-object
+   *
+   * \param[in] options the options structure to set
+   * \param[in] key the key for the name of the child meta-object
+   * \param[in] registry docs for the purpose of the meta object
+   * \param[in] current_value value of the current meta-object
+   * \param[in] args the remaining args needed for some meta modules
+   */
+  template<class StringType, class Wrapper, class Registry, class... Args>
+  void
+  set_meta_configuration(pressio_options& options, StringType&& key, Registry const& registry, Wrapper const& current_value) const {
+    std::vector<std::string> plugins;
+    plugins.reserve(registry.size());
+    for (auto const& i : registry) {
+        plugins.emplace_back(i.first);
+    }
+    set(options, std::forward<StringType>(key), plugins);
+    options.copy_from(current_value->get_configuration());
+  }
+
+  /**
+   * helper function to set on a pressio_options structure the configuration associated with a collection of meta-objects
+   *
+   * \param[in] options the options structure to set
+   * \param[in] key the key for the name of the child meta-object
+   * \param[in] docstring docs for the purpose of this collection of meta objects
+   * \param[in] current_values value of the current meta-object
+   * \param[in] args the remaining args needed for some meta modules
+   */
+  template<class StringType, class Wrapper, class Registry, class... Args>
+  void
+  set_meta_many_configuration(pressio_options& options, StringType&& key, Registry const& registry, std::vector<Wrapper> const& current_values) const {
+    std::vector<std::string> plugins;
+    plugins.reserve(registry.size());
+    for (auto const& i : registry) {
+        plugins.emplace_back(i.first);
+    }
+    set(options, std::forward<StringType>(key), plugins);
+    for (auto const& current_value : current_values) {
+        options.copy_from(current_value->get_configuration());
+    }
+  }
+
+
+  /**
    * helper function to set on a pressio_options structure the docs associated with a collection of meta-objects
    *
    * \param[in] options the options structure to set
@@ -304,6 +350,34 @@ class pressio_configurable {
       }
     }
   }
+
+  public:
+  int cast_options(pressio_options const& early_config, pressio_options const& config) {
+        set_options(early_config);
+        auto types = get_options();
+        pressio_options casted;
+
+        for (auto const& i : config) {
+            auto status = types.key_status(i.first);
+            switch(status) {
+                case pressio_options_key_does_not_exist:
+                {
+                    return set_error(1, "option " + i.first + " does not exist");
+                }
+                default:
+                {
+                    casted.set(i.first, types.get(i.first));
+                    auto cast_status = casted.cast_set(i.first, i.second, pressio_conversion_special);
+                    if(cast_status != pressio_options_key_set) {
+                        return set_error(1, "option " + i.first + " could not be converted");
+
+                    }
+                }
+            }
+        }
+        return set_options(casted);
+    }
+
 
 
   protected:

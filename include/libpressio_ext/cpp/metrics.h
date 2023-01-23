@@ -19,7 +19,7 @@ struct pressio_data;
 /**
  * plugin to collect metrics about compressors
  */
-class libpressio_metrics_plugin : public pressio_configurable, public pressio_errorable {
+class libpressio_metrics_plugin : public pressio_configurable {
   public:
   /**
    * default constructor

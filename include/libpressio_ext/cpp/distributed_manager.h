@@ -31,7 +31,7 @@ int distributed_world_size();
 /**
  * helper class for interacting with libdistributed
  */
-class pressio_distributed_manager: public pressio_configurable, public pressio_errorable {
+class pressio_distributed_manager: public pressio_configurable {
   public:
   /**
    * a variable used to indicate there is no bound applied

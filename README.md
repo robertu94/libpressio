@@ -1,105 +1,27 @@
 # LibPressio
 
-[![Build Status](https://travis-ci.org/robertu94/libpressio.svg?branch=master)](https://travis-ci.org/robertu94/libpressio)
-
-
-*the upstream version of this code is found at [at the CODARCode organization](https://github.com/CODARcode/libpressio)*
+*the stable version of this code is found at [at the CODARCode organization](https://github.com/CODARcode/libpressio) it is updated about anually*
 
 Pressio is latin for compression.  LibPressio is a C++ library with C compatible bindings to abstract between different lossless and lossy compressors and their configurations.  It solves the problem of having to having to write separate application level code for each lossy compressor that is developed.  Instead, users write application level code using LibPressio, and the library will make the correct underlying calls to the compressors.  It provides interfaces to represent data, compressors settings, and compressors.
 
 Documentation for the `master` branch can be [found here](https://robertu94.github.io/libpressio/)
 
-## Using LibPressio
+# Using LibPressio
 
-Here is a minimal example with error checking of how to use LibPressio:
+Example using the CLI from [`pressio-tools`](https://github.com/robertu94/pressio-tools)
+We also have C, C++, Rust, Julia, and Python bindings.
 
-```c
-#include <libpressio.h>
-#include <sz.h>
-
-// provides input function, found in ./test
-#include "make_input_data.h"
-
-int
-main(int argc, char* argv[])
-{
-  // get a handle to a compressor
-  struct pressio* library = pressio_instance();
-  struct pressio_compressor* compressor = pressio_get_compressor(library, "sz");
-
-  // configure metrics
-  const char* metrics[] = { "size" };
-  struct pressio_metrics* metrics_plugin =
-    pressio_new_metrics(library, metrics, 1);
-  pressio_compressor_set_metrics(compressor, metrics_plugin);
-
-  // configure the compressor
-  struct pressio_options* sz_options =
-    pressio_compressor_get_options(compressor);
-
-  pressio_options_set_integer(sz_options, "sz:error_bound_mode", ABS);
-  pressio_options_set_double(sz_options, "sz:abs_err_bound", 0.5);
-  if (pressio_compressor_check_options(compressor, sz_options)) {
-    printf("%s\n", pressio_compressor_error_msg(compressor));
-    exit(pressio_compressor_error_code(compressor));
-  }
-  if (pressio_compressor_set_options(compressor, sz_options)) {
-    printf("%s\n", pressio_compressor_error_msg(compressor));
-    exit(pressio_compressor_error_code(compressor));
-  }
-
-  // load a 300x300x300 dataset into data created with malloc
-  double* rawinput_data = make_input_data();
-  size_t dims[] = { 300, 300, 300 };
-  struct pressio_data* input_data =
-    pressio_data_new_move(pressio_double_dtype, rawinput_data, 3, dims,
-                          pressio_data_libc_free_fn, NULL);
-
-  // creates an output dataset pointer
-  struct pressio_data* compressed_data =
-    pressio_data_new_empty(pressio_byte_dtype, 0, NULL);
-
-  // configure the decompressed output area
-  struct pressio_data* decompressed_data =
-    pressio_data_new_empty(pressio_double_dtype, 3, dims);
-
-  // compress the data
-  if (pressio_compressor_compress(compressor, input_data, compressed_data)) {
-    printf("%s\n", pressio_compressor_error_msg(compressor));
-    exit(pressio_compressor_error_code(compressor));
-  }
-
-  // decompress the data
-  if (pressio_compressor_decompress(compressor, compressed_data,
-                                    decompressed_data)) {
-    printf("%s\n", pressio_compressor_error_msg(compressor));
-    exit(pressio_compressor_error_code(compressor));
-  }
-
-  // get the compression ratio
-  struct pressio_options* metric_results =
-    pressio_compressor_get_metrics_results(compressor);
-  double compression_ratio = 0;
-  if (pressio_options_get_double(metric_results, "size:compression_ratio",
-                                 &compression_ratio)) {
-    printf("failed to get compression ratio\n");
-    exit(1);
-  }
-  printf("compression ratio: %lf\n", compression_ratio);
-
-  // free the input, decompressed, and compressed data
-  pressio_data_free(decompressed_data);
-  pressio_data_free(compressed_data);
-  pressio_data_free(input_data);
-
-  // free options and the library
-  pressio_options_free(sz_options);
-  pressio_options_free(metric_results);
-  pressio_compressor_release(compressor);
-  pressio_release(library);
-  return 0;
-}
+```bash
+pressio -i ~/git/datasets/hurricane/100x500x500/CLOUDf48.bin.f32 \
+    -b compressor=sz3 -o abs=1e-4 -O all \
+    -m time -m size -m error_stat -M all \
+    -w /path/to/output.dec
 ```
+
+The reccomended way to learn LibPressio is with self-pased [LibPressio Tutorial](https://github.com/robertu94/libpressio_tutorial).
+Here you will find examples of how to use LibPressio in a series of lessons for several common languages.
+
+You can also find a [recording of the tutorial on YouTube](https://youtu.be/hZ_dFCMxmGw).
 
 ## Getting Started
 
@@ -118,13 +40,12 @@ All of these are included by the convience header `libpressio.h`.
 
 You can pick up the more advanced features as you need them.
 
-
-You can also find more examples in `test/`
+You can also find more examples in `test/` or in the [LibPressio intresting scripts collection](https://github.com/robertu94/libpressio-interesting-scripts) which catalogs intresting higher-level use cases.
 
 ## Supported Compressors and Metrics
 
 Libpressio provides a number of builtin compressor and metrics modules.
-All of these are disabled by default.
+All of these are **disabled by default**.
 They can be enabled by passing the corresponding `LIBPRESSIO_HAS_*` variable to CMake.
 
 Additionally, Libpressio is extensible.
@@ -134,262 +55,106 @@ For information on writing a metrics plugin see [Writing a Metrics Plugin](@ref 
 
 ### Compressor Plugins
 
+1st party compressors plugins can be found in [src/plugins/compressors](https://github.com/robertu94/libpressio/tree/master/src/plugins/compressors)
+
 See the [compressor settings page](@ref compressors) for information on how to configure them.
 
-+ `sz` -- the SZ error bounded lossy compressor
-+ `zfp` -- the ZFP error bounded lossy compressor
-+ `mgard` -- the MGARD error bounded lossy compressor
-+ `blosc` -- the blosc lossless compressor
-+ `magick` -- the ImageMagick image compression/decompression library
-+ `fpzip` -- the fpzip floating point lossless compressor
-+ `noop` -- a dummy compressor useful performance evaluation, testing, and introspection
-+ `sampling` -- a compressor which does naive, with out replacement, and with replacement sampling
-+ `transpose` -- a meta-compressor which performs a transpose.
-+ `resize` -- a meta-compressor which preforms a reshape operation.
-+ `bit_grooming` a compressor which implements big grooming
-+ `digit_rounding` a compressor which implements digit_rounding
-+ `many_dependent` - a meta-compressor which runs many dependent tasks in parallel
-+ `many_independent` - a meta-compressor which runs many independent tasks in parallel
 
 ### Metrics Plugins
 
+1st party compressors plugins can be found in [src/plugins/metrics](https://github.com/robertu94/libpressio/tree/master/src/plugins/metrics)
+
 See the [metrics results page](@ref metrics) for information on what they produce
 
-+ `time` -- time information on each compressor API
-+ `error_stat` -- statistics on the difference between the uncompressed and decompressed values that can be computed in one pass in linear time.
-+ `spatial_error` -- computes relative spatial error
-+ `pearson` -- computes the pearson coefficient of correlation and pearson coefficient of determination.
-+ `size` -- information on the size of the compressed and decompressed data
-+ `ftk_critical_points` -- an experimental metrics plugin which finds critical points using FTK
-+ `kl_divergance` -- computes the kl divergence a metric used to evaluate ML/AI models
-+ `ks_test` -- computes the p value and test statistic for a KS test
-+ `kth_error` -- returns the kth largest value in the dataset
-+ `external` -- run an external program to collect some metrics, see [using an external metric for more information](@ref usingexternalmetric)
-+ `printer` -- prints out the sequence of calls made to a libpressio compressor
-+ `spatial_error` -- records the percentage of elements that exceed a configurable threshold
+### IO Plugins
 
-## Dependencies
+1st party compressors plugins can be found in [src/plugins/io](https://github.com/robertu94/libpressio/tree/master/src/plugins/io)
+
+See the [io settings page](@ref io) for information on how to configure them
+
+# Installation
+
+## Installing LibPressio using Spack
+
+LibPressio can be built using [spack](https://github.com/spack/spack/).  This example will install libpressio with only the SZ3 plugin.
+
+```bash
+git clone https://github.com/spack/spack
+source ./spack/share/spack/setup-env.sh
+spack install libpressio+sz3
+```
+
+More information on spack can be found in the [spack documentation](https://spack.readthedocs.io/en/latest/) or [my quick start guides for systems that I use](https://robertu94.github.io/guides)
+
+You can see the other available versions and compilation options by calling `spack info libpressio`
+
+The following language bindings are in this repository.
+
++ `C` -- (default) if you need a stable interface
++ `C++` -- (default) if you want a more productive interface, or want to extend LibPressio
++ `Python` -- (`+python`; BUILD_PYTHON_WRAPPER) if you know or want to intergate Python
++ `HDF5` -- (`+hdf5+json`; LIBPRESSIO_HAS_HDF AND LIBPRESSIO_HAS_JSON) you already use HDF5
+
+The following bindings must be installed seperately:
+
++ `R` -- [r-libpressio](https://github.com/robertu94/libpressio-r) if you know or want to integrate with R
++ `Bash/CLI` -- [libpressio-tools](https://github.com/robertu94/pressio-tools)  if you want to quickly prototype from the CLI
+
+The following bindings are experimental and can be installed manually:
+
++ `Julia` -- [libpressio-jl](https://github.com/robertu94/LibPressio.jl) if you know or want to integrate with Julia
++ `Rust` -- [libpressio-rs](https://github.com/robertu94/libpressio-rs) if you know or want to integrate with Rust
+
+## Doing a development build with spack
+
+The easiest way to do a development build of libpressio is to use Spack envionments.
+
+```bash
+# one time setup: create an envionment
+spack env create -d mydevenviroment
+spack env activate mydevenvionment
+
+# one time setup: install libpressio-tools and checkout 
+# libpressio for development
+spack add libpressio-tools
+spack develop libpressio@git.master
+
+# compile and install (repeat as needed)
+spack install 
+```
+
+
+## Manual Installation
 
 Libpressio unconditionally requires:
 
-+ `cmake` version `3.13` or later (3.14 required for python bindings)
-+ `pkg-config` version `1.6.3` or later
-+ [`std_compat`](https://github.com/robertu94/std_compat) version 0.0.7 or later
++ `cmake`
++ `pkg-config`
++ [`std_compat`](https://github.com/robertu94/std_compat)
 + either:
   + `gcc-4.8.5` or later
   + `clang-7.0.0` or later using either `libc++` or `libstdc++`.  Beware that system libraries may need to be recompiled with `libc++` if using `libc++`
 
-Libpressio additionally optionally requires:
+Dependency versions and optional dependencies are documented [in the spack package](https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/libpressio/package.py).
 
-+ `Doxygen` version 1.8.15 or later to generate documentation
-+ `HDF5` version 1.10.0 or later for HDF5 data support
-+ `ImageMagick` version 6.9.7 or later for ImageMagick image support.  Version 7 or later supports additional data types.
-+ `biggroomingZ` version 2.1.9 or later for bit grooming support
-+ `blosc` version 1.14.2 for lossless compressor support via blosc
-+ `boost` version 1.53 to compile on a c++14 or earlier compiler
-+ `digitroundingZ` version 2.1.9 or later for digit rounding support
-+ `fpzip` version 1.3 for fpzip support
-+ `numpy` version `1.14.5` or later and its dependencies to provide the python bindings
-+ `swig` version 3.0.12 or later for python support
-+ `sz` commit `7b7463411f02be4700d13aac6737a6a9662806b4` or later and its dependencies to provide the SZ plugin
-+ `zfp` commit `e8edaced12f139ddf16167987ded15e5da1b98da` or later and its dependencies to provide the ZFP plugin
-+ `libdistributed` the latest version released at the time of a particular Libpressio release
-+ `python` 3.4 or later for the python bindings
-+ `lua` or `luajit` version 5.1 or later to provide custom composite metrics.  NOTE compiling with Lua support requires c++17 or later (i.e. gcc 7 or later, and clang 3.9 or later; see Sol2 for current requirements).
-+ `sol2` version 3.2.0 or later to provide custom composite metrics
-+ `OpenMP` development libraries and headers for your compiler compatible with OpenMP Standard 3 or later to accelerate computation of some metrics.
-+ `MPI` development libraries and headers supporting MPI-2 (specifically MPI\_Comm\_spawn using the `workdir` info option) to provide the external metrics `mpispawn` launch method
-+ `mgard` we endevor to supprt the development version, but is known to work with commit `b67a0ac963587f190e106cc3c0b30773a9455f7a`
-+ `PETSc` version 3.12.1 or later to provide PETSc binary format IO support
-
-It is also possible to build and run libpressio via Docker using the docker files in the `docker` directory.  This functionality should be considered deprecated and will be removed in a later release, please you spack instead.
-
-## Installing LibPressio using Spack
-
-LibPressio can be built using [spack](https://github.com/spack/spack/).  This example will install libpressio with only the SZ plugin.
-
-```bash
-git clone https://github.com/robertu94/spack_packages robertu94_packages
-spack repo add robertu94_packages
-spack install libpressio+sz
-```
-
-You can see the other available versions by calling `spack info libpressio`
-
-
-## Doing a development build with spack
-
-
-```bash
-#this is only required if it hasn't been done before
-git clone https://github.com/robertu94/spack_packages robertu94_packages
-spack repo add robertu94_packages
-
-git clone https://github.com/robertu94/libpressio
-cd  libpressio
-#make sure it builds first
-spack dev-build libpressio@master
-#make your changes
-spack dev-build libpressio@master
-```
 
 ## Configuring LibPressio Manually
 
-LibPressio uses cmake to configure build options.  See CMake documentation to see how to configure options
+LibPressio uses a fairly standard CMake buildsystem.
+For more information on [CMake refer to these docs](https://robertu94.github.io/learning/cmake)
 
-+ `CMAKE_INSTALL_PREFIX` - install the library to a local directory prefix
-+ `BUILD_DOCS` - build the project documentation
-+ `BUILD_TESTING` - build the test cases
+The set of configuration options for LibPressio can be found using `cmake -L $BUILD_DIR`.
+For information on what these settings do, see the [spack package](https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/libpressio/package.py)
 
-## Building and Installing LibPressio
+# API Stability
 
-To build and tests and install the library only.
+Please refer to [docs/stability.md](docs/stability.md).
 
-```bash
-BUILD_DIR=build
-mkdir $BUILD_DIR
-cd $BUILD_DIR
-cmake ..
-make
-make test
-make install
-```
+# How to Contribute
 
-To build the documentation:
+Please refer to [CONTRIBUTORS.md](CONTRIBUTORS.md) for a list of contributors, sponsors, and contribution guidelines.
 
-
-```bash
-BUILD_DIR=build
-mkdir $BUILD_DIR
-cd $BUILD_DIR
-cmake .. -DBUILD_DOCS=ON
-make docs
-# the html docs can be found in $BUILD_DIR/html/index.html
-# the man pages can be found in $BUILD_DIR/man/
-```
-
-To build on a C++11 compiler: (make sure boost is available)
-
-```
-BUILD_DIR=build
-mkdir $BUILD_DIR
-cd $BUILD_DIR
-cmake -DLIBPRESSIO_CXX_VERSION=11 ..
-make
-```
-
-To build the python bindings:
-
-```
-BUILD_DIR=build
-mkdir $BUILD_DIR
-cd $BUILD_DIR
-cmake .. -DBUILD_PYTHON_WRAPPER=ON
-make
-make install
-```
-
-To disable building the test cases
-
-```
-BUILD_DIR=build
-mkdir $BUILD_DIR
-cd $BUILD_DIR
-cmake .. -DBUILD_TESTING=OFF
-make
-ctest .
-```
-
-## Python
-
-LibPressio has a low level and high level set of python bindings.
-The low level bindings mirror the C interface as closely as possible.
-Where as the higher level bindings are based on `numcodecs` and may lack new or developing features from the C api, but are much more ergonomic and pythonic.
-
-The recommended way to install them is with `spack install libpressio+python+mpi` in addition to enabling
-any variants for compressors such as `+sz+zfp` for SZ and ZFP.
-
-Here is an example of how to use the high level bindings:
-
-```python
-#!/usr/bin/env python
-from pprint import pprint
-from pathlib import Path
-from libpressio import PressioCompressor
-import numpy as np
-
-dataset_path = Path.home() / "git/datasets/hurricane/100x500x500/CLOUDf48.bin.f32"
-uncompressed_data = np.fromfile(dataset_path, dtype=np.float32)
-uncompressed_data = uncompressed_data.reshape(500, 500, 100)
-decompressed_data = uncompressed_data.copy()
-
-# load and configure the compressor
-compressor = PressioCompressor.from_config({
-    "compressor_id": "sz",
-    "compressor_config": {
-        "sz:error_bound_mode_str": "abs",
-        "sz:abs_err_bound": 1e-6,
-        "sz:metric": "size"
-        }
-    })
-
-# print out some metadata
-print(compressor.codec_id)
-pprint(compressor.get_config())
-pprint(compressor.get_compile_config())
-
-
-# preform compression and decompression
-compressed = compressor.encode(uncompressed_data)
-decompressed = compressor.decode(compressed, decompressed_data)
-
-# print out some metrics collected during compression
-pprint(compressor.get_metrics())
-```
-
-More documentation can be found in the doc-strings for the high level bindings.
-
-## Option Names
-
-LibPressio uses a key-value system to refer to configuration settings.
-
-Each compressor may find specific configuration settings for its specific compressor with settings beginning with its compressor id as prefix (i.e. configurations for SZ begin with `sz:`).  [Refer to the specific compressors documentation](@ref compressors) for further documentation for each settings.
-
-The prefixes `metrics:` and `pressio:` are reserved for future use.
-
-## Stability
-
-As of version 1.0.0, LibPressio will follow the following API stability guidelines:
-
-+ The functions defined in files in `./include` excluding files in the `./include/libpressio_ext/` or its subdirectories may be considered to be stable.  Furthermore, all files in this set are C compatible.
-+ The functions defined in files in `./include/libpressio_ext/` are to be considered unstable.
-+ The functions and modules defined in the low-level python bindings are stable (import `pressio`).
-+ The functions and modules defined in the higher-level python bindings are unstable (import `libpressio`).
-+ Any functions listed above, in `docs/MetricResults.md` or in `docs/MetricResults.md` as experimental are unstable
-+ Any configurable that has a key `pressio:stability` with a value of `experimental` or `unstable` are unstable.  Modules that are experimental may crash or have other severe deficiencies, modules that are unstable generally will not crash, but may have options changed according to the unstable API guarantees.
-+ Any configurable that has a key `pressio:stability` with a value of `stable` conforms to the LibPressio stability guarantees
-+ Any configurable that has the key `pressio:stability` with a value of `external` indicates that options/configuration returned by this module are controlled by version of the external library that it depends upon and may change at any time without changing the LibPressio version number.
-
-Stable means:
-
-+ New APIs may be introduced with the increase of the minor version number.
-+ APIs may gain additional overloads for C++ compatible interfaces with an increase in the minor version number.
-+ An API may change the number or type of parameters with an increase in the major version number.
-+ An API may be removed with the change of the major version number
-+ New options/configuration names may appear with a increase in the minor version number
-+ Existing options/configuration names may be removed or changed with an increase in the major version number
-
-Unstable means:
-
-+ The API or options/configuration may change for any reason with the increase of the minor version number
-
-Additionally, the performance of functions, memory usage patterns may change for both stable and unstable code with the increase of the patch version.
-
-## Code Contribution
-
-Please refer to [CONTRIBUTORS.md](CONTRIBUTORS.md).
-
-## Bug Reports
+# Bug Reports
 
 Please files bugs to the Github Issues page on the CODARCode libpressio repository.
 
@@ -399,3 +164,18 @@ Please read this post on [how to file a good bug report](https://codingnest.com/
 + the output of `cmake -L $BUILD_DIR`
 + the version of each of libpressio's dependencies listed in the README that you have installed. Where possible, please provide the commit hashes.
 
+
+# Citing LibPressio
+
+If you find LibPressio useful, please cite this paper:
+
+```
+@inproceedings{underwood2021productive,
+  title={Productive and Performant Generic Lossy Data Compression with LibPressio},
+  author={Underwood, Robert and Malvoso, Victoriana and Calhoun, Jon C and Di, Sheng and Cappello, Franck},
+  booktitle={2021 7th International Workshop on Data Analysis and Reduction for Big Scientific Data (DRBSD-7)},
+  pages={1--10},
+  year={2021},
+  organization={IEEE}
+}
+```

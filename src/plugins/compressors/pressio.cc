@@ -58,7 +58,7 @@ public:
   struct pressio_options get_configuration_impl() const override
   {
     struct pressio_options options;
-    options.copy_from(comp->get_configuration());
+    set_meta_configuration(options, "pressio:compressor", compressor_plugins(), comp);
     set(options, "pressio:thread_safe", get_threadsafe(*comp));
     set(options, "pressio:stability", "experimental");
     return options;

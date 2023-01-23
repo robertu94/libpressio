@@ -25,7 +25,7 @@
 /**
  * a helper class to map input and output buffers to a meta-compressor
  */
-class pressio_subgroup_manager: public pressio_configurable, public pressio_errorable {
+class pressio_subgroup_manager: public pressio_configurable {
 public:
   int set_options(const struct pressio_options &options) override {
     pressio_data tmp;

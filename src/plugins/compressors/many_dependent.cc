@@ -36,6 +36,7 @@ public:
   {
     struct pressio_options options;
     options.copy_from(compressor->get_configuration());
+    set_meta_configuration(options, "many_dependent:compressor", compressor_plugins(), compressor);
     set(options, "pressio:thread_safe", pressio_thread_safety_multiple);
     set(options, "pressio:stability", "experimental");
     options.copy_from(manager.get_configuration());

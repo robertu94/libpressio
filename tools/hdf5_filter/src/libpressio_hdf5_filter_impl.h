@@ -1,3 +1,8 @@
+#ifndef LIBPRESSIO_HDF5_FILTER_IMPL_H_WVOKRASB
+#define LIBPRESSIO_HDF5_FILTER_IMPL_H_WVOKRASB
+
+
+
 #include <cstdint>
 #include <vector>
 #include <pressio_dtype.h>
@@ -11,3 +16,4 @@ struct compression_options {
 };
 
 std::vector<unsigned int> get_cd_values_from_options(compression_options const& options);
+#endif /* end of include guard: LIBPRESSIO_HDF5_FILTER_IMPL_H_WVOKRASB */

@@ -69,7 +69,7 @@ applies linear_quantizer encoding to prior to compression and reverses it post d
   }
   pressio_options get_configuration_impl() const override {
     pressio_options opts;
-    opts.copy_from(meta->get_configuration());
+    set_meta_configuration(opts, "linear_quantizer:compressor", compressor_plugins(), meta);
     set(opts, "pressio:thread_safe", get_threadsafe(*meta));
     set(opts, "pressio:stability", "experimental");
     return opts;

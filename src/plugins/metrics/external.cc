@@ -84,10 +84,8 @@ class external_metric_plugin : public libpressio_metrics_plugin {
 
     struct pressio_options get_configuration() const override {
       pressio_options opts;
-      for (size_t i = 0; i < std::min(io_modules.size(), field_names.size()); ++i) {
-        opts.copy_from(io_modules[i]->get_configuration());
-      }
-      opts.copy_from(launcher->get_configuration());
+      set_meta_many_configuration(opts, "external:io_format", io_plugins(), io_modules);
+      set_meta_configuration(opts, "external:launch_method", launch_plugins(), launcher);
       set(opts, "pressio:stability", "unstable");
       set(opts, "pressio:thread_safe", pressio_thread_safety_multiple);
       return opts;

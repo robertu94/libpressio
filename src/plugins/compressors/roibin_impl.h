@@ -24,7 +24,7 @@ void copy_center(
     indexer<1> const &id,
     indexer<1> const &roi_size,
     indexer<2> const &roi,
-    std::size_t const* center_ptr,
+    uint64_t const* center_ptr,
     std::size_t const center_idx,
     T const* origin,
     T * roi_mem) {
@@ -50,7 +50,7 @@ void copy_center(
     indexer<2> const &id,
     indexer<2> const &roi_size,
     indexer<3> const &roi,
-    std::size_t const* center_ptr,
+    uint64_t const* center_ptr,
     std::size_t const center_idx,
     T const* origin,
     T * roi_mem) {
@@ -85,7 +85,7 @@ void copy_center(
     indexer<3> const &id,
     indexer<3> const &roi_size,
     indexer<4> const &roi,
-    size_t const* center_ptr,
+    uint64_t const* center_ptr,
     std::size_t const center_idx,
     T const* origin,
     T * roi_mem) {
@@ -131,7 +131,7 @@ void copy_center(
     indexer<4> const &id,
     indexer<4> const &roi_size,
     indexer<5> const &roi,
-    size_t const* center_ptr,
+    uint64_t const* center_ptr,
     std::size_t const center_idx,
     T const* origin,
     T * roi_mem) {
@@ -198,7 +198,7 @@ void roi_save(indexer<N> const &id,
 
 #pragma omp parallel for num_threads(n_threads)
   for (size_t i = 0; i < centers_size; ++i) {
-    copy_center(id, roi_size, roi, static_cast<const size_t*>(centers_range.data()) + i*centers_width, i, origin, roi_mem);
+    copy_center(id, roi_size, roi, static_cast<const uint64_t*>(centers_range.data()) + i*centers_width, i, origin, roi_mem);
   }
 }
 
@@ -455,6 +455,162 @@ auto bin_omp(indexer<4> const& id,  indexer<4> const& binned_storage, indexer<4>
                 }
               }
               binned[binned_storage(i_s, j_s, k_s, l_s)] = sum / n;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+constexpr const int binfill = 0;
+
+template <class T>
+auto mask_bin_omp(indexer<1> const& id,  indexer<1> const& binned_storage, indexer<1> const& bins, T const* v, T* binned, const bool* mask, size_t n_threads) {
+    if(mask == nullptr) {
+        bin_omp(id, binned_storage, bins, v, binned, n_threads);
+        return;
+    }
+#pragma omp parallel for  num_threads(n_threads)
+    for (size_t i_s = 0; i_s < binned_storage[0]; i_s++) {
+      size_t i = i_s * bins[0];
+      T sum = 0;
+      size_t n = 0;
+      for (size_t b_i = 0; b_i < bins[0]; ++b_i) {
+        if (b_i + i < id[0]) {
+          size_t pos = id(i + b_i);
+          if(!mask[pos]) {
+              ++n;
+              sum += v[pos];
+          }
+        }
+      }
+      if (n != 0)
+          binned[binned_storage(i_s)] = sum / n;
+      else {
+          binned[binned_storage(i_s)] = binfill;
+      }
+    }
+}
+
+template <class T>
+auto mask_bin_omp(indexer<2> const& id,  indexer<2> const& binned_storage, indexer<2> const& bins, T const* v, T* binned, const bool* mask, size_t n_threads) {
+    if(mask == nullptr) {
+        bin_omp(id, binned_storage, bins, v, binned, n_threads);
+        return;
+    }
+#pragma omp parallel for collapse(2) num_threads(n_threads)
+  for (size_t j_s = 0; j_s < binned_storage[1]; j_s++) {
+    for (size_t i_s = 0; i_s < binned_storage[0]; i_s++) {
+      size_t j = j_s * bins[1];
+      size_t i = i_s * bins[0];
+      T sum = 0;
+      size_t n = 0;
+      for (size_t b_j = 0; b_j < bins[1]; ++b_j) {
+        if (b_j + j < id[1]) {
+          for (size_t b_i = 0; b_i < bins[0]; ++b_i) {
+            if (b_i + i < id[0]) {
+              size_t pos = id(i + b_i, j + b_j);
+              if(!mask[pos]) {
+                  ++n;
+                  sum += v[pos];
+              }
+            }
+          }
+        }
+      }
+      if (n != 0) {
+          binned[binned_storage(i_s, j_s)] = sum / n;
+      } else {
+          binned[binned_storage(i_s, j_s)] = binfill;
+      }
+    }
+  }
+}
+
+template <class T>
+auto mask_bin_omp(indexer<3> const& id,  indexer<3> const& binned_storage, indexer<3> const& bins, T const* v, T* binned, const bool* mask, size_t n_threads) {
+    if(mask == nullptr) {
+        bin_omp(id, binned_storage, bins, v, binned, n_threads);
+        return;
+    }
+#pragma omp parallel for collapse(3) num_threads(n_threads)
+  for (size_t k_s = 0; k_s < binned_storage[2]; k_s++) {
+    for (size_t j_s = 0; j_s < binned_storage[1]; j_s++) {
+      for (size_t i_s = 0; i_s < binned_storage[0]; i_s++) {
+        size_t k = k_s * bins[2];
+        size_t j = j_s * bins[1];
+        size_t i = i_s * bins[0];
+        T sum = 0;
+        size_t n = 0;
+        for (size_t b_k = 0; b_k < bins[2]; ++b_k) {
+          if (b_k + k < id[2]) {
+            for (size_t b_j = 0; b_j < bins[1]; ++b_j) {
+              if (b_j + j < id[1]) {
+                for (size_t b_i = 0; b_i < bins[0]; ++b_i) {
+                  if (b_i + i < id[0]) {
+                    size_t pos = id(i + b_i, j + b_j, k + b_k);
+                    if(!mask[pos]) {
+                        ++n;
+                        sum += v[pos];
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        if (n != 0) {
+            binned[binned_storage(i_s, j_s, k_s)] = sum / n;
+        } else {
+            binned[binned_storage(i_s, j_s, k_s)] = binfill;
+        }
+      }
+    }
+  }
+}
+
+template <class T>
+auto mask_bin_omp(indexer<4> const& id,  indexer<4> const& binned_storage, indexer<4> const& bins, T const* v, T* binned, const bool* mask, size_t n_threads) {
+    if(mask == nullptr) {
+        bin_omp(id, binned_storage, bins, v, binned, n_threads);
+        return;
+    }
+#pragma omp parallel for collapse(4) num_threads(n_threads)
+  for (size_t l_s = 0; l_s < binned_storage[3]; l_s++) {
+    for (size_t k_s = 0; k_s < binned_storage[2]; k_s++) {
+      for (size_t j_s = 0; j_s < binned_storage[1]; j_s++) {
+        for (size_t i_s = 0; i_s < binned_storage[0]; i_s++) {
+          size_t l = l_s * bins[3];
+          size_t k = k_s * bins[2];
+          size_t j = j_s * bins[1];
+          size_t i = i_s * bins[0];
+          T sum = 0;
+          size_t n = 0;
+          for (size_t b_l = 0; b_l < bins[3]; ++b_l) {
+            if (b_l + l < id[3]) {
+              for (size_t b_k = 0; b_k < bins[2]; ++b_k) {
+                if (b_k + k < id[2]) {
+                  for (size_t b_j = 0; b_j < bins[1]; ++b_j) {
+                    if (b_j + j < id[1]) {
+                      for (size_t b_i = 0; b_i < bins[0]; ++b_i) {
+                        if (b_i + i < id[0]) {
+                          size_t pos = id(i + b_i, j + b_j, k + b_k, l+b_l);
+                          if(!mask[pos]) {
+                              ++n;
+                              sum += v[pos];
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+              if(n != 0) {
+                  binned[binned_storage(i_s, j_s, k_s, l_s)] = sum / n;
+              } else {
+                  binned[binned_storage(i_s, j_s, k_s, l_s)] = binfill;
+              }
             }
           }
         }

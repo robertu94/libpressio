@@ -40,9 +40,7 @@ public:
   {
     struct pressio_options options;
     options.copy_from(subgroups.get_configuration());
-    for (auto& compressor : compressors) {
-      options.copy_from(compressor->get_configuration());
-    }
+    set_meta_many_configuration(options, "many_independent_threaded:compressors", compressor_plugins(), compressors);
     set(options, "pressio:thread_safe", pressio_thread_safety_multiple);
     set(options, "pressio:stability", "experimental");
     return options;

@@ -11,6 +11,8 @@
 #include <regex>
 #include <std_compat/string_view.h>
 #include <unistd.h>
+#include <dlfcn.h>
+
 
 const char* name = "pressio";
 
@@ -597,6 +599,14 @@ void document_io(std::ostream& out, const char* metric, pressio_io const* c) {
 int main(int argc, char* const argv[])
 {
   auto args = parse_args(argc, argv);
+
+  void* extensions = dlopen("liblibpressio_meta.so", RTLD_NOW|RTLD_GLOBAL);
+  if(extensions) {
+      void (*libpressio_register_all)();
+      libpressio_register_all = (void (*)())dlsym(extensions, "libpressio_register_all");
+      libpressio_register_all();
+  }
+
   auto* instance = pressio_instance();
   std::ofstream out(args.outfile_path);
 
