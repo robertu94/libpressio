@@ -1,9 +1,0 @@
-<map id="pressio_errorable" name="pressio_errorable">
-<area shape="rect" id="node1" title=" " alt="" coords="5,151,140,178"/>
-<area shape="rect" id="node2" href="$classlibpressio__compressor__plugin.html" title=" " alt="" coords="205,5,373,47"/>
-<area shape="rect" id="node3" href="$structlibpressio__io__plugin.html" title=" " alt="" coords="213,71,364,98"/>
-<area shape="rect" id="node4" href="$structlibpressio__launch__plugin.html" title=" " alt="" coords="197,122,380,149"/>
-<area shape="rect" id="node5" href="$classlibpressio__metrics__plugin.html" title=" " alt="" coords="218,173,359,215"/>
-<area shape="rect" id="node6" href="$classpressio__distributed__manager.html" title=" " alt="" coords="215,239,362,280"/>
-<area shape="rect" id="node7" href="$classpressio__subgroup__manager.html" title=" " alt="" coords="188,305,389,331"/>
-</map>

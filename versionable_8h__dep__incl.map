@@ -1,11 +1,11 @@
 <map id="include/libpressio_ext/cpp/versionable.h" name="include/libpressio_ext/cpp/versionable.h">
-<area shape="rect" id="node1" title="interface for versionable types" alt="" coords="195,5,364,47"/>
-<area shape="rect" id="node2" href="$compressor_8h.html" title="an extension header for adding compressor plugins to libpressio" alt="" coords="305,184,473,225"/>
-<area shape="rect" id="node8" href="$io_8h.html" title="C++ interface to read and write files." alt="" coords="94,184,230,225"/>
-<area shape="rect" id="node9" href="$metrics_8h.html" title="an extension header for adding metrics plugins to libpressio" alt="" coords="208,95,351,136"/>
-<area shape="rect" id="node3" href="$libpressio__ext_2cpp_2libpressio_8h.html" title="convenience header for the c++ interface" alt="" coords="448,370,604,411"/>
-<area shape="rect" id="node4" href="$libpressio__ext_2cpp_2pressio_8h.html" title="C++ interface to the compressor loader." alt="" coords="149,273,289,315"/>
-<area shape="rect" id="node5" href="$subgroup__manager_8h.html" title="helper for subgroups in meta&#45;objects which support multiple inputs" alt="" coords="5,370,223,411"/>
-<area shape="rect" id="node6" href="$external__launch_8h.html" title="interface for external launch methods" alt="" coords="249,363,403,419"/>
-<area shape="rect" id="node7" href="$printers_8h.html" title="C++ stream compatible IO functions." alt="" coords="365,273,508,315"/>
+<area shape="rect" id="node1" title="interface for versionable types" alt="" coords="195,5,364,45"/>
+<area shape="rect" id="node2" href="$compressor_8h.html" title="an extension header for adding compressor plugins to libpressio" alt="" coords="305,181,473,221"/>
+<area shape="rect" id="node8" href="$io_8h.html" title="C++ interface to read and write files." alt="" coords="94,181,230,221"/>
+<area shape="rect" id="node9" href="$metrics_8h.html" title="an extension header for adding metrics plugins to libpressio" alt="" coords="208,93,351,133"/>
+<area shape="rect" id="node3" href="$libpressio__ext_2cpp_2libpressio_8h.html" title="convenience header for the c++ interface" alt="" coords="448,365,604,405"/>
+<area shape="rect" id="node4" href="$libpressio__ext_2cpp_2pressio_8h.html" title="C++ interface to the compressor loader." alt="" coords="149,269,289,309"/>
+<area shape="rect" id="node5" href="$subgroup__manager_8h.html" title="helper for subgroups in meta&#45;objects which support multiple inputs" alt="" coords="5,365,223,405"/>
+<area shape="rect" id="node6" href="$external__launch_8h.html" title="interface for external launch methods" alt="" coords="249,357,403,412"/>
+<area shape="rect" id="node7" href="$printers_8h.html" title="C++ stream compatible IO functions." alt="" coords="365,269,508,309"/>
 </map>

@@ -1,7 +1,0 @@
-<map id="include/libpressio_ext/cpp/io.h" name="include/libpressio_ext/cpp/io.h">
-<area shape="rect" id="node1" title="C++ interface to read and write files." alt="" coords="226,5,362,47"/>
-<area shape="rect" id="node2" href="$libpressio__ext_2cpp_2pressio_8h.html" title="C++ interface to the compressor loader." alt="" coords="224,95,364,136"/>
-<area shape="rect" id="node3" href="$libpressio__ext_2cpp_2libpressio_8h.html" title="convenience header for the c++ interface" alt="" coords="5,191,161,233"/>
-<area shape="rect" id="node4" href="$subgroup__manager_8h.html" title="helper for subgroups in meta&#45;objects which support multiple inputs" alt="" coords="185,191,403,233"/>
-<area shape="rect" id="node5" href="$external__launch_8h.html" title="interface for external launch methods" alt="" coords="427,184,582,240"/>
-</map>

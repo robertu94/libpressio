@@ -1,6 +1,6 @@
 <map id="include/libpressio_ext/cpp/pressio.h" name="include/libpressio_ext/cpp/pressio.h">
-<area shape="rect" id="node1" title="C++ interface to the compressor loader." alt="" coords="224,5,364,47"/>
-<area shape="rect" id="node2" href="$libpressio__ext_2cpp_2libpressio_8h.html" title="convenience header for the c++ interface" alt="" coords="5,102,161,143"/>
-<area shape="rect" id="node3" href="$subgroup__manager_8h.html" title="helper for subgroups in meta&#45;objects which support multiple inputs" alt="" coords="185,102,403,143"/>
-<area shape="rect" id="node4" href="$external__launch_8h.html" title="interface for external launch methods" alt="" coords="427,95,582,151"/>
+<area shape="rect" id="node1" title="C++ interface to the compressor loader." alt="" coords="224,5,364,45"/>
+<area shape="rect" id="node2" href="$libpressio__ext_2cpp_2libpressio_8h.html" title="convenience header for the c++ interface" alt="" coords="5,101,161,141"/>
+<area shape="rect" id="node3" href="$subgroup__manager_8h.html" title="helper for subgroups in meta&#45;objects which support multiple inputs" alt="" coords="185,101,403,141"/>
+<area shape="rect" id="node4" href="$external__launch_8h.html" title="interface for external launch methods" alt="" coords="427,93,582,148"/>
 </map>

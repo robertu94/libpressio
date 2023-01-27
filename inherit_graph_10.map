@@ -1,3 +1,11 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$structpressio__io.html" title=" " alt="" coords="5,5,93,32"/>
+<area shape="rect" id="node1" href="$classpressio__errorable.html" title=" " alt="" coords="5,155,140,181"/>
+<area shape="rect" id="node2" href="$classpressio__configurable.html" title=" " alt="" coords="188,155,344,181"/>
+<area shape="rect" id="node3" href="$classlibpressio__compressor__plugin.html" title=" " alt="" coords="409,5,577,45"/>
+<area shape="rect" id="node4" href="$structlibpressio__io__plugin.html" title=" " alt="" coords="417,70,568,95"/>
+<area shape="rect" id="node5" href="$structlibpressio__launch__plugin.html" title=" " alt="" coords="401,234,584,259"/>
+<area shape="rect" id="node6" href="$classlibpressio__metrics__plugin.html" title=" " alt="" coords="422,284,563,324"/>
+<area shape="rect" id="node7" href="$classpressio__distributed__manager.html" title=" " alt="" coords="419,120,566,160"/>
+<area shape="rect" id="node8" href="$classpressio__subgroup__manager.html" title=" " alt="" coords="392,185,593,210"/>
+<area shape="rect" id="node9" href="$classpressio__versionable.html" title=" " alt="" coords="190,42,342,67"/>
 </map>

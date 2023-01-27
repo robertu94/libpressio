@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['_7elibpressio_5fcompressor_5fplugin_573',['~libpressio_compressor_plugin',['../classlibpressio__compressor__plugin.html#a617c723a7562d8f9a9b81f41b7a5e70c',1,'libpressio_compressor_plugin']]],
-  ['_7elibpressio_5fmetrics_5fplugin_574',['~libpressio_metrics_plugin',['../classlibpressio__metrics__plugin.html#afde2520df3806b2c1e3c33ff2dc51506',1,'libpressio_metrics_plugin']]],
-  ['_7epressio_5fversionable_575',['~pressio_versionable',['../classpressio__versionable.html#aa167cc89b57bad07ad3558dcb357c347',1,'pressio_versionable']]]
+  ['_7elibpressio_5fcompressor_5fplugin_0',['~libpressio_compressor_plugin',['../classlibpressio__compressor__plugin.html#a617c723a7562d8f9a9b81f41b7a5e70c',1,'libpressio_compressor_plugin']]],
+  ['_7elibpressio_5fmetrics_5fplugin_1',['~libpressio_metrics_plugin',['../classlibpressio__metrics__plugin.html#afde2520df3806b2c1e3c33ff2dc51506',1,'libpressio_metrics_plugin']]],
+  ['_7epressio_5fversionable_2',['~pressio_versionable',['../classpressio__versionable.html#aa167cc89b57bad07ad3558dcb357c347',1,'pressio_versionable']]]
 ];
