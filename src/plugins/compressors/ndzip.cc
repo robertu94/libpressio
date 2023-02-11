@@ -131,6 +131,8 @@ public:
     struct pressio_options options;
     set(options, "pressio:thread_safe", pressio_thread_safety_multiple);
     set(options, "pressio:stability", "experimental");
+    set(options, "pressio:lossless:min", 0);
+    set(options, "pressio:lossless:max", 0);
     set(options, "ndzip:has_mt_cpu", NDZIP_OPENMP_SUPPORT);
     set(options, "ndzip:has_cuda", NDZIP_CUDA_SUPPORT);
     set(options, "ndzip:has_sycl", NDZIP_HIPSYCL_SUPPORT);

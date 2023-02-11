@@ -33,6 +33,8 @@ class blosc_plugin: public libpressio_compressor_plugin {
         data more quickly than a direct memory fetch can preform. More information on BLOSC can be found on its
         [project homepage](https://blosc.org/pages/blosc-in-depth/))");
       set(options, "blosc:clevel", "compression level");
+      set(options, "blosc:clevel:min", "min compression level");
+      set(options, "blosc:clevel:max", "max compression level");
       set(options, "blosc:numinternalthreads", "number of threads to use internally");
       set(options, "blosc:doshuffle", "should blosc shuffle bits to try to improve compressability");
       set(options, "blosc:blocksize", "what blocksize should blosc use?");
@@ -57,6 +59,10 @@ class blosc_plugin: public libpressio_compressor_plugin {
       compiled_compressors.emplace_back(s.substr(begin, last_comma - 1));
 
       set(options, "blosc:compressor", compiled_compressors);
+      set(options, "pressio:lossless:max", 9);
+      set(options, "pressio:lossless:min", 0);
+      set(options, "blosc:clevel:max", 9);
+      set(options, "blosc:clevel:min", 0);
       return options;
     }
 

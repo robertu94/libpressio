@@ -130,6 +130,8 @@ struct pressio_options libpressio_compressor_plugin::get_documentation() const {
 
     at this time (may change in the future), individual lossless compressors may internet values less than 1 or greater than 9 differently
   )");
+  set(ret, "pressio:lossless:min", R"(minimum compression level for pressio:lossless)");
+  set(ret, "pressio:lossless:max", R"(maximum compression level for pressio:lossless)");
   ret.copy_from(get_documentation_impl());
   if(metrics_plugin) { 
     metrics_plugin->end_get_documentation(ret);

@@ -99,8 +99,26 @@ def _python_to_pressio(options, template=None):
             pressio.data_free(data)
         elif isinstance(value, bool):
             op = pressio.option_new_bool(value)
+        elif isinstance(value, np.bool):
+            op = pressio.option_new_bool(bool(value))
         elif isinstance(value, int):
             op = pressio.option_new_integer64(value)
+        elif isinstance(value, np.int8):
+            op = pressio.option_new_integer8(int(value))
+        elif isinstance(value, np.int16):
+            op = pressio.option_new_integer16(int(value))
+        elif isinstance(value, np.int32):
+            op = pressio.option_new_integer(int(value))
+        elif isinstance(value, np.int64):
+            op = pressio.option_new_integer64(int(value))
+        elif isinstance(value, np.uint8):
+            op = pressio.option_new_uinteger8(int(value))
+        elif isinstance(value, np.uint16):
+            op = pressio.option_new_uinteger16(int(value))
+        elif isinstance(value, np.uint32):
+            op = pressio.option_new_uinteger(int(value))
+        elif isinstance(value, np.uint64):
+            op = pressio.option_new_uinteger64(int(value))
         elif pressio.LIBPRESSIO_HAS_MPI4PY:
             if isinstance(value, MPI.Comm):
                 op = pressio.option_new_comm(value)

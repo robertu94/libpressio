@@ -60,6 +60,8 @@ class sz_plugin: public libpressio_compressor_plugin {
     struct pressio_options options;
     set(options, "pressio:thread_safe", pressio_thread_safety_serialized);
     set(options, "pressio:stability", "stable");
+    set(options, "pressio:lossless:min", 0);
+    set(options, "pressio:lossless:max", 0);
 #ifdef HAVE_RANDOMACCESS
     set(options, "sz:random_access_enabled", 1u);
 #else

@@ -26,6 +26,12 @@ public:
     struct pressio_options options;
     set(options, "pressio:thread_safe", pressio_thread_safety_multiple);
     set(options, "pressio:stability", "experimental");
+    set(options, "pressio:lossless:min", 0);
+    set(options, "pressio:lossless:max", 250);
+    set(options, "bzip2:block_size_100k:min", 1);
+    set(options, "bzip2:block_size_100k:max", 9);
+    set(options, "bzip2:work_factor:min", 0);
+    set(options, "bzip2:work_factor:max", 250);
     return options;
   }
 
@@ -37,6 +43,10 @@ public:
     set(options, "bzip2:block_size_100k", "between 1 and 9, what size block to consider at a time");
     set(options, "bzip2:verbosity", "use verbose logging to stdout if >0");
     set(options, "bzip2:small", "use a alternative decompression algorithm that uses less memory");
+    set(options, "bzip2:block_size_100k:min", "min block_size_100k");
+    set(options, "bzip2:block_size_100k:max", "max block_size_100k");
+    set(options, "bzip2:work_factor:min", "min work_factor");
+    set(options, "bzip2:work_factor:max", "max work_factor");
     return options;
   }
 

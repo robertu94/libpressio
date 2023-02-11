@@ -108,6 +108,8 @@ class zfp_plugin: public libpressio_compressor_plugin {
       struct pressio_options options;
       set(options, "pressio:thread_safe", pressio_thread_safety_multiple);
       set(options, "pressio:stability", "stable");
+      set(options, "pressio:lossless:min", 0);
+      set(options, "pressio:lossless:max", 0);
       set(options, "zfp:execution_name", std::vector<std::string>{"omp", "cuda", "serial"});
       return options;
     }

@@ -149,6 +149,18 @@ void document_compressor(std::ostream& out, std::string const& compressor_id, co
           free((char*)entries);
           out << std::endl << std::endl;
         }
+        auto min_key = std::string(key) + ":min";
+        auto max_key = std::string(key) + ":max";
+        if(pressio_options_exists(configuration, min_key.c_str()) == pressio_options_key_set) {
+            pressio_option* min = pressio_options_get(configuration, min_key.c_str());
+            out << "min: `" << *min << '`' << std::endl << std::endl;
+            pressio_option_free(min);
+        }
+        if(pressio_options_exists(configuration, max_key.c_str()) == pressio_options_key_set) {
+            pressio_option* max = pressio_options_get(configuration, max_key.c_str());
+            out << "max: `" << *max << '`' << std::endl << std::endl;
+            pressio_option_free(max);
+        }
 
 
         out << "description: " << trim(std::string(func_description, (func_description == nullptr)? 0: strlen(func_description)));

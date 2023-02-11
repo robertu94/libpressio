@@ -18,10 +18,11 @@ public:
     struct pressio_options options;
     set_meta(options, "roibin:roi", roi_id, roi);
     set_meta(options, "roibin:background", background_id, background);
-    set(options, "roibin:centers", centers);
+    set(options, "roibin:centers", locations);
     set(options, "roibin:roi_size", roi_size);
     set(options, "pressio:nthreads", n_threads);
     set(options, "roibin:nthreads", n_threads);
+    set(options, "roibin:roi_strategy", roi_strategy);
     return options;
   }
 
@@ -32,6 +33,7 @@ public:
     set_meta_configuration(options, "roibin:roi", compressor_plugins(), roi);
     set(options, "pressio:thread_safe", pressio_thread_safety_multiple);
     set(options, "pressio:stability", "experimental");
+    set(options, "roibin:roi_strategy", std::vector<std::string>{"coordinates", "mask"});
     return options;
   }
 
@@ -48,6 +50,12 @@ public:
     set(options, "roibin:centers", "centers of the region of interest");
     set(options, "roibin:roi_size", "region of interest size");
     set(options, "roibin:nthreads", "number of threads for region of interest");
+    set(options, "roibin:roi_strategy", R"(ROI saving method one of
+
+    + mask -- roi:centers is a mask where true indicates part of ROI
+    + coordinates -- roi:centers is a set of coordiantes for the center of each point.  Uses
+                   a fixed rectangle of size roi:roi_size for the coordinates
+    )");
     return options;
   }
 
@@ -56,9 +64,22 @@ public:
   {
     get_meta(options, "roibin:roi", compressor_plugins(), roi_id, roi);
     get_meta(options, "roibin:background", compressor_plugins(), background_id, background);
-    if(get(options, "roibin:centers", &centers) != pressio_options_key_set) {
-        if(centers.dtype() != pressio_uint64_dtype) {
-            centers = centers.cast(pressio_uint64_dtype);
+    std::string tmp_strategy;
+    if(get(options, "roibin:roi_strategy", &tmp_strategy) == pressio_options_key_set) {
+        if(tmp_strategy == "coordinates" || tmp_strategy == "mask") {
+            roi_strategy =  tmp_strategy;
+        }
+        if(roi_strategy == "coordinates" && locations.dtype() != pressio_uint64_dtype) {
+            locations = locations.cast(pressio_uint64_dtype);
+        } else if (roi_strategy == "mask" && locations.dtype() != pressio_bool_dtype) {
+            locations = locations.cast(pressio_bool_dtype);
+        }
+    }
+    if(get(options, "roibin:centers", &locations) != pressio_options_key_set) {
+        if(roi_strategy == "coordinates" && locations.dtype() != pressio_uint64_dtype) {
+            locations = locations.cast(pressio_uint64_dtype);
+        } else if (roi_strategy == "mask" && locations.dtype() != pressio_bool_dtype) {
+            locations = locations.cast(pressio_bool_dtype);
         }
     }
     get(options, "roibin:roi_size", &roi_size);
@@ -129,8 +150,13 @@ public:
         static_cast<uint8_t*>(input->data()) + sizes[0] + 2*sizeof(size_t),
         {sizes[1]}); 
     if(roi_compressed.size_in_bytes() > 0) {
-      size_t regions = centers.get_dimension(1);
-      pressio_data roi_decompressed = pressio_data::owning(output->dtype(), roi_dims(regions));
+      size_t regions = locations.get_dimension(1);
+      pressio_data roi_decompressed;
+      if(roi_strategy == "mask") {
+          roi_decompressed = pressio_data::owning(output->dtype(), {roi_compressed.num_elements()});
+      } else if(roi_strategy == "coordinates") {
+          roi_decompressed = pressio_data::owning(output->dtype(), roi_dims(regions));
+      }
       
       int ec = roi->decompress(&roi_compressed, &roi_decompressed);
       if(ec < 0) {
@@ -221,63 +247,95 @@ public:
     
   }
 
+  template <class T>
+  pressio_data roi_save_mask(T const* ptr, size_t N) {
+      if(this->locations.num_elements() != N) {
+          throw std::runtime_error("mask size != data size");
+      }
+      auto mask = locations.cast(pressio_bool_dtype);
+      const bool* mask_ptr = reinterpret_cast<const bool*>(mask.data());
+      std::vector<T> roi;
+      for (size_t i = 0; i < N; ++i) {
+          if(mask_ptr[i]) {
+              roi.push_back(ptr[i]);
+          }
+      }
+      return pressio_data(roi.begin(), roi.end());
+  }
+
+  template <class T>
+  void roi_load_mask(T* ptr, T const* roi_data, size_t N) {
+      if(this->locations.num_elements() != N) {
+          throw std::runtime_error("mask size != data size");
+      }
+      auto mask = locations.cast(pressio_bool_dtype);
+      const bool* mask_ptr = reinterpret_cast<const bool*>(mask.data());
+      size_t idx = 0;
+      for (size_t i = 0; i < N; ++i) {
+          if(mask_ptr[i]) {
+              ptr[i] = roi_data[idx++];
+          }
+      }
+  }
 
   template <class T>
   pressio_data save_roi_typed(pressio_data const& data) {
-    auto roi_size_v = this->roi_size.to_vector<size_t>();
-    if(data.num_dimensions() != roi_size_v.size()) {
-      throw std::runtime_error("roi_size must match data size");
-    }
-    if(data.num_dimensions() != centers.get_dimension(0) && centers.num_elements() > 0) {
-      throw std::runtime_error("centers dimension must match num_dimensions of input data or be empty");
-    }
-    switch(data.num_dimensions()) {
-      case 1:
-        {
-          indexer<1> id{data.get_dimension(0)};
-          indexer<1> roi_size(roi_size_v.begin(), roi_size_v.end());
-          indexer<2> roi_mem = to_roimem(roi_size, centers.get_dimension(1));
-          pressio_data roi_mem_data = pressio_data::owning(data.dtype(), roi_mem.as_vec());
-          roi_save(id, roi_size, roi_mem, centers, static_cast<T const*>(data.data()), static_cast<T*>(roi_mem_data.data()), n_threads);
-          return roi_mem_data;
+    if(roi_strategy == "coordinates") {
+        auto roi_size_v = this->roi_size.to_vector<size_t>();
+        if(data.num_dimensions() != roi_size_v.size()) {
+          throw std::runtime_error("roi_size must match data size");
         }
-      case 2:
-        {
-          indexer<2> id{data.get_dimension(0), data.get_dimension(1)};
-          indexer<2> roi_size(roi_size_v.begin(), roi_size_v.end());
-          indexer<3> roi_mem = to_roimem(roi_size, centers.get_dimension(1));
-          pressio_data roi_mem_data = pressio_data::owning(data.dtype(), roi_mem.as_vec());
-          roi_save(id, roi_size, roi_mem, centers, static_cast<T const*>(data.data()), static_cast<T*>(roi_mem_data.data()), n_threads);
-          return roi_mem_data;
+        if(data.num_dimensions() != locations.get_dimension(0) && locations.num_elements() > 0) {
+          throw std::runtime_error("centers dimension must match num_dimensions of input data or be empty");
         }
-      case 3:
-        {
-          indexer<3> id{data.get_dimension(0), data.get_dimension(1), data.get_dimension(2)};
-          indexer<3> roi_size(roi_size_v.begin(), roi_size_v.end());
-          indexer<4> roi_mem = to_roimem(roi_size, centers.get_dimension(1));
-          pressio_data roi_mem_data = pressio_data::owning(data.dtype(), roi_mem.as_vec());
-          roi_save(id, roi_size, roi_mem, centers, static_cast<T const*>(data.data()), static_cast<T*>(roi_mem_data.data()), n_threads);
-          return roi_mem_data;
+        switch(data.num_dimensions()) {
+          case 1:
+            {
+              indexer<1> id{data.get_dimension(0)};
+              indexer<1> roi_size(roi_size_v.begin(), roi_size_v.end());
+              indexer<2> roi_mem = to_roimem(roi_size, locations.get_dimension(1));
+              pressio_data roi_mem_data = pressio_data::owning(data.dtype(), roi_mem.as_vec());
+              roi_save(id, roi_size, roi_mem, locations, static_cast<T const*>(data.data()), static_cast<T*>(roi_mem_data.data()), n_threads);
+              return roi_mem_data;
+            }
+          case 2:
+            {
+              indexer<2> id{data.get_dimension(0), data.get_dimension(1)};
+              indexer<2> roi_size(roi_size_v.begin(), roi_size_v.end());
+              indexer<3> roi_mem = to_roimem(roi_size, locations.get_dimension(1));
+              pressio_data roi_mem_data = pressio_data::owning(data.dtype(), roi_mem.as_vec());
+              roi_save(id, roi_size, roi_mem, locations, static_cast<T const*>(data.data()), static_cast<T*>(roi_mem_data.data()), n_threads);
+              return roi_mem_data;
+            }
+          case 3:
+            {
+              indexer<3> id{data.get_dimension(0), data.get_dimension(1), data.get_dimension(2)};
+              indexer<3> roi_size(roi_size_v.begin(), roi_size_v.end());
+              indexer<4> roi_mem = to_roimem(roi_size, locations.get_dimension(1));
+              pressio_data roi_mem_data = pressio_data::owning(data.dtype(), roi_mem.as_vec());
+              roi_save(id, roi_size, roi_mem, locations, static_cast<T const*>(data.data()), static_cast<T*>(roi_mem_data.data()), n_threads);
+              return roi_mem_data;
+            }
+          case 4:
+            {
+              indexer<4> id{data.get_dimension(0), data.get_dimension(1), data.get_dimension(2), data.get_dimension(3)};
+              indexer<4> roi_size(roi_size_v.begin(), roi_size_v.end());
+              indexer<5> roi_mem = to_roimem(roi_size, locations.get_dimension(1));
+              pressio_data roi_mem_data = pressio_data::owning(data.dtype(), roi_mem.as_vec());
+              roi_save(id, roi_size, roi_mem, locations, static_cast<T const*>(data.data()), static_cast<T*>(roi_mem_data.data()), n_threads);
+              return roi_mem_data;
+            }
+          default:
+            throw std::runtime_error("unsupported dimension " + std::to_string(data.num_dimensions()));
         }
-      case 4:
-        {
-          indexer<4> id{data.get_dimension(0), data.get_dimension(1), data.get_dimension(2), data.get_dimension(3)};
-          indexer<4> roi_size(roi_size_v.begin(), roi_size_v.end());
-          indexer<5> roi_mem = to_roimem(roi_size, centers.get_dimension(1));
-          pressio_data roi_mem_data = pressio_data::owning(data.dtype(), roi_mem.as_vec());
-          roi_save(id, roi_size, roi_mem, centers, static_cast<T const*>(data.data()), static_cast<T*>(roi_mem_data.data()), n_threads);
-          return roi_mem_data;
-        }
-      default:
-        throw std::runtime_error("unsupported dimension " + std::to_string(data.num_dimensions()));
+    } else if(roi_strategy == "mask") {
+        return roi_save_mask<T>(reinterpret_cast<T*>(data.data()), data.num_elements());
+    } else {
+        throw std::runtime_error("unsupported roi stategy: " + roi_strategy);
     }
   }
 
   void restore_roi(pressio_data& data, pressio_data const& roi) {
-    auto roi_size = this->roi_size.to_vector<size_t>();
-    if(roi_size.size() != data.num_dimensions()) {
-        throw std::runtime_error("unsupported roi_size");
-    }
     switch(data.dtype()) {
       case pressio_int8_dtype:
         restore_roi_typed<int8_t>(data, roi);
@@ -316,21 +374,31 @@ public:
 
   template <class T>
   void restore_roi_typed(pressio_data & restored, pressio_data const& roi_mem) {
-    switch(restored.num_dimensions()){
-      case 1:
-        restore_roi_sized<T,1>(restored, roi_mem);
-        break;
-      case 2:
-        restore_roi_sized<T,2>(restored, roi_mem);
-        break;
-      case 3:
-        restore_roi_sized<T,3>(restored, roi_mem);
-        break;
-      case 4:
-        restore_roi_sized<T,4>(restored, roi_mem);
-        break;
-      default:
-        throw std::runtime_error("unsupported number of dimensions " + std::to_string(restored.num_dimensions()));
+    if(roi_strategy == "coordinates") {
+        auto roi_size = this->roi_size.to_vector<size_t>();
+        if(roi_size.size() != restored.num_dimensions()) {
+            throw std::runtime_error("unsupported roi_size");
+        }
+        switch(restored.num_dimensions()){
+          case 1:
+            restore_roi_sized<T,1>(restored, roi_mem);
+            break;
+          case 2:
+            restore_roi_sized<T,2>(restored, roi_mem);
+            break;
+          case 3:
+            restore_roi_sized<T,3>(restored, roi_mem);
+            break;
+          case 4:
+            restore_roi_sized<T,4>(restored, roi_mem);
+            break;
+          default:
+            throw std::runtime_error("unsupported number of dimensions " + std::to_string(restored.num_dimensions()));
+        }
+    } else if(roi_strategy == "mask") {
+        roi_load_mask<T>(static_cast<T*>(restored.data()), static_cast<T const*>(roi_mem.data()), restored.num_elements());
+    } else {
+        throw std::runtime_error("unsupported strategy: " + roi_strategy);
     }
   }
 
@@ -341,8 +409,8 @@ public:
 
     auto roi_size_v = this->roi_size.to_vector<size_t>();
     indexer<N> roi_size{roi_size_v.begin(), roi_size_v.end()};
-    indexer<N+1> roi = to_roimem(roi_size, centers.get_dimension(1));
-    roi_restore(id, roi_size, roi, centers, static_cast<T const*>(roi_mem.data()), static_cast<T*>(restored.data()), n_threads);
+    indexer<N+1> roi = to_roimem(roi_size, locations.get_dimension(1));
+    roi_restore(id, roi_size, roi, locations, static_cast<T const*>(roi_mem.data()), static_cast<T*>(restored.data()), n_threads);
 
   }
 
@@ -358,10 +426,11 @@ public:
 
   std::string background_id = "noop";
   std::string roi_id = "noop";
+  std::string roi_strategy = "coordinates";
   pressio_compressor background = compressor_plugins().build("noop");
   pressio_compressor roi = compressor_plugins().build("noop");
   pressio_data roi_size{5,5,0,0};
-  pressio_data centers;
+  pressio_data locations;
   uint32_t n_threads = 1;
 };
 
