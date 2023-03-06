@@ -193,14 +193,13 @@ async def test(args):
             return await common_steps(centos_base(client, version)).exit_code()
 
         async with anyio.create_task_group() as tg:
-            tg.start_soon(many_linux, client)
-            pass
-            # for version in ["almalinux:8"]:
-            #     tg.start_soon(test_centos, version)
-            # for version in ["fedora:36", "fedora:37"]:
-            #     tg.start_soon(test_fedora, version)
-            # for version in ["ubuntu:20.04", "ubuntu:22.04"]:
-            #     tg.start_soon(test_ubuntu, version)
+            #tg.start_soon(many_linux, client)
+            for version in ["almalinux:8"]:
+                tg.start_soon(test_centos, version)
+            for version in ["fedora:36", "fedora:37"]:
+                tg.start_soon(test_fedora, version)
+            for version in ["ubuntu:20.04", "ubuntu:22.04"]:
+                tg.start_soon(test_ubuntu, version)
 
         print("done!")
 
