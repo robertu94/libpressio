@@ -21,7 +21,7 @@ USER demo
 RUN . /etc/profile &&\
     spack compiler find && \
     spack repo add /app/robertu94_packages && \
-    spack mirror add  E4S https://cache.e4s.io/22.11 && \
+    spack mirror add  binary_mirror  https://binaries.spack.io/develop && \
     spack buildcache keys --install --trust && \
     spack install --reuse --fail-fast
 RUN find -L /app/.spack-env/view/* -type f -exec readlink -f '{}' \; | \

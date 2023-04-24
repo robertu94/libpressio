@@ -15,6 +15,20 @@ def many_linux(client):
         .from_("quay.io/pypa/manylinux2014_x86_64")
     )
 
+
+def spack_base(client):
+    return (client.container()
+            .from_("ecpe4s/ubuntu20.04")
+            .with_exec([
+                "bash", "-l", "-c",
+                """source /spack/share/spack/setup-env.sh
+                git clone https://github.com/robertu94/spack_packages ./robertu94_packages
+                spack repo add  ./robertu94_packages
+                spack install libpressio"""
+                ])
+            )
+
+
 def fedora_base(client, image):
     dnf_cache = client.cache_volume(f"dnf-{image}")
     ccache = client.cache_volume(f"ccache-{image}")
@@ -39,6 +53,7 @@ def fedora_base(client, image):
             ]
         )
     )
+
 
 def centos_base(client, image):
     dnf_cache = client.cache_volume(f"dnf-{image}")
@@ -93,6 +108,7 @@ def centos_base(client, image):
     )
     return container
 
+
 def ubuntu_base(client, image):
     apt_cache = client.cache_volume(f"apt-{image}")
     ccache = client.cache_volume(f"ccache-{image}")
@@ -135,8 +151,16 @@ async def test(args):
             .tree()
         )
 
-        def common_steps(container):
-            return (
+        def common_steps(container, static: bool = False, generator: str = "Ninja",
+                         has_ccache: bool = True, tests: bool = True):
+            build_cmd = {
+                "Ninja": "ninja",
+                "Unix Makefiles": "make"
+            }[generator]
+            is_static = "OFF" if static else "ON"
+            build_tests = "ON" if tests else "OFF"
+            build_jobs = str(len(os.sched_getaffinity(0)))
+            r = (
                 container.with_directory("/deps/stdcompat", stdcompat)
                 .with_workdir("/deps/stdcompat")
                 .with_exec(["mkdir", "/deps/stdcompat/build/"])
@@ -146,13 +170,15 @@ async def test(args):
                         "-S/deps/stdcompat",
                         "-B/deps/stdcompat/build/",
                         "-G",
-                        "Ninja",
-                        "-DCMAKE_CXX_COMPILER_LAUNCHER=ccache",
-                        "-DCMAKE_C_COMPILER_LAUNCHER=ccache",
+                        generator,
+                        *(["-DCMAKE_CXX_COMPILER_LAUNCHER=ccache",
+                           "-DCMAKE_C_COMPILER_LAUNCHER=ccache"] if has_ccache else []),
                         "-DBUILD_TESTING=OFF",
+                        f"-DBUILD_SHARED_LIBS={is_static}",
                     ]
                 )
-                .with_exec(["cmake", "--build", "/deps/stdcompat/build/"])
+                .with_exec([build_cmd, "-C", "/deps/stdcompat/build/", "-l",
+                            build_jobs, "-j",  build_jobs])
                 .with_exec(["cmake", "--install", "/deps/stdcompat/build/"])
                 .with_directory("/src/", src)
                 .with_workdir("/src/")
@@ -163,25 +189,32 @@ async def test(args):
                         "-S/src",
                         "-B/build/",
                         "-G",
-                        "Ninja",
-                        "-DCMAKE_CXX_COMPILER_LAUNCHER=ccache",
-                        "-DCMAKE_C_COMPILER_LAUNCHER=ccache",
-                        "-DBUILD_TESTING=ON",
+                        generator,
+                        *(["-DCMAKE_CXX_COMPILER_LAUNCHER=ccache",
+                           "-DCMAKE_C_COMPILER_LAUNCHER=ccache"] if has_ccache else []),
+                        f"-DBUILD_TESTING={build_tests}",
+                        f"-DBUILD_SHARED_LIBS={is_static}",
                     ]
                 )
                 .with_exec(
                     [
-                        "cmake",
-                        "--build",
+                        build_cmd,
+                        "-C",
                         "/build/",
+                        "-l",
+                        build_jobs,
                         "-j",
-                        str(len(os.sched_getaffinity(0))),
+                        build_jobs,
                     ]
                 )
                 .with_workdir("/build/")
-                .with_exec(["ctest", "--output-on-failure"])
-                .with_exec(["cmake", "--install", "/build/"])
             )
+            if build_tests:
+                return (r
+                        .with_exec(["ctest", "--output-on-failure"])
+                        .with_exec(["cmake", "--install", "/build/"]))
+            else:
+                return r
 
         async def test_ubuntu(version):
             return await common_steps(ubuntu_base(client, version)).exit_code()
@@ -192,8 +225,30 @@ async def test(args):
         async def test_centos(version):
             return await common_steps(centos_base(client, version)).exit_code()
 
+        async def test_spack():
+            return await spack_base(client).exit_code()
+
+        async def test_manylinux():
+            return await common_steps(many_linux(client),
+                                      static=True,
+                                      generator="Unix Makefiles",
+                                      has_ccache=False,
+                                      tests=False
+                                      ).exit_code()
+
+        async def build_container():
+            return await (client
+                          .host()
+                          .directory("./docker")
+                          .docker_build()
+                          .publish("ghcr.io/robertu94/libpressio:latest")
+                          )
+
+        # run the builds we con control the load average for together
         async with anyio.create_task_group() as tg:
-            #tg.start_soon(many_linux, client)
+
+            tg.start_soon(test_manylinux)
+
             for version in ["almalinux:8"]:
                 tg.start_soon(test_centos, version)
             for version in ["fedora:36", "fedora:37"]:
@@ -201,9 +256,17 @@ async def test(args):
             for version in ["ubuntu:20.04", "ubuntu:22.04"]:
                 tg.start_soon(test_ubuntu, version)
 
+        # run the builds were we cannot control the load average separately
+        async with anyio.create_task_group() as tg:
+            tg.start_soon(test_spack)
+        if args.build_container:
+            async with anyio.create_task_group() as tg:
+                tg.start_soon(build_container)
+
         print("done!")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--build_container", action="store_true")
     args = parser.parse_args()
     anyio.run(test, args)
