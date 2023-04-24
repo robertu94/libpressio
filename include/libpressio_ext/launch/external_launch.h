@@ -49,6 +49,10 @@ struct extern_proc_results {
  * an extension point for launching processes
  */
 struct libpressio_launch_plugin: public pressio_configurable {
+  virtual std::string type() const final {
+      return "launch";
+  }
+
   virtual ~libpressio_launch_plugin()=default;
   /**
    * launch the process
@@ -58,11 +62,24 @@ struct libpressio_launch_plugin: public pressio_configurable {
    */
   virtual extern_proc_results launch(std::vector<std::string> const& args) const =0;
 
+  virtual pressio_options get_configuration_impl() const {
+      return {};
+  }
+  pressio_options get_configuration() const final {
+      auto opts = get_configuration_impl();
+      set(opts, "pressio:children", children());
+      set(opts, "pressio:type", type());
+      set(opts, "pressio:prefix", prefix());
+      return opts;
+  }
+
   pressio_options get_documentation() const final {
     pressio_options opts;
     opts.copy_from(get_documentation_impl());
     set(opts, "pressio:thread_safe", "level of thread safety provided by the compressor");
     set(opts, "pressio:stability", "level of stablity provided by the compressor; see the README for libpressio");
+    set(opts, "pressio:type", R"(type of the libpressio meta object)");
+    set(opts, "pressio:children", R"(children of this libpressio meta object)");
     return opts;
   }
 

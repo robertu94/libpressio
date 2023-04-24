@@ -8,11 +8,11 @@ extern "C" {
  * Header Guard
  */
 #define LIBPRESSIO_OPTIONS_H
-#include "pressio_dtype.h"
-#include "pressio_compressor.h"
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include "pressio_dtype.h"
+#include "pressio_compressor.h"
 
 /*! \file pressio_options.h 
  *  \brief A set of options for a compressor
@@ -253,7 +253,10 @@ pressio_options_define_type(uinteger, uint32_t)
 pressio_options_define_type(integer, int32_t)
 pressio_options_define_type(float, float)
 pressio_options_define_type(double, double)
-pressio_options_define_type(bool, bool)
+pressio_options_define_type_set(bool, bool)
+pressio_options_define_type_get(bool, bool)
+pressio_options_define_type_cast(bool, bool)
+pressio_options_define_type_as(bool, bool) 
 pressio_options_define_type(userptr, void*)
 pressio_options_define_type(dtype, enum pressio_dtype)
 pressio_options_define_type(threadsafety, enum pressio_thread_safety)

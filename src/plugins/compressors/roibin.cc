@@ -205,6 +205,13 @@ public:
       background->set_name(new_name);
     }
   }
+  std::vector<std::string> children_impl() const final {
+      return {
+          roi->get_name(),
+          background->get_name(),
+      };
+  }
+
 
   pressio_options get_metrics_results_impl() const override {
     pressio_options opts = background->get_metrics_results();

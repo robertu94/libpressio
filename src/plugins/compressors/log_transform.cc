@@ -84,6 +84,9 @@ y[0] = log(x[0]);
     meta->set_name(new_name);
     }
   }
+  std::vector<std::string> children_impl() const final {
+      return { meta->get_name() };
+  }
   const char* prefix() const override { return "log_transform"; }
   const char* version() const override { 
     const static std::string version_str = [this]{

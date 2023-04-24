@@ -86,6 +86,9 @@ class chunking_plugin: public libpressio_compressor_plugin {
       compressor->set_name(new_name);
       }
     }
+  std::vector<std::string> children_impl() const final {
+      return { compressor->get_name() };
+  }
 
 
     int compress_impl(const pressio_data *input, struct pressio_data* output) override {

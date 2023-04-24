@@ -22,6 +22,14 @@ class pressio_configurable : public pressio_errorable {
   /** get the prefix used by this compressor for options */
   virtual const char* prefix() const=0;
 
+  /** get the type of this configurable */
+  virtual std::string type() const=0;
+
+  /**
+   * get the names of child meta objects
+   */
+  virtual std::vector<std::string> children() const;
+
   /**
    * \returns the assigned name for the compressor used in options getting/setting
    */

@@ -35,7 +35,7 @@ struct copy_template_io : public libpressio_io_plugin {
   }
   virtual struct pressio_options get_configuration_impl() const override{
     pressio_options opts;
-    opts.copy_from(impl->get_configuration());
+    set_meta_configuration(opts, "copy_template:io", io_plugins(), impl);
     set(opts, "pressio:stability", "stable");
     set(opts, "pressio:thread_safe",  pressio_thread_safety_single);
     return opts;
@@ -71,6 +71,9 @@ struct copy_template_io : public libpressio_io_plugin {
     } else {
       impl->set_name(new_name);
     }
+  }
+  std::vector<std::string> children() const final {
+      return { impl->get_name() };
   }
 
   private:

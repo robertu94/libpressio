@@ -221,6 +221,9 @@ public:
     comp->set_name(new_name); 
     }
   }
+  std::vector<std::string> children_impl() const final {
+      return { comp->get_name() };
+  }
 
   pressio_options get_metrics_results_impl() const override {
     return comp->get_metrics_results();

@@ -56,7 +56,8 @@ class magick_plugin: public libpressio_compressor_plugin {
     set(options, "pressio:description", R"(ImageMagick is a robust library that preforms a wide array of image
       compression and manipulation. Only a fraction of its api is exposed. More information on ImageMagick
       can be found on its [project homepage](https://imagemagick.org/))");
-    set(options, "magick:samples_magick", "the string for the samples format");
+    set(options, "magick:samples_magick", "the string for the samples format, can be any combination of or order of R = red, G = green, B = blue, A = alpha, C = cyan, Y = yellow, M = magenta, and K = black. The ordering reflects the order of the pixels in the supplied pixel array.");
+    set(options, "magick:samples_magick:hint", "common values for magick:samples_magick");
     set(options, "magick:compressed_magick", "the ImageMagick magick format");
     set(options, "magick:quality", "the quality parameter for lossy images");
     return options;
@@ -67,6 +68,29 @@ class magick_plugin: public libpressio_compressor_plugin {
     struct pressio_options options;
     set(options, "pressio:thread_safe", pressio_thread_safety_multiple);
     set(options, "pressio:stability", "unstable");
+    std::vector<std::string> coders;
+    std::vector<Magick::CoderInfo> v;
+    Magick::coderInfoList(&v,
+            Magick::CoderInfo::TrueMatch,
+            Magick::CoderInfo::TrueMatch,
+            Magick::CoderInfo::AnyMatch
+            );
+    coders.reserve(v.size());
+    for (auto const& i : v) {
+        coders.push_back(i.name());
+    }
+    set(options, "magick:compressed_magick", coders);
+
+    //intentionally choosing a vast subset of possible options
+    std::vector<std::string> samples_format {
+        "RGB",
+        "G",
+        "K"
+    };
+    set(options, "magick:samples_magick:hint", samples_format);
+
+    
+
     return options;
   }
 

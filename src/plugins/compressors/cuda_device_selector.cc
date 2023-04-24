@@ -21,7 +21,7 @@ public:
   struct pressio_options get_configuration_impl() const override
   {
     struct pressio_options options;
-    options.copy_from(impl->get_configuration());
+    set_meta_configuration(options, "cuda_device_selector:compressor", compressor_plugins(), impl);
     set(options, "pressio:thread_safe", get_threadsafe(*impl));
     set(options, "pressio:stability", "experimental");
     return options;
@@ -129,6 +129,9 @@ public:
 
   void set_name_impl(std::string const& new_name) override {
     impl->set_name(new_name + '/' + impl->prefix());
+  }
+  std::vector<std::string> children_impl() const final {
+      return { impl->get_name() };
   }
 
   int device = []{ int dev; if(cudaGetDevice(&dev) == cudaSuccess) return dev; else return 0;}();

@@ -183,8 +183,9 @@ class composite_plugin : public libpressio_metrics_plugin {
     return "composite";
   }
 
-  struct pressio_options get_configuration() const override {
+  struct pressio_options get_configuration_impl() const override {
     pressio_options opts;
+    set_meta_many_configuration(opts, "composite:plugins", metrics_plugins(), plugins);
     set(opts, "pressio:stability", "stable");
     set(opts, "pressio:thread_safe", pressio_thread_safety_multiple);
     return opts;
@@ -209,6 +210,15 @@ class composite_plugin : public libpressio_metrics_plugin {
   void set_name_impl(std::string const& name) override {
     set_names_many(name, plugins, names);
   };
+  std::vector<std::string> children() const final {
+      std::vector<std::string> result;
+      result.reserve(plugins.size());
+      for (auto const& plugin : plugins) {
+          result.push_back(plugin->get_name());
+      }
+      return result;
+  }
+  
 
   private:
 

@@ -116,6 +116,9 @@ applies linear_quantizer encoding to prior to compression and reverses it post d
       meta->set_name(new_name);
     }
   }
+  std::vector<std::string> children_impl() const final {
+      return { meta->get_name() };
+  }
   const char* prefix() const override { return "linear_quantizer"; }
   const char* version() const override { 
     const static std::string version_str = [this]{

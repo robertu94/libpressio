@@ -12,7 +12,6 @@ extern "C" {
 #define PRESSIO_OPTION
 #include <stdbool.h>
 #include <stdint.h>
-#include <stdbool.h>
 #include "pressio_options.h"
 #include "pressio_compressor.h"
 

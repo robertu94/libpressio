@@ -21,6 +21,9 @@ class libpressio_metrics_plugin;
  */
 class libpressio_compressor_plugin :public pressio_configurable, public pressio_versionable {
   public:
+  std::string type() const final {
+      return "compressor";
+  }
 
   libpressio_compressor_plugin() noexcept;
   /**
@@ -125,6 +128,11 @@ class libpressio_compressor_plugin :public pressio_configurable, public pressio_
    * \see pressio_compressor_decompress for the semantics this function should obey
    */
   int decompress(struct pressio_data const*input, struct pressio_data* output);
+
+  /**
+   * get the names of child meta objects
+   */
+  std::vector<std::string> children() const final;
 
   /** compresses a pressio_data buffer
    * \param[in] in_begin iterator to the beginning of the inputs
@@ -293,6 +301,12 @@ class libpressio_compressor_plugin :public pressio_configurable, public pressio_
    * compress multiple data buffers
    */
   virtual int compress_many_impl(compat::span<const pressio_data* const> const& inputs, compat::span<pressio_data*> & outputs);
+
+  /**
+   * get the names of child meta objects
+   */
+  virtual std::vector<std::string> children_impl() const;
+
 
   private:
   pressio_metrics metrics_plugin;

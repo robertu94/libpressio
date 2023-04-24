@@ -27,6 +27,9 @@
  */
 class pressio_subgroup_manager: public pressio_configurable {
 public:
+  std::string type() const final{
+      return "subgroup_manager";
+  }
   int set_options(const struct pressio_options &options) override {
     pressio_data tmp;
     if(get(options, "subgroups:input_data_groups", &tmp) == pressio_options_key_set) {

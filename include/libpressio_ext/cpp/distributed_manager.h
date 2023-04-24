@@ -33,6 +33,9 @@ int distributed_world_size();
  */
 class pressio_distributed_manager: public pressio_configurable {
   public:
+  std::string type() const final {
+      return "distributed_manager";
+  }
   /**
    * a variable used to indicate there is no bound applied
    */

@@ -175,6 +175,9 @@ public:
     comp->set_name(name);
     }
   }
+  std::vector<std::string> children_impl() const final {
+      return {comp->get_name()};
+  }
 
   int major_version() const override { return 0; }
   int minor_version() const override { return 0; }

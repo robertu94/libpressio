@@ -104,11 +104,27 @@ struct pressio_options libpressio_io_plugin::get_documentation() const {
   pressio_options opts;
   set(opts, "pressio:thread_safe", "level of thread safety provided by the compressor");
   set(opts, "pressio:stability", "level of stablity provided by the compressor; see the README for libpressio");
+  set(opts, "pressio:version_epoch", R"(the epoch version number; this is a libpressio specific value used if the major_version does not accurately reflect backward incompatibility)");
+  set(opts, "pressio:version_major", R"(the major version number)");
+  set(opts, "pressio:version_minor", R"(the minor version number)");
+  set(opts, "pressio:version_patch", R"(the patch version number)");
+  set(opts, "pressio:version", R"(the version string from the compressor)");
+  set(opts, "pressio:type", R"(type of the libpressio meta object)");
+  set(opts, "pressio:children", R"(children of this libpressio meta object)");
   opts.copy_from(get_documentation_impl());
   return opts;
 }
 struct pressio_options libpressio_io_plugin::get_configuration() const {
-  return get_configuration_impl();
+  auto opts = get_configuration_impl();
+  set(opts, "pressio:version_epoch", epoch_version());
+  set(opts, "pressio:version_major", major_version());
+  set(opts, "pressio:version_minor", minor_version());
+  set(opts, "pressio:version_patch", patch_version());
+  set(opts, "pressio:children", children());
+  set(opts, "pressio:version", version());
+  set(opts, "pressio:type", type());
+  set(opts, "pressio:prefix", prefix());
+  return opts;
 }
 struct pressio_options libpressio_io_plugin::get_options() const {
   return get_options_impl();

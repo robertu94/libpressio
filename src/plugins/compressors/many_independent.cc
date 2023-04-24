@@ -123,6 +123,9 @@ public:
     manager.set_name(name);
     subgroups.set_name(name);
   }
+  std::vector<std::string> children_impl() const final {
+      return { compressor->get_name() };
+  }
 
   pressio_options get_metrics_results_impl() const override {
     return compressor->get_metrics_results();

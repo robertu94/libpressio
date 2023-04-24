@@ -53,9 +53,9 @@ class mask_metrics: public libpressio_metrics_plugin {
     return 0;
   }
 
-  struct pressio_options get_configuration() const override {
+  struct pressio_options get_configuration_impl() const override {
     pressio_options opts;
-    opts.copy_from(plugin->get_configuration());
+    set_meta_configuration(opts, "mask:metrics", metrics_plugins(), plugin);
     set(opts, "pressio:stability", "stable");
     set(opts, "pressio:thread_safe", pressio_thread_safety_multiple);
     return opts;
@@ -93,6 +93,9 @@ class mask_metrics: public libpressio_metrics_plugin {
     } else {
       plugin->set_name(new_name);
     }
+  }
+  std::vector<std::string> children() const final {
+      return { plugin->get_name() };
   }
 
   std::unique_ptr<libpressio_metrics_plugin> clone() override {

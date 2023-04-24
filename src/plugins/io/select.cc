@@ -81,6 +81,9 @@ struct select_io: public libpressio_io_plugin {
       impl->set_name(new_name);
     }
   }
+  std::vector<std::string> children() const final {
+      return { impl->get_name() };
+  }
 
   std::shared_ptr<libpressio_io_plugin> clone() override {
     return compat::make_unique<select_io>(*this);

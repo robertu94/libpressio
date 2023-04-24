@@ -86,8 +86,9 @@ class write_debug_inputs_plugin : public libpressio_metrics_plugin {
   }
 
 
-  struct pressio_options get_configuration() const override {
+  struct pressio_options get_configuration_impl() const override {
     pressio_options opts;
+    set_meta_configuration(opts, "write_debug_inputs:io", io_plugins(), io);
     set(opts, "pressio:stability", "stable");
     set(opts, "pressio:thread_safe", pressio_thread_safety_multiple);
     return opts;
@@ -116,6 +117,13 @@ class write_debug_inputs_plugin : public libpressio_metrics_plugin {
   }
   const char* prefix() const override {
     return "write_debug_inputs";
+  }
+
+  void set_name_impl(std::string const& name) final {
+      io->set_name(name + "/" + io->prefix());
+  }
+  std::vector<std::string> children() const final {
+      return { io->get_name() };
   }
 
   private:

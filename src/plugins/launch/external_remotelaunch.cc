@@ -107,7 +107,7 @@ extern_proc_results launch(std::vector<std::string> const& full_command) const o
     return 0;
   }
 
-  struct pressio_options get_configuration() const override {
+  struct pressio_options get_configuration_impl() const override {
     struct pressio_options options;
     set(options, "pressio:thread_safe", pressio_thread_safety_multiple);
     set(options, "pressio:stability", "stable");

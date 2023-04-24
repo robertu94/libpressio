@@ -12,6 +12,20 @@ struct pressio_options libpressio_metrics_plugin::get_documentation() const {
   set(opts, "pressio:stability", "level of stablity provided by the compressor; see the README for libpressio");
   set(opts, "metrics:copy_compressor_results", "copy the metrics provided by the compressor");
   set(opts, "metrics:errors_fatal", "propagate errors from the metrics to the compressor");
+  set(opts, "pressio:type", R"(type of the libpressio meta object)");
+  set(opts, "pressio:children", R"(children of this libpressio meta object)");
+  return opts;
+}
+
+struct pressio_options libpressio_metrics_plugin::get_configuration_impl() const {
+    return {};
+}
+
+struct pressio_options libpressio_metrics_plugin::get_configuration() const {
+  auto opts = get_configuration_impl();
+  set(opts, "pressio:children", children());
+  set(opts, "pressio:type", type());
+  set(opts, "pressio:prefix", prefix());
   return opts;
 }
 

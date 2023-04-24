@@ -15,6 +15,8 @@ int pressio_configurable::set_options(struct pressio_options const&) {
   return 0;
 }
 
+std::vector<std::string> pressio_configurable::children() const { return {}; }
+
 int pressio_configurable::check_options(struct pressio_options const&) {
   return 0;
 }

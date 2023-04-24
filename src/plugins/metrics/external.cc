@@ -82,7 +82,7 @@ class external_metric_plugin : public libpressio_metrics_plugin {
       return 0;
     }
 
-    struct pressio_options get_configuration() const override {
+    struct pressio_options get_configuration_impl() const override {
       pressio_options opts;
       set_meta_many_configuration(opts, "external:io_format", io_plugins(), io_modules);
       set_meta_configuration(opts, "external:launch_method", launch_plugins(), launcher);
@@ -174,6 +174,15 @@ class external_metric_plugin : public libpressio_metrics_plugin {
         }
         launcher->set_name(new_name);
       }
+    }
+    std::vector<std::string> children() const final {
+        std::vector<std::string> result;
+        result.reserve(io_modules.size() + 1);
+        for (size_t i = 0; i < io_modules.size(); ++i) {
+            result.push_back(io_modules[i]->get_name());
+        }
+        result.push_back(launcher->get_name());
+        return result;
     }
 
     std::unique_ptr<libpressio_metrics_plugin> clone() override {

@@ -87,6 +87,9 @@ y[i] = x[i] - x[i-1];
     meta->set_name(new_name);
     }
   }
+  std::vector<std::string> children_impl() const final {
+      return { meta->get_name() };
+  }
   pressio_options get_metrics_results_impl() const override {
     return meta->get_metrics_results();
   }

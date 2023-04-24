@@ -111,6 +111,9 @@ class by_extension_plugin : public libpressio_io_plugin {
   void set_name_impl(std::string const& new_name) override {
     plugin->set_name(new_name + "/" + plugin->prefix());
   }
+  std::vector<std::string> children() const final {
+      return { plugin->get_name() };
+  }
 
   std::shared_ptr<libpressio_io_plugin> clone() override {
     return compat::make_unique<by_extension_plugin>(*this);

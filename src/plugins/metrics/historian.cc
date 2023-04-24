@@ -192,7 +192,7 @@ class pressio_historian_metric: public libpressio_metrics_plugin {
     set(opts, "historian:events", events_str);
     return opts;
   }
-  pressio_options get_configuration() const override {
+  pressio_options get_configuration_impl() const override {
     pressio_options opts;
     set_meta_configuration(opts, "historian:metrics", metrics_plugins(), metrics);
     set(opts, "pressio:thread_safe", get_threadsafe(*metrics));
@@ -227,6 +227,9 @@ class pressio_historian_metric: public libpressio_metrics_plugin {
   }
   void set_name_impl(std::string const& new_name) override {
     metrics->set_name(new_name);
+  }
+  std::vector<std::string> children() const final {
+      return { metrics->get_name() };
   }
 
   std::mutex lock;

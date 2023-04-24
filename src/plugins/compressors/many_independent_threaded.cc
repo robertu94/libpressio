@@ -163,6 +163,14 @@ public:
     set_names_many(name, compressors, compressor_ids);
     subgroups.set_name(name);
   }
+  std::vector<std::string> children_impl() const final {
+      std::vector<std::string> result;
+      result.reserve(compressors.size());
+      for (auto const& compressor : compressors) {
+          result.push_back(compressor->get_name());
+      }
+      return result;
+  }
 
   pressio_options get_metrics_results_impl() const override {
     return metrics_results;

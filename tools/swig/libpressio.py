@@ -1,3 +1,9 @@
+"""
+Highlevel Python Bindings for LibPressio
+
+Documentation: https://robertu94.github.io/libpressio
+Tutorial: https://github.com/robertu94/libpressio_tutorial
+"""
 import pressio
 import numpy as np
 from numcodecs.abc import Codec
@@ -356,11 +362,19 @@ class PressioCompressor(Codec):
         return options
 
     def get_metrics(self):
-        """get runtime time metrics"""
+        """get runtime metrics"""
         lp_options = pressio.compressor_get_metrics_results(self._compressor)
         options = _pressio_to_python(lp_options)
         pressio.options_free(lp_options)
         return options
+
+    def get_documentation(self):
+        """get documentation"""
+        lp_options = pressio.compressor_get_documentation(self._compressor)
+        options = _pressio_to_python(lp_options)
+        pressio.options_free(lp_options)
+        return options
+
 
     def _get_config(self):
         lp_options = pressio.compressor_get_options(self._compressor)
@@ -510,6 +524,14 @@ class PressioIO:
         pressio.options_free(lp_options)
         return options
 
+    def get_documentation(self):
+        """get documentation"""
+        lp_options = pressio.io_get_documentation(self._io)
+        options = _pressio_to_python(lp_options)
+        pressio.options_free(lp_options)
+        return options
+
+
     def set_config(self, config):
         """set runtime time options"""
         try:
@@ -624,6 +646,13 @@ class PressioMetrics:
 
     def _get_config(self):
         lp_options = pressio.metrics_get_options(self._metric)
+        options = _pressio_to_python(lp_options)
+        pressio.options_free(lp_options)
+        return options
+
+    def get_documentation(self):
+        """get documentation"""
+        lp_options = pressio.metric_get_documentation(self._metric)
         options = _pressio_to_python(lp_options)
         pressio.options_free(lp_options)
         return options

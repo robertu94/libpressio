@@ -16,7 +16,7 @@ public:
     return compat::make_unique<noop_metrics_plugin>(*this);
   }
 
-  struct pressio_options get_configuration() const override {
+  struct pressio_options get_configuration_impl() const override {
     pressio_options opts;
     set(opts, "pressio:stability", "stable");
     set(opts, "pressio:thread_safe", pressio_thread_safety_multiple);

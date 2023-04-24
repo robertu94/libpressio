@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.94.0" LANGUAGES CXX C)
+project(libpressio VERSION "0.95.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -141,6 +141,7 @@ function(libpressio_optional_component name description file_names)
 endfunction()
 
 libpressio_optional_component(mask_interpolation "build the mask_interpolation compressor plugin" /compressors/mask_interpolation.cc)
+libpressio_optional_component(max_error "build the max_error metric plugin" /metrics/max_error.cc)
 libpressio_optional_component(repeat "build the repeat compressor plugin" /compressors/repeat.cc)
 libpressio_optional_component(pw_rel "build the pw_rel compressor plugin" /compressors/pw_rel.cc)
 libpressio_optional_component(csv "build the CSV io plugin" /io/csv.cc)
@@ -354,6 +355,7 @@ option(LIBPRESSIO_HAS_ZFP "build the ZFP plugin" OFF)
 if(LIBPRESSIO_HAS_ZFP)
   set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} zfp")
   find_package(ZFP REQUIRED)
+  try_compile(LIBPRESSIO_ZFP_HAS_HIP SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/checks/zfp_hip.cc LINK_LIBRARIES zfp::zfp)
   target_sources(libpressio
     PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/zfp_plugin.cc
@@ -734,6 +736,7 @@ if(BUILD_DOCS)
     set(DOXYGEN_MAN_LINKS NO)
   endif()
   set(DOXYGEN_GENERATE_MAN YES)
+
   set(DOXYGEN_HTML_EXTRA_STYLESHEET "${CMAKE_CURRENT_SOURCE_DIR}/docs/doxygen-awesome.css" )
   set(DOXYGEN_HTML_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/docs/head.html")
   set(DOXYGEN_GENERATE_HTML YES)

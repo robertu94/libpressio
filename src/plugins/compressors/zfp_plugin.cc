@@ -7,6 +7,7 @@
 #include "pressio_options.h"
 #include "pressio_data.h"
 #include "pressio_compressor.h"
+#include "pressio_version.h"
 #include "zfp.h"
 #include "std_compat/memory.h"
 #include "std_compat/utility.h"
@@ -186,6 +187,10 @@ class zfp_plugin: public libpressio_compressor_plugin {
           execution = zfp_exec_omp;
         } else if (tmp_execution_name == "cuda") {
           execution = zfp_exec_cuda;
+#if LIBPRESSIO_ZFP_HAS_HIP
+        } else if (tmp_execution_name == "hip") {
+          execution = zfp_exec_hip;
+#endif
         } else {
           return set_error(1, "unknown execution policy: " + tmp_execution_name);
         }
@@ -412,6 +417,10 @@ class zfp_plugin: public libpressio_compressor_plugin {
               return set_error(1, "zfp openmp execution is not available");
             case zfp_exec_cuda:
               return set_error(1, "zfp cuda execution is not available");
+#if LIBPRESSIO_ZFP_HAS_HIP
+            case zfp_exec_hip:
+              return set_error(1, "zfp hip execution is not available");
+#endif
           }
         }
         return 0;

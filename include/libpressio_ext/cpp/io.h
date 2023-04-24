@@ -20,6 +20,10 @@ struct pressio_data;
 struct libpressio_io_plugin: public pressio_configurable, public pressio_versionable {
   public:
 
+  std::string type() const final {
+      return "io";
+  }
+
   virtual ~libpressio_io_plugin()=default;
 
   /** reads a pressio_data buffer from some persistent storage. Modules should override read_impl instead.

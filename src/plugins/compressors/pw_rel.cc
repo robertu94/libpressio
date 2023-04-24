@@ -265,6 +265,9 @@ public:
       signs_comp->set_name(new_name);
     }
   }
+  std::vector<std::string> children_impl() const final {
+      return { abs_comp->get_name(), signs_comp->get_name() };
+  }
 
   std::shared_ptr<libpressio_compressor_plugin> clone() override
   {

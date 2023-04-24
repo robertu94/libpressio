@@ -193,6 +193,9 @@ public:
       impl->set_name(new_name);
     }
   }
+  std::vector<std::string> children_impl() const final {
+      return { impl->get_name() };
+  }
 
   int major_version() const override { return 0; }
   int minor_version() const override { return 0; }

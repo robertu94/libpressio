@@ -50,7 +50,7 @@ public:
   struct pressio_options get_configuration_impl() const override
   {
     struct pressio_options options;
-    options.copy_from(impl->get_configuration());
+    set_meta_configuration(options, "arc:compressor", compressor_plugins(), impl);
     set(options, "pressio:thread_safe", get_threadsafe(*impl));
     set(options, "pressio:stability", "experimental");
     return options;
@@ -167,6 +167,9 @@ public:
     } else {
     impl->set_name(new_name);
     }
+  }
+  std::vector<std::string> children_impl() const final {
+      return { impl->get_name() };
   }
 
   pressio_options get_metrics_results_impl() const override {

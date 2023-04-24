@@ -101,6 +101,9 @@ public:
   void set_name_impl(std::string const& new_name) override {
       comp->set_name(new_name + "/" + comp->prefix());
   }
+  std::vector<std::string> children_impl() const final {
+      return {comp->get_name()};
+  }
 
   pressio_options get_metrics_results_impl() const override {
     return comp->get_metrics_results();

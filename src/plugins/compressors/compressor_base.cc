@@ -74,11 +74,23 @@ struct pressio_options libpressio_compressor_plugin::get_configuration() const {
   set(ret, "pressio:version_major", major_version());
   set(ret, "pressio:version_minor", minor_version());
   set(ret, "pressio:version_patch", patch_version());
+  set(ret, "pressio:children", children());
+  set(ret, "pressio:prefix", prefix());
   set(ret, "pressio:version", version());
+  set(ret, "pressio:type", type());
   if(metrics_plugin) { 
     metrics_plugin->end_get_configuration(ret);
   }
   return ret;
+}
+
+std::vector<std::string> libpressio_compressor_plugin::children() const {
+    auto c = children_impl();
+    c.push_back(metrics_plugin->get_name());
+    return c;
+}
+std::vector<std::string> libpressio_compressor_plugin::children_impl() const {
+    return {};
 }
 
 struct pressio_options libpressio_compressor_plugin::get_documentation() const {
@@ -107,6 +119,8 @@ struct pressio_options libpressio_compressor_plugin::get_documentation() const {
   set(ret, "pressio:version_minor", R"(the minor version number)");
   set(ret, "pressio:version_patch", R"(the patch version number)");
   set(ret, "pressio:version", R"(the version string from the compressor)");
+  set(ret, "pressio:type", R"(type of the libpressio meta object)");
+  set(ret, "pressio:children", R"(children of this libpressio meta object)");
 
   set(ret, "pressio:nthreads", R"(number of threads to use)");
   set(ret, "pressio:abs", R"(a pointwise absolute error bound

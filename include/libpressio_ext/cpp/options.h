@@ -185,12 +185,12 @@ struct pressio_option final {
    */
   template <class T, typename std::enable_if<std::is_same<T, void*>::value, int>::type = 0>
   void* get_value() const{
-    return get<userdata>()->get();
+    return get<userdata>()->get(); //NOLINT
   }
 
   template <class T, typename std::enable_if<!std::is_same<T, void*>::value, int>::type = 0>
   T const& get_value() const{
-    return *get<T>();
+    return *get<T>(); // NOLINT
   }
 
   /**

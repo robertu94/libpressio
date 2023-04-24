@@ -21,6 +21,15 @@ struct pressio_data;
  */
 class libpressio_metrics_plugin : public pressio_configurable {
   public:
+  std::string type() const final {
+      return "metric";
+  }
+
+  /**
+   * base configuration implementation provides type, and children
+   */
+  pressio_options get_configuration() const final;
+
   /**
    * default constructor
    */
@@ -260,6 +269,8 @@ protected:
   virtual int end_decompress_many_impl(compat::span<const pressio_data* const> const& inputs,
                                    compat::span<const pressio_data* const> const& outputs, int rc);
 
+
+  virtual pressio_options get_configuration_impl() const;
 
 //  virtual pressio_options get_metrics_results_impl(pressio_options const &options)=0;
 };
