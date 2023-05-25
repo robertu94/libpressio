@@ -9,8 +9,15 @@
 #include "std_compat/memory.h"
 
 struct external_forkexec: public libpressio_launch_plugin {
-extern_proc_results launch(std::vector<std::string> const& full_command) const override {
+extern_proc_results launch_impl(std::vector<std::string> const& full_command) const override {
       extern_proc_results results;
+
+      if(commands.size() == 0) {
+          results.return_code = 0;
+          results.error_code = fork_error;
+          results.proc_stderr = "command not set";
+          return results;
+      }
 
       //create the pipe for stdout
       int stdout_pipe_fd[2];
@@ -161,9 +168,14 @@ extern_proc_results launch(std::vector<std::string> const& full_command) const o
     return "forkexec";
   }
 
-  int set_options(pressio_options const& options) override {
+  int set_options_impl(pressio_options const& options) override {
     get(options, "external:workdir", &workdir);
-    get(options, "external:commands", &commands);
+    std::string command;
+    if(get(options, "external:commands", &command) == pressio_options_key_set) {
+        commands = {command};
+    } else {
+        get(options, "external:commands", &commands);
+    }
     return 0;
   }
 
@@ -182,7 +194,7 @@ extern_proc_results launch(std::vector<std::string> const& full_command) const o
     return options;
   }
 
-  pressio_options get_options() const override {
+  pressio_options get_options_impl() const override {
     pressio_options options;
     set(options, "external:workdir", workdir);
     set(options, "external:commands", commands);

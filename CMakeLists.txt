@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.95.1" LANGUAGES CXX C)
+project(libpressio VERSION "0.96.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -70,6 +70,7 @@ add_library(libpressio
   ./src/pressio_options.cc
   ./src/pressio_options_iter.cc
   ./src/pressio_highlevel.cc
+  ./src/external_parse.cc
 
   #plugins
   ./src/plugins/compressors/compressor_base.cc
@@ -80,6 +81,8 @@ add_library(libpressio
   ./src/plugins/metrics/error_stat.cc
   ./src/plugins/metrics/metrics_base.cc
   ./src/plugins/launch/external_forkexec.cc
+  ./src/plugins/launch_metrics/noop.cc
+  ./src/plugins/launch_metrics/print.cc
   ./src/plugins/metrics/noop.cc
   ./src/plugins/io/noop.cc
   ./src/plugins/io/by_extension.cc
@@ -111,6 +114,11 @@ add_library(libpressio
   include/pressio_option.h
   include/pressio_options.h
   include/pressio_options_iter.h
+  
+  #private headers
+  src/external_parse.h
+  src/multi_dimensional_iterator.h
+  src/cleanup.h
   )
 
 if(NOT LIBPRESSIO_BUILD_MODE)
@@ -146,6 +154,7 @@ libpressio_optional_component(repeat "build the repeat compressor plugin" /compr
 libpressio_optional_component(pw_rel "build the pw_rel compressor plugin" /compressors/pw_rel.cc)
 libpressio_optional_component(csv "build the CSV io plugin" /io/csv.cc)
 libpressio_optional_component(numpy "build the numpy io plugin" /io/numpy.cc)
+libpressio_optional_component(copy_template "build the numpy io plugin" /io/copy_template.cc)
 libpressio_optional_component(size "build the size metrics plugin" /metrics/size.cc)
 libpressio_optional_component(time "build the time metrics plugin" /metrics/time.cc)
 libpressio_optional_component(autocorr "build the autocorr metrics plugin" /metrics/autocorr.cc)
@@ -564,6 +573,17 @@ if(LIBPRESSIO_HAS_MPI)
 endif()
 
 
+option(LIBPRESSIO_HAS_PYTHON_LAUNCH "build the python launch plugin" OFF)
+if(LIBPRESSIO_HAS_PYTHON_LAUNCH)
+  set(LIBPRESSIO_FEATURES "${LIBPRESSIO_FEATURES} python")
+  find_package(pybind11 REQUIRED)
+  target_sources(libpressio
+    PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/launch/external_python.cc
+    )
+  target_link_libraries(libpressio PRIVATE pybind11::embed)
+endif()
+
 option(LIBPRESSIO_HAS_PETSC "build the petsc io plugin" OFF)
 if(LIBPRESSIO_HAS_PETSC)
   set(LIBPRESSIO_FEATURES "${LIBPRESSIO_FEATURES} petsc")
@@ -620,6 +640,7 @@ if(LIBPRESSIO_HAS_JSON)
     PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/pressio_options_json.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/manifest.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/external.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/include/libpressio_ext/json/pressio_options_json.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/libpressio_ext/cpp/json.h
     )

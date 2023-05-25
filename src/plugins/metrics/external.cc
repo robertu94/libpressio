@@ -17,6 +17,7 @@
 #include "libpressio_ext/cpp/io.h"
 #include "std_compat/memory.h"
 #include "std_compat/language.h"
+#include "external_parse.h"
 
 #include "libpressio_ext/launch/external_launch.h"
 #include "pressio_version.h"
@@ -156,7 +157,7 @@ class external_metric_plugin : public libpressio_metrics_plugin {
       if(results.size() == 0) {
         pressio_options ret;
         auto default_result = launcher->launch({});
-        parse_result(default_result, ret, true);
+        parse_result(default_result, ret, true, get_name(), duration);
         return ret;
       }
       return results;
@@ -197,83 +198,6 @@ class external_metric_plugin : public libpressio_metrics_plugin {
   private:
 
 
-    //returns the version number parsed, starts at 1, zero means error
-    static std::string api_version_number(std::istringstream& stdout_stream)  {
-      std::string version_line;
-      std::getline(stdout_stream, version_line);
-      auto eq_pos = version_line.find('=') + 1;
-      if(version_line.substr(0, eq_pos) != "external:api=") {
-        //report error
-        throw std::runtime_error("invalid format version");
-      }
-      return version_line.substr(eq_pos);
-    }
-
-    size_t parse_result(extern_proc_results& proc_results, pressio_options& results, bool is_default) const
-    {
-      try{
-        std::istringstream stdout_stream(proc_results.proc_stdout);
-        auto api_version = api_version_number(stdout_stream);
-        if(api_version == "1" || api_version == "2" || api_version == "3" || api_version == "4" || api_version == "5") {
-            parse_v1(stdout_stream, proc_results, results, is_default);
-            return stoull(api_version);
-#if LIBPRESSIO_HAS_JSON
-        } else if(api_version == "json:1") {
-            parse_json(stdout_stream, proc_results, results, is_default);
-            return 1;
-#endif
-        }
-
-      } catch(...) {} //swallow all errors and set error information
-
-      results.clear();
-      if(not is_default) {
-        set(results, "external:error_code", static_cast<int32_t>(format_error));
-        set(results, "external:return_code", 0);
-        set(results, "external:stderr", proc_results.proc_stderr);
-        set(results, "external:runtime", duration);
-      }
-      return 0;
-    }
-
-    void parse_v1(std::istringstream& stdout_stream, extern_proc_results const& input, pressio_options&proc_results_opts, bool is_default) const {
-      proc_results_opts.clear();
-
-      for (std::string line; std::getline(stdout_stream, line); ) {
-        auto equal_pos = line.find('=');
-        std::string name = "external:results:" + line.substr(0, equal_pos);
-        std::string value_s = line.substr(equal_pos + 1);
-        double value = std::stod(value_s);
-        set(proc_results_opts, name, value);
-      }
-      if(not is_default) {
-        set(proc_results_opts, "external:stderr", input.proc_stderr);
-        set(proc_results_opts, "external:return_code", input.return_code);
-        set(proc_results_opts, "external:error_code", input.return_code);
-        set(proc_results_opts, "external:runtime", duration);
-      }
-    }
-
-#if LIBPRESSIO_HAS_JSON
-    void parse_json(std::istringstream& stdout_stream, extern_proc_results const& input, pressio_options& results, bool is_default) const {
-      results.clear();
-
-      nlohmann::json j;
-      stdout_stream >> j;
-      pressio_options options = j;
-
-      for (auto const& item : options) {
-        results.set("external:results:"+item.first, item.second);
-      }
-
-      if(not is_default) {
-        set(results, "external:stderr", input.proc_stderr);
-        set(results, "external:return_code", input.return_code);
-        set(results, "external:error_code", input.return_code);
-        set(results, "external:runtime", duration);
-      }
-    }
-#endif
 
     std::vector<std::string> build_command(std::vector<std::pair<std::string,std::string>> const& filenames, compat::span<const pressio_data* const> const& input_datasets) const {
       std::vector<std::string> full_command;
@@ -363,7 +287,7 @@ class external_metric_plugin : public libpressio_metrics_plugin {
 
       //get the defaults
       auto default_result = launcher->launch({});
-      parse_result(default_result, this->defaults, true);
+      parse_result(default_result, this->defaults, true, get_name(), duration);
 
       //build the command
       auto full_command = build_command(filenames, input_data);
@@ -375,7 +299,7 @@ class external_metric_plugin : public libpressio_metrics_plugin {
       duration = std::chrono::duration<double>(end_time - start_time).count();
 
       //parse the output
-      size_t api_version =parse_result(result, this->results, false);
+      size_t api_version =parse_result(result, this->results, false, get_name(), duration);
 
       //combine the results by setting defaults
       if(api_version >= 3) {

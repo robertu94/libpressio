@@ -14,6 +14,7 @@ struct pressio_options libpressio_metrics_plugin::get_documentation() const {
   set(opts, "metrics:errors_fatal", "propagate errors from the metrics to the compressor");
   set(opts, "pressio:type", R"(type of the libpressio meta object)");
   set(opts, "pressio:children", R"(children of this libpressio meta object)");
+  set(opts, "pressio:prefix", R"(prefix of the this libpresiso meta object)");
   return opts;
 }
 

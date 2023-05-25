@@ -48,13 +48,13 @@ These may change from version to version.
 
 *New in external API 3* The following arguments will be "prefixed" according to the `external:field_names` argument if it is set. See the table above in "Configuration Options" and example usage below.
 
-`--input` path to a temporary file containing the input data prior to compression. (new in version 2) It will be according to the `external:io_format` option
+`--input` path to a temporary file containing the input data prior to compression. (new in version 2) It will be interpreted according to the `external:io_format` option
 
-`--decompressed` path to a temporary file containing the input data prior to compression. (new in version 2) It will be according to the `external:io_format` option
+`--decompressed` path to a temporary file containing the input data prior to compression. (new in version 2) It will be interpreted according to the `external:io_format` option
 
 `--dim` dimension the dimensions of the dataset from low to high.  This argument may be passed more than once.  If passed more than once, the dimensions are given in order same order as the `pressio_data_new` functions.
 
-`--type` type of the input data.  Valid types include: "float", "double", "int8", "int16", "int32", "int64", "uint8", "uint16", "uint32", "uint64", "byte".
+`--type` type of the input data.  Valid types include: "bool", "float", "double", "int8", "int16", "int32", "int64", "uint8", "uint16", "uint32", "uint64", "byte".
 
 ## "Custom Defined" Command line Arguments
 

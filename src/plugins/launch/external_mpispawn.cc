@@ -7,10 +7,11 @@
 #include "std_compat/memory.h"
 
 struct external_mpispawn: public libpressio_launch_plugin {
-extern_proc_results launch(std::vector<std::string> const& full_command) const override {
+extern_proc_results launch_impl(std::vector<std::string> const& full_command) const override {
       extern_proc_results results;
 
       std::vector<char*> args;
+      args.reserve(commands.size() + full_command.size() + 1);
       for (auto const& command: commands) {
         args.push_back(const_cast<char*>(command.c_str()));
       }
@@ -49,7 +50,7 @@ extern_proc_results launch(std::vector<std::string> const& full_command) const o
     return "mpispawn";
   }
 
-  int set_options(pressio_options const& options) override {
+  int set_options_impl(pressio_options const& options) override {
     get(options, "external:workdir", &workdir);
     get(options, "external:commands", &commands);
     return 0;
@@ -72,7 +73,7 @@ extern_proc_results launch(std::vector<std::string> const& full_command) const o
   }
 
 
-  pressio_options get_options() const override {
+  pressio_options get_options_impl() const override {
     pressio_options options;
     set(options, "external:workdir", workdir);
     set(options, "external:commands", commands);

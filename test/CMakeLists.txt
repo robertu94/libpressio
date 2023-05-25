@@ -128,6 +128,9 @@ endif()
 if(LIBPRESSIO_HAS_JSON AND LIBPRESSIO_HAS_HDF)
   add_gtest(test_hdffilter.cc)
   target_link_libraries(test_hdffilter PRIVATE hdf5::hdf5 libpressio_hdf5_filter)
+
+  add_executable(test_pressio_external_compressor_helper test_external_compressor_helper.cc)
+  target_link_libraries(test_pressio_external_compressor_helper PRIVATE libpressio)
 endif()
 
 if(LIBPRESSIO_HAS_SZ AND LIBPRESSIO_HAS_FPZIP AND LIBPRESSIO_BUILD_MODE STREQUAL "FULL")

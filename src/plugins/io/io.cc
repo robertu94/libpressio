@@ -108,9 +108,10 @@ struct pressio_options libpressio_io_plugin::get_documentation() const {
   set(opts, "pressio:version_major", R"(the major version number)");
   set(opts, "pressio:version_minor", R"(the minor version number)");
   set(opts, "pressio:version_patch", R"(the patch version number)");
-  set(opts, "pressio:version", R"(the version string from the compressor)");
+  set(opts, "pressio:version", R"(the version string from the io)");
   set(opts, "pressio:type", R"(type of the libpressio meta object)");
   set(opts, "pressio:children", R"(children of this libpressio meta object)");
+  set(opts, "pressio:prefix", R"(prefix for settings from this object)");
   opts.copy_from(get_documentation_impl());
   return opts;
 }

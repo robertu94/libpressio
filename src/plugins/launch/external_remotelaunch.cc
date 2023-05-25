@@ -41,7 +41,7 @@ struct external_remote: public libpressio_launch_plugin {
   external_remote(std::shared_ptr<libpressio_external_curl_manager>&& curl_singleton):
     curl_singleton(curl_singleton) {}
 
-extern_proc_results launch(std::vector<std::string> const& full_command) const override {
+extern_proc_results launch_impl(std::vector<std::string> const& full_command) const override {
       extern_proc_results results;
       nlohmann::json request;
       request["args"] = full_command;
@@ -102,7 +102,7 @@ extern_proc_results launch(std::vector<std::string> const& full_command) const o
     return "remote";
   }
 
-  int set_options(pressio_options const& options) override {
+  int set_options_impl(pressio_options const& options) override {
     get(options, "external:connection_string", &connection_string);
     return 0;
   }
@@ -121,7 +121,7 @@ extern_proc_results launch(std::vector<std::string> const& full_command) const o
     return options;
   }
 
-  pressio_options get_options() const override {
+  pressio_options get_options_impl() const override {
     pressio_options options;
     set(options, "external:connection_string", connection_string);
     return options;

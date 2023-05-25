@@ -169,7 +169,6 @@ __pressio_to_lp_dtype = {
    numpy.uint64: _pressio.uint64_dtype,
    numpy.int64: _pressio.int64_dtype,
    bool: _pressio.bool_dtype,
-   numpy.bool: _pressio.bool_dtype,
 }
 
 def _pressio_io_data_from_numpy_0d(array):

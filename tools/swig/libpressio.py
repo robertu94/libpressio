@@ -105,8 +105,6 @@ def _python_to_pressio(options, template=None):
             pressio.data_free(data)
         elif isinstance(value, bool):
             op = pressio.option_new_bool(value)
-        elif isinstance(value, np.bool):
-            op = pressio.option_new_bool(bool(value))
         elif isinstance(value, int):
             op = pressio.option_new_integer64(value)
         elif isinstance(value, np.int8):
