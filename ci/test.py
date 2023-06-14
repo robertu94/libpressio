@@ -35,8 +35,8 @@ def fedora_base(client, image):
     return (
         client.container()
         .from_(image)
-        .with_mounted_cache("/var/cache/dnf", dnf_cache)
-        .with_mounted_cache("/var/ccache/cache", ccache)
+        .with_mounted_cache("/var/cache/dnf", dnf_cache, sharing=dagger.CacheSharingMode.LOCKED)
+        .with_mounted_cache("/var/ccache/cache", ccache, sharing=dagger.CacheSharingMode.LOCKED)
         .with_env_variable("CCACHE_DIR", "/var/ccache/cache")
         .with_exec(
             [
@@ -61,8 +61,8 @@ def centos_base(client, image):
     container = (
         client.container()
         .from_(image)
-        .with_mounted_cache("/var/cache/dnf", dnf_cache)
-        .with_mounted_cache("/var/ccache/cache", ccache)
+        .with_mounted_cache("/var/cache/dnf", dnf_cache, sharing=dagger.CacheSharingMode.LOCKED)
+        .with_mounted_cache("/var/ccache/cache", ccache, sharing=dagger.CacheSharingMode.LOCKED)
         .with_env_variable("CCACHE_DIR", "/var/ccache/cache")
         .with_exec(
             [
