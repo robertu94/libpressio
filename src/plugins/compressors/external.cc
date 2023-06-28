@@ -11,6 +11,7 @@
 #include "external_parse.h"
 #include "cleanup.h"
 #include "pressio_posix.h"
+#include <unistd.h>
 
 #include <nlohmann/json.hpp>
 #include "libpressio_ext/cpp/json.h"
