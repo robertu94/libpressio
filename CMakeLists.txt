@@ -68,6 +68,7 @@ add_library(libpressio
   ./src/pressio_metrics.cc
   ./src/pressio_option.cc
   ./src/pressio_options.cc
+  ./src/pressio_memory.cc
   ./src/pressio_options_iter.cc
   ./src/pressio_highlevel.cc
   ./src/external_parse.cc

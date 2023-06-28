@@ -7,12 +7,18 @@
 #include <vector>
 #include <cstdlib>
 #include <cstring>
+#include <sstream>
 #include <utility>
 #include <algorithm>
+#include <functional>
+#include <memory>
 #include "pressio_data.h"
+#include "domain.h"
+#include "memory.h"
+
 #include "libpressio_ext/cpp/dtype.h"
-#include "std_compat/utility.h"
 #include "std_compat/optional.h"
+#include <std_compat/memory.h>
 
 /**
  * \file
@@ -46,6 +52,8 @@ size_t data_size_in_elements(size_t dimensions, size_t const dims[]);
 size_t data_size_in_bytes(pressio_dtype type, size_t const dimensions, size_t const dims[]);
 
 
+
+
 /**
  * represents a data buffer that may or may not be owned by the class
  */
@@ -59,9 +67,7 @@ struct pressio_data {
    * \returns an empty data object (i.e. has no data)
    * \see pressio_data_new_empty
    * */
-  static pressio_data empty(const pressio_dtype dtype, std::vector<size_t> const& dimensions) {
-    return pressio_data(dtype, nullptr, nullptr, nullptr, dimensions.size(), dimensions.data());
-  }
+  static pressio_data empty(const pressio_dtype dtype, std::vector<size_t> const& dimensions);
   /**  
    * creates a non-owning reference to data
    *
@@ -71,17 +77,13 @@ struct pressio_data {
    * \returns an non-owning data object (i.e. calling pressio_data_free will not deallocate this memory)
    * \see pressio_data_new_nonowning
    * */
-  static pressio_data nonowning(const pressio_dtype dtype, void* data, std::vector<size_t> const& dimensions) {
-    return pressio_data::nonowning(dtype, data, dimensions.size(), dimensions.data());
-  }
+  static pressio_data nonowning(const pressio_dtype dtype, void* data, std::vector<size_t> const& dimensions);
   /**  
    * creates a copy of a data buffer
    *
    * \param[in] dtype the type of the buffer
    * \param[in] src the buffer to copy \param[in] dimensions the dimensions of the buffer \returns an owning copy of the data object \see pressio_data_new_copy */
-  static pressio_data copy(const enum pressio_dtype dtype, const void* src, std::vector<size_t> const& dimensions) {
-    return pressio_data::copy(dtype, src, dimensions.size(), dimensions.data());
-  }
+  static pressio_data copy(const enum pressio_dtype dtype, const void* src, std::vector<size_t> const& dimensions);
   /**  
    * creates a copy of a data buffer
    *
@@ -90,9 +92,7 @@ struct pressio_data {
    * \returns an owning data object with uninitialized memory
    * \see pressio_data_new_owning
    * */
-  static pressio_data owning(const pressio_dtype dtype, std::vector<size_t> const& dimensions) {
-    return pressio_data::owning(dtype, dimensions.size(), dimensions.data());
-  }
+  static pressio_data owning(const pressio_dtype dtype, std::vector<size_t> const& dimensions);
   /**  
    * takes ownership of an existing data buffer
    *
@@ -108,9 +108,7 @@ struct pressio_data {
       void* data,
       std::vector<size_t> const& dimensions,
       pressio_data_delete_fn deleter,
-      void* metadata) {
-    return pressio_data::move(dtype, data, dimensions.size(), dimensions.data(), deleter, metadata);
-  }
+      void* metadata);
 
   /**  
    * allocates a new empty data buffer
@@ -121,9 +119,7 @@ struct pressio_data {
    * \returns an empty data object (i.e. has no data)
    * \see pressio_data_new_empty
    * */
-  static pressio_data empty(const pressio_dtype dtype, size_t const num_dimensions, size_t const dimensions[]) {
-    return pressio_data(dtype, nullptr, nullptr, nullptr, num_dimensions, dimensions);
-  }
+  static pressio_data empty(const pressio_dtype dtype, size_t const num_dimensions, size_t const dimensions[]);
 
   /**  
    * creates a non-owning reference to data
@@ -135,9 +131,7 @@ struct pressio_data {
    * \returns an non-owning data object (i.e. calling pressio_data_free will not deallocate this memory)
    * \see pressio_data_new_nonowning
    * */
-  static pressio_data nonowning(const pressio_dtype dtype, void* data, size_t const num_dimensions, size_t const dimensions[]) {
-    return pressio_data(dtype, data, nullptr, nullptr, num_dimensions, dimensions);
-  }
+  static pressio_data nonowning(const pressio_dtype dtype, void* data, size_t const num_dimensions, size_t const dimensions[]);
 
   /**  
    * creates a copy of a data buffer
@@ -149,15 +143,7 @@ struct pressio_data {
    * \returns an owning copy of the data object
    * \see pressio_data_new_copy
    * */
-  static pressio_data copy(const enum pressio_dtype dtype, const void* src, size_t const num_dimensions, size_t const dimensions[]) {
-    size_t bytes = data_size_in_bytes(dtype, num_dimensions, dimensions);
-    void* data = nullptr;
-    if(bytes != 0) {
-      data = malloc(bytes);
-      memcpy(data, src, bytes); 
-    }
-    return pressio_data(dtype, data, nullptr, pressio_data_libc_free_fn, num_dimensions, dimensions);
-  }
+  static pressio_data copy(const enum pressio_dtype dtype, const void* src, size_t const num_dimensions, size_t const dimensions[]);
 
   /**  
    * creates a copy of a data buffer
@@ -168,12 +154,7 @@ struct pressio_data {
    * \returns an owning data object with uninitialized memory
    * \see pressio_data_new_owning
    * */
-  static pressio_data owning(const pressio_dtype dtype, size_t const num_dimensions, size_t const dimensions[]) {
-    size_t bytes = data_size_in_bytes(dtype, num_dimensions, dimensions);
-    void* data = nullptr;
-    if(bytes != 0) data = malloc(bytes);
-    return pressio_data(dtype, data, nullptr, pressio_data_libc_free_fn, num_dimensions, dimensions);
-  }
+  static pressio_data owning(const pressio_dtype dtype, size_t const num_dimensions, size_t const dimensions[]);
 
 
   /**  
@@ -193,9 +174,7 @@ struct pressio_data {
       size_t const num_dimensions,
       size_t const dimensions[],
       pressio_data_delete_fn deleter,
-      void* metadata) {
-    return pressio_data(dtype, data, metadata, deleter, num_dimensions, dimensions);
-  }
+      void* metadata);
 
   /**
    * clones a existing data buffer
@@ -207,102 +186,15 @@ struct pressio_data {
    *
    */
   static pressio_data clone(pressio_data const& src){
-    size_t bytes = src.size_in_bytes(); 
-    unsigned char* data = nullptr;
-    if(bytes != 0 && src.data() != nullptr) {
-      data = static_cast<unsigned char*>(malloc(bytes));
-      memcpy(data, src.data(), src.size_in_bytes());
-    }
-    return pressio_data(src.dtype(),
-        data,
-        nullptr,
-        pressio_data_libc_free_fn,
-        src.num_dimensions(),
-        src.dimensions().data()
-        );
+      pressio_memory cloned(src.memory);
+      return pressio_data(src.dtype(), src.dimensions(), std::move(cloned));
   }
 
   pressio_data() :
     data_dtype(pressio_byte_dtype),
-    data_ptr(nullptr),
-    metadata_ptr(nullptr),
-    deleter(nullptr),
     dims(),
-    capacity(0)
+    memory()
   {}
-
-  ~pressio_data() {
-    if(deleter!=nullptr) deleter(data_ptr,metadata_ptr);
-  };
-
-  /**copy-assignment, clones the data
-   * \param[in] rhs the data to clone
-   * \see pressio_data::clone
-   * */
-  pressio_data& operator=(pressio_data const& rhs) {
-    if(this == &rhs) return *this;
-    data_dtype = rhs.data_dtype;
-    if(rhs.has_data() && rhs.size_in_bytes() > 0) {
-      if(deleter != nullptr) deleter(data_ptr, metadata_ptr);
-      data_ptr = malloc(rhs.size_in_bytes());
-      memcpy(data_ptr, rhs.data_ptr, rhs.size_in_bytes());
-    } else {
-      data_ptr = nullptr;
-    }
-    metadata_ptr = nullptr;
-    deleter = pressio_data_libc_free_fn;
-    dims = rhs.dims;
-    capacity = data_size_in_bytes(rhs.dtype(), rhs.dims.size(), rhs.dims.data()); //we only malloc size_in_bytes()
-    return *this;
-  }
-  /**copy-constructor, clones the data
-   * \param[in] rhs the data to clone
-   * \see pressio_data::clone
-   * */
-  pressio_data(pressio_data const& rhs): 
-    data_dtype(rhs.data_dtype),
-    data_ptr((rhs.has_data())? malloc(rhs.size_in_bytes()) : nullptr),
-    metadata_ptr(nullptr),
-    deleter(pressio_data_libc_free_fn),
-    dims(rhs.dims),
-    capacity(data_size_in_bytes(rhs.dtype(), rhs.dims.size(), rhs.dims.data())) //we only malloc size_in_bytes
-  {
-    if(rhs.has_data() && rhs.size_in_bytes() > 0) {
-      memcpy(data_ptr, rhs.data_ptr, rhs.size_in_bytes());
-    }
-  }
-  /**
-   * move-constructor
-   *
-   * \param[in] rhs the data buffer to move from
-   * \returns a reference to the object moved into
-   */
-  pressio_data(pressio_data&& rhs) noexcept:
-    data_dtype(rhs.data_dtype),
-    data_ptr(compat::exchange(rhs.data_ptr, nullptr)),
-    metadata_ptr(compat::exchange(rhs.metadata_ptr, nullptr)),
-    deleter(compat::exchange(rhs.deleter, nullptr)),
-    dims(compat::exchange(rhs.dims, {})),
-    capacity(compat::exchange(rhs.capacity, 0)) //we take ownership, so take everything
-    {}
-  
-  /**
-   * move-assignment operator
-   *
-   * \param[in] rhs the data buffer to move from
-   * \returns a l-value reference to the object moved into
-   */
-  pressio_data& operator=(pressio_data && rhs) noexcept {
-    if(this==&rhs) return *this;
-    if(deleter!=nullptr) deleter(data_ptr,metadata_ptr);
-    data_dtype = rhs.data_dtype,
-    data_ptr = compat::exchange(rhs.data_ptr, nullptr),
-    metadata_ptr = compat::exchange(rhs.metadata_ptr, nullptr),
-    deleter = compat::exchange(rhs.deleter, nullptr),
-    dims = compat::exchange(rhs.dims, {});
-    capacity = compat::exchange(rhs.capacity, 0);
-    return *this;
-  }
 
   /**
    * construct a literal pressio_data object from a initializer list
@@ -312,12 +204,10 @@ struct pressio_data {
   template <class T>
   pressio_data(std::initializer_list<T> il):
     data_dtype(pressio_dtype_from_type<T>()),
-    data_ptr((il.size() == 0)? nullptr:malloc(il.size() * sizeof(T))),
-    metadata_ptr(nullptr),
-    deleter(pressio_data_libc_free_fn),
-    dims({il.size()}) 
+    dims({il.size()}),
+    memory(il.size()*sizeof(T))
   {
-    std::copy(std::begin(il), std::end(il), static_cast<T*>(data_ptr));
+    std::copy(std::begin(il), std::end(il), static_cast<T*>(memory.data()));
   }
     
 
@@ -325,14 +215,14 @@ struct pressio_data {
    * \returns a non-owning pointer to the data
    */
   void* data() const {
-    return data_ptr;
+    return memory.data();
   }
 
   /**
    * \returns true if the structure has has data
    */
   bool has_data() const {
-    return data_ptr != nullptr && size_in_bytes() > 0;
+    return memory.data() != nullptr && size_in_bytes() > 0;
   }
   
   /**
@@ -386,18 +276,8 @@ struct pressio_data {
   size_t set_dimensions(std::vector<size_t>&& dims) {
     size_t new_size = data_size_in_bytes(data_dtype, dims.size(), dims.data());
     if(capacity_in_bytes() < new_size) {
-      void* tmp = malloc(new_size);
-      if(tmp == nullptr) {
-        return 0;
-      } else {
-        memcpy(tmp, data_ptr, size_in_bytes());
-        if(deleter!=nullptr) deleter(data_ptr,metadata_ptr);
-
-        data_ptr = tmp;
-        deleter = pressio_data_libc_free_fn;
-        metadata_ptr = nullptr;
-        capacity = new_size;
-      }
+        pressio_memory new_mem(new_size, memory.domain());
+        memory = std::move(new_mem);
     } 
     this->dims = std::move(dims);
     return size_in_bytes();
@@ -423,7 +303,7 @@ struct pressio_data {
    * \returns the capacity of the buffer in bytes
    */
   size_t capacity_in_bytes() const {
-    return capacity;
+    return memory.capacity();
   }
 
   /**
@@ -499,15 +379,13 @@ struct pressio_data {
   template <class ForwardIt>
   pressio_data(ForwardIt begin, ForwardIt end):
     data_dtype(pressio_dtype_from_type<typename std::iterator_traits<ForwardIt>::value_type>()),
-    data_ptr(malloc(std::distance(begin, end)*pressio_dtype_size(data_dtype))),
-    metadata_ptr(nullptr),
-    deleter(pressio_data_libc_free_fn),
-    dims({static_cast<size_t>(std::distance(begin, end))})
+    dims({static_cast<size_t>(std::distance(begin, end))}),
+    memory(std::distance(begin, end)*pressio_dtype_size(data_dtype))
   {
   using out_t = typename std::add_pointer<typename std::decay<
     typename std::iterator_traits<ForwardIt>::value_type>::type>::type;
 
-    std::copy(begin, end, static_cast<out_t>(data_ptr));
+    std::copy(begin, end, static_cast<out_t>(memory.data()));
   }
 
   /**
@@ -524,58 +402,21 @@ struct pressio_data {
   bool operator==(pressio_data const& rhs) const;
 
   private:
-  /**
-   * constructor use the static methods instead
-   * \param dtype the type of the data
-   * \param data the buffer to use
-   * \param metadata the meta data to pass to the deleter function
-   * \param num_dimensions the number of dimensions to represent
-   * \param dimensions of the data
-   */
   pressio_data(const pressio_dtype dtype,
-      void* data,
-      void* metadata,
-      void (*deleter)(void*, void*),
-      size_t const num_dimensions,
-      size_t const dimensions[]
+      std::vector<size_t>const& dimensions,
+      pressio_memory&& memory
       ):
     data_dtype(dtype),
-    data_ptr(data),
-    metadata_ptr(metadata),
-    deleter(deleter),
-    dims(dimensions, dimensions+num_dimensions),
-    capacity(data_size_in_bytes(dtype, num_dimensions, dimensions))
-  {}
-  /**
-   * constructor use the static methods instead
-   * \param dtype the type of the data
-   * \param data the buffer to use
-   * \param metadata the meta data to pass to the deleter function
-   * \param num_dimensions the number of dimensions to represent
-   * \param dimensions of the data
-   * \param capacity of the data
-   */
-  pressio_data(const pressio_dtype dtype,
-      void* data,
-      void* metadata,
-      void (*deleter)(void*, void*),
-      size_t const num_dimensions,
-      size_t const dimensions[],
-      size_t capacity
-      ):
-    data_dtype(dtype),
-    data_ptr(data),
-    metadata_ptr(metadata),
-    deleter(deleter),
-    dims(dimensions, dimensions+num_dimensions),
-    capacity(capacity)
-  {}
+    dims(dimensions),
+    memory(std::move(memory))
+  {
+      if(memory.capacity() != 0 && size_in_bytes() > memory.capacity()) {
+          throw std::runtime_error("pressio_data size exceeds capacity");
+      }
+  }
   pressio_dtype data_dtype;
-  void* data_ptr;
-  void* metadata_ptr;
-  void (*deleter)(void*, void*);
   std::vector<size_t> dims;
-  size_t capacity;
+  pressio_memory memory;
 };
 
 /**
@@ -639,6 +480,11 @@ ReturnType pressio_data_for_each(pressio_data const& data, Function&& f)
       return std::forward<Function>(f)(
           static_cast<int64_t*>(data.data()),
           static_cast<int64_t*>(data.data()) + data.num_elements()
+        );
+    case pressio_bool_dtype:
+      return std::forward<Function>(f)(
+          static_cast<bool*>(data.data()),
+          static_cast<bool*>(data.data()) + data.num_elements()
         );
     case pressio_byte_dtype:
     default:
@@ -711,6 +557,11 @@ ReturnType pressio_data_for_each(pressio_data& data, Function&& f)
           static_cast<int64_t*>(data.data()),
           static_cast<int64_t*>(data.data()) + data.num_elements()
         );
+    case pressio_bool_dtype:
+      return std::forward<Function>(f)(
+          static_cast<bool*>(data.data()),
+          static_cast<bool*>(data.data()) + data.num_elements()
+        );
     case pressio_byte_dtype:
     default:
       return std::forward<Function>(f)(
@@ -753,6 +604,8 @@ namespace {
       return pressio_data_for_each_call<ReturnType, Function, Type1, int32_t>(data, data2, std::forward<Function>(f));
     case pressio_int64_dtype:
       return pressio_data_for_each_call<ReturnType, Function, Type1, int64_t>(data, data2, std::forward<Function>(f));
+    case pressio_bool_dtype:
+      return pressio_data_for_each_call<ReturnType, Function, Type1, bool>(data, data2, std::forward<Function>(f));
     default:
       return pressio_data_for_each_call<ReturnType, Function, Type1, char>(data, data2, std::forward<Function>(f));
     }
@@ -788,6 +641,8 @@ namespace {
       return pressio_data_for_each_call<ReturnType, Function, Type1, int32_t>(data, data2, std::forward<Function>(f));
     case pressio_int64_dtype:
       return pressio_data_for_each_call<ReturnType, Function, Type1, int64_t>(data, data2, std::forward<Function>(f));
+    case pressio_bool_dtype:
+      return pressio_data_for_each_call<ReturnType, Function, Type1, bool>(data, data2, std::forward<Function>(f));
     default:
       return pressio_data_for_each_call<ReturnType, Function, Type1, char>(data, data2, std::forward<Function>(f));
     }
@@ -827,6 +682,8 @@ ReturnType pressio_data_for_each(pressio_data const& data, pressio_data const& d
       return pressio_data_for_each_type2_switch<ReturnType, Function, int32_t>(data, data2, std::forward<Function>(f));
     case pressio_int64_dtype:
       return pressio_data_for_each_type2_switch<ReturnType, Function, int64_t>(data, data2, std::forward<Function>(f));
+    case pressio_bool_dtype:
+      return pressio_data_for_each_type2_switch<ReturnType, Function, bool>(data, data2, std::forward<Function>(f));
     default:
       return pressio_data_for_each_type2_switch<ReturnType, Function, char>(data, data2, std::forward<Function>(f));
     }
@@ -863,6 +720,8 @@ ReturnType pressio_data_for_each(pressio_data& data, pressio_data& data2, Functi
       return pressio_data_for_each_type2_switch<ReturnType, Function, int32_t>(data, data2, std::forward<Function>(f));
     case pressio_int64_dtype:
       return pressio_data_for_each_type2_switch<ReturnType, Function, int64_t>(data, data2, std::forward<Function>(f));
+    case pressio_bool_dtype:
+      return pressio_data_for_each_type2_switch<ReturnType, Function, bool>(data, data2, std::forward<Function>(f));
     default:
       return pressio_data_for_each_type2_switch<ReturnType, Function, char>(data, data2, std::forward<Function>(f));
     }
