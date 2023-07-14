@@ -114,6 +114,10 @@ The easiest way to do a development build of libpressio is to use Spack envionme
 spack env create -d mydevenviroment
 spack env activate mydevenvionment
 
+# one time setup: tell spack to set LD_LIBRARY_PATH with the spack envionment's library paths
+spack config add modules:prefix_inspections:lib64:[LD_LIBRARY_PATH]
+spack config add modules:prefix_inspections:lib:[LD_LIBRARY_PATH]
+
 # one time setup: install libpressio-tools and checkout 
 # libpressio for development
 spack add libpressio-tools
