@@ -1009,6 +1009,7 @@ class ssim_plugin : public libpressio_metrics_plugin {
     
     https://github.com/szcompressor/qcat
     )");
+    set(opt, "ssim:ssim", "the structual image similarity metric, between 0 and 1, 1 is good");
     return opt;
   }
 

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.96.2" LANGUAGES CXX C)
+project(libpressio VERSION "0.96.3" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -184,6 +184,8 @@ libpressio_optional_component(print_options "print the options passed to set_opt
 libpressio_optional_component(data_gap "compute the data_gap" /metrics/data_gap.cc)
 libpressio_optional_component(clipping "compute the number of values that exceed an absolute error bound" /metrics/clipping.cc)
 libpressio_optional_component(ssim "computes the SSIM" /metrics/ssim.cc)
+libpressio_optional_component(ssim "computes the sobolev norm" /metrics/sobolevp2.cc)
+libpressio_optional_component(ssim "computes the gradient length" /metrics/gradlength.cc)
 libpressio_optional_component(write_debug_inputs "metric that writes output buffers for testing" /metrics/write_debug_inputs.cc)
 set(roibin_sources /compressors/roibin.cc /compressors/binning.cc /compressors/masked_binning.cc)
 libpressio_optional_component(roibin "build the roibin metacompressor" "${roibin_sources}")
