@@ -62,7 +62,6 @@ public:
     j["n"] = get_name(); //name
     j["c"] = versions(); //versions tree
 
-    std::cout << j << std::endl;
     std::vector<uint8_t> msgpk = nlohmann::json::to_msgpack(j);
 
     int rc = impl->compress(input, output);

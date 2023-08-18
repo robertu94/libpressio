@@ -265,118 +265,118 @@ namespace serializer {
     MPI_Status* s = (status == MPI_STATUS_IGNORE) ? &local_status: status;
     int type, has_value;
     ret |= comm::recv(type, source, tag, comm, s);
-    ret |= comm::recv(has_value, source, tag, comm, s);
+    ret |= comm::recv(has_value, s->MPI_SOURCE, s->MPI_TAG, comm, s);
     if(has_value) {
       switch(type) {
         case pressio_option_int8_type:
             {
             int8_t value;
-            ret |= comm::recv(value, source, tag, comm, s);
+            ret |= comm::recv(value, s->MPI_SOURCE, s->MPI_TAG, comm, s);
             option = value;
             }
             break;
         case pressio_option_int16_type:
             {
             int16_t value;
-            ret |= comm::recv(value, source, tag, comm, s);
+            ret |= comm::recv(value, s->MPI_SOURCE, s->MPI_TAG, comm, s);
             option = value;
             }
             break;
         case pressio_option_int32_type:
           {
           int32_t value;
-          ret |= comm::recv(value, source, tag, comm, s);
+          ret |= comm::recv(value, s->MPI_SOURCE, s->MPI_TAG, comm, s);
           option = value;
           }
           break;
         case pressio_option_int64_type:
           {
           int64_t value;
-          ret |= comm::recv(value, source, tag, comm, s);
+          ret |= comm::recv(value, s->MPI_SOURCE, s->MPI_TAG, comm, s);
           option = value;
           }
           break;
         case pressio_option_uint8_type:
             {
             uint8_t value;
-            ret |= comm::recv(value, source, tag, comm, s);
+            ret |= comm::recv(value, s->MPI_SOURCE, s->MPI_TAG, comm, s);
             option = value;
             }
             break;
         case pressio_option_uint16_type:
             {
             uint16_t value;
-            ret |= comm::recv(value, source, tag, comm, s);
+            ret |= comm::recv(value, s->MPI_SOURCE, s->MPI_TAG, comm, s);
             option = value;
             }
             break;
         case pressio_option_uint32_type:
           {
           unsigned int value;
-          ret |= comm::recv(value, source, tag, comm, s);
+          ret |= comm::recv(value, s->MPI_SOURCE, s->MPI_TAG, comm, s);
           option = value;
           }
           break;
         case pressio_option_uint64_type:
           {
           uint64_t value;
-          ret |= comm::recv(value, source, tag, comm, s);
+          ret |= comm::recv(value, s->MPI_SOURCE, s->MPI_TAG, comm, s);
           option = value;
           }
           break;
         case pressio_option_float_type:
           {
           float value;
-          ret |= comm::recv(value, source, tag, comm, s);
+          ret |= comm::recv(value, s->MPI_SOURCE, s->MPI_TAG, comm, s);
           option = value;
           }
           break;
         case pressio_option_double_type:
           {
           double value;
-          ret |= comm::recv(value, source, tag, comm, s);
+          ret |= comm::recv(value, s->MPI_SOURCE, s->MPI_TAG, comm, s);
           option = value;
           }
           break;
         case pressio_option_bool_type:
           {
           bool value;
-          ret |= comm::recv(value, source, tag, comm, s);
+          ret |= comm::recv(value, s->MPI_SOURCE, s->MPI_TAG, comm, s);
           option = value;
           }
           break;
         case pressio_option_charptr_type:
           {
           std::string value;
-          ret |= comm::recv(value, source, tag, comm, s);
+          ret |= comm::recv(value, s->MPI_SOURCE, s->MPI_TAG, comm, s);
           option = std::move(value);
           }
           break;
         case pressio_option_charptr_array_type:
           {
           std::vector<std::string> value;
-          ret |= comm::recv(value, source, tag, comm, s);
+          ret |= comm::recv(value, s->MPI_SOURCE, s->MPI_TAG, comm, s);
           option = std::move(value);
           }
           break;
         case pressio_option_data_type:
           {
           pressio_data value;
-          ret |= comm::recv(value, source, tag, comm, s);
+          ret |= comm::recv(value, s->MPI_SOURCE, s->MPI_TAG, comm, s);
           option = std::move(value);
           }
           break;
         case pressio_option_threadsafety_type:
           {
           pressio_thread_safety value;
-          ret |= comm::recv(value, source, tag, comm, s);
+          ret |= comm::recv(value, s->MPI_SOURCE, s->MPI_TAG, comm, s);
           option = std::move(value);
           }
           break;
         case pressio_option_dtype_type:
           {
           pressio_dtype value;
-          ret |= comm::recv(value, source, tag, comm, s);
+          ret |= comm::recv(value, s->MPI_SOURCE, s->MPI_TAG, comm, s);
           option = std::move(value);
           }
           break;

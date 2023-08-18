@@ -322,7 +322,7 @@ public:
   }
 
   uint32_t nthreads = 1;
-  SZ::Config config;
+  SZ::Config config{};
 };
 
 static pressio_register compressor_many_fields_plugin(compressor_plugins(), "sz3", []() {

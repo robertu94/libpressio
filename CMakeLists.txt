@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.96.1" LANGUAGES CXX C)
+project(libpressio VERSION "0.96.2" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -183,6 +183,7 @@ libpressio_optional_component(transpose "build the transpose compressor plugin" 
 libpressio_optional_component(print_options "print the options passed to set_options" /metrics/print_options.cc)
 libpressio_optional_component(data_gap "compute the data_gap" /metrics/data_gap.cc)
 libpressio_optional_component(clipping "compute the number of values that exceed an absolute error bound" /metrics/clipping.cc)
+libpressio_optional_component(ssim "computes the SSIM" /metrics/ssim.cc)
 libpressio_optional_component(write_debug_inputs "metric that writes output buffers for testing" /metrics/write_debug_inputs.cc)
 set(roibin_sources /compressors/roibin.cc /compressors/binning.cc /compressors/masked_binning.cc)
 libpressio_optional_component(roibin "build the roibin metacompressor" "${roibin_sources}")
@@ -658,6 +659,17 @@ if(LIBPRESSIO_HAS_REMOTELAUNCH)
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/launch/external_remotelaunch.cc
     )
 
+endif()
+
+option(LIBPRESSIO_HAS_OPENSSL "build with OpenSSL support to hash libpressio options" OFF)
+if(LIBPRESSIO_HAS_OPENSSL)
+  set(LIBPRESSIO_FEATURES "${LIBPRESSIO_FEATURES} remotelaunch")
+  find_package(OpenSSL REQUIRED)
+  target_link_libraries(libpressio PRIVATE OpenSSL::Crypto)
+  target_sources(libpressio
+    PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/pressio_hash.cc
+    )
 endif()
 
 configure_file(
