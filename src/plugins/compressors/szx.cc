@@ -4,7 +4,9 @@
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
+#include "cleanup.h"
 #include <szx.h>
+#include <omp.h>
 
 namespace libpressio { namespace szx_ns {
 
@@ -45,6 +47,8 @@ public:
       set_type(options, "pressio:rel", pressio_option_double_type);
     }
 
+    set(options, "pressio:nthreads", nthreads);
+    set(options, "szx:nthreads", nthreads);
     set(options, "szx:abs_err_bound", absErrBound);
     set(options, "szx:rel_bound_ratio", relBoundRatio);
     set(options, "szx:fast_mode", fastMode);
@@ -68,6 +72,7 @@ public:
   {
     struct pressio_options options;
     set(options, "pressio:description", R"(an ultra fast error bounded lossy compressor)");
+    set(options, "szx:nthreads", "number of threads to use for szx");
     set(options, "szx:abs_err_bound", "absolute pointwise error bound");
     set(options, "szx:rel_bound_ratio", "pointwise relative error bound error bound");
     set(options, "szx:fast_mode", "compression approach");
@@ -87,6 +92,11 @@ public:
       if(get(options, "pressio:rel", &relBoundRatio) == pressio_options_key_set) {
         errBoundMode = REL;
       }
+      if(get(options, "pressio:nthreads", &nthreads) == pressio_options_key_set) {
+        fastMode= COMP_MODES.at("openmp_fast");
+      }
+      get(options, "szx:nthreads", &nthreads);
+      
       get(options, "szx:fast_mode", &fastMode);
       std::string tmp;
       if(get(options, "szx:fast_mode_str", &tmp) == pressio_options_key_set) {
@@ -108,6 +118,14 @@ public:
                     struct pressio_data* output) override
   {
     try {
+    cleanup cleanup_nthreads;
+    if(nthreads) {
+        auto old_threads = omp_get_num_threads();
+        omp_set_num_threads(static_cast<int>(nthreads));
+        cleanup_nthreads = [old_threads]() {
+            omp_set_num_threads(old_threads);
+        };
+    }
     size_t outsize = 0;
     auto dims = input->normalized_dims(5);
     unsigned char* bytes = SZ_fast_compress_args(
@@ -139,6 +157,14 @@ public:
                       struct pressio_data* output) override
   {
     try {
+    cleanup cleanup_nthreads;
+    if(nthreads) {
+        auto old_threads = omp_get_num_threads();
+        omp_set_num_threads(static_cast<int>(nthreads));
+        cleanup_nthreads = [old_threads]() {
+            omp_set_num_threads(old_threads);
+        };
+    }
     auto dims = output->normalized_dims(5);
     void* output_bytes = SZ_fast_decompress(
         fastMode,
@@ -198,6 +224,7 @@ private:
 
   int32_t fastMode = SZx_WITH_BLOCK_FAST_CMPR;
   int32_t errBoundMode = ABS;
+  uint32_t nthreads = 0;
   double absErrBound = 1e-4;
   double relBoundRatio = 0;
 };
