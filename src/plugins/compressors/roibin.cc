@@ -415,6 +415,9 @@ public:
     indexer<N> id(restored_v.begin(), restored_v.end());
 
     auto roi_size_v = this->roi_size.to_vector<size_t>();
+    if(roi_size_v.size() != N) {
+        throw std::logic_error("unexpected size in restore_roi_sized");
+    }
     indexer<N> roi_size{roi_size_v.begin(), roi_size_v.end()};
     indexer<N+1> roi = to_roimem(roi_size, locations.get_dimension(1));
     roi_restore(id, roi_size, roi, locations, static_cast<T const*>(roi_mem.data()), static_cast<T*>(restored.data()), n_threads);

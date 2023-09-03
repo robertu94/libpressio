@@ -1,4 +1,5 @@
 #include "libpressio_ext/launch/external_launch.h"
+#include "libpressio_ext/python/python.h"
 #include <mutex>
 #include "std_compat/memory.h"
 #include <nlohmann/json.hpp>
@@ -12,27 +13,28 @@ namespace libpressio { namespace python_launch {
 namespace py = pybind11;
 using namespace py::literals;
 
-static std::mutex libpressio_pybind_init_lock;
 struct __attribute__((visibility ("hidden"))) libpressio_external_pybind_manager {
   libpressio_external_pybind_manager() {
   }
   ~libpressio_external_pybind_manager() {
   }
 
-  static std::shared_ptr<libpressio_external_pybind_manager> get_library() {
+  py::scoped_interpreter guard;
+};
+
+static std::mutex libpressio_pybind_init_lock;
+__attribute__((visibility ("default"))) std::shared_ptr<libpressio_external_pybind_manager> get_library() {
     std::lock_guard<std::mutex> guard(libpressio_pybind_init_lock);
     static std::weak_ptr<libpressio_external_pybind_manager> weak{};
     if(auto observed = weak.lock())
     {
-      return observed;
+        return observed;
     } else {
-      auto library = std::make_shared<libpressio_external_pybind_manager>();
-      weak = library;
-      return library;
+        auto library = std::make_shared<libpressio_external_pybind_manager>();
+        weak = library;
+        return library;
     }
-  }
-  py::scoped_interpreter guard;
-};
+}
 
 
 
@@ -98,9 +100,7 @@ extern_proc_results launch_impl(std::vector<std::string> const& full_command) co
 };
 
 static pressio_register launch_spawn_plugin(launch_plugins(), "python", [](){
-    return compat::make_unique<python_external_remote>(
-        libpressio_external_pybind_manager::get_library()
-        );
+    return compat::make_unique<python_external_remote>(get_library());
 });
 
 }}
