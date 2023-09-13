@@ -506,7 +506,7 @@ struct pressio_options final {
   pressio_option const& get(compat::string_view const& name, StringType2 const& key) const {
     std::string prefix_key;
     for (auto path : search(name)) {
-      prefix_key = format_name(path, key);
+      prefix_key = format_name(std::string(path), std::string(key));
       if(options.find(prefix_key) != options.end()) {
         return get(prefix_key);
       }
@@ -637,7 +637,7 @@ struct pressio_options final {
   enum pressio_options_key_status cast(StringType const& name, StringType2 const& key, PointerType value, enum pressio_conversion_safety safety) const {
     std::string prefix_key;
     for (auto path : search(name)) {
-      prefix_key = format_name(path, key);
+      prefix_key = format_name(std::string(path), std::string(key));
       if(options.find(prefix_key) != options.end()) {
         return cast(prefix_key, value, safety);
       }

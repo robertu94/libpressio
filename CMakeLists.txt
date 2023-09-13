@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(libpressio VERSION "0.96.6" LANGUAGES CXX C)
+cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
+project(libpressio VERSION "0.97.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -213,8 +213,10 @@ target_include_directories(libpressio
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/libpressio>
   )
 target_compile_options(libpressio PRIVATE 
-  $<$<CONFIG:Debug>: -Wall -Wextra -Wpedantic>
-  $<$<CONFIG:RelWithDebInfo>: ${NO_OMIT_FRAME_POINTER_FLAG}>
+  $<$<COMPILE_LANGUAGE:CXX,C>:
+      $<$<CONFIG:Debug>: -Wall -Wextra -Wpedantic>
+      $<$<CONFIG:RelWithDebInfo>: ${NO_OMIT_FRAME_POINTER_FLAG}>
+  >
   )
 
 option(LIBPRESSIO_TREAT_WARNINGS_AS_ERRORS "treat compiler warnings as errors" OFF)
@@ -549,6 +551,17 @@ if(LIBPRESSIO_HAS_NDZIP)
     target_link_libraries(libpressio PRIVATE NDZip::ndzip-sycl)
   endif()
 
+endif()
+
+option(LIBPRESSIO_HAS_CUSZP "build the CUSZP plugin" OFF)
+if(LIBPRESSIO_HAS_CUSZP)
+  set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} CUSZP")
+  find_package(cuSZp REQUIRED)
+  target_sources(libpressio
+    PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/cuszp.cc
+    )
+  target_link_libraries(libpressio PRIVATE cuSZp::cuSZp)
 endif()
 
 option(LIBPRESSIO_HAS_FPZIP "build the fpzip plugin" OFF)
