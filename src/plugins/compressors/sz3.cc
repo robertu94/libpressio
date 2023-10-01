@@ -239,6 +239,9 @@ public:
         restore_threads = [old_threads]{ omp_set_num_threads(old_threads);};
     }
 
+    std::vector<size_t> output_dims = output->dimensions();
+    config.setDims(output_dims.begin(), output_dims.end());
+
     switch(output->dtype()) {
       case pressio_float_dtype:
         {
