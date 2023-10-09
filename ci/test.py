@@ -143,7 +143,7 @@ async def test(args):
     async with dagger.Connection(dagger.Config(log_output=sys.stderr)) as client:
         # get reference to the local project
         src = client.host().directory(
-            ".", exclude=["build*", "test/CMakeFiles*", "CMakeFiles*", "Testing*"]
+            ".", exclude=["build*", "test/CMakeFiles*", "CMakeFiles*", "Testing*", "ci"]
         )
         stdcompat = (
             client.git("https://github.com/robertu94/std_compat")
@@ -228,6 +228,27 @@ async def test(args):
         async def test_spack():
             return await spack_base(client).exit_code()
 
+        async def build_scip():
+            try:
+                src_access_token = client.set_secret("SRC_ACCESS_TOKEN", os.environ["SRC_ACCESS_TOKEN"])
+                build_dir = common_steps(fedora_base(client, "fedora:38"))
+                scip = client.http("https://github.com/sourcegraph/scip-clang/releases/download/v0.2.7/scip-clang-x86_64-linux")
+                src = client.http("https://sourcegraph.com/.api/src-cli/src_linux_amd64")
+                await (build_dir.with_file("/bin/scip-clang", scip, permissions=0o700)
+                                .with_file("/bin/src", src, permissions=0o700)
+                                .with_workdir("/src/")
+                                .with_exec(["/bin/scip-clang", "--compdb-path=/build/compile_commands.json"])
+                                .with_env_variable("SRC_ENDPOINT", os.environ["SRC_ENDPOINT"])
+                                .with_secret_variable("SRC_ACCESS_TOKEN", src_access_token)
+                                .with_exec(["src", "login", os.environ["SRC_ENDPOINT"]])
+                                .with_exec(["src", "code-intel", "upload", "-file=index.scip"])
+                       )
+            except KeyError:
+                print("no sourcegraph token, skipping scip upload", file=sys.stderr)
+
+
+
+
         async def test_manylinux():
             return await common_steps(many_linux(client),
                                       static=True,
@@ -247,18 +268,20 @@ async def test(args):
         # run the builds we con control the load average for together
         async with anyio.create_task_group() as tg:
 
-            tg.start_soon(test_manylinux)
+            # tg.start_soon(test_manylinux)
 
             for version in ["almalinux:8"]:
                 tg.start_soon(test_centos, version)
-            for version in ["fedora:36", "fedora:37"]:
+            for version in ["fedora:37", "fedora:38"]:
                 tg.start_soon(test_fedora, version)
             for version in ["ubuntu:20.04", "ubuntu:22.04"]:
                 tg.start_soon(test_ubuntu, version)
+            tg.start_soon(build_scip)
 
         # run the builds were we cannot control the load average separately
         async with anyio.create_task_group() as tg:
             tg.start_soon(test_spack)
+            pass
         if args.build_container:
             async with anyio.create_task_group() as tg:
                 tg.start_soon(build_container)
