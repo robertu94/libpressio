@@ -14,6 +14,7 @@ namespace libpressio { namespace szx_ns {
   const std::map<std::string,int> ERR_MODES {
     {"abs", ABS},
     {"rel", REL},
+    {"fxr", FXR},
   };
   const std::map<std::string,int> COMP_MODES {
     {"no_block_fast", SZx_NO_BLOCK_FAST_CMPR},
@@ -51,6 +52,8 @@ public:
     set(options, "szx:nthreads", nthreads);
     set(options, "szx:abs_err_bound", absErrBound);
     set(options, "szx:rel_bound_ratio", relBoundRatio);
+    set(options, "szx:tolerance", tolerance);
+    set(options, "szx:fixed_ratio", ratio);
     set(options, "szx:fast_mode", fastMode);
     set_type(options, "szx:fast_mode_str", pressio_option_charptr_type);
     set(options, "szx:err_bound_mode", errBoundMode);
@@ -75,6 +78,8 @@ public:
     set(options, "szx:nthreads", "number of threads to use for szx");
     set(options, "szx:abs_err_bound", "absolute pointwise error bound");
     set(options, "szx:rel_bound_ratio", "pointwise relative error bound error bound");
+    set(options, "szx:tolerance", "tolerance of the fixed compression ratio");
+    set(options, "szx:fixed_ratio", "target compression ratio for fixed ratio (fxr) mode");
     set(options, "szx:fast_mode", "compression approach");
     set(options, "szx:fast_mode_str", "compression approach as a human readable string");
     set(options, "szx:err_bound_mode", "error bound type");
@@ -95,6 +100,8 @@ public:
       if(get(options, "pressio:nthreads", &nthreads) == pressio_options_key_set) {
         fastMode= COMP_MODES.at("openmp_fast");
       }
+      get(options, "szx:tolerance", &tolerance);
+      get(options, "szx:fixed_ratio", &ratio);
       get(options, "szx:nthreads", &nthreads);
       
       get(options, "szx:fast_mode", &fastMode);
@@ -128,7 +135,7 @@ public:
     }
     size_t outsize = 0;
     auto dims = input->normalized_dims(5);
-    unsigned char* bytes = SZ_fast_compress_args(
+    unsigned char* bytes = SZx_fast_compress_args(
         fastMode,
         to_szx_type(input->dtype()),
         input->data(),
@@ -136,6 +143,8 @@ public:
         errBoundMode,
         static_cast<float>(absErrBound),
         static_cast<float>(relBoundRatio),
+        static_cast<float>(ratio),
+        static_cast<float>(tolerance),
         dims[4],
         dims[3],
         dims[2],
@@ -166,7 +175,7 @@ public:
         };
     }
     auto dims = output->normalized_dims(5);
-    void* output_bytes = SZ_fast_decompress(
+    void* output_bytes = SZx_fast_decompress(
         fastMode,
         to_szx_type(output->dtype()),
         static_cast<unsigned char*>(input->data()),
@@ -215,7 +224,9 @@ private:
   int to_szx_type(pressio_dtype dtype) {
     switch(dtype) {
       case pressio_float_dtype:
-        return SZ_FLOAT;
+        return SZx_FLOAT;
+      case pressio_double_dtype:
+        return SZx_DOUBLE;
       default:
         throw std::runtime_error("unsupported type ");
 
@@ -227,6 +238,8 @@ private:
   uint32_t nthreads = 0;
   double absErrBound = 1e-4;
   double relBoundRatio = 0;
+  double ratio = 0;
+  double tolerance = 0;
 };
 
 static pressio_register compressor_many_fields_plugin(compressor_plugins(), "szx", []() {

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
-project(libpressio VERSION "0.97.1" LANGUAGES CXX C)
+project(libpressio VERSION "0.97.2" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -310,15 +310,12 @@ endif()
 option(LIBPRESSIO_HAS_SZx "build the SZx plugin" OFF)
 if(LIBPRESSIO_HAS_SZx)
   set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} SZx")
-  find_library(szx_LIBRARY SZx REQUIRED)
-  find_file(szx_HEADER szx.h REQUIRED)
-  get_filename_component(szx_INCLUDE_DIR "${szx_HEADER}" DIRECTORY)
+  find_package(SZx REQUIRED)
   target_sources(libpressio
     PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/szx.cc
     )
-  target_link_libraries(libpressio PRIVATE ${szx_LIBRARY})
-  target_include_directories(libpressio PRIVATE ${szx_INCLUDE_DIR})
+    target_link_libraries(libpressio PRIVATE SZx::SZx)
 endif()
 
 
