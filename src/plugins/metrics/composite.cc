@@ -16,6 +16,21 @@
 #endif
 
 namespace libpressio { namespace composite {
+    template <class T>
+    struct reversed {
+        T& t;
+        reversed(T& t): t(t) {}
+        auto begin() -> decltype(t.rbegin()) {
+            return t.rbegin();
+        }
+        auto end() -> decltype(t.rend()) {
+            return t.rend();
+        }
+    };
+    template <class T>
+    reversed<T> make_reversed(T& t) {
+        return reversed<T>(t);
+    }
 class composite_plugin : public libpressio_metrics_plugin {
   public:
   explicit composite_plugin(std::vector<pressio_metrics>&& plugins) :
@@ -43,7 +58,7 @@ class composite_plugin : public libpressio_metrics_plugin {
   }
 
   int end_check_options_impl(struct pressio_options const* options, int rc) override {
-    for (auto& plugin : plugins) {
+    for (auto& plugin : make_reversed(plugins)) {
       plugin->end_check_options(options, rc);
     }
     return 0;
@@ -57,7 +72,7 @@ class composite_plugin : public libpressio_metrics_plugin {
   }
 
   int end_get_options_impl(struct pressio_options const* options) override {
-    for (auto& plugin : plugins) {
+    for (auto& plugin : make_reversed(plugins)) {
       plugin->end_get_options(options);
     }
     return 0;
@@ -71,7 +86,7 @@ class composite_plugin : public libpressio_metrics_plugin {
   }
 
   int end_set_options_impl(struct pressio_options const& options, int rc) override {
-    for (auto& plugin : plugins) {
+    for (auto& plugin : make_reversed(plugins)) {
       plugin->end_set_options(options, rc);
     }
     return 0;
@@ -85,7 +100,7 @@ class composite_plugin : public libpressio_metrics_plugin {
   }
 
   int end_compress_impl(struct pressio_data const* input, pressio_data const * output, int rc) override {
-    for (auto& plugin : plugins) {
+    for (auto& plugin : make_reversed(plugins)) {
       plugin->end_compress(input, output, rc);
     }
     return 0;
@@ -99,7 +114,7 @@ class composite_plugin : public libpressio_metrics_plugin {
   }
 
   int end_decompress_impl(struct pressio_data const* input, pressio_data const* output, int rc) override {
-    for (auto& plugin : plugins) {
+    for (auto& plugin : make_reversed(plugins)) {
       plugin->end_decompress(input, output, rc);
     }
     return 0;
@@ -115,7 +130,7 @@ class composite_plugin : public libpressio_metrics_plugin {
 
   int end_compress_many_impl(compat::span<const pressio_data* const> const& inputs,
                                    compat::span<const pressio_data* const> const& outputs, int rc) override {
-    for (auto& plugin : plugins) {
+    for (auto& plugin : make_reversed(plugins)) {
       plugin->end_compress_many(inputs, outputs, rc);
     }
 
@@ -132,7 +147,7 @@ class composite_plugin : public libpressio_metrics_plugin {
 
   int end_decompress_many_impl(compat::span<const pressio_data* const> const& inputs,
                                    compat::span<const pressio_data* const> const& outputs, int rc) override {
-    for (auto& plugin : plugins) {
+    for (auto& plugin : make_reversed(plugins)) {
       plugin->end_decompress_many(inputs, outputs, rc);
     }
     return 0;
