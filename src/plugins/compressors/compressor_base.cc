@@ -304,3 +304,10 @@ void libpressio_compressor_plugin::set_name(std::string const& new_name) {
     metrics_plugin->set_name(new_name);
   }
 }
+
+int libpressio_compressor_plugin::view_segment(pressio_data* data, const char* segment_id) {
+    if(metrics_plugin) {
+        return metrics_plugin->view_segment(data, segment_id);
+    }
+    return 0;
+}

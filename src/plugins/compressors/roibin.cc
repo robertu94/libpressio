@@ -108,6 +108,7 @@ public:
       pressio_data roi_data = save_roi(*input);
       pressio_data roi_compressed = pressio_data::empty(pressio_byte_dtype, {});
       pressio_data background_compressed = pressio_data::empty(pressio_byte_dtype, {});
+      view_segment(&roi_data, "roi_data");
       if(roi_data.size_in_bytes() > 0) {
         int ec = roi->compress(&roi_data, &roi_compressed);
         if(ec < 0) {
@@ -116,6 +117,7 @@ public:
           return set_error(ec, roi->error_msg());
         }
       }
+      view_segment(&roi_compressed, "roi_compressed");
 
       int ec = background->compress(input, &background_compressed);
       if(ec < 0) {
@@ -123,6 +125,7 @@ public:
       } else if (ec > 0) {
         return set_error(ec, background->error_msg());
       }
+      view_segment(&background_compressed, "background_compressed");
 
       *output = pressio_data::owning(
           pressio_byte_dtype,

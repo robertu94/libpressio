@@ -177,6 +177,14 @@ int libpressio_metrics_plugin::end_decompress_many_impl(compat::span<const press
   return 0;
 }
 
+int libpressio_metrics_plugin::view_segment(pressio_data const* data, const char* segment_id) {
+    return view_segment_impl(data, segment_id);
+}
+
+int libpressio_metrics_plugin::view_segment_impl(pressio_data const*, const char*) {
+    return 0;
+}
+
 void libpressio_metrics_plugin::set_name(std::string const& new_name) {
   pressio_configurable::set_name(new_name);
 }

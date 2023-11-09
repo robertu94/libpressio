@@ -301,10 +301,10 @@ public:
     return 0;
   }
 
-  int major_version() const override { return QoZ_VER_MAJOR; }
-  int minor_version() const override { return QoZ_VER_MINOR; }
-  int patch_version() const override { return QoZ_VER_TWEAK; }
-  const char* version() const override { return QoZ_VER; }
+  int major_version() const override { return atoi(PROJECT_VER_MAJOR); }
+  int minor_version() const override { return atoi(PROJECT_VER_MINOR); }
+  int patch_version() const override { return atoi(PROJECT_VER_PATCH); }
+  const char* version() const override { return PROJECT_VER; }
   const char* prefix() const override { return "qoz"; }
 
   pressio_options get_metrics_results_impl() const override {

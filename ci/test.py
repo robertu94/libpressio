@@ -231,7 +231,7 @@ async def test(args):
         async def build_scip():
             try:
                 src_access_token = client.set_secret("SRC_ACCESS_TOKEN", os.environ["SRC_ACCESS_TOKEN"])
-                build_dir = common_steps(fedora_base(client, "fedora:38"))
+                build_dir = common_steps(fedora_base(client, "fedora:39"))
                 scip = client.http("https://github.com/sourcegraph/scip-clang/releases/download/v0.2.7/scip-clang-x86_64-linux")
                 src = client.http("https://sourcegraph.com/.api/src-cli/src_linux_amd64")
                 await (build_dir.with_file("/bin/scip-clang", scip, permissions=0o700)
@@ -272,7 +272,7 @@ async def test(args):
 
             for version in ["almalinux:8"]:
                 tg.start_soon(test_centos, version)
-            for version in ["fedora:37", "fedora:38"]:
+            for version in ["fedora:38", "fedora:39"]:
                 tg.start_soon(test_fedora, version)
             for version in ["ubuntu:20.04", "ubuntu:22.04"]:
                 tg.start_soon(test_ubuntu, version)

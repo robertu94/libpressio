@@ -109,6 +109,10 @@ int main(int argc, char * argv[])
 
   std::istringstream supported_compressors(library.supported_compressors());
   for (std::string compressor_id; std::getline(supported_compressors, compressor_id, ' '); ) {
+    // The external compressor cannot be smoke tested in a reasonable way in a single binary so we
+    // should skip it because it requires an additional command to be installed to test it
+    if(compressor_id == "external_compressor") continue;
+
     pressio_compressor comp = library.get_compressor(compressor_id);
     lp_assert(comp);
 

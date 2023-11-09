@@ -307,6 +307,10 @@ class libpressio_compressor_plugin :public pressio_configurable, public pressio_
    */
   virtual std::vector<std::string> children_impl() const;
 
+  /**
+   * expose a segment to the metrics plugin
+   */
+  int view_segment(pressio_data* data, const char* segment_id);
 
   private:
   pressio_metrics metrics_plugin;

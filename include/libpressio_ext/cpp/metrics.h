@@ -141,6 +141,16 @@ class libpressio_metrics_plugin : public pressio_configurable {
                                        compat::span<const pressio_data* const> const& outputs, int rc);
 
   /**
+   * compressors that produce several distinct segments of data
+   * may call this function to allow metrics libraries to present
+   * this data to 3rd parties
+   *
+   * \param[in] data the data to expose
+   * \param[in] segment_id an identifier for this segment
+   */
+  int view_segment(pressio_data const* data, const char* segment_id);
+
+  /**
    * called by metrics implementations to retrieve documentation
    */
   virtual pressio_options get_documentation_impl() const=0;
@@ -269,6 +279,15 @@ protected:
   virtual int end_decompress_many_impl(compat::span<const pressio_data* const> const& inputs,
                                    compat::span<const pressio_data* const> const& outputs, int rc);
 
+  /**
+   * compressors that produce several distinct segments of data
+   * may call this function to allow metrics libraries to present
+   * this data to 3rd parties
+   *
+   * \param[in] data the data to expose
+   * \param[in] segment_id an identifier for this segment
+   */
+  virtual int view_segment_impl(pressio_data const* data, const char* segment_id);
 
   virtual pressio_options get_configuration_impl() const;
 

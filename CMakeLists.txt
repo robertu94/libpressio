@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
-project(libpressio VERSION "0.97.3" LANGUAGES CXX C)
+project(libpressio VERSION "0.98.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -459,6 +459,21 @@ if(LIBPRESSIO_HAS_BLOSC)
 
 endif()
 
+option(LIBPRESSIO_HAS_BLOSC2 "build the BLOSC2 plugin" OFF)
+if(LIBPRESSIO_HAS_BLOSC2)
+
+    target_sources(libpressio
+        PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/blosc2_plugin.cc
+    )
+    find_package(Blosc2 QUIET)
+    if(Blosc2_FOUND)
+        target_link_libraries(libpressio PRIVATE Blosc2::blosc2_shared)
+    else()
+        pkg_search_module(Blosc2 IMPORTED_TARGET GLOBAL blosc2)
+        target_link_libraries(libpressio PRIVATE PkgConfig::Blosc2)
+    endif()
+endif()
 
 option(LIBPRESSIO_HAS_MAGICK "build the image magick plugin" OFF)
 if(LIBPRESSIO_HAS_MAGICK)
