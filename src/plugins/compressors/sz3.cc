@@ -26,29 +26,29 @@ struct impl_compress{
         pressio_byte_dtype,
         compressedData,
         {outSize},
-        pressio_new_free_fn<SZ::uchar>(),
+        pressio_new_free_fn<SZ3::uchar>(),
         nullptr
         );
   }
   pressio_data const& input_data;
-  SZ::Config& config;
+  SZ3::Config& config;
   std::vector<size_t> const& reg_dims;
 };
 
   
 struct sz3_option_maps {
-  std::map<std::string, SZ::EB, iless> error_bounds;
-  std::map<std::string, SZ::ALGO, iless> algo;
-  std::map<std::string, SZ::INTERP_ALGO, iless> interp_algo;
+  std::map<std::string, SZ3::EB, iless> error_bounds;
+  std::map<std::string, SZ3::ALGO, iless> algo;
+  std::map<std::string, SZ3::INTERP_ALGO, iless> interp_algo;
   sz3_option_maps() {
-    for (size_t i = 0; i < std::size(SZ::EB_STR); ++i) {
-      error_bounds[SZ::EB_STR[i]] = SZ::EB_OPTIONS[i];
+    for (size_t i = 0; i < std::size(SZ3::EB_STR); ++i) {
+      error_bounds[SZ3::EB_STR[i]] = SZ3::EB_OPTIONS[i];
     }
-    for (size_t i = 0; i < std::size(SZ::ALGO_STR); ++i) {
-      algo[SZ::ALGO_STR[i]] = SZ::ALGO_OPTIONS[i];
+    for (size_t i = 0; i < std::size(SZ3::ALGO_STR); ++i) {
+      algo[SZ3::ALGO_STR[i]] = SZ3::ALGO_OPTIONS[i];
     }
-    for (size_t i = 0; i < std::size(SZ::INTERP_ALGO_STR); ++i) {
-      interp_algo[SZ::INTERP_ALGO_STR[i]] = SZ::INTERP_ALGO_OPTIONS[i];
+    for (size_t i = 0; i < std::size(SZ3::INTERP_ALGO_STR); ++i) {
+      interp_algo[SZ3::INTERP_ALGO_STR[i]] = SZ3::INTERP_ALGO_OPTIONS[i];
     }
   }
 };
@@ -70,18 +70,18 @@ class sz3_compressor_plugin : public libpressio_compressor_plugin {
 public:
   sz3_compressor_plugin() {
     config.absErrorBound = 1e-6;
-    config.errorBoundMode = SZ::EB_ABS;
+    config.errorBoundMode = SZ3::EB_ABS;
   }
 
   struct pressio_options get_options_impl() const override
   {
     struct pressio_options options;
-    if(config.errorBoundMode == SZ::EB_ABS) {
+    if(config.errorBoundMode == SZ3::EB_ABS) {
       set(options, "pressio:abs", config.absErrorBound);
     } else {
       set_type(options, "pressio:abs", pressio_option_double_type);
     }
-    if(config.errorBoundMode == SZ::EB_REL) {
+    if(config.errorBoundMode == SZ3::EB_REL) {
       set(options, "pressio:rel", config.relErrorBound);
     } else {
       set_type(options, "pressio:rel", pressio_option_double_type);
@@ -156,10 +156,10 @@ public:
   int set_options_impl(struct pressio_options const& options) override
   {
     if(get(options, "pressio:abs", &config.absErrorBound) == pressio_options_key_set) {
-      config.errorBoundMode = SZ::EB_ABS;
+      config.errorBoundMode = SZ3::EB_ABS;
     } 
     if(get(options, "pressio:rel", &config.relErrorBound) == pressio_options_key_set) {
-      config.errorBoundMode = SZ::EB_REL;
+      config.errorBoundMode = SZ3::EB_REL;
     } 
     uint32_t tmp_nthreads;
     if(get(options, "pressio:nthreads", &tmp_nthreads) == pressio_options_key_set) {
@@ -325,7 +325,7 @@ public:
   }
 
   uint32_t nthreads = 1;
-  SZ::Config config{};
+  SZ3::Config config{};
 };
 
 static pressio_register compressor_many_fields_plugin(compressor_plugins(), "sz3", []() {
