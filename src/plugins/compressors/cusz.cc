@@ -1,5 +1,6 @@
 #define PSZ_USE_CUDA 1
 
+#include <set>
 #include "std_compat/memory.h"
 #include "libpressio_ext/cpp/compressor.h"
 #include "libpressio_ext/cpp/data.h"
@@ -13,6 +14,45 @@
 #include <cusz/utils/viewer.hh>
 
 namespace libpressio { namespace cusz_ns {
+
+    const std::map<std::string, decltype(Rel)> bounds {
+        {"rel",Rel},
+            {"rel",Abs},
+    };
+    const std::map<std::string, decltype(NVGPU)> devices {
+        {"cuda",NVGPU},
+            {"amd",AMDGPU},
+            {"intel",INTELGPU},
+            {"cpu",CPU},
+    };
+    const std::map<std::string, decltype(Canonical)> bookstyles {
+        { "canonical", Canonical},
+            { "sword", Sword},
+            { "mword", Mword}
+    };
+    const std::map<std::string, decltype(Abs)> cuszmode {
+        {"abs", Abs},
+            {"rel", Rel},
+    };
+    const std::map<std::string, decltype(Lorenzo)> predictors {
+        {"lorenzo", Lorenzo},
+            {"lorenzoi", Lorenzo},
+            {"lorenzo0", Lorenzo},
+            {"spline", Spline},
+    };
+    const std::map<std::string, decltype(Fine)> huffman_styles {
+        {"coarse",Coarse},
+            {"fine",Fine},
+    };
+
+template <class T>
+std::vector<std::string> to_keys(std::map<std::string, T> const& map) {
+    std::set<std::string> s;
+    for (auto const& i : map) {
+        s.emplace(i.first);
+    }
+    return std::vector<std::string>(s.begin(), s.end());
+}
 
 class cusz_compressor_plugin : public libpressio_compressor_plugin {
 public:
@@ -33,14 +73,25 @@ public:
 
     set(options, "cusz:mode_str", eb_mode);
     set(options, "cusz:bound", err_bnd);
-
+    set(options, "cusz:coarse_pardeg", coarse_pardeg);
+    set(options, "cusz:booklen", booklen);
+    set(options, "cusz:bookstyle", bookstyle);
+    set(options, "cusz:radius", radius);
+    set(options, "cusz:max_outlier_percent", max_outlier_percent);
+    set(options, "cusz:device", device);
+    set(options, "cusz:huffman_coding_style", huffman_coding_style);
+    set(options, "cusz:predictor", predictor);
     return options;
   }
 
   struct pressio_options get_configuration_impl() const override
   {
     struct pressio_options options;
-    set(options, "cusz:mode_str", std::vector<std::string>{"abs", "rel"});
+    set(options, "cusz:mode_str", to_keys(bounds));
+    set(options, "cusz:device", to_keys(devices));
+    set(options, "cusz:huffman_coding_style", to_keys(huffman_styles));
+    set(options, "cusz:predictor", to_keys(predictors));
+    set(options, "cusz:bookstyle", to_keys(bookstyles));
     set(options, "pressio:thread_safe", pressio_thread_safety_multiple);
     set(options, "pressio:stability", "experimental");
     return options;
@@ -52,6 +103,14 @@ public:
     set(options, "pressio:description", R"(A GPU based implementation of SZ for Nvidia GPUs)");
     set(options, "cusz:mode_str", "error bound mode");
     set(options, "cusz:bound", "bound of the error bound");
+    set(options, "cusz:coarse_pardeg", "paralellism degree for the huffman encoding stage");
+    set(options, "cusz:booklen", "huffman encoding booklength");
+    set(options, "cusz:bookstyle", "huffman encoding bookstyle");
+    set(options, "cusz:radius", "quantizer radius");
+    set(options, "cusz:max_outlier_percent", "max outlier percent");
+    set(options, "cusz:device", "execucution device");
+    set(options, "cusz:huffman_coding_style", "huffman coding style");
+    set(options, "cusz:predictor", "predictor style");
     return options;
   }
 
@@ -66,6 +125,14 @@ public:
     }
     get(options, "cusz:mode_str", &eb_mode);
     get(options, "cusz:bound", &err_bnd);
+    get(options, "cusz:coarse_pardeg", &coarse_pardeg);
+    get(options, "cusz:booklen", &booklen);
+    get(options, "cusz:bookstyle", &bookstyle);
+    get(options, "cusz:radius", &radius);
+    get(options, "cusz:max_outlier_percent", &max_outlier_percent);
+    get(options, "cusz:device", &device);
+    get(options, "cusz:huffman_coding_style", &huffman_coding_style);
+    get(options, "cusz:predictor", &predictor);
 
     return 0;
   }
@@ -104,17 +171,18 @@ public:
   }
 
   psz_predtype to_cusz_predictor_type(std::string const& s) {
-    [[deprecated("Only `lorenzo` instead of multiple variants")]]
-    if (s == "lorenzo0") return Lorenzo;
-    else if (s == "lorenzo") return Lorenzo;
-    else if (s == "lorenzoi") return Lorenzo;
-    else if (s == "spline") return Spline;
-    else throw std::domain_error("unsupported predictor_type: " + s);
+      try {
+        return predictors.at(s);
+      } catch(std::out_of_range const& ex) {
+        throw std::domain_error("unsupported predictor_type: " + s);
+      }
   }
   psz_hfpartype to_huffman_style(std::string const& s) {
-    if(s == "coarse") return Coarse;
-    else if(s == "fine") return Fine;
-    else throw std::domain_error("unsupported codec type: " + s);
+      try {
+        return huffman_styles.at(s);
+      } catch(std::out_of_range const& ex) {
+        throw std::domain_error("unsupported huffman style: " + s);
+      }
   }
 
   int cuda_error(cudaError_t ec) {
@@ -177,15 +245,25 @@ public:
   }
 
   auto to_cuszmode(std::string const& mode) {
-      if (mode == "abs") return Abs;
-      else if (mode == "rel") return Rel;
-      else throw std::runtime_error("unsupported mode " + mode);
+      try {
+        return cuszmode.at(mode);
+      } catch(std::out_of_range const& ex) {
+        throw std::runtime_error("unsupported mode " + mode);
+      }
   }
   auto to_bookstyle(std::string const& s) {
-      if(s == "") return Canonical;
-      else if(s == "") return Sword;
-      else if(s == "") return Mword;
-      else throw std::runtime_error("unknown bookstyle " + s); 
+      try {
+        return bookstyles.at(s);
+      } catch(std::out_of_range const& ex) {
+        throw std::runtime_error("unsupported bookstyle " + s);
+      }
+  }
+  auto to_device(std::string const& s) {
+      try {
+        return devices.at(s);
+      } catch(std::out_of_range const& ex) {
+        throw std::runtime_error("unsupported device " + s);
+      }
   }
   bool isDevicePtr(void* ptr) const {
     cudaPointerAttributes attrs;
@@ -223,17 +301,21 @@ public:
         },
         .max_outlier_percent = max_outlier_percent};
     pszcompressor* comp = psz_create(work, to_cuszdtype(input->dtype()));
-    pszctx* ctx = new pszctx{
+    auto ctx = std::make_unique<pszctx>(pszctx{
+        .device = to_device(device),
+        .pred_type = to_cusz_predictor_type(predictor),
+        .dbgstr_pred = "",
         .demodata_name = "",
         .infile = "",
         .original_file = "",
         .opath = "",
         .mode = to_cuszmode(eb_mode),
-        .eb = err_bnd
-    };
+        .eb = err_bnd,
+
+    });
     pszlen uncomp_len = pszlen{{dims[0]}, {dims[1]}, {dims[2]}, {dims[3]}};
     psz::TimeRecord compress_timerecord;
-    psz_compress_init(comp, uncomp_len, ctx);
+    psz_compress_init(comp, uncomp_len, ctx.get());
     psz_compress(
         comp, d_uncomp, uncomp_len, &ptr_compressed, &compressed_len, &header,
         (void*)&compress_timerecord, stream);
@@ -301,23 +383,23 @@ public:
     cudaStreamCreate(&stream);
     auto const dims = output->normalized_dims(4, 1);
     T *d_decomp;
-    cudaMallocAsync(&d_decomp, output->size_in_bytes(), stream);
+    lp_check_cuda_error(cudaMallocAsync(&d_decomp, output->size_in_bytes(), stream));
     uint8_t* ptr_compressed;
     pszheader header;
     size_t compressed_len = input->size_in_bytes() - sizeof(header);
     if(isDevicePtr(input->data())) {
-        cudaMemcpyAsync(&header, input->data(), sizeof(header), cudaMemcpyDeviceToHost, stream);
-        cudaStreamSynchronize(stream);
+        lp_check_cuda_error(cudaMemcpyAsync(&header, input->data(), sizeof(header), cudaMemcpyDeviceToHost, stream));
+        lp_check_cuda_error(cudaStreamSynchronize(stream));
         ptr_compressed = (uint8_t*)input->data()+sizeof(header);
     } else {
         memcpy(&header, input->data(), sizeof(header));
-        cudaMallocAsync(&ptr_compressed, compressed_len, stream);
-        cudaMemcpyAsync(ptr_compressed, (uint8_t*)input->data()+sizeof(header), compressed_len, cudaMemcpyHostToDevice, stream);
+        lp_check_cuda_error(cudaMallocAsync(&ptr_compressed, compressed_len, stream));
+        lp_check_cuda_error(cudaMemcpyAsync(ptr_compressed, (uint8_t*)input->data()+sizeof(header), compressed_len, cudaMemcpyHostToDevice, stream));
     }
 
     psz::TimeRecord decompress_timerecord;
     pszlen decomp_len = pszlen{{dims[0]}, {dims[1]}, {dims[2]}, {dims[3]}};  // x, y, z, w
-    pszframe* work = new pszframe{
+    auto work = std::make_unique<pszframe>(pszframe{
         .predictor = pszpredictor{.type = to_cusz_predictor_type(predictor)},
         .quantizer = pszquantizer{.radius = radius},
         .hfcoder = pszhfrc{
@@ -326,8 +408,8 @@ public:
             .booklen = booklen,
             .coarse_pardeg = coarse_pardeg 
         },
-        .max_outlier_percent = max_outlier_percent};
-    pszcompressor* comp = psz_create(work, to_cuszdtype(output->dtype()));
+        .max_outlier_percent = max_outlier_percent});
+    pszcompressor* comp = psz_create(work.get(), to_cuszdtype(output->dtype()));
     psz_decompress_init(comp, &header);
     psz_decompress(
         comp, ptr_compressed, compressed_len, d_decomp, decomp_len,
@@ -336,13 +418,13 @@ public:
     if(isDevicePtr(input->data())) {
         if(output->has_data() && isDevicePtr(output->data()) && compressed_len <= output->capacity_in_bytes()) {
             //copy to existing device ptr
-            cudaMemcpyAsync(output->data(), d_decomp, output->size_in_bytes(), cudaMemcpyDeviceToDevice, stream);
+            lp_check_cuda_error(cudaMemcpyAsync(output->data(), d_decomp, output->size_in_bytes(), cudaMemcpyDeviceToDevice, stream));
         } else {
             //copy to new device ptr
             T* buf_uncompressed;
-            cudaMallocAsync(&buf_uncompressed, output->size_in_bytes(), stream);
-            cudaMemcpyAsync(buf_uncompressed, d_decomp, output->size_in_bytes(), cudaMemcpyDeviceToDevice, stream);
-            cudaStreamSynchronize(stream);
+            lp_check_cuda_error(cudaMallocAsync(&buf_uncompressed, output->size_in_bytes(), stream));
+            lp_check_cuda_error(cudaMemcpyAsync(buf_uncompressed, d_decomp, output->size_in_bytes(), cudaMemcpyDeviceToDevice, stream));
+            lp_check_cuda_error(cudaStreamSynchronize(stream));
             *output = pressio_data::move(output->dtype(),
                     buf_uncompressed, output->dimensions(),
                     [](void* data, void*){ cudaFree(data);}, nullptr
@@ -351,13 +433,13 @@ public:
     } else {
         //copy to host pointer
         if(output->has_data()) {
-            cudaMemcpyAsync(output->data(), d_decomp, output->size_in_bytes(), cudaMemcpyDeviceToHost, stream);
+            lp_check_cuda_error(cudaMemcpyAsync(output->data(), d_decomp, output->size_in_bytes(), cudaMemcpyDeviceToHost, stream));
         } else {
             *output = pressio_data::owning(output->dtype(), output->dimensions());
-            cudaMemcpyAsync(output->data(), d_decomp, output->size_in_bytes(), cudaMemcpyDeviceToHost, stream);
+            lp_check_cuda_error(cudaMemcpyAsync(output->data(), d_decomp, output->size_in_bytes(), cudaMemcpyDeviceToHost, stream));
         }
-        cudaStreamSynchronize(stream);
-        cudaFree(ptr_compressed);
+        lp_check_cuda_error(cudaStreamSynchronize(stream));
+        lp_check_cuda_error(cudaFree(ptr_compressed));
     }
     psz_release(comp);
     return 0;
@@ -386,8 +468,9 @@ public:
   std::string eb_mode = "abs";
   std::string predictor = "lorenzo";
   std::string huffman_coding_style = "coarse";
-  std::string bookstyle = "";
-  float max_outlier_percent;
+  std::string bookstyle = "canonical";
+  std::string device = "cuda";
+  float max_outlier_percent = 10.0;
   int32_t radius = 512;
   int32_t booklen = 0;
   int32_t coarse_pardeg  = 0;
