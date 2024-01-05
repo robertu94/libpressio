@@ -148,6 +148,17 @@ public:
     executor_options.emplace_back("sycl");
 #endif
     set(options, "ndzip:executor", executor_options);
+    
+        std::vector<std::string> invalidations {"ndzip:executor", "pressio:lossless"}; 
+        std::vector<pressio_configurable const*> invalidation_children {}; 
+        
+        set(options, "predictors:error_dependent", get_accumulate_configuration("predictors:error_dependent", invalidation_children, {}));
+        set(options, "predictors:error_agnostic", get_accumulate_configuration("predictors:error_agnostic", invalidation_children, invalidations));
+        set(options, "predictors:runtime", get_accumulate_configuration("predictors:runtime", invalidation_children, invalidations));
+
+    
+        set(options, "pressio:highlevel", get_accumulate_configuration("pressio:highlevel", invalidation_children, std::vector<std::string>{"pressio:lossless"}));
+
     return options;
   }
 

@@ -61,6 +61,24 @@ public:
     set_meta_configuration(options, "pressio:compressor", compressor_plugins(), comp);
     set(options, "pressio:thread_safe", get_threadsafe(*comp));
     set(options, "pressio:stability", "experimental");
+    
+        std::vector<std::string> invalidations {"pressio:bound_name", "pressio:reset_mode"}; 
+        auto child = comp->get_options();
+        if(child_supports_mode(child, "pressio:abs")) {
+            invalidations.emplace_back("pressio:abs");
+        }
+        if(child_supports_mode(child, "pressio:rel")) {
+            invalidations.emplace_back("pressio:rel");
+        }
+        std::vector<pressio_configurable const*> invalidation_children {&*comp}; 
+        
+        set(options, "predictors:error_dependent", get_accumulate_configuration("predictors:error_dependent", invalidation_children, invalidations));
+        set(options, "predictors:error_agnostic", get_accumulate_configuration("predictors:error_agnostic", invalidation_children, invalidations));
+        set(options, "predictors:runtime", get_accumulate_configuration("predictors:runtime", invalidation_children, {}));
+
+    
+        set(options, "pressio:highlevel", get_accumulate_configuration("pressio:highlevel", invalidation_children, invalidations));
+
     return options;
   }
 

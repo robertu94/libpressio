@@ -89,5 +89,21 @@ struct pressio_options* pressio_metrics_evaluate_many(
   return new pressio_options((*metrics)->get_metrics_results({}));
 }
 
+/**
+ * \param[in] metrics the metrics to query
+ * \returns last error code for the metrics
+ */
+int pressio_metrics_error_code(struct pressio_metrics const* metrics) {
+    return (*metrics)->error_code();
+}
+
+/**
+ * \param[in] metrics the metrics to query
+ * \returns last error message for the metrics
+ */
+const char* pressio_metrics_error_msg(struct pressio_metrics const* metrics) {
+    return (*metrics)->error_msg();
+}
+
 
 }

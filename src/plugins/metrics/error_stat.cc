@@ -123,6 +123,31 @@ class error_stat_plugin : public libpressio_metrics_plugin {
       pressio_options opts;
       set(opts, "pressio:stability", "stable");
       set(opts, "pressio:thread_safe", pressio_thread_safety_multiple);
+      set(opts, "predictors:error_agnostic", std::vector<std::string>{
+              "error_stat:value_mean",
+              "error_stat:value_std",
+              "error_stat:value_min",
+              "error_stat:value_max",
+              "error_stat:value_range",
+              "error_stat:n",
+              });
+      std::vector<std::string> reqs_dec {
+          "error_stat:psnr",
+              "error_stat:mse",
+              "error_stat:rmse",
+              "error_stat:min_error",
+              "error_stat:max_error",
+              "error_stat:min_rel_error",
+              "error_stat:max_rel_error",
+              "error_stat:min_pw_rel_error",
+              "error_stat:max_pw_rel_error",
+              "error_stat:average_difference",
+              "error_stat:average_error",
+              "error_stat:difference_range",
+              "error_stat:error_range",
+      };
+      set(opts, "predictors:requires_decompress", reqs_dec);
+      set(opts, "predictors:error_dependent", reqs_dec);
       return opts;
     }
 

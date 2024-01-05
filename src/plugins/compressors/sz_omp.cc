@@ -118,6 +118,19 @@ class sz_omp: public libpressio_compressor_plugin {
         std::back_inserter(vs),
         [](typename decltype(sz_omp_mode_str_to_code)::const_reference m){ return m.first; });
     set(options, "sz_omp:error_bound_mode_str", vs);
+    
+
+    std::vector<std::string> invalidations {"sz_omp:protect_value_range", "sz_omp:max_quant_intervals", "sz_omp:quantization_intervals", "sz_omp:sol_id", "sz_omp:lossless_compressor", "sz_omp:sample_distance", "sz_omp:pred_threshold", "sz_omp:sz_mode", "sz_omp:gzip_mode", "sz_omp:abs_err_bound", "sz_omp:segment_size", "sz_omp:snapshot_cmpr_step", "sz_omp:prediction_mode", "sz_omp:data_type", "pressio:abs", "sz_omp:config_file", "sz_omp:config_struct", "pressio:nthreads", "sz_omp:nthreads", "sz_omp:error_bound_mode_str", "sz_omp:error_bound_mode"}; 
+    std::vector<pressio_configurable const*> invalidation_children {}; 
+
+    set(options, "pressio:highlevel", get_accumulate_configuration("pressio:highlevel", invalidation_children, std::vector<std::string>{"pressio:abs", "pressio:nthreads"}));
+
+
+
+    set(options, "predictors:error_dependent", get_accumulate_configuration("predictors:error_dependent", invalidation_children, invalidations));
+    set(options, "predictors:error_agnostic", get_accumulate_configuration("predictors:error_agnostic", invalidation_children, invalidations));
+    set(options, "predictors:runtime", get_accumulate_configuration("predictors:runtime", invalidation_children, invalidations));
+
     return options;
   }
   int set_options_impl(const pressio_options &options) override {

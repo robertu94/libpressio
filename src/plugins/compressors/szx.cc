@@ -7,6 +7,10 @@
 #include "cleanup.h"
 #include <szx.h>
 #include <omp.h>
+#include <pressio_version.h>
+#ifdef LIBPRESSIO_HAS_CUSZx
+#include <cuszx_entry.h>
+#endif
 
 namespace libpressio { namespace szx_ns {
 
@@ -68,6 +72,37 @@ public:
     set(options, "pressio:stability", "experimental");
     set(options, "szx:err_bound_mode_str", keys(ERR_MODES));
     set(options, "szx:fast_mode_str", keys(COMP_MODES));
+
+
+      set(options, "predictors:error_dependent", std::vector<std::string>{
+    "pressio:abs",
+    "szx:tolerance",
+    "szx:fixed_ratio",
+    "szx:fast_mode",
+    "szx:fast_mode_str",
+    "szx:abs_err_bound",
+    "szx:rel_bound_ratio",
+    "szx:err_bound_mode",
+    "szx:err_bound_mode_str",
+    });
+      set(options, "predictors:error_agnostic", std::vector<std::string>{
+    "pressio:abs",
+    "szx:tolerance",
+    "szx:fixed_ratio",
+    "szx:fast_mode",
+    "szx:fast_mode_str",
+    "szx:abs_err_bound",
+    "szx:rel_bound_ratio",
+    "szx:err_bound_mode",
+    "szx:err_bound_mode_str",
+    });
+
+    set(options, "predictors:runtime", std::vector<std::string>{ "szx:nthreads" });
+
+
+    
+        set(options, "pressio:highlevel", get_accumulate_configuration("pressio:highlevel", {}, std::vector<std::string>{"pressio:abs", "pressio:rel", "pressio:nthreads"}));
+
     return options;
   }
 
@@ -135,7 +170,21 @@ public:
     }
     size_t outsize = 0;
     auto dims = input->normalized_dims(5);
-    unsigned char* bytes = SZx_fast_compress_args(
+    unsigned char* bytes = nullptr;
+#if LIBPRESSIO_HAS_CUSZx
+    if (use_cuda) {
+        if(input->dtype() != pressio_float_dtype) {
+            return set_error(1, "unsupported type");
+        }
+        bytes = cuSZx_fast_compress_args_unpredictable_blocked_float(
+                static_cast<float*>(input->data()),
+                &outsize,
+                static_cast<float>(absErrBound),
+                input->num_elements(),
+                blockSize);
+    } else {
+#endif
+    bytes = SZx_fast_compress_args(
         fastMode,
         to_szx_type(input->dtype()),
         input->data(),
@@ -151,6 +200,9 @@ public:
         dims[1],
         dims[0]
         );
+#if LIBPRESSIO_HAS_CUSZx
+    }
+#endif
     if(bytes) {
       *output = pressio_data::move(pressio_byte_dtype, bytes, {outsize}, pressio_data_libc_free_fn, nullptr);
       return 0;
@@ -175,7 +227,14 @@ public:
         };
     }
     auto dims = output->normalized_dims(5);
-    void* output_bytes = SZx_fast_decompress(
+    void* output_bytes = nullptr;
+#if LIBPRESSIO_HAS_CUSZx
+    if(use_cuda) {
+
+        cuSZx_fast_decompress_args_unpredictable_blocked_float(reinterpret_cast<float**>(&output_bytes), output->num_elements(), static_cast<unsigned char*>(input->data()));
+    } else {
+#endif
+    output_bytes = SZx_fast_decompress(
         fastMode,
         to_szx_type(output->dtype()),
         static_cast<unsigned char*>(input->data()),
@@ -186,6 +245,9 @@ public:
         dims[1],
         dims[0]
         );
+#if LIBPRESSIO_HAS_CUSZx
+    }
+#endif
     if(output) {
       *output = pressio_data::move(output->dtype(), output_bytes, output->dimensions(), pressio_data_libc_free_fn, nullptr);
       return 0;
@@ -240,6 +302,10 @@ private:
   double relBoundRatio = 0;
   double ratio = 0;
   double tolerance = 0;
+#if LIBPRESSIO_HAS_CUSZx
+  bool use_cuda = false;
+  int32_t blockSize = 0;
+#endif
 };
 
 static pressio_register compressor_many_fields_plugin(compressor_plugins(), "szx", []() {

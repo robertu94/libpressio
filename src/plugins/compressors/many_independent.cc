@@ -53,6 +53,14 @@ public:
     set(options, "pressio:stability", "experimental");
     options.copy_from(manager.get_configuration());
     options.copy_from(subgroups.get_configuration());
+    
+        std::vector<std::string> invalidations {"many_independent:bcast_outputs"}; 
+        std::vector<pressio_configurable const*> invalidation_children {&*compressor}; 
+        
+        set(options, "predictors:error_dependent", get_accumulate_configuration("predictors:error_dependent", invalidation_children, {}));
+        set(options, "predictors:error_agnostic", get_accumulate_configuration("predictors:error_agnostic", invalidation_children, {}));
+        set(options, "predictors:runtime", get_accumulate_configuration("predictors:runtime", invalidation_children, invalidations));
+
     return options;
   }
 

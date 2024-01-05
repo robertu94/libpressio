@@ -15,6 +15,13 @@ struct pressio_options libpressio_metrics_plugin::get_documentation() const {
   set(opts, "pressio:type", R"(type of the libpressio meta object)");
   set(opts, "pressio:children", R"(children of this libpressio meta object)");
   set(opts, "pressio:prefix", R"(prefix of the this libpresiso meta object)");
+  set(opts, "predictors:requires_decompress", R"(list of metrics that a metric requires decompression to collect or a bool to indicate that none of or all or the metrics require decompression)");
+  set(opts, "predictors:invalidate", R"(what invalidates all metrics returned by `get_metrics_results()` which contains a possibly empty subest of `predictors:runtime`, `predictors:error_dependent`, `predictors:error_agnostic`, `predictors:data`, or `predictors:nondeterministc`)");
+  set(opts, "predictors:runtime", R"(the list of metrics returned by `get_metrics_results()` that are effected by runtime)");
+  set(opts, "predictors:error_dependent", R"(list of metrics returned by `get_metrics_results()`that effected by the error characteristics)");
+  set(opts, "predictors:error_agnostic", R"(list of metrics returned by `get_metrics_results()`that are agnostic to errors)");
+  set(opts, "predictors:data", R"(list of metrics returned by `get_metrics_results()` depend only one the uncompressed data)");
+  set(opts, "predictors:nondeterministc", R"(list of metrics returned that are never consistent returned from `get_metrics_results()`)");
   return opts;
 }
 

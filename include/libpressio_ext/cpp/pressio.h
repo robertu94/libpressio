@@ -63,6 +63,14 @@ struct pressio_registry {
   auto end() const -> decltype(factories.end()) { return std::end(factories); }
 
   /**
+   * remove an entry from the factory if it exists
+   * \returns 1 if an item was removed, 0 otherwise
+   */
+  size_t erase(std::string const& name) {
+      return factories.erase(name);
+  }
+
+  /**
    * checks if the name is registered
    *
    * \param[in] key the key to search for
@@ -92,6 +100,9 @@ struct pressio_registry {
     return factories.find(key);
   }
 
+  /**
+   * return the number of entries in the registry
+   */
   size_t size() const {
       return factories.size();
   }
@@ -112,9 +123,19 @@ class pressio_register{
    * \param[in] factory the factory to register
    */
   template <class RegistryType, class NameType, class Factory>
-  pressio_register(pressio_registry<RegistryType>& registry, NameType&& name, Factory&& factory) {
+  pressio_register(pressio_registry<RegistryType>& registry, NameType&& name, Factory&& factory):
+      name(name),
+      unregister([&registry, name]{ registry.erase(name);})
+    {
     registry.regsiter_factory(name, factory);
   }
+
+  ~pressio_register(){
+      unregister();
+  }
+
+  std::string name;
+  std::function<void()> unregister;
 };
 
 /**

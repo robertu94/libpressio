@@ -120,6 +120,18 @@ public:
     set(options, "sz3:error_bound_mode_str", keys(sz3_options().error_bounds));
     set(options, "sz3:intrep_algo_str", keys(sz3_options().interp_algo));
     set(options, "sz3:algorithm_str", keys(sz3_options().algo));
+    
+        std::vector<std::string> invalidations {"sz3:abs_error_bound", "sz3:rel_error_bound", "sz3:psnr_error_bound", "sz3:l2_norm_error_bound", "sz3:error_bound_mode", "sz3:algorithm", "sz3:lorenzo", "sz3:lorenzo2", "sz3:regression", "sz3:regression2", "sz3:openmp", "sz3:lossless", "sz3:encoder", "sz3:interp_algo", "sz3:interp_direction", "sz3:interp_block_size", "sz3:quant_bin_size", "sz3:stride", "sz3:pred_dim", "pressio:abs", "pressio:rel",  "sz3:error_bound_mode_str", "sz3:intrep_algo_str", "sz3:algorithm_str"}; 
+        std::vector<std::string> runtime_invalidations {"sz3:abs_error_bound", "sz3:rel_error_bound", "sz3:psnr_error_bound", "sz3:l2_norm_error_bound", "sz3:error_bound_mode", "sz3:algorithm", "sz3:lorenzo", "sz3:lorenzo2", "sz3:regression", "sz3:regression2", "sz3:openmp", "sz3:lossless", "sz3:encoder", "sz3:interp_algo", "sz3:interp_direction", "sz3:interp_block_size", "sz3:quant_bin_size", "sz3:stride", "sz3:pred_dim", "pressio:abs", "pressio:rel", "pressio:nthreads", "sz3:error_bound_mode_str", "sz3:intrep_algo_str", "sz3:algorithm_str"}; 
+        std::vector<pressio_configurable const*> invalidation_children {}; 
+        
+        set(options, "predictors:error_dependent", get_accumulate_configuration("predictors:error_dependent", invalidation_children, invalidations));
+        set(options, "predictors:error_agnostic", get_accumulate_configuration("predictors:error_agnostic", invalidation_children, invalidations));
+        set(options, "predictors:runtime", get_accumulate_configuration("predictors:runtime", invalidation_children, runtime_invalidations));
+
+    
+        set(options, "pressio:highlevel", get_accumulate_configuration("pressio:highlevel", invalidation_children, std::vector<std::string>{"pressio:abs", "pressio:rel", "pressio:nthreads"}));
+
     return options;
   }
 

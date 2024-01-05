@@ -6,6 +6,7 @@ Tutorial: https://github.com/robertu94/libpressio_tutorial
 """
 import pressio
 import numpy as np
+import abc
 from numcodecs.abc import Codec
 from numcodecs.compat import ndarray_copy
 if pressio.LIBPRESSIO_HAS_MPI4PY:
@@ -17,6 +18,7 @@ try:
     lib.libpressio_register_all()
 except OSError:
     pass
+
 
 def supported_io():
     """returns the list of valid io modules"""
@@ -38,6 +40,7 @@ def supported_metrics():
 
 class PressioException(Exception):
     """represents and error for a libpressio object"""
+
     def __init__(self, msg, error_code):
         self.msg = msg
         self.error_code = error_code
@@ -64,8 +67,15 @@ class PressioException(Exception):
         error_code = pressio.io_error_code(io)
         return cls(msg, error_code)
 
-def _python_to_pressio(options, template=None):
-    config = pressio.options_new() 
+    @classmethod
+    def from_metric(cls, metrics):
+        """represents and error for a libpressio io object"""
+        msg = pressio.metrics_error_msg(metrics).decode()
+        error_code = pressio.metrics_error_code(metrics)
+        return cls(msg, error_code)
+
+def python_to_pressio(options, template=None):
+    config = pressio.options_new()
 
     def _compute_path(path, key):
         if len(path) > 1:
@@ -217,7 +227,7 @@ _config_to_option_converters = {
 }
 
 
-def _pressio_to_python(config):
+def pressio_to_python(config):
     def to_python(value):
         if not pressio.option_has_value(value):
             return None
@@ -256,8 +266,161 @@ def _pressio_to_python(config):
     return options
 
 
-class PressioCompressor(Codec):
+class PressioObject(metaclass=abc.ABCMeta):
+    def __init__(self, object, object_id, name):
+        self._object = object
+        self._object_id = object_id
+        self._name = name
+
+    @staticmethod
+    @abc.abstractmethod
+    def _typename():
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def get_name(self):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def from_object(self):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _get_configuration_impl(self):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _get_options_impl(self):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _get_documentation_impl(self):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _set_options_impl(self):
+        raise NotImplementedError()
+
+    def get_compile_config(self):
+        """get compile time configuration"""
+        lp_options = self._get_configuration_impl()
+        options = pressio_to_python(lp_options)
+        pressio.options_free(lp_options)
+        return options
+
+    def get_configuration(self):
+        """get compile time configuration"""
+        return self.get_compile_config()
+
+    def get_documentation(self):
+        """get documentation"""
+        lp_options = self._get_documentation_impl()
+        options = pressio_to_python(lp_options)
+        pressio.options_free(lp_options)
+        return options
+
+    def get_options(self):
+        """get runtime time configuration"""
+        lp_options = self._get_options_impl()
+        options = pressio_to_python(lp_options)
+        pressio.options_free(lp_options)
+        return options
+
+    def get_config(self):
+        """get runtime time options in numcodecs compatiable format"""
+        options = self.get_options()
+        return {
+            "id": self.codec_id,
+            "{}_id".format(self._typename()): self._object_id,
+            "early_config": options,
+            "{}_config".format(self._typename()): options,
+            "name": self.get_name()
+        }
+
+    def set_options(self, config):
+        """set runtime options; libpressio-style interface"""
+        return self.set_config(self, config)
+
+    def set_config(self, config):
+        """set runtime time options; numcodecs compatible interface"""
+        try:
+            options = python_to_pressio(config)
+            if self._set_options_impl(options):
+                raise self.from_object(self._object)
+        finally:
+            pressio.options_free(options)
+
+    def json(self):
+        instance = None
+        options = None
+        json = None
+        try:
+            instance = pressio.instance()
+            options = self._get_options_impl()
+            json = pressio.options_to_json(instance, options)
+            return json.decode()
+        finally:
+            pressio.options_free(options)
+            pressio.release(instance)
+
+    @staticmethod
+    def _recursive_keys(config):
+        entries = [config]
+        while entries:
+            entry = entries.pop()
+            for key, value in entry.items():
+                if isinstance(value, dict):
+                    entries.append(value)
+                yield key
+
+    @property
+    def codec_id(self):
+        """returns a unique key based on this structure of object"""
+        return "pressio:" + str(hash(frozenset(self._recursive_keys(self.get_options()))))
+
+    @classmethod
+    def from_config(cls, config):
+        """returns a compressor from a configuration
+
+        params:
+            config: dict - the configuration to build the compressor from
+                compressor_id: str - the id of the compressors to load
+                early_config: Optional[dict] - the structural configuration of the compressor or nothing
+                compressor_config: Optional[dict] - the configuration of the compressor or nothing
+                name: Optional[str] - the name of the compressor if one is to be used
+        """
+        return cls(config['{}_id'.format(cls._typename())],
+                   config.get('early_config', {}),
+                   config.get('{}_config'.format(cls._typename()), {}),
+                   config.get('name', None)
+                   )
+
+
+class PressioCompressor(PressioObject, Codec):
     """wrapper for a libpressio compressor object"""
+
+    @staticmethod
+    def _typename():
+        return "compressor"
+
+    def get_name(self):
+        return pressio.compressor_get_name(self._object).decode()
+
+    def from_object(self):
+        return PressioException.from_compressor
+
+    def _get_configuration_impl(self):
+        return pressio.compressor_get_configuration(self._object)
+
+    def _get_options_impl(self):
+        return pressio.compressor_get_options(self._object)
+
+    def _get_documentation_impl(self):
+        return pressio.compressor_get_documentation(self._object)
+
+    def _set_options_impl(self, options):
+        return pressio.compressor_set_options(self._object, options)
+
 
     def __init__(self, compressor_id="noop", early_config={}, compressor_config={}, name=""):
         """wrapper for a libpressio compressor object
@@ -270,28 +433,29 @@ class PressioCompressor(Codec):
         """
         try:
             library = pressio.instance()
-            self._name = name
-            self._compressor_id = compressor_id
-            self._compressor = pressio.get_compressor(library, compressor_id.encode())
-            if self._compressor is None:
+            obj_id = compressor_id
+            obj = pressio.get_compressor(library, compressor_id.encode())
+            if obj is None:
                 raise PressioException.from_library(library)
 
             if name:
-                pressio.compressor_set_name(self._compressor, name.encode())
+                pressio.compressor_set_name(obj, name.encode())
 
-            early_config_lp = _python_to_pressio(early_config)
-            ec = pressio.compressor_set_options(self._compressor, early_config_lp)
+            early_config_lp = python_to_pressio(early_config)
+            ec = pressio.compressor_set_options(obj, early_config_lp)
             pressio.options_free(early_config_lp)
             if ec != 0:
-                raise PressioException.from_compressor(self._compressor)
+                raise self.from_object(obj)
 
-            config_lp_template = pressio.compressor_get_options(self._compressor)
-            config_lp = _python_to_pressio(compressor_config, config_lp_template)
-            ec = pressio.compressor_set_options(self._compressor, config_lp)
+            config_lp_template = pressio.compressor_get_options(obj)
+            config_lp = python_to_pressio(compressor_config, config_lp_template)
+            ec = pressio.compressor_set_options(obj, config_lp)
             pressio.options_free(config_lp)
             pressio.options_free(config_lp_template)
             if ec != 0:
-                raise PressioException.from_compressor(self._compressor)
+                raise self.from_object(obj)
+
+            super().__init__(obj, obj_id, name)
 
         finally:
             pressio.release(library)
@@ -301,7 +465,14 @@ class PressioCompressor(Codec):
         # indicating that the shared library has been unloaded.  Just let the OS
         # clean up in this case.
         if pressio:
-            pressio.compressor_release(self._compressor)
+            pressio.compressor_release(self._object)
+
+    def get_metrics(self):
+        """get runtime metrics"""
+        lp_options = pressio.compressor_get_metrics_results(self._object)
+        options = pressio_to_python(lp_options)
+        pressio.options_free(lp_options)
+        return options
 
     def encode(self, uncompressed):
         """perform compression
@@ -315,9 +486,9 @@ class PressioCompressor(Codec):
             uncompressed_lp = pressio.io_data_from_numpy(uncompressed)
             compressed_lp = pressio.data_new_empty(pressio.byte_dtype, pressio.vector_uint64_t())
 
-            rc = pressio.compressor_compress(self._compressor, uncompressed_lp, compressed_lp)
+            rc = pressio.compressor_compress(self._object, uncompressed_lp, compressed_lp)
             if rc:
-                raise PressioException.from_compressor(self._compressor)
+                raise PressioException.from_compressor(self._object)
 
             comp = pressio.io_data_to_numpy(compressed_lp)
         finally:
@@ -338,9 +509,9 @@ class PressioCompressor(Codec):
             compressed_lp = pressio.io_data_from_numpy(compressed)
             decompressed_lp = pressio.io_data_from_numpy(decompressed)
 
-            rc = pressio.compressor_decompress(self._compressor, compressed_lp, decompressed_lp)
+            rc = pressio.compressor_decompress(self._object, compressed_lp, decompressed_lp)
             if rc:
-                raise PressioException.from_compressor(self._compressor)
+                raise PressioException.from_compressor(self._object)
 
             dec = pressio.io_data_to_numpy(decompressed_lp)
 
@@ -352,109 +523,52 @@ class PressioCompressor(Codec):
             pressio.data_free(compressed_lp)
             pressio.data_free(decompressed_lp)
 
-    def get_compile_config(self):
-        """get compile time configuration"""
-        lp_options = pressio.compressor_get_configuration(self._compressor)
-        options = _pressio_to_python(lp_options)
-        pressio.options_free(lp_options)
-        return options
 
-    def get_metrics(self):
-        """get runtime metrics"""
-        lp_options = pressio.compressor_get_metrics_results(self._compressor)
-        options = _pressio_to_python(lp_options)
-        pressio.options_free(lp_options)
-        return options
-
-    def get_documentation(self):
-        """get documentation"""
-        lp_options = pressio.compressor_get_documentation(self._compressor)
-        options = _pressio_to_python(lp_options)
-        pressio.options_free(lp_options)
-        return options
-
-
-    def _get_config(self):
-        lp_options = pressio.compressor_get_options(self._compressor)
-        options = _pressio_to_python(lp_options)
-        pressio.options_free(lp_options)
-        return options
-
-    def get_config(self):
-        """get runtime time options"""
-        options = self._get_config()
-        return {
-            "id": self.codec_id,
-            "compressor_id": self._compressor_id,
-            "early_config": options,
-            "compressor_config": options,
-            "name": pressio.compressor_get_name(self._compressor).decode()
-        }
-
-    def set_config(self, config):
-        """set runtime time options"""
-        try:
-            options = _python_to_pressio(config)
-            if pressio.compressor_set_options(self._compressor, options):
-                raise PressioCompressor.from_compressor(self._compressor)
-        finally:
-            pressio.options_free(options)
+class PressioIO(PressioObject):
 
     @staticmethod
-    def _recursive_keys(config):
-        entries = [config]
-        while entries:
-            entry = entries.pop()
-            for key, value in entry.items():
-                if isinstance(value, dict):
-                    entries.append(value)
-                yield key
+    def _typename():
+        return "io"
 
-    @property
-    def codec_id(self):
-        """returns a unique key based on this structure of compressor"""
-        return "pressio:" + str(hash(frozenset(self._recursive_keys(self._get_config()))))
+    def get_name(self):
+        return pressio.io_get_name(self._object).decode()
 
-    @classmethod
-    def from_config(cls, config):
-        """returns a compressor from a configuration
+    def from_object(self):
+        return PressioException.from_io
 
-        params:
-            config: dict - the configuration to build the compressor from
-                compressor_id: str - the id of the compressors to load
-                early_config: Optional[dict] - the structural configuration of the compressor or nothing
-                compressor_config: Optional[dict] - the configuration of the compressor or nothing
-                name: Optional[str] - the name of the compressor if one is to be used
-        """
-        return cls(config['compressor_id'],
-                   config.get('early_config', {}),
-                   config.get('compressor_config', {}),
-                   config.get('name', None)
-                   )
+    def _get_configuration_impl(self):
+        return pressio.io_get_configuration(self._object)
 
+    def _get_options_impl(self):
+        return pressio.io_get_options(self._object)
 
-class PressioIO:
+    def _get_documentation_impl(self):
+        return pressio.io_get_documentation(self._object)
+
+    def _set_options_impl(self, options):
+        return pressio.io_set_options(self._object)
 
     def __init__(self, io, early_config, io_config, name):
         try:
             config_lp = None
             library = pressio.instance()
-            self._io = pressio.get_io(library, io.encode())
-            self._io_id = io
-            if not self._io:
+            obj = pressio.get_io(library, io.encode())
+            obj_id = io
+            if not self._object:
                 raise PressioException.from_library(library)
 
             if name is not None:
-                pressio.compressor_set_name(self._io, name.encode())
+                pressio.compressor_set_name(self._object, name.encode())
 
-            early_config_lp = _python_to_pressio(early_config)
-            pressio.io_set_options(self._io, early_config_lp)
+            early_config_lp = python_to_pressio(early_config)
+            pressio.io_set_options(self._object, early_config_lp)
             pressio.options_free(early_config_lp)
 
-            config_lp_template = pressio.io_get_options(self._io)
-            config_lp = _python_to_pressio(io_config, config_lp_template)
+            config_lp_template = pressio.io_get_options(self._object)
+            config_lp = python_to_pressio(io_config, config_lp_template)
 
-            pressio.io_set_options(self._io, config_lp)
+            pressio.io_set_options(self._object, config_lp)
+            super().__init__(obj, obj_id, name)
         finally:
             pressio.release(library)
             pressio.options_free(config_lp)
@@ -465,7 +579,7 @@ class PressioIO:
         # indicating that the shared library has been unloaded.  Just let the OS
         # clean up in this case.
         if pressio:
-            pressio.io_free(self._io)
+            pressio.io_free(self._object)
 
     def read(self, template=None):
         """reads a data buffer from a file
@@ -475,9 +589,9 @@ class PressioIO:
         """
         if template is not None:
             template = pressio.io_data_from_numpy(template)
-        ret_lp = pressio.io_read(self._io, template)
+        ret_lp = pressio.io_read(self._object, template)
         if not ret_lp:
-            raise PressioException.from_io(self._io)
+            raise PressioException.from_io(self._object)
         ret = pressio.io_data_to_numpy(ret_lp)
         pressio.data_free(ret_lp)
         if template is not None:
@@ -492,101 +606,59 @@ class PressioIO:
         """
         try:
             out = pressio.io_data_from_numpy(output)
-            ret = pressio.io_write(self._io, out)
+            ret = pressio.io_write(self._object, out)
             if ret:
-                raise PressioException.from_io(self._io)
+                raise PressioException.from_io(self._object)
             return ret
         finally:
             pressio.data_free(out)
 
-    def _get_config(self):
-        lp_options = pressio.io_get_options(self._io)
-        options = _pressio_to_python(lp_options)
-        pressio.options_free(lp_options)
-        return options
 
-    def get_config(self):
-        """get runtime configuration"""
-        options = self._get_config()
-        return {
-            "io_id": self._io_id,
-            "early_config": options,
-            "io_config": options,
-            "name": pressio.io_get_name(self._io).decode()
-        }
+class PressioMetrics(PressioObject):
+    @staticmethod
+    def _typename():
+        return "metric"
 
-    def get_compile_config(self):
-        """get compile time configuration"""
-        lp_options = pressio.io_get_configuration(self._io)
-        options = _pressio_to_python(lp_options)
-        pressio.options_free(lp_options)
-        return options
+    def get_name(self):
+        return pressio.metrics_get_name(self._object).decode()
 
-    def get_documentation(self):
-        """get documentation"""
-        lp_options = pressio.io_get_documentation(self._io)
-        options = _pressio_to_python(lp_options)
-        pressio.options_free(lp_options)
-        return options
+    def from_object(self):
+        return PressioException.from_metric
 
+    def _get_configuration_impl(self):
+        return pressio.metrics_get_configuration(self._object)
 
-    def set_config(self, config):
-        """set runtime time options"""
-        try:
-            options = _python_to_pressio(config)
-            if pressio.io_set_options(self._io, options):
-                raise PressioException.from_io(self._io)
-        finally:
-            pressio.options_free(options)
+    def _get_options_impl(self):
+        return pressio.metrics_get_options(self._object)
 
-    @classmethod
-    def from_config(cls, config):
-        """returns a compressor from a configuration
+    def _get_documentation_impl(self):
+        return pressio.metrics_get_documentation(self._object)
 
-        params:
-            config: dict - the configuration to build the io object from
-                io_id: str - the id of the io object to load
-                early_config: Optional[dict] - the structural configuration of the io object or nothing
-                io_config: Optional[dict] - the configuration of the io object or nothing
-                name: Optional[str] - the name of the io object if one is to be used
-        """
-        return cls(config['io_id'],
-                   config.get('early_config', {}),
-                   config.get('io_config', {}),
-                   config.get('name', None)
-                   )
-
-
-class PressioMetrics:
-    @classmethod
-    def from_config(cls, config):
-        return cls(config.get('metric_ids', []),
-                   config.get('early_config', {}),
-                   config.get('metrics_config', {}),
-                   config.get('name', None)
-                   )
+    def _set_options_impl(self, options):
+        return pressio.metrics_set_options(self._object, options)
 
     def __init__(self, ids, early_config, metrics_config, name):
         try:
             config_lp = None
             library = pressio.instance()
             metrics_ids = pressio.vector_string([i.encode() for i in ids])
-            self._metric = pressio.new_metrics(library, metrics_ids)
-            self._metric_id = "composite"
-            if not self._metric:
+            obj = pressio.new_metrics(library, metrics_ids)
+            obj_id = "composite"
+            if not obj:
                 raise PressioException.from_library(library)
 
             if name is not None:
-                pressio.metrics_set_name(self._metric, name.encode())
+                pressio.metrics_set_name(self._object, name.encode())
 
-            early_config_lp = _python_to_pressio(early_config)
-            pressio.metrics_set_options(self._metric, early_config_lp)
+            early_config_lp = python_to_pressio(early_config)
+            pressio.metrics_set_options(self._object, early_config_lp)
             pressio.options_free(early_config_lp)
 
-            config_lp_template = pressio.metrics_get_options(self._metric)
-            config_lp = _python_to_pressio(metrics_config, config_lp_template)
+            config_lp_template = pressio.metrics_get_options(self._object)
+            config_lp = python_to_pressio(metrics_config, config_lp_template)
 
-            pressio.metrics_set_options(self._metric, config_lp)
+            pressio.metrics_set_options(self._object, config_lp)
+            super.__init__(obj, obj_id, name)
         finally:
             pressio.release(library)
             pressio.options_free(config_lp)
@@ -597,7 +669,7 @@ class PressioMetrics:
         # indicating that the shared library has been unloaded.  Just let the OS
         # clean up in this case.
         if pressio:
-            pressio.metrics_free(self._metric)
+            pressio.metrics_free(self._object)
 
     def evaluate(self, input=None, compressed=None, output=None):
         results_lp = None
@@ -605,8 +677,8 @@ class PressioMetrics:
             input_lp = input if input is None else pressio.io_data_from_numpy(input)
             compressed_lp = compressed if compressed is None else pressio.io_data_from_bytes(compressed)
             output_lp = output if output is None else pressio.io_data_from_numpy(output)
-            results_lp = pressio.metrics_evaluate(self._metric, input_lp, compressed_lp, output_lp)
-            return _pressio_to_python(results_lp)
+            results_lp = pressio.metrics_evaluate(self._object, input_lp, compressed_lp, output_lp)
+            return pressio_to_python(results_lp)
         finally:
             if input_lp is not None:
                 pressio.data_free(input_lp)
@@ -616,53 +688,3 @@ class PressioMetrics:
                 pressio.data_free(compressed_lp)
             if results_lp is not None:
                 pressio.options_free(results_lp)
-
-
-    def set_config(self, config):
-        """set runtime time options"""
-        try:
-            options = _python_to_pressio(config)
-            pressio.metrics_set_options(options)
-        finally:
-            pressio.options_free(options)
-
-    @staticmethod
-    def _recursive_keys(config):
-        entries = [config]
-        while entries:
-            entry = entries.pop()
-            for key, value in entry.items():
-                if isinstance(value, dict):
-                    entries.append(value)
-                yield key
-
-    @property
-    def codec_id(self):
-        """returns a unique key based on this structure of compressor"""
-        return "pressio:" + str(hash(frozenset(self._recursive_keys(self._get_config()))))
-
-
-    def _get_config(self):
-        lp_options = pressio.metrics_get_options(self._metric)
-        options = _pressio_to_python(lp_options)
-        pressio.options_free(lp_options)
-        return options
-
-    def get_documentation(self):
-        """get documentation"""
-        lp_options = pressio.metric_get_documentation(self._metric)
-        options = _pressio_to_python(lp_options)
-        pressio.options_free(lp_options)
-        return options
-
-
-    def get_config(self):
-        """get runtime time options"""
-        options = self._get_config()
-        return {
-            "id": self.codec_id,
-            "metric_id": self._metric_id,
-            "early_config": options,
-            "metrics_config": options,
-            "name": pressio.metrics_get_name(self._metric).decode()
-        }

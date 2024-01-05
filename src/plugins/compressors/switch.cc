@@ -37,6 +37,19 @@ class switch_compressor: public libpressio_compressor_plugin {
       set(opts, "pressio:thread_safe", pressio_thread_safety_single);
     }
     set(opts, "pressio:stability", "experimental");
+    
+        std::vector<std::string> invalidations {"switch:names", "switch:active_id", "switch:clear_invocations"}; 
+        std::vector<pressio_configurable const*> invalidation_children {}; 
+        
+            invalidation_children.reserve(compressors.size());
+for (auto const& child : compressors) {
+                invalidation_children.emplace_back(&*child);
+            }
+                
+        set(opts, "predictors:error_dependent", get_accumulate_configuration("predictors:error_dependent", invalidation_children, invalidations));
+        set(opts, "predictors:error_agnostic", get_accumulate_configuration("predictors:error_agnostic", invalidation_children, invalidations));
+        set(opts, "predictors:runtime", get_accumulate_configuration("predictors:runtime", invalidation_children, invalidations));
+
     return opts;
   }
   int set_options_impl(const pressio_options &options) override {

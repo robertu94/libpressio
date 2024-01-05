@@ -289,6 +289,9 @@ protected:
    */
   virtual int view_segment_impl(pressio_data const* data, const char* segment_id);
 
+  /**
+   * base no-op routine that can be overwritten to provide configuration options
+   */
   virtual pressio_options get_configuration_impl() const;
 
 //  virtual pressio_options get_metrics_results_impl(pressio_options const &options)=0;

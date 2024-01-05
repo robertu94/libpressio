@@ -129,6 +129,17 @@ public:
     set(options, "qoz:error_bound_mode_str", keys(sz3_options().error_bounds));
     set(options, "qoz:intrep_algo_str", keys(sz3_options().interp_algo));
     set(options, "qoz:algorithm_str", keys(sz3_options().algo));
+    
+        std::vector<std::string> invalidations {"qoz:abs_error_bound", "qoz:rel_error_bound", "qoz:psnr_error_bound", "qoz:l2_norm_error_bound", "qoz:error_bound_mode", "qoz:algorithm", "qoz:lorenzo", "qoz:lorenzo2", "qoz:regression", "qoz:regression2", "qoz:openmp", "qoz:lossless", "qoz:encoder", "qoz:interp_algo", "qoz:interp_direction", "qoz:interp_block_size", "qoz:quant_bin_size", "qoz:stride", "qoz:pred_dim", "qoz:use_qoz", "qoz:maxstep", "qoz:test_lorenzo", "qoz:turning_target", "pressio:abs", "pressio:rel", "qoz:error_bound_mode_str", "qoz:intrep_algo_str", "qoz:algorithm_str", "qoz:turning_target_str"}; 
+        std::vector<pressio_configurable const*> invalidation_children {}; 
+        
+        set(options, "predictors:error_dependent", get_accumulate_configuration("predictors:error_dependent", invalidation_children, invalidations));
+        set(options, "predictors:error_agnostic", get_accumulate_configuration("predictors:error_agnostic", invalidation_children, invalidations));
+        set(options, "predictors:runtime", get_accumulate_configuration("predictors:runtime", invalidation_children, invalidations));
+
+    
+        set(options, "pressio:highlevel", get_accumulate_configuration("pressio:highlevel", invalidation_children, std::vector<std::string>{"pressio:abs", "pressio:rel"}));
+
     return options;
   }
 

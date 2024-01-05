@@ -34,6 +34,19 @@ public:
     set(options, "pressio:thread_safe", pressio_thread_safety_multiple);
     set(options, "pressio:stability", "experimental");
     set(options, "roibin:roi_strategy", std::vector<std::string>{"coordinates", "mask"});
+    
+        //TODO fix the list of options for each command
+        std::vector<std::string> invalidations {"roibin:roi_size", "roibin:roi_strategy", "roibin:centers", "pressio:nthreads", "roibin:nthreads"}; 
+        std::vector<std::string> runtime_invalidations {"roibin:roi_size", "roibin:roi_strategy", "roibin:centers", "pressio:nthreads", "roibin:nthreads"}; 
+        std::vector<pressio_configurable const*> invalidation_children {&*roi, &*background}; 
+        
+        set(options, "predictors:error_dependent", get_accumulate_configuration("predictors:error_dependent", invalidation_children, invalidations));
+        set(options, "predictors:error_agnostic", get_accumulate_configuration("predictors:error_agnostic", invalidation_children, invalidations));
+        set(options, "predictors:runtime", get_accumulate_configuration("predictors:runtime", invalidation_children, runtime_invalidations));
+
+    
+        set(options, "pressio:highlevel", get_accumulate_configuration("pressio:highlevel", invalidation_children, std::vector<std::string>{"pressio:nthreads"}));
+
     return options;
   }
 

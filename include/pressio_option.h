@@ -131,7 +131,6 @@ struct pressio_option* pressio_option_new_userptr_managed(
   \param[in] metadata to use to manage the allocation of value
   \param[in] deleter deletes the value
   \param[in] copy copies the value
-  \returns a pointer to a new pressio option set to value passed in
  */
 void pressio_option_set_userptr_managed(struct pressio_option* option,
     void* value,

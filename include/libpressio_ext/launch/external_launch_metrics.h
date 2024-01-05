@@ -35,15 +35,30 @@ struct extern_proc_results {
   int error_code = success;
 };
 
+/**
+ * plugin base for gathering metrics on a launch plugin
+ */
 struct libpressio_launch_metrics_plugin : public pressio_configurable {
+  /**
+   * call back at the beginning of a luanch
+   */
   virtual void launch_begin(std::vector<std::string> const&) const {
       return;
   }
+  /**
+   * call back at the end of a luanch
+   */
   virtual void launch_end(std::vector<std::string> const&, extern_proc_results const&) const {
       return;
   }
+  /**
+   * clone this launch metric
+   */
   virtual std::unique_ptr<libpressio_launch_metrics_plugin> clone() const = 0;
 
+  /**
+   * specify the typeid string for launch metrics
+   */
   std::string type() const final {
 	  return "launchmetric";
   }

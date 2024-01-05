@@ -62,7 +62,24 @@ class blosc2_plugin: public libpressio_compressor_plugin {
       set(options, "pressio:lossless:min", 0);
       set(options, "blosc2:clevel:max", 9);
       set(options, "blosc2:clevel:min", 0);
-      return options;
+
+      set(options, "predictors:error_dependent", std::vector<std::string>{});
+      set(options, "predictors:error_agnostic", std::vector<std::string>{
+"pressio:lossless",
+"blosc2:clevel",
+"blosc2:blocksize",
+"blosc2:compressor",
+});
+
+
+      set(options, "predictors:runtime", std::vector<std::string>{
+"pressio:nthreads",
+"blosc2:numinternalthreads",
+});
+      
+        set(options, "pressio:highlevel", get_accumulate_configuration("pressio:highlevel", {}, std::vector<std::string>{"pressio:lossless", "pressio:nthreads"}));
+
+    return options;
     }
 
     int set_options_impl(struct pressio_options const& options) override {

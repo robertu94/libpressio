@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
-project(libpressio VERSION "0.98.2" LANGUAGES CXX C)
+project(libpressio VERSION "0.99.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -137,7 +137,7 @@ endif()
 #    FULL -- build all optional plugins that don't have additional dependencies
 function(libpressio_optional_component name description file_names)
   string(TOUPPER "${name}" name_upper)
-  option("LIBPRESSIO_HAS_${name_upper}" ${description} OFF)
+  cmake_dependent_option(LIBPRESSIO_HAS_${name_upper} ${description} OFF "LIBPRESSIO_BUILD_MODE STREQUAL CORE" OFF)
   if(LIBPRESSIO_HAS_${name_upper} OR LIBPRESSIO_BUILD_MODE STREQUAL FULL)
     foreach(file_name IN LISTS file_names)
     target_sources(libpressio
@@ -189,6 +189,7 @@ libpressio_optional_component(ssim "computes the gradient length" /metrics/gradl
 libpressio_optional_component(write_debug_inputs "metric that writes output buffers for testing" /metrics/write_debug_inputs.cc)
 set(roibin_sources /compressors/roibin.cc /compressors/binning.cc /compressors/masked_binning.cc)
 libpressio_optional_component(roibin "build the roibin metacompressor" "${roibin_sources}")
+libpressio_optional_component(pipeline "build the pipeline metacompressor" /compressors/pipeline.cc)
 
 option(LIBPRESSIO_INTERPROCEDURAL_OPTIMIZATION "Use interprocedural optimization (LTO)" OFF)
 if(LIBPRESSIO_INTERPROCEDURAL_OPTIMIZATION)
@@ -224,7 +225,6 @@ if(LIBPRESSIO_TREAT_WARNINGS_AS_ERRORS)
   target_compile_options(libpressio PRIVATE -Werror)
 endif()
 
-find_package(PkgConfig REQUIRED)
 find_package(std_compat REQUIRED)
 target_link_libraries(libpressio PUBLIC std_compat::std_compat)
 
@@ -298,6 +298,7 @@ option(LIBPRESSIO_HAS_SZ_AUTO "build the SZauto plugin" OFF)
 if(LIBPRESSIO_HAS_SZ_AUTO)
   set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} SZauto")
   find_package(szauto REQUIRED)
+  find_package(PkgConfig REQUIRED)
   pkg_search_module(ZSTD IMPORTED_TARGET GLOBAL libzstd)
   target_sources(libpressio
     PRIVATE
@@ -308,6 +309,7 @@ endif()
 
 
 option(LIBPRESSIO_HAS_SZx "build the SZx plugin" OFF)
+cmake_dependent_option(LIBPRESSIO_HAS_CUSZx "build cuda support for SZx" OFF "LIBPRESSIO_HAS_SZx" OFF)
 if(LIBPRESSIO_HAS_SZx)
   set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} SZx")
   find_package(SZx REQUIRED)
@@ -390,6 +392,7 @@ option(LIBPRESSIO_HAS_SZ3 "build the SZ3 plugin" OFF)
 if(LIBPRESSIO_HAS_SZ3)
   set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} sz3")
   find_package(SZ3 REQUIRED)
+  find_package(PkgConfig REQUIRED)
   pkg_search_module(ZSTD IMPORTED_TARGET GLOBAL libzstd)
   target_sources(libpressio
     PRIVATE
@@ -402,6 +405,7 @@ option(LIBPRESSIO_HAS_QoZ "build the QoZ plugin" OFF)
 if(LIBPRESSIO_HAS_QoZ)
   set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} qoz")
   find_package(QoZ REQUIRED)
+  find_package(PkgConfig REQUIRED)
   pkg_search_module(ZSTD IMPORTED_TARGET GLOBAL libzstd)
   target_sources(libpressio
     PRIVATE
@@ -416,6 +420,7 @@ if(LIBPRESSIO_HAS_SZ)
   set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} sz")
   find_package(SZ REQUIRED)
   find_package(ZLIB REQUIRED)
+  find_package(PkgConfig REQUIRED)
   pkg_search_module(ZSTD IMPORTED_TARGET GLOBAL libzstd)
   pkg_search_module(FFTW3 QUIET IMPORTED_TARGET GLOBAL fftw3)
   target_sources(libpressio
@@ -442,6 +447,7 @@ if(LIBPRESSIO_HAS_BLOSC)
     PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/blosc_plugin.cc
     )
+  find_package(PkgConfig REQUIRED)
   pkg_search_module(BLOSC IMPORTED_TARGET GLOBAL blosc)
   if(BLOSC_FOUND)
     target_link_libraries(libpressio PRIVATE PkgConfig::BLOSC)
@@ -470,6 +476,7 @@ if(LIBPRESSIO_HAS_BLOSC2)
     if(Blosc2_FOUND)
         target_link_libraries(libpressio PRIVATE Blosc2::blosc2_shared)
     else()
+        find_package(PkgConfig REQUIRED)
         pkg_search_module(Blosc2 IMPORTED_TARGET GLOBAL blosc2)
         target_link_libraries(libpressio PRIVATE PkgConfig::Blosc2)
     endif()
@@ -477,6 +484,7 @@ endif()
 
 option(LIBPRESSIO_HAS_MAGICK "build the image magick plugin" OFF)
 if(LIBPRESSIO_HAS_MAGICK)
+  find_package(PkgConfig REQUIRED)
   pkg_search_module(Magick++ IMPORTED_TARGET GLOBAL Magick++)
   try_compile(
     LIBPRESSIO_COMPAT_HAS_IMAGEMAGICK_LONGLONG
@@ -496,7 +504,7 @@ endif()
 option(LIBPRESSIO_HAS_NETCDF "build the netcdf io plugin" OFF)
 if(LIBPRESSIO_HAS_NETCDF)
   set(LIBPRESSIO_FEATURES "${LIBPRESSIO_FEATURES} netcdf")
-  find_package(PkgConfig)
+  find_package(PkgConfig REQUIRED)
   pkg_search_module(NetCDF REQUIRED IMPORTED_TARGET GLOBAL netcdf)
   target_link_libraries(libpressio PRIVATE PkgConfig::NetCDF)
   target_sources(libpressio
@@ -527,6 +535,19 @@ if(LIBPRESSIO_HAS_CUFILE)
     PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/io/cufile.cc
     )
+endif()
+
+option(LIBPRESSIO_HAS_MATLABIO "build the matlab io plugin" OFF)
+if(LIBPRESSIO_HAS_MATLABIO)
+    find_file(MATIO_HEADER matio.h REQUIRED)
+    find_library(MATIO_LIBRARY matio REQUIRED)
+    get_filename_component(MATIO_HEADER_DIR ${MATIO_HEADER} DIRECTORY)
+    target_link_libraries(libpressio PRIVATE ${MATIO_LIBRARY})
+    target_include_directories(libpressio PRIVATE ${MATIO_HEADER_DIR})
+    target_sources(libpressio
+      PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/io/matio.cc
+      )
 endif()
 
 option(LIBPRESSIO_HAS_HDF "build the hdf5 io plugin" OFF)
@@ -615,6 +636,7 @@ endif()
 option(LIBPRESSIO_HAS_PETSC "build the petsc io plugin" OFF)
 if(LIBPRESSIO_HAS_PETSC)
   set(LIBPRESSIO_FEATURES "${LIBPRESSIO_FEATURES} petsc")
+  find_package(PkgConfig REQUIRED)
   pkg_search_module(PETSc IMPORTED_TARGET PETSc)
   target_sources(libpressio
     PRIVATE
@@ -627,6 +649,7 @@ option(LIBPRESSIO_HAS_LUA "build multi-objective code" OFF)
 if(LIBPRESSIO_HAS_LUA)
   set(LIBPRESSIO_FEATURES "${LIBPRESSIO_FEATURES} lua")
   find_package(sol2 REQUIRED)
+  find_package(PkgConfig REQUIRED)
   pkg_search_module(Lua IMPORTED_TARGET lua luajit)
   if(Lua_FOUND)
     message(INFO "lua from pkgconfig")
@@ -783,6 +806,11 @@ if(LIBPRESSIO_HAS_JSON AND LIBPRESSIO_HAS_HDF)
   add_subdirectory(tools/hdf5_filter)
 endif()
 
+option(BUILD_MIGRATION_TOOLS "build tools to help migrate to newer versions of libpressio" OFF)
+if(BUILD_MIGRATION_TOOLS)
+    add_subdirectory(tools/migrate/)
+endif()
+
 option(BUILD_DOCS "build the documetation" OFF)
 if(BUILD_DOCS)
   add_subdirectory(tools/docs)
@@ -832,9 +860,9 @@ if(BUILD_DOCS)
     )
   doxygen_add_docs(
     docs
+    ${PROJECT_SOURCE_DIR}/docs/
     ${PROJECT_SOURCE_DIR}/README.md
     ${PROJECT_SOURCE_DIR}/CONTRIBUTORS.md
-    ${PROJECT_SOURCE_DIR}/docs
     ${PROJECT_BINARY_DIR}/Compressors.md
     ${PROJECT_BINARY_DIR}/Metrics.md
     ${PROJECT_BINARY_DIR}/IO.md

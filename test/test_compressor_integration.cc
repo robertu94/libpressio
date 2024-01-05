@@ -218,10 +218,90 @@ void test_has_configuration(pressio_configurable& c) {
 
   pressio_thread_safety thread_safe;
   std::string stability;
-  EXPECT_EQ(config.key_status("pressio:thread_safe"), pressio_options_key_set) << config;
-  EXPECT_EQ(config.key_status("pressio:stability"), pressio_options_key_set) << config;
-  EXPECT_EQ(config.get("pressio:thread_safe", &thread_safe), pressio_options_key_set);
-  EXPECT_EQ(config.get("pressio:stability", &stability), pressio_options_key_set) << config;
+  EXPECT_EQ(config.key_status("pressio:thread_safe"), pressio_options_key_set) << c.prefix() << ' ' << config;
+  EXPECT_EQ(config.key_status("pressio:stability"), pressio_options_key_set) << c.prefix() << ' '<< config;
+  EXPECT_EQ(config.get("pressio:thread_safe", &thread_safe), pressio_options_key_set) << c.prefix() << ' ' << config;
+  EXPECT_EQ(config.get("pressio:stability", &stability), pressio_options_key_set) << c.prefix() << ' ' << config;
+
+  std::set<std::string> const standard_invalidations { "predictors:runtime", "predictors:error_dependent", "predictors:error_agnostic", "predictors:data", "predictors:nondeterministc" };
+
+  if(c.type() == "metric") {
+      //this is kind an evil way to check this
+      //we know that the configurable is a metric because we checked above by looking at type()
+      //now dynamic cast to a metrics plugin so that get the list of metrics that this metric returns
+      //the list of metrics that can be invalidated must be in this list
+      auto& metric = dynamic_cast<libpressio_metrics_plugin&>(c);
+      auto const& metrics_results = metric.get_metrics_results({});
+      std::set<std::string> keys;
+      for (auto const& i : metrics_results) {
+          keys.emplace(i.first);
+      }
+
+      ASSERT_EQ(config.key_status("predictors:requires_decompress"), pressio_options_key_set) << c.prefix() << config;
+      auto const& req_dec = config.get("predictors:requires_decompress");
+      EXPECT_THAT(std::vector<pressio_option_type>{req_dec.type()}, testing::IsSubsetOf({pressio_option_bool_type, pressio_option_charptr_array_type}));
+      if(req_dec.type() == pressio_option_charptr_array_type) {
+          auto const& req_dec_values = req_dec.get_value<std::vector<std::string>>();
+          EXPECT_THAT(req_dec_values, testing::IsSubsetOf(keys)) << c.prefix() << " if predictors:requires_decompress is a string, it must contain only returned metrics";
+      }
+      if((config.key_status("predictors:invalidate") == pressio_options_key_set) xor
+              (std::any_of(standard_invalidations.begin(),
+                           standard_invalidations.end(),
+                           [&](std::string const& key){ return config.key_status(key) == pressio_options_key_set;}))){
+          if(config.key_status("predictors:invalidate") == pressio_options_key_set) {
+              auto const& invs_opt = config.get("predictors:invalidate");
+              auto const& invs = invs_opt.get_value<std::vector<std::string>>();
+              EXPECT_THAT(invs, testing::IsSubsetOf(standard_invalidations)) 
+                  << c.prefix() << ' ' << "metrics must provide a list of what invalidates them if they provide a list of string";
+          } else {
+              auto check_key = [&](std::string const& key) {
+                  if(config.key_status(key) == pressio_options_key_set) {
+                      auto const& value_opt = config.get(key);
+                      auto const& value = value_opt.get_value<std::vector<std::string>>();
+                      EXPECT_EQ(value_opt.type(), pressio_option_charptr_array_type) << c.prefix() << ' ' << key << " must be charptr_array";
+                      EXPECT_THAT(value, testing::IsSubsetOf(keys)) << c.prefix() << ' ' << key << " must be a valid metric returned";
+                  }
+              };
+              for (auto const& i : {"predictors:runtime", "predictors:error_dependent", "predictors:error_agnostic", "predictors:data", "predictors:nondeterministc"}) {
+                  check_key(i);
+              }
+          }
+      } else {
+          FAIL() << "either predictors:invalidate xor a standard invalidation key must be provided " << c.prefix() << ' ' << config;
+      }
+  } else if (c.type() == "compressor") {
+      //this is kind an evil way to check this
+      //we know that the configurable is a compressor because we checked above by looking at type()
+      //now dynamic cast to a metrics plugin so that get the list of options that this compressors
+      //the list of options that invalidate metrics must be in this list
+      auto& compressor = dynamic_cast<libpressio_compressor_plugin&>(c);
+      auto const& compressor_options = compressor.get_options();
+      std::set<std::string> keys;
+      for (auto const& i : compressor_options) {
+          keys.emplace(i.first);
+      }
+      auto check_key = [&](std::string const& key) {
+          ASSERT_EQ(config.key_status(key), pressio_options_key_set) << c.prefix() << ' ' << key << " must be set";
+          auto const& value_opt = config.get(key);
+          EXPECT_EQ(value_opt.type(), pressio_option_charptr_array_type) << c.prefix() << ' ' << key << " must be charptr_array";
+          auto const& value = value_opt.get_value<std::vector<std::string>>();
+          EXPECT_THAT(value, testing::IsSubsetOf(keys)) << c.prefix() << ' ' << key << " must be a valid option returned";
+      };
+      for (auto const& i : {"predictors:runtime", "predictors:error_dependent", "predictors:error_agnostic"}) {
+          try {
+          check_key(i);
+          } catch(std::bad_variant_access const&) {
+              continue;
+          }
+      }
+      if(config.key_status("pressio:highlevel") == pressio_options_key_set) {
+          auto const& highlevel = config.get("pressio:highlevel");
+          ASSERT_EQ(highlevel.type(), pressio_option_charptr_array_type);
+          auto const& highlevel_val = highlevel.get_value<std::vector<std::string>>();
+          ASSERT_THAT(highlevel_val, testing::IsSubsetOf(keys)) << c.prefix() << ' ' << " pressio:highlevel must be a valid option returned";
+      }
+
+  }
 }
 TEST_P(PressioCompressorIntegrationConfigOnly, HasConfiguration) {
   test_has_configuration(*compressor);

@@ -49,28 +49,28 @@ All of these are **disabled by default**.
 They can be enabled by passing the corresponding `LIBPRESSIO_HAS_*` variable to CMake.
 
 Additionally, Libpressio is extensible.
-For information on writing a compressor plugin see [Writing a Compressor Plugin](@ref writingacompressor)
-For information on writing a metrics plugin see [Writing a Metrics Plugin](@ref writingametric)
+For information on writing a compressor plugin see [Writing a Compressor Plugin](docs/WritingACompressorPlugin.md)
+For information on writing a metrics plugin see [Writing a Metrics Plugin](docs/WritingAMetricsPlugin.md)
 
 
 ### Compressor Plugins
 
 1st party compressors plugins can be found in [src/plugins/compressors](https://github.com/robertu94/libpressio/tree/master/src/plugins/compressors)
 
-See the [compressor settings page](@ref compressors) for information on how to configure them.
+See the [compressor settings page](build/Compressors.md) for information on how to configure them.
 
 
 ### Metrics Plugins
 
 1st party compressors plugins can be found in [src/plugins/metrics](https://github.com/robertu94/libpressio/tree/master/src/plugins/metrics)
 
-See the [metrics results page](@ref metrics) for information on what they produce
+See the [metrics results page](build/Metrics.md) for information on what they produce
 
 ### IO Plugins
 
 1st party compressors plugins can be found in [src/plugins/io](https://github.com/robertu94/libpressio/tree/master/src/plugins/io)
 
-See the [io settings page](@ref io) for information on how to configure them
+See the [io settings page](build/IO.md) for information on how to configure them
 
 # Installation
 

@@ -203,6 +203,8 @@ class composite_plugin : public libpressio_metrics_plugin {
     set_meta_many_configuration(opts, "composite:plugins", metrics_plugins(), plugins);
     set(opts, "pressio:stability", "stable");
     set(opts, "pressio:thread_safe", pressio_thread_safety_multiple);
+    set(opts, "predictors:requires_decompress", std::vector<std::string>{"composite:decompression_rate", "composite:decompression_rate_many"});
+    set(opts, "predictors:invalidate", std::vector<std::string>{"predictors:runtime", "predictors:error_dependent", "predictors:error_agnostic", "predictors:nondeterministc"});
     return opts;
   }
 

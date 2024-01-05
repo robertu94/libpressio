@@ -109,6 +109,19 @@ struct pressio_options* pressio_metrics_evaluate(
     struct pressio_data const* decompressed
     );
 
+
+/**
+ * \param[in] metrics the metrics to query
+ * \returns last error code for the metrics
+ */
+int pressio_metrics_error_code(struct pressio_metrics const* metrics);
+
+/**
+ * \param[in] metrics the metrics to query
+ * \returns last error message for the metrics
+ */
+const char* pressio_metrics_error_msg(struct pressio_metrics const* metrics);
+
 #endif
 
 #ifdef __cplusplus

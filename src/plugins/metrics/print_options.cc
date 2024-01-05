@@ -23,6 +23,8 @@ class print_options_plugin : public libpressio_metrics_plugin {
     pressio_options opts;
     set(opts, "pressio:stability", "stable");
     set(opts, "pressio:thread_safe", pressio_thread_safety_multiple);
+    set(opts, "predictors:requires_decompress", false);
+    set(opts, "predictors:invalidate", std::vector<std::string>{});
     return opts;
   }
 

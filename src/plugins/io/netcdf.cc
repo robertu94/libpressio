@@ -72,6 +72,9 @@ class netcdf_plugin : public libpressio_io_plugin {
         return nc_get_var_float(file_id, query_varid, static_cast<float*>(data_ptr));
       case pressio_double_dtype:
         return nc_get_var_double(file_id, query_varid, static_cast<double*>(data_ptr));
+      default:
+        //intentional fall through
+        break;
     }
     throw std::runtime_error("unexpected dtype");
   }

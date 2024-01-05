@@ -31,6 +31,14 @@ public:
     set_meta_configuration(options, "resize:compressor", compressor_plugins(), compressor);
     set(options, "pressio:thread_safe", pressio_thread_safety_multiple);
     set(options, "pressio:stability", "stable");
+    
+        std::vector<std::string> invalidations {"resize:compressed_dims", "resize:decompressed_dims"}; 
+        std::vector<pressio_configurable const*> invalidation_children {&*compressor}; 
+        
+        set(options, "predictors:error_dependent", get_accumulate_configuration("predictors:error_dependent", invalidation_children, {}));
+        set(options, "predictors:error_agnostic", get_accumulate_configuration("predictors:error_agnostic", invalidation_children, invalidations));
+        set(options, "predictors:runtime", get_accumulate_configuration("predictors:runtime", invalidation_children, {}));
+
     return options;
   }
 

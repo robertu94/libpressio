@@ -31,7 +31,16 @@ class digit_rounding_plugin: public libpressio_compressor_plugin {
       struct pressio_options options;
       set(options, "pressio:thread_safe", pressio_thread_safety_multiple);
       set(options, "pressio:stability", "stable");
-      return options;
+      
+        //TODO fix the list of options for each command
+        std::vector<std::string> invalidations {"digit_rounding:prec"}; 
+        std::vector<pressio_configurable const*> invalidation_children {}; 
+        
+        set(options, "predictors:error_dependent", get_accumulate_configuration("predictors:error_dependent", invalidation_children, invalidations));
+        set(options, "predictors:error_agnostic", get_accumulate_configuration("predictors:error_agnostic", invalidation_children, invalidations));
+        set(options, "predictors:runtime", get_accumulate_configuration("predictors:runtime", invalidation_children, invalidations));
+
+    return options;
     }
 
     struct pressio_options get_documentation_impl() const override {

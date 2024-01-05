@@ -27,6 +27,10 @@ struct libpressio_launch_plugin: public pressio_configurable {
 
   virtual ~libpressio_launch_plugin()=default;
 
+  /**
+   * launch the external command
+   * \param[in] args the arguments to pass to the command
+   */
   virtual extern_proc_results launch(std::vector<std::string> const& args) const final {
       metrics_plugin->launch_begin(args);
       auto ret = launch_impl(args);
@@ -42,18 +46,33 @@ struct libpressio_launch_plugin: public pressio_configurable {
    */
   virtual extern_proc_results launch_impl(std::vector<std::string> const& args) const =0;
 
+  /**
+   * default set_options_impl implementation that has no options
+   */
   virtual int set_options_impl(pressio_options const&) {
       return 0;
   }
+  /**
+   * default get_options_impl implementation that has no options
+   */
   virtual pressio_options get_options_impl() const {
       return {};
   }
+  /**
+   * default get_configuratoin_impl implementation that has no options
+   */
   virtual pressio_options get_configuration_impl() const {
       return {};
   }
+  /**
+   * return the name of the launch metric
+   */
   std::string get_metrics_key_name() const {
     return std::string(prefix()) + ":launch_metric";
   }
+  /**
+   * common get_configuration options
+   */
   pressio_options get_configuration() const final {
       pressio_options opts;
       set_meta_configuration(opts, "external:launch_metric", launch_metrics_plugins(), metrics_plugin);
@@ -64,6 +83,9 @@ struct libpressio_launch_plugin: public pressio_configurable {
       set(opts, "pressio:prefix", prefix());
       return opts;
   }
+  /**
+   * common get_options options
+   */
   pressio_options get_options() const final {
       pressio_options opts;
       set_meta(opts, "external:launch_metric",  metrics_id, metrics_plugin);
@@ -71,6 +93,9 @@ struct libpressio_launch_plugin: public pressio_configurable {
       opts.copy_from(get_options_impl());
       return opts;
   }
+  /**
+   * common set_options options
+   */
   int set_options(pressio_options const& opts) final {
       get_meta(opts, "external:launch_metric", launch_metrics_plugins(), metrics_id, metrics_plugin);
       get_meta(opts, get_metrics_key_name(), launch_metrics_plugins(), metrics_id, metrics_plugin);
@@ -78,6 +103,9 @@ struct libpressio_launch_plugin: public pressio_configurable {
       return ret;
   }
 
+  /**
+   * common get documentation docs
+   */
   pressio_options get_documentation() const final {
     pressio_options opts;
     set_meta_docs(opts, "external:launch_metric", "metrics to collect while launching an external process", metrics_plugin);
@@ -95,10 +123,16 @@ struct libpressio_launch_plugin: public pressio_configurable {
     return opts;
   }
 
+  /**
+   * base set_name to set the name of the launch metric
+   */
   void set_name(std::string const& new_name) final {
 	  metrics_plugin->set_name(new_name +'/'+metrics_plugin->prefix());
   };
 
+  /**
+   * default method to return the children of this plugin
+   */
   std::vector<std::string> children() const final {
 	  return {
 		  metrics_plugin->get_name()
@@ -117,7 +151,14 @@ struct libpressio_launch_plugin: public pressio_configurable {
    */
   virtual std::unique_ptr<libpressio_launch_plugin> clone() const = 0;
 
+  private:
+  /**
+   * ID of the launch metrics plugin in use
+   */
   std::string metrics_id = "noop";
+  /**
+   * the launch metrics plugin
+   */
   pressio_launcher_metrics metrics_plugin = launch_metrics_plugins().build("noop");
 };
 

@@ -116,6 +116,9 @@ struct pressio_option final {
     >::type>
   pressio_option(T const& value): option(compat::optional<T>(value)) {}
 
+  /**
+   * construct a userdata value from void pointers
+   */
   pressio_option(void* value): option(compat::optional<userdata>(userdata(value))) {}
 
   /** specialization for option to reset the type to hold no type or value
@@ -188,6 +191,9 @@ struct pressio_option final {
     return get<userdata>()->get(); //NOLINT
   }
 
+  /**
+   * specialized template for getting void* pointers out of options
+   */
   template <class T, typename std::enable_if<!std::is_same<T, void*>::value, int>::type = 0>
   T const& get_value() const{
     return *get<T>(); // NOLINT
@@ -251,6 +257,9 @@ struct pressio_option final {
     option = compat::optional<T>(v);
   }
 
+  /**
+   * specialization for setting void* pointers now managed by userdata
+   */
   void set(void* v) {
     option = compat::optional<userdata>(userdata(v));
   }
@@ -660,6 +669,7 @@ struct pressio_options final {
   /**
    * copies all of the options from o
    * \param[in] o the options to copy from
+   * \param[in] ignore_empty only set the values if they are in existing options structure
    */
   void copy_from(pressio_options const& o, bool ignore_empty=false) {
     insert_or_assign(o.begin(), o.end(), ignore_empty);
@@ -712,6 +722,7 @@ struct pressio_options final {
    *
    * \param[in] begin the iterator to the beginning
    * \param[in] end the iterator to the end
+   * \param[in] ignore_empty ignore values if they are not already assigned
    */
   template <class InputIt>
   void insert_or_assign(InputIt begin, InputIt end, bool ignore_empty){

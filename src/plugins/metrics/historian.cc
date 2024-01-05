@@ -210,6 +210,8 @@ class pressio_historian_metric: public libpressio_metrics_plugin {
        "clone"
     };
     set(opts, "historian:events", events_types);
+    set(opts, "predictors:requires_decompress", events.on_decompress || events.on_decompress_many);
+    set(opts, "predictors:invalidate", std::vector<std::string>{});
 
     return opts;
   };

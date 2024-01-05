@@ -30,6 +30,15 @@ public:
     set_meta_configuration(options, "manifest:compressor", compressor_plugins(), impl);
     set(options, "pressio:thread_safe", get_threadsafe(*impl));
     set(options, "pressio:stability", "experimental");
+    
+        //TODO fix the list of options for each command
+        std::vector<std::string> invalidations {"manifest:lineage", "manifest:record_lineage_on_decompress"}; 
+        std::vector<pressio_configurable const*> invalidation_children {&*impl}; 
+        
+        set(options, "predictors:error_dependent", get_accumulate_configuration("predictors:error_dependent", invalidation_children, {}));
+        set(options, "predictors:error_agnostic", get_accumulate_configuration("predictors:error_agnostic", invalidation_children, invalidations));
+        set(options, "predictors:runtime", get_accumulate_configuration("predictors:runtime", invalidation_children, invalidations));
+
     return options;
   }
 

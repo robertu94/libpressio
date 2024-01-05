@@ -81,6 +81,7 @@ public:
     set(options, "cusz:device", device);
     set(options, "cusz:huffman_coding_style", huffman_coding_style);
     set(options, "cusz:predictor", predictor);
+
     return options;
   }
 
@@ -94,6 +95,17 @@ public:
     set(options, "cusz:bookstyle", to_keys(bookstyles));
     set(options, "pressio:thread_safe", pressio_thread_safety_multiple);
     set(options, "pressio:stability", "experimental");
+    
+    std::vector<pressio_configurable const*> invalidation_children {}; 
+    set(options, "pressio:highlevel", get_accumulate_configuration("pressio:highlevel", invalidation_children, std::vector<std::string>{"pressio:abs", "pressio:rel"}));
+    std::vector<std::string> error_invalidations {"cusz:mode_str", "cusz:bound",  "cusz:radius", "cusz:max_outlier_percent", "cusz:huffman_coding_style", "cusz:predictor", "pressio:abs", "pressio:rel"}; 
+    std::vector<std::string> invalidations {"cusz:mode_str", "cusz:bound", "cusz:coarse_pardeg", "cusz:booklen", "cusz:bookstyle", "cusz:radius", "cusz:max_outlier_percent", "cusz:huffman_coding_style", "cusz:predictor", "pressio:abs", "pressio:rel"}; 
+    std::vector<std::string> runtime_invalidations {"cusz:mode_str", "cusz:bound", "cusz:coarse_pardeg", "cusz:booklen", "cusz:bookstyle", "cusz:radius", "cusz:max_outlier_percent", "cusz:device", "cusz:huffman_coding_style", "cusz:predictor", "pressio:abs", "pressio:rel"}; 
+    
+    set(options, "predictors:error_dependent", get_accumulate_configuration("predictors:error_dependent", invalidation_children, error_invalidations));
+    set(options, "predictors:error_agnostic", get_accumulate_configuration("predictors:error_agnostic", invalidation_children, invalidations));
+    set(options, "predictors:runtime", get_accumulate_configuration("predictors:runtime", invalidation_children, runtime_invalidations));
+
     return options;
   }
 

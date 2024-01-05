@@ -35,7 +35,16 @@ class chunking_plugin: public libpressio_compressor_plugin {
       set_meta_configuration(options, "chunking:compressor", compressor_plugins(), compressor);
       set(options, "pressio:thread_safe", get_threadsafe(*compressor));
       set(options, "pressio:stability", "experimental");
-      return options;
+      
+        std::vector<std::string> invalidations {"chunking:chunk_nthreads", "pressio:nthreads", "chunking:size"}; 
+        std::vector<pressio_configurable const*> invalidation_children {&*compressor}; 
+        
+        set(options, "predictors:error_dependent", get_accumulate_configuration("predictors:error_dependent", invalidation_children, {}));
+        set(options, "predictors:error_agnostic", get_accumulate_configuration("predictors:error_agnostic", invalidation_children, std::vector<std::string>{"chunking:size"}));
+        set(options, "predictors:runtime", get_accumulate_configuration("predictors:runtime", invalidation_children, invalidations));
+        set(options, "pressio:highlevel", get_accumulate_configuration("pressio:highlevel", invalidation_children, std::vector<std::string>{"pressio:nthreads"}));
+
+    return options;
     }
 
     struct pressio_options get_documentation_impl() const override {

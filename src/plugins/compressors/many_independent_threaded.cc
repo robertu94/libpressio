@@ -43,6 +43,20 @@ public:
     set_meta_many_configuration(options, "many_independent_threaded:compressors", compressor_plugins(), compressors);
     set(options, "pressio:thread_safe", pressio_thread_safety_multiple);
     set(options, "pressio:stability", "experimental");
+    
+        std::vector<std::string> invalidations {"many_independent_threaded:collect_metrics_on_compression", "many_independent_threaded:collect_metrics_on_decompression", "many_independent_threaded:preserve_metrics", "pressio:nthreads", "many_independent_threaded:nthreads"}; 
+        std::vector<pressio_configurable const*> invalidation_children {}; 
+        
+            invalidation_children.reserve(compressors.size());
+for (auto const& child : compressors) {
+                invalidation_children.emplace_back(&*child);
+            }
+                
+        set(options, "predictors:error_dependent", get_accumulate_configuration("predictors:error_dependent", invalidation_children, {}));
+        set(options, "predictors:error_agnostic", get_accumulate_configuration("predictors:error_agnostic", invalidation_children, {}));
+        set(options, "predictors:runtime", get_accumulate_configuration("predictors:runtime", invalidation_children, invalidations));
+        set(options, "pressio:highlevel", get_accumulate_configuration("pressio:highlevel", invalidation_children, std::vector<std::string>{"pressio:nthreads"}));
+
     return options;
   }
 
