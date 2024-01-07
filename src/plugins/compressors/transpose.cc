@@ -30,6 +30,9 @@ public:
     set_meta_configuration(options, "transpose:compressor", compressor_plugins(), compressor);
     set(options, "pressio:thread_safe", pressio_thread_safety_multiple);
     set(options, "pressio:stability", "unstable");
+    set(options, "predictors:error_dependent", get_accumulate_configuration("predictors:error_dependent", {&*compressor}, {"transpose:axis"}));
+    set(options, "predictors:error_agnostic", get_accumulate_configuration("predictors:error_agnostic", {&*compressor}, {}));
+    set(options, "predictors:runtime", get_accumulate_configuration("predictors:runtime", {&*compressor}, {}));
     return options;
   }
 

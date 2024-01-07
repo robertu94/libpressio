@@ -99,6 +99,12 @@ public:
     set_meta_configuration(options, "binning:compressor", compressor_plugins(), comp);
     set(options, "pressio:thread_safe", pressio_thread_safety_multiple);
     set(options, "pressio:stability", "experimental");
+    set(options, "predictors:error_dependent", get_accumulate_configuration("predictors:error_dependent", {&*comp}, {"binning:shape"}));
+    set(options, "predictors:error_agnostic", get_accumulate_configuration("predictors:error_agnostic", {&*comp}, {}));
+    set(options, "predictors:runtime", get_accumulate_configuration("predictors:runtime", {&*comp}, {"pressio:nthreads", "binning:nthreads"}));
+    
+    set(options, "pressio:highlevel", get_accumulate_configuration("pressio:highlevel", {&*comp}, std::vector<std::string>{"pressio:nthreads"}));
+
     return options;
   }
 

@@ -32,6 +32,16 @@ public:
     set(options, "pressio:thread_safe", get_threadsafe(*comp));
     set(options, "pressio:stability", "experimental");
     set(options, "mask_interpolation:mask_mode", std::vector<std::string>{"fill", "interp"});
+    
+        std::vector<std::string> invalidations {"mask_interpolation:mask", "mask_interpolation:fill", "pressio:nthreads", "mask_interpolation:nthreads", "mask_interpolation:mask_mode"}; 
+        std::vector<std::string> runtime_invalidations {"mask_interpolation:mask", "pressio:nthreads", "mask_interpolation:nthreads", "mask_interpolation:mask_mode"}; 
+        std::vector<pressio_configurable const*> invalidation_children {&*comp}; 
+        
+        set(options, "predictors:error_dependent", get_accumulate_configuration("predictors:error_dependent", invalidation_children, invalidations));
+        set(options, "predictors:error_agnostic", get_accumulate_configuration("predictors:error_agnostic", invalidation_children, invalidations));
+        set(options, "predictors:runtime", get_accumulate_configuration("predictors:runtime", invalidation_children, runtime_invalidations));
+        set(options, "pressio:highlevel", get_accumulate_configuration("pressio:highlevel", invalidation_children, std::vector<std::string>{"pressio:nthreads"}));
+
     return options;
   }
 

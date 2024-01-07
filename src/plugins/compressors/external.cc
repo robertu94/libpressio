@@ -276,6 +276,21 @@ public:
     set(options, "pressio:thread_safe", pressio_thread_safety_multiple);
     set(options, "pressio:stability", "experimental");
     options.copy_from(invoke_settings("get_configuration"));
+    
+        std::vector<std::string> invalidations {}; 
+        std::vector<pressio_configurable const*> invalidation_children {&*launch}; 
+        
+        for (auto const& child : full.io) {
+            invalidation_children.emplace_back(&*child);
+        }
+        for (auto const& child : compressed.io) {
+            invalidation_children.emplace_back(&*child);
+        }
+                
+        set(options, "predictors:error_dependent", get_accumulate_configuration("predictors:error_dependent", invalidation_children, invalidations));
+        set(options, "predictors:error_agnostic", get_accumulate_configuration("predictors:error_agnostic", invalidation_children, invalidations));
+        set(options, "predictors:runtime", get_accumulate_configuration("predictors:runtime", invalidation_children, invalidations));
+
     return options;
   }
 

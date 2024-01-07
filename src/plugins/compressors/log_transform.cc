@@ -62,6 +62,15 @@ y[0] = log(x[0]);
     set_meta_configuration(opts, "log_transform:compressor", compressor_plugins(), meta);
     set(opts, "pressio:thread_safe", get_threadsafe(*meta));
     set(opts, "pressio:stability", "experimental");
+    
+        //TODO fix the list of options for each command
+        std::vector<std::string> invalidations {}; 
+        std::vector<pressio_configurable const*> invalidation_children {&*meta}; 
+        
+        set(opts, "predictors:error_dependent", get_accumulate_configuration("predictors:error_dependent", invalidation_children, invalidations));
+        set(opts, "predictors:error_agnostic", get_accumulate_configuration("predictors:error_agnostic", invalidation_children, invalidations));
+        set(opts, "predictors:runtime", get_accumulate_configuration("predictors:runtime", invalidation_children, invalidations));
+
     return opts;
   }
   int set_options_impl(const pressio_options &options) override {

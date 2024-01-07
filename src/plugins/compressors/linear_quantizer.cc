@@ -72,6 +72,16 @@ applies linear_quantizer encoding to prior to compression and reverses it post d
     set_meta_configuration(opts, "linear_quantizer:compressor", compressor_plugins(), meta);
     set(opts, "pressio:thread_safe", get_threadsafe(*meta));
     set(opts, "pressio:stability", "experimental");
+    
+        //TODO fix the list of options for each command
+        std::vector<std::string> invalidations {"pressio:abs", "linear_quantizer:step", "linear_quantizer:auto_step"}; 
+        std::vector<pressio_configurable const*> invalidation_children {&*meta}; 
+        
+        set(opts, "predictors:error_dependent", get_accumulate_configuration("predictors:error_dependent", invalidation_children, invalidations));
+        set(opts, "predictors:error_agnostic", get_accumulate_configuration("predictors:error_agnostic", invalidation_children, invalidations));
+        set(opts, "predictors:runtime", get_accumulate_configuration("predictors:runtime", invalidation_children, {}));
+        set(opts, "pressio:highlevel", get_accumulate_configuration("pressio:highlevel", invalidation_children, std::vector<std::string>{"pressio:abs"}));
+
     return opts;
   }
   int set_options_impl(const pressio_options &options) override {

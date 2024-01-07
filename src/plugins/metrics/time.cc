@@ -238,6 +238,8 @@ class time_plugin : public libpressio_metrics_plugin {
     set_meta_configuration(opts, "time:metric", metrics_plugins(), child);
     set(opts, "pressio:stability", "stable");
     set(opts, "pressio:thread_safe", pressio_thread_safety_multiple);
+    set(opts, "predictors:requires_decompress", std::vector<std::string>{"time:decompress", "time:decompress_many", "time:begin_decompress", "time:end_decompress", "time:begin_decompress_many", "time:end_decompress_many"});
+    set(opts, "predictors:invalidate", std::vector<std::string>{"predictors:runtime", "predictors:nondeterministc"});
     return opts;
   }
 

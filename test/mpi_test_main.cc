@@ -3,6 +3,7 @@
 #include "mpi.h"
 #endif
 #include "gtest/gtest.h"
+#include <dlfcn.h>
 
 
 int main(int argc, char *argv[])
@@ -13,6 +14,18 @@ int main(int argc, char *argv[])
   MPI_Comm_size(MPI_COMM_WORLD, &size);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 #endif
+  const char* plugins_ptr = getenv("LIBPRESSIO_PLUGINS");
+  std::string plugins;
+  void* lib = nullptr;
+  if(plugins_ptr!=nullptr) {
+      plugins = plugins_ptr;
+      lib = dlopen(plugins.c_str(), RTLD_NOW|RTLD_LOCAL);
+      if(lib) {
+          void(*fn)(void) ;
+          *(void **)(&fn) = dlsym(lib, "libpressio_register_all");
+          fn();
+      }
+  }
   ::testing::InitGoogleTest(&argc, argv);
 #if LIBPRESSIO_HAS_MPI
   if(rank == 0){
@@ -46,6 +59,9 @@ int main(int argc, char *argv[])
 #else
   int all_result=result;
 #endif
+
+  if(lib)
+  dlclose(lib);
 
   return all_result;
 }

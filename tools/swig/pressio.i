@@ -15,22 +15,35 @@ python bindings for pressio
 #include "pressio_options.h"
 #include "pressio_options_iter.h"
 #include "pressio_data.h"
+#include "libpressio_ext/cpp/compressor.h"
 #include "libpressio_ext/io/pressio_io.h"
 #include "libpressio_ext/io/posix.h"
 #include "pypressio.h"
+#include "libpressio_ext/highlevel/libpressio_highlevel.h"
+#if LIBPRESSIO_HAS_JSON
+#include "libpressio_ext/json/pressio_options_json.h"
+#endif
+#if LIBPRESSIO_HAS_OPENSSL
+#include "libpressio_ext/hash/libpressio_hash.h"
+#endif
 %}
 
 %include <stdint.i>
+#if SWIGPYTHON
 %include "numpy.i"
 %init %{
 import_array();
 %}
+#endif
 
 
 %include "pressio_version.h"
+
+#if SWIGPYTHON
 %include "pybuffer.i"
 %pybuffer_string(const char* compressor_id)
 %pybuffer_binary(const char* buffer, size_t buffer_size)
+#endif
 
 
 %include <std_string.i>
@@ -49,12 +62,17 @@ import_array();
 %pointer_functions(double, double)
 %pointer_functions(float, float)
 
+#if SWIGPYTHON
 #if LIBPRESSIO_HAS_MPI4PY
 %include "mpi4py/mpi4py.i"
 %mpi4py_typemap(Comm, MPI_Comm)
 #endif
+#endif
+
+
 %include "pypressio.h"
 
+#if SWIGPYTHON
 %numpy_typemaps(bool       , NPY_BOOL     , size_t)
 %numpy_typemaps(signed char       , NPY_BYTE     , size_t)
 %numpy_typemaps(unsigned char     , NPY_UBYTE    , size_t)
@@ -97,9 +115,7 @@ import_array();
 %numpy_typemaps(unsigned long     , NPY_ULONG    , long int)
 %numpy_typemaps(long long         , NPY_LONGLONG , long int)
 %numpy_typemaps(unsigned long long, NPY_ULONGLONG, long int)
-
 %define pressio_numpy_type(type, name)
-
   %apply (type* INPLACE_ARRAY1, size_t DIM1 ) {( type * data, size_t r1)};
   %apply (type* INPLACE_ARRAY2, size_t DIM1, size_t DIM2 ) { ( type * data, size_t r1, size_t r2)};
   %apply (type* INPLACE_ARRAY3, size_t DIM1, size_t DIM2, size_t DIM3 ) {( type* data, size_t r1, size_t r2, size_t r3)};
@@ -120,7 +136,6 @@ namespace std {
   %template( _pressio_io_data_from_numpy_3d_ ## name ) _pressio_io_data_from_numpy_3d< type >;
   %template( _pressio_io_data_from_numpy_4d_ ## name ) _pressio_io_data_from_numpy_4d< type >;
 %enddef
-
 pressio_numpy_type(bool, bool);
 pressio_numpy_type(float, float);
 pressio_numpy_type(double, double);
@@ -132,6 +147,7 @@ pressio_numpy_type(signed char, int8_t);
 pressio_numpy_type(short, int16_t);
 pressio_numpy_type(int, int32_t);
 pressio_numpy_type(long int, int64_t);
+#endif
 
 namespace std { 
   %template() vector<size_t>;
@@ -327,3 +343,12 @@ def io_data_to_numpy(ptr):
 %include "pressio_options_iter.h"
 %include "libpressio_ext/io/pressio_io.h"
 %include "libpressio_ext/io/posix.h"
+
+#if LIBPRESSIO_HAS_JSON
+%newobject pressio_options_to_json;
+%include "libpressio_ext/json/pressio_options_json.h"
+#endif
+#if LIBPRESSIO_HAS_OPENSSL
+%include "libpressio_ext/hash/libpressio_hash.h"
+#endif
+%include "libpressio_ext/highlevel/libpressio_highlevel.h"

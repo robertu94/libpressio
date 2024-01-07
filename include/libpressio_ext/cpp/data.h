@@ -275,7 +275,6 @@ struct pressio_data {
    * move-constructor
    *
    * \param[in] rhs the data buffer to move from
-   * \returns a reference to the object moved into
    */
   pressio_data(pressio_data&& rhs) noexcept:
     data_dtype(rhs.data_dtype),
@@ -494,7 +493,6 @@ struct pressio_data {
    * convert a iterable type into a pressio_data object
    * \param[in] begin iterator to the beginning of the data
    * \param[in] end iterator to the end of the data
-   * \returns a new 1d pressio_data object or matching type
    */
   template <class ForwardIt>
   pressio_data(ForwardIt begin, ForwardIt end):

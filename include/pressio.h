@@ -5,7 +5,7 @@ extern "C" {
 #ifndef LIBPRESSIO_H
 #define LIBPRESSIO_H
 
-/*! \file
+/*! \file pressio.h
  * \brief Pressio compressor loader
  */
 
@@ -22,7 +22,7 @@ struct pressio* pressio_instance();
 
 /**
  * \param[in] library the pointer to the library
- * \returns informs the library that this instance is no longer required; the pointer passed becomes invalid
+ * informs the library that this instance is no longer required; the pointer passed becomes invalid
  */
 void pressio_release(struct pressio* library);
 

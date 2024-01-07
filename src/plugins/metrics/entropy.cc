@@ -57,6 +57,9 @@ public:
     pressio_options opts;
     set(opts, "pressio:stability", "stable");
     set(opts, "pressio:thread_safe", pressio_thread_safety_multiple);
+    set(opts, "predictors:requires_decompress", std::vector<std::string>{"entropy:decompressed"});
+    set(opts, "predictors:data", std::vector<std::string>{"entropy:input"});
+    set(opts, "predictors:error_dependent", std::vector<std::string>{"entropy:decompressed"});
     return opts;
   }
 

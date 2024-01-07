@@ -23,6 +23,11 @@ class fpzip_plugin: public libpressio_compressor_plugin {
     struct pressio_options options = pressio_options();
     set(options, "fpzip:has_header", has_header);
     set(options, "fpzip:prec", prec);
+    if(prec == 0) {
+      set(options, "pressio:lossless", 1);
+    } else {
+      set_type(options, "pressio:lossless", pressio_option_int32_type);
+    }
     return options;
   };
 
@@ -37,11 +42,6 @@ class fpzip_plugin: public libpressio_compressor_plugin {
     set(options, "fpzip:data_model", "the FPZip data model");
     set(options, "fpzip:has_header", "output a header on compression");
     set(options, "fpzip:prec", "the precision to use");
-    if(prec == 0) {
-      set(options, "pressio:lossless", 1);
-    } else {
-      set_type(options, "pressio:lossless", pressio_option_int32_type);
-    }
 
     return options;
   };
@@ -53,6 +53,15 @@ class fpzip_plugin: public libpressio_compressor_plugin {
     set(options, "fpzip:codec_version", fpzip_codec_version);
     set(options, "fpzip:library_version", fpzip_library_version);
     set(options, "fpzip:data_model", fpzip_data_model);
+    
+        std::vector<std::string> invalidations {"fpzip:prec", "fpzip:has_header", "pressio:lossless"}; 
+        std::vector<pressio_configurable const*> invalidation_children {}; 
+        
+        set(options, "predictors:error_dependent", get_accumulate_configuration("predictors:error_dependent", invalidation_children, invalidations));
+        set(options, "predictors:error_agnostic", get_accumulate_configuration("predictors:error_agnostic", invalidation_children, invalidations));
+        set(options, "predictors:runtime", get_accumulate_configuration("predictors:runtime", invalidation_children, invalidations));
+        set(options, "pressio:highlevel", get_accumulate_configuration("pressio:highlevel", invalidation_children, std::vector<std::string>{"pressio:lossless", "fpzip:prec"}));
+
     return options;
   };
 

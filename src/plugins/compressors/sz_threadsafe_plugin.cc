@@ -82,6 +82,17 @@ class sz_threadsafe_plugin: public libpressio_compressor_plugin {
         std::back_inserter(vs),
         [](typename decltype(sz_threadsafe_mode_str_to_code)::const_reference m){ return m.first; });
     set(options, "sz_threadsafe:error_bound_mode_str", vs);
+    
+        std::vector<std::string> invalidations {"sz_threadsafe:protect_value_range", "sz_threadsafe:max_quant_intervals", "sz_threadsafe:quantization_intervals", "sz_threadsafe:sol_id", "sz_threadsafe:lossless_compressor", "sz_threadsafe:sample_distance", "sz_threadsafe:pred_threshold", "sz_threadsafe:sz_mode", "sz_threadsafe:gzip_mode", "sz_threadsafe:abs_err_bound", "sz_threadsafe:rel_err_bound", "sz_threadsafe:psnr_err_bound", "sz_threadsafe:pw_rel_err_bound", "sz_threadsafe:segment_size", "sz_threadsafe:snapshot_cmpr_step", "sz_threadsafe:prediction_mode", "sz_threadsafe:accelerate_pw_rel_compression", "sz_threadsafe:data_type", "sz_threadsafe:app", "sz_threadsafe:user_params", "pressio:abs", "pressio:rel", "pressio:lossless", "sz_threadsafe:config_struct", "sz_threadsafe:error_bound_mode_str", "sz_threadsafe:error_bound_mode", "sz_threadsafe:exafel:tolerance", "sz_threadsafe:exafel:peaks_segs", "sz_threadsafe:exafel:peaks_rows", "sz_threadsafe:exafel:peaks_cols", "sz_threadsafe:exafel:num_peaks", "sz_threadsafe:exafel:calib_panel", "sz_threadsafe:exafel:bin_size", "sz_threadsafe:exafel:sz_dim", "sz_threadsafe:exafel:peak_size"}; 
+        std::vector<pressio_configurable const*> invalidation_children {}; 
+        
+        set(options, "predictors:error_dependent", get_accumulate_configuration("predictors:error_dependent", invalidation_children, invalidations));
+        set(options, "predictors:error_agnostic", get_accumulate_configuration("predictors:error_agnostic", invalidation_children, invalidations));
+        set(options, "predictors:runtime", get_accumulate_configuration("predictors:runtime", invalidation_children, invalidations));
+
+    
+        set(options, "pressio:highlevel", get_accumulate_configuration("pressio:highlevel", invalidation_children, std::vector<std::string>{"pressio:abs", "pressio:rel", "pressio:lossless"}));
+
     return options;
   }
 

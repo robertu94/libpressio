@@ -53,6 +53,12 @@ public:
     set_meta_configuration(options, "arc:compressor", compressor_plugins(), impl);
     set(options, "pressio:thread_safe", get_threadsafe(*impl));
     set(options, "pressio:stability", "experimental");
+
+    std::vector<std::string> configs {"arc:memory_constraint", "arc:throughput_constraint", "arc:ecc_options"}; 
+    set(options, "predictors:error_dependent", get_accumulate_configuration("predictors:error_dependent", {&*impl}, {}));
+    set(options, "predictors:error_agnostic", get_accumulate_configuration("predictors:error_agnostic", {&*impl}, configs));
+    set(options, "predictors:runtime", get_accumulate_configuration("predictors:runtime", {&*impl}, configs));
+
     return options;
   }
 

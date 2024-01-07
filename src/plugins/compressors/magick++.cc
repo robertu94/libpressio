@@ -91,6 +91,14 @@ class magick_plugin: public libpressio_compressor_plugin {
 
     
 
+    
+    std::vector<std::string> invalidations {"magick:samples_magick", "magick:compressed_magick", "magick:quality"}; 
+    std::vector<pressio_configurable const*> invalidation_children {}; 
+
+    set(options, "predictors:error_dependent", get_accumulate_configuration("predictors:error_dependent", invalidation_children, invalidations));
+    set(options, "predictors:error_agnostic", get_accumulate_configuration("predictors:error_agnostic", invalidation_children, invalidations));
+    set(options, "predictors:runtime", get_accumulate_configuration("predictors:runtime", invalidation_children, invalidations));
+
     return options;
   }
 

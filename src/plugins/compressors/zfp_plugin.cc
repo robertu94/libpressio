@@ -112,7 +112,53 @@ class zfp_plugin: public libpressio_compressor_plugin {
       set(options, "pressio:lossless:min", 0);
       set(options, "pressio:lossless:max", 0);
       set(options, "zfp:execution_name", std::vector<std::string>{"omp", "cuda", "serial"});
-      return options;
+
+      set(options, "predictors:error_dependent", std::vector<std::string>{
+              "pressio:abs",
+              "zfp:minbits",
+              "zfp:maxbits",
+              "zfp:maxprec",
+              "zfp:minexp",
+              "pressio:lossless",
+              "zfp:precision",
+              "zfp:accuracy",
+              "zfp:wra",
+              "zfp:rate",
+              "zfp:type",
+              "zfp:dims",
+              "zfp:mode",
+              "zfp:reversible",
+              });
+      set(options, "predictors:error_agnostic", std::vector<std::string>{
+              "pressio:abs",
+              "zfp:minbits",
+              "zfp:maxbits",
+              "zfp:maxprec",
+              "zfp:minexp",
+              "pressio:lossless",
+              "zfp:precision",
+              "zfp:accuracy",
+              "zfp:wra",
+              "zfp:rate",
+              "zfp:type",
+              "zfp:dims",
+              "zfp:mode",
+              "zfp:reversible",
+              });
+      set(options, "predictors:runtime", std::vector<std::string>{
+              "zfp:execution",
+              "zfp:execution_name",
+              "pressio:nthreads",
+              "zfp:omp_threads",
+              "zfp:omp_chunk_size",
+              });
+      
+
+    
+    
+        set(options, "pressio:highlevel", get_accumulate_configuration("pressio:highlevel", {}, std::vector<std::string>{"pressio:abs", "pressio:lossless", "pressio:nthreads", "zfp:rate", "zfp:precision", "zfp:accuracy"}));
+
+    return options;
     }
 
     int set_options_impl(struct pressio_options const& options) override {

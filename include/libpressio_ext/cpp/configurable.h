@@ -5,6 +5,7 @@
 #include "options.h"
 #include "pressio_compressor.h"
 #include "errorable.h"
+#include "std_compat/span.h"
 
 /**
  * \file
@@ -93,7 +94,74 @@ class pressio_configurable : public pressio_errorable {
    */
   virtual int set_options(struct pressio_options const& options);
 
+  private:
+  /**
+   * base accumulate method
+   */
+  template <class OutputType, class StringType, class BinOp, class OptionsOp>
+  OutputType get_accumulate(StringType const& key, std::vector<pressio_configurable const*> const& children, OutputType init, OptionsOp&& to_options, BinOp&& append) const {
+      OutputType values = init;
+      for (auto const& child : children) {
+          OutputType child_values;
+          pressio_options config = to_options(child);
+          if(config.get(child->get_name(), key, &child_values) == pressio_options_key_set) {
+              if(append(values, child_values)) break;
+          }
+      }
+      return values;
+  }
   protected:
+  /**
+   * accumluates a vector of string from the child modules configuration
+   */
+  template <class StringType>
+  std::vector<std::string> get_accumulate_configuration(StringType const& key, std::vector<pressio_configurable const*> const& children, std::vector<std::string> const& init) const {
+      return get_accumulate(key, children, init,
+          [](pressio_configurable const* const& conf){ return conf->get_configuration(); },
+          [](std::vector<std::string>& acc, std::vector<std::string> const& child){
+            acc.insert(acc.end(), child.begin(), child.end()); return false;
+          }
+      );
+  }
+
+  /**
+   * accumluates a vector of string from the child modules options
+   */
+  template <class StringType>
+  std::vector<std::string> get_accumulate_options(StringType const& key, std::vector<pressio_configurable const*> const& children, std::vector<std::string> const& init) const {
+      return get_accumulate(key, children, init,
+          [](pressio_configurable const* const& conf){ return conf->get_options(); },
+          [](std::vector<std::string>& acc, std::vector<std::string> const& child){
+            acc.insert(acc.end(), child.begin(), child.end()); return false;
+          }
+      );
+  }
+  /**
+   * test if any child returns true for an option the child modules configuration
+   */
+  template <class StringType>
+  bool get_any_configuration(StringType const& key, std::vector<pressio_configurable const*> const& children, bool init) const {
+      return get_accumulate(key, children, init,
+          [](pressio_configurable const* const& conf){ return conf->get_configuration(); },
+          [](bool& acc, bool child){
+            return acc |= child;
+          }
+      );
+  }
+
+  /**
+   * test if any child returns true for an option the child modules options
+   */
+  template <class StringType>
+  bool get_any_options(StringType const& key, std::vector<pressio_configurable const*> const& children, bool init) const {
+      return get_accumulate(key, children, init,
+          [](pressio_configurable const* const& conf){ return conf->get_options(); },
+          [](bool& acc, bool child){
+            return acc |= child;
+          }
+      );
+  }
+
   /**
    * helper function to set options according to name prefixes if provided
    *
@@ -176,7 +244,6 @@ class pressio_configurable : public pressio_errorable {
    * \param[in] key the key for the name of the child meta-object
    * \param[in] registry docs for the purpose of the meta object
    * \param[in] current_value value of the current meta-object
-   * \param[in] args the remaining args needed for some meta modules
    */
   template<class StringType, class Wrapper, class Registry, class... Args>
   void
@@ -195,9 +262,8 @@ class pressio_configurable : public pressio_errorable {
    *
    * \param[in] options the options structure to set
    * \param[in] key the key for the name of the child meta-object
-   * \param[in] docstring docs for the purpose of this collection of meta objects
+   * \param[in] registry the registry to construct new values from
    * \param[in] current_values value of the current meta-object
-   * \param[in] args the remaining args needed for some meta modules
    */
   template<class StringType, class Wrapper, class Registry, class... Args>
   void
@@ -360,6 +426,13 @@ class pressio_configurable : public pressio_errorable {
   }
 
   public:
+  /**
+   * set the options in a highlevel way that deduces the types from config
+   *
+   * \param[in] early_config used to set options as-is without type conversions
+   * \param[in] config converts the options using pressio_conversion_special
+   * \returns the error code from the second set_options call
+   */
   int cast_options(pressio_options const& early_config, pressio_options const& config) {
         set_options(early_config);
         auto types = get_options();

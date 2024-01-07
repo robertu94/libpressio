@@ -154,7 +154,6 @@ enum pressio_options_key_status pressio_options_as_set(struct pressio_options* o
  * \param[in] options the option to set type of a pressio_option for
  * \param[in] key the key to get from the options structure
  * \param[in] type value to set in the pressio_options structure
- * \returns pressio_options_key_set if the key is modified, pressio_options_key_exists if the key exists but can't convert, and pressio_options_key_does_not_exist if the key does not exist;
  */
 void pressio_options_set_type(struct pressio_options* options, const char* key, enum pressio_option_type type);
 
@@ -276,7 +275,6 @@ pressio_options_define_type_cast(string, char*)
   \param[in] metadata to use to manage the allocation of value
   \param[in] deleter deletes the value
   \param[in] copy copies the value
-  \returns a pointer to a new pressio option set to value passed in
  */
 void pressio_options_set_userptr_managed(struct pressio_options* options,
     const char* key,

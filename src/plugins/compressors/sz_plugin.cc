@@ -91,6 +91,18 @@ class sz_plugin: public libpressio_compressor_plugin {
         std::back_inserter(vs),
         [](typename decltype(sz_mode_str_to_code)::const_reference m){ return m.first; });
     set(options, "sz:error_bound_mode_str", vs);
+    
+        //TODO fix the list of options for each command
+        std::vector<std::string> invalidations {"sz:protect_value_range", "sz:max_quant_intervals", "sz:quantization_intervals", "sz:sol_id", "sz:lossless_compressor", "sz:sample_distance", "sz:pred_threshold", "sz:sz_mode", "sz:gzip_mode", "sz:abs_err_bound", "sz:rel_err_bound", "sz:psnr_err_bound", "sz:pw_rel_err_bound", "sz:segment_size", "sz:snapshot_cmpr_step", "sz:prediction_mode", "sz:accelerate_pw_rel_compression", "sz:data_type", "sz:app", "sz:user_params", "pressio:abs", "pressio:rel", "pressio:pw_rel", "pressio:lossless", "sz:config_file", "sz:config_struct", "sz:error_bound_mode_str", "sz:error_bound_mode", "sz:exafel:tolerance", "sz:exafel:peaks_segs", "sz:exafel:peaks_rows", "sz:exafel:peaks_cols", "sz:exafel:num_peaks", "sz:exafel:calib_panel", "sz:exafel:bin_size", "sz:exafel:sz_dim", "sz:exafel:peak_size"}; 
+        std::vector<pressio_configurable const*> invalidation_children {}; 
+        
+        set(options, "predictors:error_dependent", get_accumulate_configuration("predictors:error_dependent", invalidation_children, invalidations));
+        set(options, "predictors:error_agnostic", get_accumulate_configuration("predictors:error_agnostic", invalidation_children, invalidations));
+        set(options, "predictors:runtime", get_accumulate_configuration("predictors:runtime", invalidation_children, invalidations));
+
+    
+        set(options, "pressio:highlevel", get_accumulate_configuration("pressio:highlevel", invalidation_children, std::vector<std::string>{"pressio:abs", "pressio:rel", "pressio:pw_rel", "pressio:lossless"}));
+
     return options;
   }
 

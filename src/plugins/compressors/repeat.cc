@@ -24,6 +24,15 @@ public:
     set_meta_configuration(options, "repeat:compressor", compressor_plugins(), comp);
     set(options, "pressio:thread_safe", get_threadsafe(*comp));
     set(options, "pressio:stability", "experimental");
+    
+        //TODO fix the list of options for each command
+        std::vector<std::string> invalidations {"repeat:count", "repeat:clone_output"}; 
+        std::vector<pressio_configurable const*> invalidation_children {&*comp}; 
+        
+        set(options, "predictors:error_dependent", get_accumulate_configuration("predictors:error_dependent", invalidation_children, {}));
+        set(options, "predictors:error_agnostic", get_accumulate_configuration("predictors:error_agnostic", invalidation_children, {}));
+        set(options, "predictors:runtime", get_accumulate_configuration("predictors:runtime", invalidation_children, invalidations));
+
     return options;
   }
 

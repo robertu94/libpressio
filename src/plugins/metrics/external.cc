@@ -89,6 +89,8 @@ class external_metric_plugin : public libpressio_metrics_plugin {
       set_meta_configuration(opts, "external:launch_method", launch_plugins(), launcher);
       set(opts, "pressio:stability", "unstable");
       set(opts, "pressio:thread_safe", pressio_thread_safety_multiple);
+      set(opts, "predictors:requires_decompress", true);
+      set(opts, "predictors:invalidate", std::vector<std::string>{"predictors:error_dependent"});
       return opts;
     }
 

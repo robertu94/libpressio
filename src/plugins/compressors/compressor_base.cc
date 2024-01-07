@@ -146,6 +146,10 @@ struct pressio_options libpressio_compressor_plugin::get_documentation() const {
   )");
   set(ret, "pressio:lossless:min", R"(minimum compression level for pressio:lossless)");
   set(ret, "pressio:lossless:max", R"(maximum compression level for pressio:lossless)");
+  set(ret, "pressio:highlevel", R"(ordered list of settings that the uesr should consider modifying first)");
+  set(ret, "predictors:runtime", R"(settings that may change the runtime of the compressor)");
+  set(ret, "predictors:error_agnostic", R"(settings that may change the error agnostic metrics of the compressor such as compression ratio)");
+  set(ret, "predictors:error_dependent", R"(settings that may change the error dependent metrics of the compressor such as maximum absolute pointwise error)");
   ret.copy_from(get_documentation_impl());
   if(metrics_plugin) { 
     metrics_plugin->end_get_documentation(ret);

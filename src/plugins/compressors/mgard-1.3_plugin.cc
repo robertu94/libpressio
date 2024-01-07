@@ -117,6 +117,18 @@ public:
     set(options, "mgard:hip_enabled", MGARD_ENABLE_HIP);
     set(options, "mgard:sycl_enabled", MGARD_ENABLE_SYCL);
     set(options, "pressio:stability", "experimental");
+    
+        std::vector<std::string> invalidations {"mgard:huff_dict_size", "mgard:huff_block_size", "mgard:lz4_block_size", "mgard:zstd_compress_level", "mgard:normalize_coordinates", "mgard:reorder", "mgard:log_level", "mgard:s", "mgard:tolerance", "pressio:abs", "mgard:decomposition", "mgard:decomposition_str", "mgard:lossless_type", "mgard:lossless_type_str", "mgard:error_bound_type", "mgard:error_bound_type_str"}; 
+        std::vector<std::string> runtime_invalidations {"mgard:huff_dict_size", "mgard:dev_id", "mgard:huff_block_size", "mgard:lz4_block_size", "mgard:zstd_compress_level", "mgard:normalize_coordinates", "mgard:reorder", "mgard:log_level", "mgard:s", "mgard:tolerance", "pressio:abs", "pressio:nthreads", "mgard:nthreads", "mgard:dev_type", "mgard:dev_type_str", "mgard:decomposition", "mgard:decomposition_str", "mgard:lossless_type", "mgard:lossless_type_str", "mgard:error_bound_type", "mgard:error_bound_type_str"}; 
+        std::vector<pressio_configurable const*> invalidation_children {}; 
+        
+        set(options, "predictors:error_dependent", get_accumulate_configuration("predictors:error_dependent", invalidation_children, invalidations));
+        set(options, "predictors:error_agnostic", get_accumulate_configuration("predictors:error_agnostic", invalidation_children, invalidations));
+        set(options, "predictors:runtime", get_accumulate_configuration("predictors:runtime", invalidation_children, runtime_invalidations));
+
+    
+        set(options, "pressio:highlevel", get_accumulate_configuration("pressio:highlevel", invalidation_children, std::vector<std::string>{"pressio:abs", "pressio:nthreads"}));
+
     return options;
   }
 

@@ -91,6 +91,8 @@ class write_debug_inputs_plugin : public libpressio_metrics_plugin {
     set_meta_configuration(opts, "write_debug_inputs:io", io_plugins(), io);
     set(opts, "pressio:stability", "stable");
     set(opts, "pressio:thread_safe", pressio_thread_safety_multiple);
+    set(opts, "predictors:requires_decompress", write_output);
+    set(opts, "predictors:invalidate", std::vector<std::string>{"predictors:error_dependent", "predictors:error_agnostic"});
     return opts;
   }
 
