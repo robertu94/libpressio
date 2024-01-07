@@ -118,23 +118,28 @@ struct pressio_option* option_new_strings(std::vector<std::string> const& string
 }
 
 struct pressio_data* data_new_empty(const pressio_dtype dtype, std::vector<uint64_t> dimensions) {
-  return new pressio_data(pressio_data::empty(dtype, dimensions));
+  std::vector<size_t> dimensions_(dimensions.cbegin(), dimensions.cend());
+  return new pressio_data(pressio_data::empty(dtype, dimensions_));
 }
 struct pressio_data* data_new_nonowning(const pressio_dtype dtype, void* data, std::vector<uint64_t> dimensions) {
-  return new pressio_data(pressio_data::nonowning(dtype, data, dimensions));
+  std::vector<size_t> dimensions_(dimensions.cbegin(), dimensions.cend());
+  return new pressio_data(pressio_data::nonowning(dtype, data, dimensions_));
 }
 struct pressio_data* data_new_copy(const enum pressio_dtype dtype, void* src, std::vector<uint64_t>  dimensions) {
-  return new pressio_data(pressio_data::copy(dtype, src, dimensions));
+  std::vector<size_t> dimensions_(dimensions.cbegin(), dimensions.cend());
+  return new pressio_data(pressio_data::copy(dtype, src, dimensions_));
 }
 struct pressio_data* data_new_owning(const pressio_dtype dtype, std::vector<uint64_t> dimensions) {
-  return new pressio_data(pressio_data::owning(dtype, dimensions));
+  std::vector<size_t> dimensions_(dimensions.cbegin(), dimensions.cend());
+  return new pressio_data(pressio_data::owning(dtype, dimensions_));
 }
 struct pressio_data* data_new_move(const pressio_dtype dtype,
     void* data,
     std::vector<uint64_t> dimensions,
     pressio_data_delete_fn deleter,
     void* metadata) {
-  return new pressio_data(pressio_data::move(dtype, data, dimensions, deleter, metadata));
+  std::vector<size_t> dimensions_(dimensions.cbegin(), dimensions.cend());
+  return new pressio_data(pressio_data::move(dtype, data, dimensions_, deleter, metadata));
 }
 
 pressio_metrics* new_metrics(struct pressio* library, std::vector<std::string> metrics) {
