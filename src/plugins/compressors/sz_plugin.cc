@@ -4,7 +4,7 @@
 #include <sstream>
 #include <cstdlib>
 
-#include <sz/sz.h>
+#include <sz.h>
 #if HAVE_WRITESTATS
 #include <sz/sz_stats.h>
 #endif
