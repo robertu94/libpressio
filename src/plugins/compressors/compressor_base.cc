@@ -179,8 +179,11 @@ int libpressio_compressor_plugin::set_options(struct pressio_options const& opti
       return error_code();
     }
   }
-  get_meta(options, "pressio:metric", metrics_plugins(), metrics_id, metrics_plugin);
-  get_meta(options, get_metrics_key_name(), metrics_plugins(), metrics_id, metrics_plugin);
+  if(options.key_status(get_name(), get_metrics_key_name()) == pressio_options_key_set) {
+      get_meta(options, get_metrics_key_name(), metrics_plugins(), metrics_id, metrics_plugin);
+  } else {
+      get_meta(options, "pressio:metric", metrics_plugins(), metrics_id, metrics_plugin);
+  }
   get(options, "metrics:errors_fatal", &metrics_errors_fatal);
   get(options, "metrics:copy_compressor_results", &metrics_copy_impl_results);
   auto ret = set_options_impl(options);

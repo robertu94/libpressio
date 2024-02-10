@@ -11,10 +11,22 @@
 #include "compressor.h"
 #include "pressio_dtype.h"
 #include "pressio_compressor.h"
+#include "pressio.h"
 
 /** \file 
  *  \brief C++ stream compatible IO functions
  *  */
+
+/**
+ * print the registry
+ */
+template <class CharT, class Traits, class T>
+std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& out, pressio_registry<T>& reg) {
+    for (auto const& i : reg) {
+        out << i.first << ' ';
+    }
+    return out;
+}
 
 /**
  * print the thread safety entries
