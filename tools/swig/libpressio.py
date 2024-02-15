@@ -298,7 +298,7 @@ class PressioObject(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _set_options_impl(self):
+    def _set_options_impl(self, _options):
         raise NotImplementedError()
 
     def get_compile_config(self):
@@ -339,14 +339,15 @@ class PressioObject(metaclass=abc.ABCMeta):
 
     def set_options(self, config):
         """set runtime options; libpressio-style interface"""
-        return self.set_config(self, config)
+        return self.set_config(config)
 
     def set_config(self, config):
         """set runtime time options; numcodecs compatible interface"""
+        options = None
         try:
             options = python_to_pressio(config)
             if self._set_options_impl(options):
-                raise self.from_object(self._object)
+                raise self.from_object()(self._object)
         finally:
             pressio.options_free(options)
 
@@ -445,7 +446,7 @@ class PressioCompressor(PressioObject, Codec):
             ec = pressio.compressor_set_options(obj, early_config_lp)
             pressio.options_free(early_config_lp)
             if ec != 0:
-                raise self.from_object(obj)
+                raise self.from_object()(obj)
 
             config_lp_template = pressio.compressor_get_options(obj)
             config_lp = python_to_pressio(compressor_config, config_lp_template)
@@ -453,7 +454,7 @@ class PressioCompressor(PressioObject, Codec):
             pressio.options_free(config_lp)
             pressio.options_free(config_lp_template)
             if ec != 0:
-                raise self.from_object(obj)
+                raise self.from_object()(obj)
 
             super().__init__(obj, obj_id, name)
 
@@ -546,28 +547,31 @@ class PressioIO(PressioObject):
         return pressio.io_get_documentation(self._object)
 
     def _set_options_impl(self, options):
-        return pressio.io_set_options(self._object)
+        return pressio.io_set_options(self._object, options)
 
     def __init__(self, io, early_config, io_config, name):
+        library = None
+        config_lp = None
+        config_lp_template = None
         try:
             config_lp = None
             library = pressio.instance()
             obj = pressio.get_io(library, io.encode())
             obj_id = io
-            if not self._object:
+            if not obj:
                 raise PressioException.from_library(library)
 
             if name is not None:
-                pressio.compressor_set_name(self._object, name.encode())
+                pressio.compressor_set_name(obj, name.encode())
 
             early_config_lp = python_to_pressio(early_config)
-            pressio.io_set_options(self._object, early_config_lp)
+            pressio.io_set_options(obj, early_config_lp)
             pressio.options_free(early_config_lp)
 
-            config_lp_template = pressio.io_get_options(self._object)
+            config_lp_template = pressio.io_get_options(obj)
             config_lp = python_to_pressio(io_config, config_lp_template)
 
-            pressio.io_set_options(self._object, config_lp)
+            pressio.io_set_options(obj, config_lp)
             super().__init__(obj, obj_id, name)
         finally:
             pressio.release(library)
@@ -638,9 +642,13 @@ class PressioMetrics(PressioObject):
         return pressio.metrics_set_options(self._object, options)
 
     def __init__(self, ids, early_config, metrics_config, name):
+        library = None
+        config_lp = None
+        config_lp_template = None
         try:
-            config_lp = None
             library = pressio.instance()
+            if isinstance(ids, str):
+                ids = [ids]
             metrics_ids = pressio.vector_string([i.encode() for i in ids])
             obj = pressio.new_metrics(library, metrics_ids)
             obj_id = "composite"
@@ -648,17 +656,17 @@ class PressioMetrics(PressioObject):
                 raise PressioException.from_library(library)
 
             if name is not None:
-                pressio.metrics_set_name(self._object, name.encode())
+                pressio.metrics_set_name(obj, name.encode())
 
             early_config_lp = python_to_pressio(early_config)
-            pressio.metrics_set_options(self._object, early_config_lp)
+            pressio.metrics_set_options(obj, early_config_lp)
             pressio.options_free(early_config_lp)
 
-            config_lp_template = pressio.metrics_get_options(self._object)
+            config_lp_template = pressio.metrics_get_options(obj)
             config_lp = python_to_pressio(metrics_config, config_lp_template)
 
-            pressio.metrics_set_options(self._object, config_lp)
-            super.__init__(obj, obj_id, name)
+            pressio.metrics_set_options(obj, config_lp)
+            super().__init__(obj, obj_id, name)
         finally:
             pressio.release(library)
             pressio.options_free(config_lp)
@@ -673,6 +681,9 @@ class PressioMetrics(PressioObject):
 
     def evaluate(self, input=None, compressed=None, output=None):
         results_lp = None
+        input_lp = None
+        compressed_lp = None
+        output_lp = None
         try:
             input_lp = input if input is None else pressio.io_data_from_numpy(input)
             compressed_lp = compressed if compressed is None else pressio.io_data_from_bytes(compressed)
