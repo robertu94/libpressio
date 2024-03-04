@@ -303,28 +303,27 @@ public:
 
     pszheader header;
     pszframe* work = new pszframe{
-        .predictor = pszpredictor{.type = to_cusz_predictor_type(predictor)},
-        .quantizer = pszquantizer{.radius = radius},
-        .hfcoder = pszhfrc{
-            .book = to_bookstyle(bookstyle),
-            .style = to_huffman_style(huffman_coding_style),
-            .booklen = booklen,
-            .coarse_pardeg = coarse_pardeg 
+        pszpredictor{to_cusz_predictor_type(predictor)},
+        pszquantizer{radius},
+        pszhfrc{
+            to_bookstyle(bookstyle),
+            to_huffman_style(huffman_coding_style),
+            booklen,
+            coarse_pardeg 
         },
-        .max_outlier_percent = max_outlier_percent};
+        max_outlier_percent};
     pszcompressor* comp = psz_create(work, to_cuszdtype(input->dtype()));
-    auto ctx = std::make_unique<pszctx>(pszctx{
-        .device = to_device(device),
-        .pred_type = to_cusz_predictor_type(predictor),
-        .dbgstr_pred = "",
-        .demodata_name = "",
-        .infile = "",
-        .original_file = "",
-        .opath = "",
-        .mode = to_cuszmode(eb_mode),
-        .eb = err_bnd,
+    auto ctx = std::make_unique<pszctx>(pszctx{});
+    ctx->device = to_device(device);
+    ctx->pred_type = to_cusz_predictor_type(predictor);
+    // ctx->dbgstr_pred = "";
+    // ctx->demodata_name = "";
+    // ctx->infile = "";
+    // ctx->original_file = "";
+    // ctx->opath = "";
+    ctx->mode = to_cuszmode(eb_mode);
+    ctx->eb = err_bnd;
 
-    });
     pszlen uncomp_len = pszlen{{dims[0]}, {dims[1]}, {dims[2]}, {dims[3]}};
     psz::TimeRecord compress_timerecord;
     psz_compress_init(comp, uncomp_len, ctx.get());
