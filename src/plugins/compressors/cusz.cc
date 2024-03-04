@@ -316,11 +316,6 @@ public:
     auto ctx = std::make_unique<pszctx>(pszctx{});
     ctx->device = to_device(device);
     ctx->pred_type = to_cusz_predictor_type(predictor);
-    // ctx->dbgstr_pred = "";
-    // ctx->demodata_name = "";
-    // ctx->infile = "";
-    // ctx->original_file = "";
-    // ctx->opath = "";
     ctx->mode = to_cuszmode(eb_mode);
     ctx->eb = err_bnd;
 
