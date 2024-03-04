@@ -1,4 +1,5 @@
 #include "libpressio_ext/cpp/distributed_manager.h"
+#include <cassert>
 
 size_t pressio_distributed_manager::unlimited = 0;
 

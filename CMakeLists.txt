@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
-project(libpressio VERSION "0.99.2" LANGUAGES CXX C)
+project(libpressio VERSION "0.99.3" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -68,6 +68,10 @@ add_library(libpressio
   ./src/pressio_metrics.cc
   ./src/pressio_option.cc
   ./src/pressio_options.cc
+  ./src/pressio_memory.cc
+  ./src/pressio_domain.cc
+  ./src/pressio_domain_send.cc
+  ./src/pressio_domain_manager.cc
   ./src/pressio_options_iter.cc
   ./src/pressio_highlevel.cc
   ./src/external_parse.cc
@@ -88,6 +92,10 @@ add_library(libpressio
   ./src/plugins/io/by_extension.cc
   ./src/plugins/io/io.cc
   ./src/plugins/io/posix.cc
+  ./src/plugins/domains/base.cc
+  ./src/plugins/domains/malloc.cc
+  ./src/plugins/domains/nonowning.cc
+  ./src/plugins/domains/user.cc
   ./src/iless.cc
 
   #public headers
@@ -513,7 +521,7 @@ if(LIBPRESSIO_HAS_NETCDF)
     )
 endif()
 
-option(LIBPRESSIO_HAS_CUDA "build the cuda_device_selector compressor plugin" OFF)
+option(LIBPRESSIO_HAS_CUDA "build the cuda_device_selector compressor plugin and cuda integration" OFF)
 if(LIBPRESSIO_HAS_CUDA)
   set(LIBPRESSIO_FEATURES "${LIBPRESSIO_FEATURES} cuda")
   find_package(CUDAToolkit REQUIRED)
@@ -521,6 +529,8 @@ if(LIBPRESSIO_HAS_CUDA)
   target_sources(libpressio
     PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/cuda_device_selector.cc
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/domains/cuda.cc
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/domains/cudahost.cc
     )
 endif()
 

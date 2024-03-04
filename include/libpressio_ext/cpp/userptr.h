@@ -2,6 +2,11 @@
 #define PRESSIO_OPTIONS_USERPTR_CPP
 #include <std_compat/utility.h>
 
+/**
+ * \file
+ * \brief C++ inteface to user managed pointer objects (e.g. MPI_Comm, CudaStream_t, etc...)
+ */
+
 extern "C" {
 void static_deleter(void*, void*);
 void static_copy(void**, void**, const void*, const void*);

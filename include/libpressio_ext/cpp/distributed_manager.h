@@ -5,9 +5,7 @@
 #include <libdistributed/libdistributed_work_queue_options.h>
 #include <std_compat/optional.h>
 #include <utility>
-#include <cassert>
 #include "configurable.h"
-#include "errorable.h"
 #include "options.h"
 #include "data.h"
 #include <pressio_option.h>

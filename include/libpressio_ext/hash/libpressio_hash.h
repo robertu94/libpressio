@@ -5,6 +5,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * \file
+ * \brief C interface that hashes libpressio data object keys and entries.
+ */
 
 struct pressio;
 struct pressio_options;

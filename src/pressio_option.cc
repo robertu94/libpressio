@@ -201,6 +201,127 @@ void pressio_option_set_data(struct pressio_option* option, struct pressio_data*
   return option->set(*value);
 }
 
+  void pressio_option::set(void* v) {
+    option = compat::optional<userdata>(userdata(v));
+  }
+
+  bool pressio_option::operator==(pressio_option const& rhs) const {
+    return option == rhs.option;
+  }
+  enum pressio_options_key_status pressio_option::cast_set(struct pressio_option const& rhs, enum pressio_conversion_safety safety) { 
+    auto casted = rhs.as(type(), safety);
+    if (casted.has_value()) {
+      *this = std::move(casted);
+      return pressio_options_key_set;
+    } else {
+      return pressio_options_key_exists; 
+    }
+  }
+  void pressio_option::set_type(pressio_option_type type) {
+    switch(type)
+    {
+      case pressio_option_charptr_type:
+        option = compat::optional<std::string>();
+        break;
+      case pressio_option_userptr_type:
+        option = compat::optional<userdata>();
+        break;
+      case pressio_option_bool_type:
+        option = compat::optional<bool>();
+        break;
+      case pressio_option_int8_type:
+        option = compat::optional<int8_t>();
+        break;
+      case pressio_option_uint8_type:
+        option = compat::optional<uint8_t>();
+        break;
+      case pressio_option_int16_type:
+        option = compat::optional<int16_t>();
+        break;
+      case pressio_option_uint16_type:
+        option = compat::optional<uint16_t>();
+        break;
+      case pressio_option_int32_type:
+        option = compat::optional<int32_t>();
+        break;
+      case pressio_option_uint32_type:
+        option = compat::optional<uint32_t>();
+        break;
+      case pressio_option_int64_type:
+        option = compat::optional<int64_t>();
+        break;
+      case pressio_option_uint64_type:
+        option = compat::optional<uint64_t>();
+        break;
+      case pressio_option_float_type:
+        option = compat::optional<float>();
+        break;
+      case pressio_option_double_type:
+        option = compat::optional<double>();
+        break;
+      case pressio_option_unset_type:
+        option = compat::monostate{};
+        break;
+      case pressio_option_charptr_array_type:
+        option = compat::optional<std::vector<std::string>>();
+        break;
+      case pressio_option_data_type:
+        option = compat::optional<pressio_data>();
+        break;
+      case pressio_option_threadsafety_type:
+        option = compat::optional<pressio_thread_safety>();
+        break;
+      case pressio_option_dtype_type:
+        option = compat::optional<pressio_dtype>();
+        break;
+    }
+  }
+
+bool pressio_option::has_value() const {
+    if (holds_alternative<compat::monostate>()) return false;
+    else {
+      switch(type())
+      {
+        case pressio_option_bool_type:
+          return (bool)get<bool>();
+        case pressio_option_int8_type:
+          return (bool)get<int8_t>();
+        case pressio_option_uint8_type:
+          return (bool)get<uint8_t>();
+        case pressio_option_int16_type:
+          return (bool)get<int16_t>();
+        case pressio_option_uint16_type:
+          return (bool)get<uint16_t>();
+        case pressio_option_int32_type:
+          return (bool)get<int32_t>();
+        case pressio_option_uint32_type:
+          return (bool)get<uint32_t>();
+        case pressio_option_int64_type:
+          return (bool)get<int64_t>();
+        case pressio_option_uint64_type:
+          return (bool)get<uint64_t>();
+        case pressio_option_float_type:
+          return (bool)get<float>();
+        case pressio_option_double_type:
+          return (bool)get<double>();
+        case pressio_option_charptr_type:
+          return (bool)get<std::string>();
+        case pressio_option_userptr_type:
+          return (bool)get<userdata>();
+        case pressio_option_charptr_array_type:
+          return (bool)get<std::vector<std::string>>();
+        case pressio_option_data_type:
+          return (bool)get<pressio_data>();
+        case pressio_option_dtype_type:
+          return (bool)get<pressio_dtype>();
+        case pressio_option_threadsafety_type:
+          return (bool)get<pressio_thread_safety>();
+        case pressio_option_unset_type:
+        default:
+          return false;
+      }
+    }
+  }
 
 pressio_option_type pressio_option::type() const {
   if (holds_alternative<std::string>()) return pressio_option_charptr_type;

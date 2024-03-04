@@ -4,8 +4,6 @@
 #include <memory>
 #include <vector>
 #include "configurable.h"
-#include "errorable.h"
-#include "versionable.h"
 #include <std_compat/span.h>
 
 

@@ -112,6 +112,7 @@ struct pressio_options libpressio_io_plugin::get_documentation() const {
   set(opts, "pressio:type", R"(type of the libpressio meta object)");
   set(opts, "pressio:children", R"(children of this libpressio meta object)");
   set(opts, "pressio:prefix", R"(prefix for settings from this object)");
+  set(opts, "io:path", R"(path to the file/object on storage)");
   opts.copy_from(get_documentation_impl());
   return opts;
 }

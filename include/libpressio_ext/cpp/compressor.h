@@ -5,7 +5,6 @@
 #include "metrics.h"
 #include "configurable.h"
 #include "versionable.h"
-#include "errorable.h"
 #include <std_compat/span.h>
 
 /*!\file 

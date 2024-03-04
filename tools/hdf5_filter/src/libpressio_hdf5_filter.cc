@@ -159,7 +159,7 @@ extern "C" {
     }
 
     if(H5Sget_simple_extent_dims(chunk_space_id, h_dims.data(), nullptr) > 0) {
-      opts.dims = std::move(std::vector<size_t>(h_dims.begin(), h_dims.end()));
+      opts.dims = std::vector<size_t>(h_dims.begin(), h_dims.end());
     } else {
       H5Z_LIBPRESSIO_PUSH_AND_GOTO(H5E_PLINE, H5E_BADTYPE, -1, "bad chunk data space");
     }

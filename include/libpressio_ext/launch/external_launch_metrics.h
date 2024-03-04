@@ -6,6 +6,12 @@
 
 
 /**
+ * \file
+ * \brief interface for gathering metrics from launches
+ */
+
+
+/**
  * error codes for extern_proc_results
  */
 enum extern_proc_error_codes {

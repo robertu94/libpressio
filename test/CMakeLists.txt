@@ -41,8 +41,14 @@ add_gtest(test_pressio_options.cc)
 add_gtest(test_io.cc)
 add_gtest(test_highlevel.cc)
 
+if(LIBPRESSIO_HAS_CUDA)
+  find_package(CUDAToolkit REQUIRED)
+    add_gtest(test_domain.cc)
+    target_link_libraries(test_domain PRIVATE CUDA::cudart)
+endif()
+
 add_executable(test_compressor_integration ./test_compressor_integration.cc mpi_test_main.cc)
-target_link_libraries(test_compressor_integration PRIVATE libpressio gtest gmock)
+target_link_libraries(test_compressor_integration PRIVATE libpressio gtest gmock ${CMAKE_DL_LIBS})
 if(LIBPRESSIO_HAS_MPI)
   target_link_libraries(test_compressor_integration PRIVATE MPI::MPI_CXX)
 endif()
@@ -123,6 +129,13 @@ if(BUILD_PYTHON_WRAPPER AND LIBPRESSIO_HAS_SZ AND ${LIBPRESSIO_BUILD_MODE} STREQ
     ${CMAKE_CURRENT_SOURCE_DIR}/from_numpy.py
     ${CMAKE_BINARY_DIR}/tools/swig
   )
+  if(LIBPRESSIO_HAS_ZFP AND LIPBRESSIO_HAS_CUDA)
+      add_test(test_python_cupy_conversions
+        ${Python3_EXECUTABLE}
+        ${CMAKE_CURRENT_SOURCE_DIR}/test_cupy.py
+        ${CMAKE_BINARY_DIR}/tools/swig
+      )
+  endif()
 endif()
 
 if(LIBPRESSIO_HAS_JSON AND LIBPRESSIO_HAS_HDF)

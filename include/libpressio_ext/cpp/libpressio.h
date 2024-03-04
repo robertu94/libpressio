@@ -3,6 +3,7 @@
  * \brief convenience header for the c++ interface
  */
 #include "compressor.h"
+#include "io.h"
 #include "data.h"
 #include "dtype.h"
 #include "metrics.h"

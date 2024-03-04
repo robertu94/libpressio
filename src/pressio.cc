@@ -1,14 +1,12 @@
-#include <vector>
-#include <map>
 #include <memory>
 #include <string>
 #include <sstream>
-#include <functional>
 #include "pressio.h"
 #include "pressio_version.h"
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/pressio.h"
 #include "libpressio_ext/cpp/compressor.h"
+#include "libpressio_ext/cpp/io.h"
 
 
 
@@ -28,11 +26,6 @@ struct pressio* pressio_instance() {
   return new pressio;
 }
 
-//IMPLEMENTATION NOTE this function exists to preserve the option of releasing the memory for the library in the future.
-//currently this is undesirable because some libraries such as SZ don't handle this well, but may be possible
-//after the planned C++ rewrite.
-//
-//Therefore, it intentionally does not release the memory
 void pressio_release(struct pressio* library) {
   delete library;
 }
@@ -97,6 +90,26 @@ unsigned int pressio_patch_version() {
 }
 
 }
+
+std::shared_ptr<libpressio_compressor_plugin> pressio::get_compressor(std::string const& compressor_id) {
+    auto compressor = compressor_plugins().build(compressor_id);
+    if (compressor) return compressor;
+    else {
+      set_error(1, std::string("invalid compressor id ") + compressor_id);
+      return nullptr;
+    }
+  }
+
+std::shared_ptr<libpressio_io_plugin> pressio::get_io(std::string const& io_module_id) {
+    auto io_module = io_plugins().build(io_module_id);
+    if (io_module)
+      return RVO_MOVE(io_module);
+    else {
+      set_error(1, std::string("invalid io_plugin id ") + io_module_id);
+      return nullptr;
+    }
+  }
+
 
 
 const char* pressio::version() {

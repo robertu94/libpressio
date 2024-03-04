@@ -13,8 +13,20 @@ class pressio_historian_metric: public libpressio_metrics_plugin {
   //to be shared with the factory function below
   public:
   pressio_historian_metric()=default;
-  pressio_historian_metric(pressio_historian_metric && lhs)=default;
-  pressio_historian_metric& operator=(pressio_historian_metric && lhs)=default;
+  pressio_historian_metric(pressio_historian_metric && lhs) noexcept:
+      lock(), opts(std::exchange(lhs.opts, {})), idx(std::exchange(lhs.idx, {})),
+      metrics_id(std::exchange(lhs.metrics_id, {})), metrics(std::exchange(lhs.metrics, {})),
+      events(std::exchange(lhs.events, {})) {
+      }
+  pressio_historian_metric& operator=(pressio_historian_metric && lhs) noexcept {
+    if (&lhs != this) return *this;
+    opts = std::exchange(lhs.opts,{});
+    idx = std::exchange(lhs.idx, {});
+    metrics_id = std::exchange(lhs.metrics_id, {});
+    metrics = std::exchange(lhs.metrics, {});
+    events = std::exchange(lhs.events, {});
+    return *this;
+  }
 
   //historian is special in that it needs to offer a higher degree of thread safety to be useful
   //since it can record the number of times that a metrics plugin is cloned, which might happen

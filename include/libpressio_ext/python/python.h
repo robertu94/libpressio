@@ -1,6 +1,12 @@
 #ifndef LIBPRESSIO_EXT_PYTHON
 #define LIBPRESSIO_EXT_PYTHON
 #include <memory>
+
+/**
+ * \file
+ * \brief header to ensure that python is only initialized once by libpressio projects
+ */
+
 namespace libpressio { namespace python_launch {
 
 /**

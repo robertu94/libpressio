@@ -6,6 +6,7 @@
 #include <vector>
 #include <cstdint>
 #include <algorithm>
+#include <std_compat/bit.h>
 #include "pressio_version.h"
 
 #if LIBPRESSIO_HAS_MPI4PY
@@ -34,6 +35,75 @@ namespace {
         dims.data()
         );
   }
+}
+
+struct lp_cuda_array_interface {
+    std::vector<uint64_t> shape;
+    std::string typestr;
+    intptr_t ptr;
+    bool read_only;
+    int version;
+    int stream;
+};
+
+lp_cuda_array_interface io_data_to_cuda_array(struct pressio_data* data) {
+    lp_cuda_array_interface ret;
+    static std::map<pressio_dtype, std::string> dtypes {
+        {pressio_float_dtype ,"f4"},
+        {pressio_double_dtype,"f8"},
+        {pressio_int8_dtype  ,"i1"},
+        {pressio_int16_dtype ,"i2"},
+        {pressio_int32_dtype ,"i4"},
+        {pressio_int64_dtype ,"i8"},
+        {pressio_uint8_dtype ,"u1"},
+        {pressio_uint16_dtype,"u2"},
+        {pressio_uint32_dtype,"u4"},
+        {pressio_uint64_dtype,"u8"},
+        {pressio_bool_dtype  ,"b1"},
+        {pressio_byte_dtype  ,"i1"},
+    };
+    auto dims = data->dimensions();
+    std::reverse(dims.begin(), dims.end());
+    ret.shape = dims;
+    ret.typestr = ((data->dtype() == pressio_byte_dtype)
+                       ? "|"
+                       : (compat::endian::native == compat::endian::little ? "<" : ">")) +
+                  dtypes.at(data->dtype());
+    ret.ptr = reinterpret_cast<intptr_t>(data->data());
+    ret.read_only = false;
+    ret.version = 3;
+    ret.stream = 1;
+    return ret;
+}
+
+pressio_data* io_data_from_cuda_array(std::vector<uint64_t> shape, std::string const& typestr, intptr_t ptr_asint) {
+    static std::map<std::string, pressio_dtype> dtypes {
+        {"f4", pressio_float_dtype},
+        {"f8", pressio_double_dtype},
+        {"i1", pressio_int8_dtype},
+        {"i2", pressio_int16_dtype},
+        {"i4", pressio_int32_dtype},
+        {"i8", pressio_int64_dtype},
+        {"u1", pressio_uint8_dtype},
+        {"u2", pressio_uint16_dtype},
+        {"u4", pressio_uint32_dtype},
+        {"u8", pressio_uint64_dtype},
+        {"b1", pressio_bool_dtype},
+        {"i1"  ,pressio_byte_dtype},
+    };
+    pressio_dtype dtype;
+    if(typestr.size() == 3) {
+        auto endian = typestr[0];
+        if (compat::endian::native == compat::endian::little) {
+            if(endian == '>') {
+                throw std::runtime_error("cross endian data not supported");
+            }
+        }
+        dtype = dtypes.at(typestr.substr(1));
+    }
+    std::reverse(shape.begin(), shape.end());
+    void* ptr = reinterpret_cast<void*>(ptr_asint);
+    return new pressio_data(pressio_data::nonowning(dtype, ptr, shape, "cudamalloc"));
 }
 
 template <class T>

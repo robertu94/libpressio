@@ -98,6 +98,12 @@ void print_all_options(struct pressio_options* options) {
         case pressio_option_bool_type:
           printf("%s <bool>: null\n", key);
           break;
+        case pressio_option_dtype_type:
+          printf("%s <dtype>: null\n", key);
+          break;
+        case pressio_option_threadsafety_type:
+          printf("%s <threadsafety>: null\n", key);
+          break;
       }
     }
 

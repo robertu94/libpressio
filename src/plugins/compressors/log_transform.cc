@@ -8,7 +8,8 @@ namespace libpressio { namespace log_transform {
 
 struct log_encoder {
   template <class T>
-  pressio_data operator()(T const* begin, T const* end) {
+  typename std::enable_if<!std::is_same<T, bool>::value,pressio_data>::type
+  operator()(T const* begin, T const* end) {
     pressio_data d = pressio_data::owning(pressio_dtype_from_type<T>(), {static_cast<size_t>(end - begin)});
     T* ptr = static_cast<T*>(d.data());
 
@@ -19,11 +20,16 @@ struct log_encoder {
 
     return d;
   }
+  pressio_data
+  operator()(bool const* , bool const* ) {
+      throw std::runtime_error("unsupported dtype bool");
+  }
 };
 
 struct log_decoder {
   template <class T>
-  pressio_data operator()(T const* begin, T const* end) {
+  typename std::enable_if<!std::is_same<T, bool>::value,pressio_data>::type
+  operator()(T const* begin, T const* end) {
     pressio_data d = pressio_data::owning(pressio_dtype_from_type<T>(), {static_cast<size_t>(end - begin)});
     T* ptr = static_cast<T*>(d.data());
 
@@ -33,6 +39,10 @@ struct log_decoder {
     }
 
     return d;
+  }
+  pressio_data
+  operator()(bool const* , bool const* ) {
+      throw std::runtime_error("unsupported dtype bool");
   }
 };
 

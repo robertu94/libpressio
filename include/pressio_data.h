@@ -43,6 +43,17 @@ void pressio_data_libc_free_fn (void* data, void* metadata);
 struct pressio_data* pressio_data_new_nonowning(const enum pressio_dtype dtype, void* data, size_t const num_dimensions, size_t const dimensions[]);
 
 /** 
+ *  allocates a new pressio_data structure, it does NOT take ownership of data.
+ *
+ *  \param[in] dtype type of the data stored by the pointer
+ *  \param[in] data the actual data to be represented
+ *  \param[in] num_dimensions the number of dimensions; must match the length of dimensions
+ *  \param[in] dimensions an array corresponding to the dimensions of the data, a copy is made of this on construction
+ *  \param[in] domain the name of a domain that could have allocated this data
+ */
+struct pressio_data* pressio_data_new_nonowning_domain(const enum pressio_dtype dtype, void* data, size_t const num_dimensions, size_t const dimensions[], const char* domain);
+
+/** 
  *  allocates a new pressio_data structure and corresponding data and copies data from provided data structure
  *  \param[in] src the pressio_data structure to be cloned
  *  \returns the newly allocated copy 
@@ -223,6 +234,11 @@ size_t pressio_data_get_capacity_in_bytes(struct pressio_data const* data);
  * \returns the total number of elements to represent the data
  */
 size_t pressio_data_num_elements(struct pressio_data const* data);
+
+/**
+ * returns the domain_id of the data
+ */
+const char* pressio_data_domain_id(struct pressio_data const* data);
 
 #endif
 

@@ -5,7 +5,6 @@
 #include "options.h"
 #include "pressio_compressor.h"
 #include "errorable.h"
-#include "std_compat/span.h"
 
 /**
  * \file

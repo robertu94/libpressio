@@ -159,6 +159,8 @@ TEST_F(PressioOptionsTests, IterateKeys) {
       case pressio_option_charptr_array_type:
       case pressio_option_data_type:
       case pressio_option_bool_type:
+      case pressio_option_dtype_type:
+      case pressio_option_threadsafety_type:
         FAIL();
         break;
     }

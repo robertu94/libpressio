@@ -22,8 +22,7 @@ extern "C" {
     if(dims != nullptr) {
       if(pressio_data_has_data(dims)) {
         //re-use the buffer provided by dims
-        ret = pressio_data_new_empty(pressio_byte_dtype, 0, nullptr);
-        *ret = std::move(*dims);
+        ret = new pressio_data(std::move(*dims));
       } else {
         //create a new buffer of the appropriate size
         auto dtype = pressio_data_dtype(dims);

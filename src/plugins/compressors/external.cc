@@ -7,6 +7,7 @@
 #include "libpressio_ext/cpp/printers.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
+#include "libpressio_ext/cpp/io.h"
 #include "libpressio_ext/launch/external_launch.h"
 #include "external_parse.h"
 #include "cleanup.h"

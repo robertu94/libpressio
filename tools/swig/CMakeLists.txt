@@ -43,7 +43,7 @@ if(SWIG_FOUND AND PYTHON3_FOUND)
   endfunction()
 
 
-  build_pressio_swig_module(pressio.i)
+  build_pressio_swig_module(pressio.i pypressio.h)
   install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/libpressio.py" DESTINATION ${LIBPRESSIO_PYTHON_SITELIB})
 endif()
 

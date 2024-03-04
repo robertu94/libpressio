@@ -13,7 +13,7 @@ namespace libpressio { namespace qoz_ns {
 
 struct impl_compress{
   template <class T>
-  pressio_data operator()(T* in_data, T*) {
+  typename std::enable_if<!std::is_same<T, bool>::value,pressio_data>::type operator()(T* in_data, T*) {
     config.N = static_cast<char>(reg_dims.size());
     config.num = std::accumulate(reg_dims.begin(), reg_dims.end(), (size_t) 1, compat::multiplies<>());
     config.blockSize = (config.N == 1 ? 128 : (config.N == 2 ? 16 : 6));
@@ -28,6 +28,9 @@ struct impl_compress{
         pressio_new_free_fn<QoZ::uchar>(),
         nullptr
         );
+  }
+  pressio_data operator()(bool* , bool*) {
+        throw std::runtime_error("unsupported type bool");
   }
   pressio_data const& input_data;
   QoZ::Config& config;

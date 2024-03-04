@@ -1,19 +1,14 @@
 #ifndef LIBPRESSSIO_SUBGROUP_MANAGER
 #define LIBPRESSSIO_SUBGROUP_MANAGER
 #include "configurable.h"
-#include "std_compat/memory.h"
 #include "std_compat/span.h"
-#include "libpressio_ext/cpp/compressor.h"
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/options.h"
-#include "libpressio_ext/cpp/pressio.h"
 #include "pressio_compressor.h"
 #include "pressio_data.h"
 #include "pressio_options.h"
 #include <cstddef>
-#include <memory>
 #include <numeric>
-#include <random>
 #include <vector>
 #include <set>
 

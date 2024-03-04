@@ -19,14 +19,14 @@ def many_linux(client):
 def spack_base(client):
     return (client.container()
             .from_("ecpe4s/ubuntu20.04")
-            .with_exec([
-                "bash", "-l", "-c",
-                """source /spack/share/spack/setup-env.sh
-                git clone https://github.com/robertu94/spack_packages ./robertu94_packages
-                spack repo add  ./robertu94_packages
-                spack install libpressio"""
-                ])
-            )
+            .with_new_file("/build_libpressio.sh",
+                           contents="""
+                           #!/usr/bin/env bash
+                           source /spack/share/spack/setup-env.sh
+                           spack install libpressio
+                           """
+                           )
+            .with_exec(["/build_libpressio.sh"]))
 
 
 def fedora_base(client, image):
@@ -55,7 +55,7 @@ def fedora_base(client, image):
     )
 
 
-def centos_base(client, image):
+def centos_base(client, image, powertools_repo="powertools"):
     dnf_cache = client.cache_volume(f"dnf-{image}")
     ccache = client.cache_volume(f"ccache-{image}")
     container = (
@@ -85,7 +85,7 @@ def centos_base(client, image):
                 "dnf",
                 "config-manager",
                 "--set-enabled",
-                "powertools",
+                powertools_repo,
             ]
         )
     )
@@ -217,16 +217,19 @@ async def test(args):
                 return r
 
         async def test_ubuntu(version):
-            return await common_steps(ubuntu_base(client, version)).exit_code()
+            return await common_steps(ubuntu_base(client, version)).sync()
 
         async def test_fedora(version):
-            return await common_steps(fedora_base(client, version)).exit_code()
+            return await common_steps(fedora_base(client, version)).sync()
 
         async def test_centos(version):
-            return await common_steps(centos_base(client, version)).exit_code()
+            if int(version.split(":")[1]) <= 8:
+                return await common_steps(centos_base(client, version)).sync()
+            else:
+                return await common_steps(centos_base(client, version, "crb")).sync()
 
         async def test_spack():
-            return await spack_base(client).exit_code()
+            return await spack_base(client).sync()
 
         async def build_scip():
             try:
@@ -248,15 +251,6 @@ async def test(args):
 
 
 
-
-        async def test_manylinux():
-            return await common_steps(many_linux(client),
-                                      static=True,
-                                      generator="Unix Makefiles",
-                                      has_ccache=False,
-                                      tests=False
-                                      ).exit_code()
-
         async def build_container():
             return await (client
                           .host()
@@ -267,10 +261,7 @@ async def test(args):
 
         # run the builds we con control the load average for together
         async with anyio.create_task_group() as tg:
-
-            # tg.start_soon(test_manylinux)
-
-            for version in ["almalinux:8"]:
+            for version in ["almalinux:8", "almalinux:9"]:
                 tg.start_soon(test_centos, version)
             for version in ["fedora:38", "fedora:39"]:
                 tg.start_soon(test_fedora, version)

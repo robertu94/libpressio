@@ -1,6 +1,6 @@
 #include <libpressio_ext/highlevel/libpressio_highlevel.h>
 #include <libpressio_ext/cpp/libpressio.h>
-#include <memory>
+#include <libpressio_ext/cpp/io.h>
 
 extern "C" {
 

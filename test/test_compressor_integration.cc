@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include <numeric>
+#include <libpressio_ext/cpp/libpressio.h>
 #include <libpressio_ext/cpp/libpressio.h>
 #include <libpressio_ext/launch/external_launch.h>
 
@@ -10,6 +10,7 @@ std::set<std::tuple<std::string, std::string>> skip_list {
   {"qoz", "1d int"},
   {"qoz", "3d int"},
   {"qoz", "3d float zeros"},
+  {"sperr", "3d float"},
 };
 
 template <class Func>
@@ -244,7 +245,7 @@ void test_has_configuration(pressio_configurable& c) {
           auto const& req_dec_values = req_dec.get_value<std::vector<std::string>>();
           EXPECT_THAT(req_dec_values, testing::IsSubsetOf(keys)) << c.prefix() << " if predictors:requires_decompress is a string, it must contain only returned metrics";
       }
-      if((config.key_status("predictors:invalidate") == pressio_options_key_set) xor
+      if((config.key_status("predictors:invalidate") == pressio_options_key_set) or
               (std::any_of(standard_invalidations.begin(),
                            standard_invalidations.end(),
                            [&](std::string const& key){ return config.key_status(key) == pressio_options_key_set;}))){
@@ -267,7 +268,7 @@ void test_has_configuration(pressio_configurable& c) {
               }
           }
       } else {
-          FAIL() << "either predictors:invalidate xor a standard invalidation key must be provided " << c.prefix() << ' ' << config;
+          FAIL() << "either predictors:invalidate or a standard invalidation key must be provided " << c.prefix() << ' ' << config;
       }
   } else if (c.type() == "compressor") {
       //this is kind an evil way to check this

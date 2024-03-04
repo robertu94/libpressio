@@ -4,7 +4,7 @@
 #include <sz.h>
 
 #include "libpressio.h"
-#include "libpressio_ext/cpp/data.h"
+#include "libpressio_ext/cpp/compressor.h"
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"

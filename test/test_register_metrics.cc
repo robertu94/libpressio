@@ -7,6 +7,7 @@
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
+#include "libpressio_ext/cpp/compressor.h"
 #include "std_compat/memory.h"
 #include "make_input_data.h"
 

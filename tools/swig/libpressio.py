@@ -14,8 +14,8 @@ if pressio.LIBPRESSIO_HAS_MPI4PY:
 import ctypes
 
 try:
-    lib = ctypes.cdll.LoadLibrary("liblibpressio_meta.so")
-    lib.libpressio_register_all()
+    _lib = ctypes.cdll.LoadLibrary("liblibpressio_meta.so")
+    _lib.libpressio_register_all()
 except OSError:
     pass
 
@@ -36,7 +36,6 @@ def supported_metrics():
     """returns the list of valid compressor modules"""
     supported = pressio.supported_metrics()
     return [s.decode() for s in supported.split(b' ') if s]
-
 
 class PressioException(Exception):
     """represents and error for a libpressio object"""
@@ -74,7 +73,48 @@ class PressioException(Exception):
         error_code = pressio.metrics_error_code(metrics)
         return cls(msg, error_code)
 
-def python_to_pressio(options, template=None):
+def python_to_pressio_data(x):
+    if hasattr(x, "__cuda_array_interface__"):
+        info = x.__cuda_array_interface__
+        if info.get("strides",None) is not None:
+            raise NotImplementedError("stridded cuda arrays are not supported")
+        if info.get("mask", None) is not None:
+            raise NotImplementedError("masked cuda arrays are not supported")
+        if info['version'] != 3:
+            raise NotImplementedError("only version 3 is supported")
+        return pressio.io_data_from_cuda_array(
+                pressio.vector_uint64_t(info['shape']),
+                info['typestr'].encode(),
+                info['data'][0]
+                )
+    elif isinstance(x, np.ndarray):
+        return pressio.io_data_from_numpy(x)
+    else:
+        raise NotImplementedError()
+
+def pressio_data_to_python(x, out=None):
+    domain = pressio.data_domain_id(x)
+    if domain == b"cudamalloc":
+        info = pressio.io_data_to_cuda_array(x)
+        class PressioDataCuda:
+            def __init__(self, x, info):
+                self.ptr = x
+                self.__cuda_array_interface__ = {
+                    "shape": tuple(info.shape),
+                    "typestr": info.typestr.decode(),
+                    "data": (info.ptr, info.read_only),
+                    "version": info.version
+                }
+            def __del__(self):
+                pressio.data_free(self.ptr)
+        return PressioDataCuda(x, info), False
+    else:
+        ret = pressio.io_data_to_numpy(x)
+        if out is not None:
+            ret = ndarray_copy(ret, out)
+    return ret, True
+
+def python_to_pressio_options(options, template=None):
     config = pressio.options_new()
 
     def _compute_path(path, key):
@@ -84,60 +124,60 @@ def python_to_pressio(options, template=None):
             ret = key.encode()
         return ret
 
-    def to_libpressio(x):
+    def to_libpressio_option(x):
         op = None
-        if isinstance(value, np.ndarray):
-            value_lp = pressio.io_data_from_numpy(value)
+        if isinstance(x, np.ndarray):
+            value_lp = python_to_pressio_data(x)
             op = pressio.option_new_data(value_lp)
             pressio.data_free(value_lp)
-        elif isinstance(value, list):
-            if value:
+        elif isinstance(x, list):
+            if x:
                 # list is non-empty
-                if isinstance(value[0], str):
-                    op = pressio.option_new_strings(pressio.vector_string([i.encode() for i in value]))
-                elif isinstance(value[0], int) or isinstance(value[0], float):
-                    arr = np.array(value)
-                    lp = pressio.io_data_from_numpy(arr)
+                if isinstance(x[0], str):
+                    op = pressio.option_new_strings(pressio.vector_string([i.encode() for i in x]))
+                elif isinstance(x[0], int) or isinstance(x[0], float):
+                    arr = np.array(x)
+                    lp = python_to_pressio_data(arr)
                     op = pressio.option_new_data(lp)
                     pressio.data_free(lp)
                 else:
-                    raise TypeError("unexpected list type: " + value)
+                    raise TypeError("unexpected list type: " + str(x))
             else:
                 # list is empty
                 op = pressio.option_new_strings(pressio.vector_string())
-        elif isinstance(value, float):
-            op = pressio.option_new_double(value)
-        elif isinstance(value, str):
-            op = pressio.option_new_string(value.encode())
-        elif isinstance(value, bytes):
-            data = pressio.io_data_from_bytes(value)
+        elif isinstance(x, float):
+            op = pressio.option_new_double(x)
+        elif isinstance(x, str):
+            op = pressio.option_new_string(x.encode())
+        elif isinstance(x, bytes):
+            data = pressio.io_data_from_bytes(x)
             op = pressio.option_new_data(data)
             pressio.data_free(data)
-        elif isinstance(value, bool):
-            op = pressio.option_new_bool(value)
-        elif isinstance(value, int):
-            op = pressio.option_new_integer64(value)
-        elif isinstance(value, np.int8):
-            op = pressio.option_new_integer8(int(value))
-        elif isinstance(value, np.int16):
-            op = pressio.option_new_integer16(int(value))
-        elif isinstance(value, np.int32):
-            op = pressio.option_new_integer(int(value))
-        elif isinstance(value, np.int64):
-            op = pressio.option_new_integer64(int(value))
-        elif isinstance(value, np.uint8):
-            op = pressio.option_new_uinteger8(int(value))
-        elif isinstance(value, np.uint16):
-            op = pressio.option_new_uinteger16(int(value))
-        elif isinstance(value, np.uint32):
-            op = pressio.option_new_uinteger(int(value))
-        elif isinstance(value, np.uint64):
-            op = pressio.option_new_uinteger64(int(value))
+        elif isinstance(x, bool):
+            op = pressio.option_new_bool(x)
+        elif isinstance(x, int):
+            op = pressio.option_new_integer64(x)
+        elif np.issubdtype(x, np.int8):
+            op = pressio.option_new_integer8(int(x))
+        elif np.issubdtype(x, np.int16):
+            op = pressio.option_new_integer16(int(x))
+        elif np.issubdtype(x, np.int32):
+            op = pressio.option_new_integer(int(x))
+        elif np.issubdtype(x, np.int64):
+            op = pressio.option_new_integer64(int(x))
+        elif np.issubdtype(x, np.uint8):
+            op = pressio.option_new_uinteger8(int(x))
+        elif np.issubdtype(x, np.uint16):
+            op = pressio.option_new_uinteger16(int(x))
+        elif np.issubdtype(x, np.uint32):
+            op = pressio.option_new_uinteger(int(x))
+        elif np.issubdtype(x, np.uint64):
+            op = pressio.option_new_uinteger64(int(x))
         elif pressio.LIBPRESSIO_HAS_MPI4PY:
-            if isinstance(value, MPI.Comm):
-                op = pressio.option_new_comm(value)
+            if isinstance(x, MPI.Comm): # type: ignore
+                op = pressio.option_new_comm(x)
         else:
-            raise TypeError("Unsupported type " + str(type(value)))
+            raise TypeError("Unsupported type " + str(type(x)))
         return op
 
     entries = [([''], options)]
@@ -152,13 +192,14 @@ def python_to_pressio(options, template=None):
                 elif value is None:
                     pass
                 else:
-                    op = to_libpressio(value)
+                    op = to_libpressio_option(value)
 
                 name = _compute_path(path, key)
                 if template is not None:
                     status = pressio.options_exists(template, name)
 
                     if status == pressio.options_key_set or status == pressio.options_key_exists:
+                        op_template = None
                         try:
                             op_template = pressio.options_get(template, name)
                             if op is not None:
@@ -187,7 +228,7 @@ def python_to_pressio(options, template=None):
     return config
 
 
-def _no_conversion(x):
+def _no_conversion(_x):
     raise TypeError("no conversion")
 
 
@@ -227,8 +268,8 @@ _config_to_option_converters = {
 }
 
 
-def pressio_to_python(config):
-    def to_python(value):
+def pressio_options_to_python(config):
+    def to_python_option(value):
         if not pressio.option_has_value(value):
             return None
         return _config_to_option_converters[pressio.option_get_type(value)](value)
@@ -256,7 +297,7 @@ def pressio_to_python(config):
         key = pressio.options_iter_get_key(iter)
         value = pressio.options_iter_get_value(iter)
         try:
-            set_option(key, to_python(value))
+            set_option(key, to_python_option(value))
         except TypeError:
             pass
         pressio.option_free(value)
@@ -304,7 +345,7 @@ class PressioObject(metaclass=abc.ABCMeta):
     def get_compile_config(self):
         """get compile time configuration"""
         lp_options = self._get_configuration_impl()
-        options = pressio_to_python(lp_options)
+        options = pressio_options_to_python(lp_options)
         pressio.options_free(lp_options)
         return options
 
@@ -315,14 +356,14 @@ class PressioObject(metaclass=abc.ABCMeta):
     def get_documentation(self):
         """get documentation"""
         lp_options = self._get_documentation_impl()
-        options = pressio_to_python(lp_options)
+        options = pressio_options_to_python(lp_options)
         pressio.options_free(lp_options)
         return options
 
     def get_options(self):
         """get runtime time configuration"""
         lp_options = self._get_options_impl()
-        options = pressio_to_python(lp_options)
+        options = pressio_options_to_python(lp_options)
         pressio.options_free(lp_options)
         return options
 
@@ -345,7 +386,7 @@ class PressioObject(metaclass=abc.ABCMeta):
         """set runtime time options; numcodecs compatible interface"""
         options = None
         try:
-            options = python_to_pressio(config)
+            options = python_to_pressio_options(config)
             if self._set_options_impl(options):
                 raise self.from_object()(self._object)
         finally:
@@ -442,14 +483,14 @@ class PressioCompressor(PressioObject, Codec):
             if name:
                 pressio.compressor_set_name(obj, name.encode())
 
-            early_config_lp = python_to_pressio(early_config)
+            early_config_lp = python_to_pressio_options(early_config)
             ec = pressio.compressor_set_options(obj, early_config_lp)
             pressio.options_free(early_config_lp)
             if ec != 0:
                 raise self.from_object()(obj)
 
             config_lp_template = pressio.compressor_get_options(obj)
-            config_lp = python_to_pressio(compressor_config, config_lp_template)
+            config_lp = python_to_pressio_options(compressor_config, config_lp_template)
             ec = pressio.compressor_set_options(obj, config_lp)
             pressio.options_free(config_lp)
             pressio.options_free(config_lp_template)
@@ -471,11 +512,11 @@ class PressioCompressor(PressioObject, Codec):
     def get_metrics(self):
         """get runtime metrics"""
         lp_options = pressio.compressor_get_metrics_results(self._object)
-        options = pressio_to_python(lp_options)
+        options = pressio_options_to_python(lp_options)
         pressio.options_free(lp_options)
         return options
 
-    def encode(self, uncompressed):
+    def encode(self, buf, out=None):
         """perform compression
 
         params:
@@ -483,21 +524,23 @@ class PressioCompressor(PressioObject, Codec):
         """
         uncompressed_lp = None
         compressed_lp = None
+        cleanup_comp = True
         try:
-            uncompressed_lp = pressio.io_data_from_numpy(uncompressed)
-            compressed_lp = pressio.data_new_empty(pressio.byte_dtype, pressio.vector_uint64_t())
+            uncompressed_lp = python_to_pressio_data(buf)
+            compressed_lp = pressio.data_new_empty(pressio.byte_dtype, pressio.vector_uint64_t()) if out is None else python_to_pressio_data(out)
 
             rc = pressio.compressor_compress(self._object, uncompressed_lp, compressed_lp)
             if rc:
                 raise PressioException.from_compressor(self._object)
 
-            comp = pressio.io_data_to_numpy(compressed_lp)
+            comp, cleanup_comp = pressio_data_to_python(compressed_lp)
         finally:
             pressio.data_free(uncompressed_lp)
-            pressio.data_free(compressed_lp)
+            if cleanup_comp:
+                pressio.data_free(compressed_lp)
         return comp
 
-    def decode(self, compressed, decompressed=None):
+    def decode(self, buf, out=None):
         """perform decompression
 
         params:
@@ -506,23 +549,25 @@ class PressioCompressor(PressioObject, Codec):
         """
         compressed_lp = None
         decompressed_lp = None
+        cleanup_dec = True
         try:
-            compressed_lp = pressio.io_data_from_numpy(compressed)
-            decompressed_lp = pressio.io_data_from_numpy(decompressed)
+            compressed_lp = python_to_pressio_data(buf)
+            decompressed_lp = python_to_pressio_data(out)
 
             rc = pressio.compressor_decompress(self._object, compressed_lp, decompressed_lp)
             if rc:
                 raise PressioException.from_compressor(self._object)
 
-            dec = pressio.io_data_to_numpy(decompressed_lp)
+            dec, cleanup_dec = pressio_data_to_python(decompressed_lp, out)
 
-            if decompressed is not None:
+            if out is not None:
                 return dec
             else:
-                return ndarray_copy(dec, decompressed)
+                return ndarray_copy(dec, out)
         finally:
             pressio.data_free(compressed_lp)
-            pressio.data_free(decompressed_lp)
+            if cleanup_dec:
+                pressio.data_free(decompressed_lp)
 
 
 class PressioIO(PressioObject):
@@ -564,12 +609,12 @@ class PressioIO(PressioObject):
             if name is not None:
                 pressio.compressor_set_name(obj, name.encode())
 
-            early_config_lp = python_to_pressio(early_config)
+            early_config_lp = python_to_pressio_options(early_config)
             pressio.io_set_options(obj, early_config_lp)
             pressio.options_free(early_config_lp)
 
             config_lp_template = pressio.io_get_options(obj)
-            config_lp = python_to_pressio(io_config, config_lp_template)
+            config_lp = python_to_pressio_options(io_config, config_lp_template)
 
             pressio.io_set_options(obj, config_lp)
             super().__init__(obj, obj_id, name)
@@ -592,7 +637,7 @@ class PressioIO(PressioObject):
             template: Optional[np.ndarray] - a input template if one is provided
         """
         if template is not None:
-            template = pressio.io_data_from_numpy(template)
+            template = python_to_pressio_data(template)
         ret_lp = pressio.io_read(self._object, template)
         if not ret_lp:
             raise PressioException.from_io(self._object)
@@ -608,8 +653,9 @@ class PressioIO(PressioObject):
         params:
             output: np.ndarray - the file to be written
         """
+        out = None
         try:
-            out = pressio.io_data_from_numpy(output)
+            out = python_to_pressio_data(output)
             ret = pressio.io_write(self._object, out)
             if ret:
                 raise PressioException.from_io(self._object)
@@ -658,12 +704,12 @@ class PressioMetrics(PressioObject):
             if name is not None:
                 pressio.metrics_set_name(obj, name.encode())
 
-            early_config_lp = python_to_pressio(early_config)
+            early_config_lp = python_to_pressio_options(early_config)
             pressio.metrics_set_options(obj, early_config_lp)
             pressio.options_free(early_config_lp)
 
             config_lp_template = pressio.metrics_get_options(obj)
-            config_lp = python_to_pressio(metrics_config, config_lp_template)
+            config_lp = python_to_pressio_options(metrics_config, config_lp_template)
 
             pressio.metrics_set_options(obj, config_lp)
             super().__init__(obj, obj_id, name)
@@ -685,11 +731,11 @@ class PressioMetrics(PressioObject):
         compressed_lp = None
         output_lp = None
         try:
-            input_lp = input if input is None else pressio.io_data_from_numpy(input)
+            input_lp = input if input is None else python_to_pressio_data(input)
             compressed_lp = compressed if compressed is None else pressio.io_data_from_bytes(compressed)
-            output_lp = output if output is None else pressio.io_data_from_numpy(output)
+            output_lp = output if output is None else python_to_pressio_data(output)
             results_lp = pressio.metrics_evaluate(self._object, input_lp, compressed_lp, output_lp)
-            return pressio_to_python(results_lp)
+            return pressio_options_to_python(results_lp)
         finally:
             if input_lp is not None:
                 pressio.data_free(input_lp)

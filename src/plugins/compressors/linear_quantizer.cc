@@ -31,12 +31,18 @@ struct linear_quantizer_encoder {
 
 struct linear_quantizer_decoder {
   template <class T, class V>
-  int operator()(T const* begin, T const* end, V* ptr) {
+  typename std::enable_if<!(std::is_same<T, bool>::value||std::is_same<V,bool>::value), int>::type
+  operator()(T const* begin, T const* end, V* ptr) {
     const size_t len = end-begin;
     for (size_t i = 0; i < len; ++i) {
       ptr[i] = begin[i]*step;
     }
     return 0;
+  }
+  template <class T, class V>
+  typename std::enable_if<(std::is_same<T, bool>::value||std::is_same<V,bool>::value), int>::type
+  operator()(T const* , T const* , V* ) {
+      throw std::runtime_error("linear quantizaton not supported for bool");
   }
   double step;
 };

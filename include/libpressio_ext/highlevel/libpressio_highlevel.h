@@ -8,6 +8,11 @@
 extern "C" {
 #endif
 
+/**
+ * \file
+ * \brief highlevel C interface for libpressio
+ */
+
     /**
      * A highlevel api to create a compressor from options containing only strings
      *
