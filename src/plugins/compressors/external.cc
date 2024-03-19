@@ -1,6 +1,7 @@
 #include <tuple>
 #include <regex>
 #include <chrono>
+#include <sstream>
 #include "std_compat/memory.h"
 #include "libpressio_ext/cpp/compressor.h"
 #include "libpressio_ext/cpp/data.h"

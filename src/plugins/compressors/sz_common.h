@@ -8,7 +8,7 @@
 #include <std_compat/shared_mutex.h>
 #include <std_compat/mutex.h>
 #include <pressio_dtype.h>
-#include <sz/sz.h>
+#include <sz.h>
 
 #define PRESSIO_SZ_VERSION_GREATEREQ(major, minor, build, revision) \
    (SZ_VER_MAJOR > major || \

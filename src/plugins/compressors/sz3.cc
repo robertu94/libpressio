@@ -226,9 +226,11 @@ public:
   {
     cleanup restore_threads;
     if(config.openmp) {
+#if LIBPRESSIO_HAS_OPENMP
         int32_t old_threads = omp_get_num_threads();
         omp_set_num_threads(static_cast<int32_t>(nthreads));
         restore_threads = [old_threads]{ omp_set_num_threads(old_threads);};
+#endif
     }
 
     auto reg_dims = input->normalized_dims();
@@ -246,9 +248,11 @@ public:
   {
     cleanup restore_threads;
     if(config.openmp) {
+#if LIBPRESSIO_HAS_OPENMP
         int32_t old_threads = omp_get_num_threads();
         omp_set_num_threads(static_cast<int32_t>(nthreads));
         restore_threads = [old_threads]{ omp_set_num_threads(old_threads);};
+#endif
     }
 
     std::vector<size_t> output_dims = output->normalized_dims();
