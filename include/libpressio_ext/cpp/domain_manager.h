@@ -153,6 +153,15 @@ struct pressio_domain_manager {
     }
 
     /**
+     * copy data to the specified memory, or move if both pointers are in the same domain
+     */
+    template <class T>
+    pressio_data copy_to(std::shared_ptr<pressio_domain>&& dst, T&& src) {
+        auto ret = copy_to_impl(std::move(dst), std::forward<T>(src));
+        return ret;
+    }
+
+    /**
      * set the metrics for this domain
      */
     void set_metrics(pressio_domain_manager_metrics&& metrics) {

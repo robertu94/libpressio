@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "libpressio_ext/cpp/domain.h"
 
 void pressio_domain::set_name(std::string const& name) {

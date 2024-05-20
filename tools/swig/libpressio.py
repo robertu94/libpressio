@@ -7,6 +7,7 @@ Tutorial: https://github.com/robertu94/libpressio_tutorial
 import pressio
 import numpy as np
 import abc
+import os
 from numcodecs.abc import Codec
 from numcodecs.compat import ndarray_copy
 if pressio.LIBPRESSIO_HAS_MPI4PY:
@@ -14,7 +15,7 @@ if pressio.LIBPRESSIO_HAS_MPI4PY:
 import ctypes
 
 try:
-    _lib = ctypes.cdll.LoadLibrary("liblibpressio_meta.so")
+    _lib = ctypes.cdll.LoadLibrary(os.environ.get("LIBPRESSIO_PLUGINS", "liblibpressio_meta.so"))
     _lib.libpressio_register_all()
 except OSError:
     pass
