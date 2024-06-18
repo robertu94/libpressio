@@ -16,8 +16,8 @@
 namespace libpressio { namespace cusz_ns {
 
     const std::map<std::string, decltype(Rel)> bounds {
-        {"rel",Rel},
-            {"rel",Abs},
+        {"abs", Abs},
+            {"rel", Rel},
     };
     const std::map<std::string, decltype(NVGPU)> devices {
         {"cuda",NVGPU},
@@ -25,24 +25,13 @@ namespace libpressio { namespace cusz_ns {
             {"intel",INTELGPU},
             {"cpu",CPU},
     };
-    const std::map<std::string, decltype(Canonical)> bookstyles {
-        { "canonical", Canonical},
-            { "sword", Sword},
-            { "mword", Mword}
-    };
     const std::map<std::string, decltype(Abs)> cuszmode {
         {"abs", Abs},
             {"rel", Rel},
     };
     const std::map<std::string, decltype(Lorenzo)> predictors {
         {"lorenzo", Lorenzo},
-            {"lorenzoi", Lorenzo},
-            {"lorenzo0", Lorenzo},
             {"spline", Spline},
-    };
-    const std::map<std::string, decltype(Fine)> huffman_styles {
-        {"coarse",Coarse},
-            {"fine",Fine},
     };
 
 template <class T>
@@ -75,11 +64,9 @@ public:
     set(options, "cusz:bound", err_bnd);
     set(options, "cusz:coarse_pardeg", coarse_pardeg);
     set(options, "cusz:booklen", booklen);
-    set(options, "cusz:bookstyle", bookstyle);
     set(options, "cusz:radius", radius);
     set(options, "cusz:max_outlier_percent", max_outlier_percent);
     set(options, "cusz:device", device);
-    set(options, "cusz:huffman_coding_style", huffman_coding_style);
     set(options, "cusz:predictor", predictor);
 
     return options;
@@ -90,17 +77,15 @@ public:
     struct pressio_options options;
     set(options, "cusz:mode_str", to_keys(bounds));
     set(options, "cusz:device", to_keys(devices));
-    set(options, "cusz:huffman_coding_style", to_keys(huffman_styles));
     set(options, "cusz:predictor", to_keys(predictors));
-    set(options, "cusz:bookstyle", to_keys(bookstyles));
     set(options, "pressio:thread_safe", pressio_thread_safety_multiple);
     set(options, "pressio:stability", "experimental");
     
     std::vector<pressio_configurable const*> invalidation_children {}; 
     set(options, "pressio:highlevel", get_accumulate_configuration("pressio:highlevel", invalidation_children, std::vector<std::string>{"pressio:abs", "pressio:rel"}));
-    std::vector<std::string> error_invalidations {"cusz:mode_str", "cusz:bound",  "cusz:radius", "cusz:max_outlier_percent", "cusz:huffman_coding_style", "cusz:predictor", "pressio:abs", "pressio:rel"}; 
-    std::vector<std::string> invalidations {"cusz:mode_str", "cusz:bound", "cusz:coarse_pardeg", "cusz:booklen", "cusz:bookstyle", "cusz:radius", "cusz:max_outlier_percent", "cusz:huffman_coding_style", "cusz:predictor", "pressio:abs", "pressio:rel"}; 
-    std::vector<std::string> runtime_invalidations {"cusz:mode_str", "cusz:bound", "cusz:coarse_pardeg", "cusz:booklen", "cusz:bookstyle", "cusz:radius", "cusz:max_outlier_percent", "cusz:device", "cusz:huffman_coding_style", "cusz:predictor", "pressio:abs", "pressio:rel"}; 
+    std::vector<std::string> error_invalidations {"cusz:mode_str", "cusz:bound",  "cusz:radius", "cusz:max_outlier_percent", "cusz:predictor", "pressio:abs", "pressio:rel"}; 
+    std::vector<std::string> invalidations {"cusz:mode_str", "cusz:bound", "cusz:coarse_pardeg", "cusz:booklen", "cusz:radius", "cusz:max_outlier_percent", "cusz:predictor", "pressio:abs", "pressio:rel"}; 
+    std::vector<std::string> runtime_invalidations {"cusz:mode_str", "cusz:bound", "cusz:coarse_pardeg", "cusz:booklen", "cusz:radius", "cusz:max_outlier_percent", "cusz:device", "cusz:predictor", "pressio:abs", "pressio:rel"}; 
     
     set(options, "predictors:error_dependent", get_accumulate_configuration("predictors:error_dependent", invalidation_children, error_invalidations));
     set(options, "predictors:error_agnostic", get_accumulate_configuration("predictors:error_agnostic", invalidation_children, invalidations));
@@ -117,11 +102,9 @@ public:
     set(options, "cusz:bound", "bound of the error bound");
     set(options, "cusz:coarse_pardeg", "paralellism degree for the huffman encoding stage");
     set(options, "cusz:booklen", "huffman encoding booklength");
-    set(options, "cusz:bookstyle", "huffman encoding bookstyle");
     set(options, "cusz:radius", "quantizer radius");
     set(options, "cusz:max_outlier_percent", "max outlier percent");
     set(options, "cusz:device", "execucution device");
-    set(options, "cusz:huffman_coding_style", "huffman coding style");
     set(options, "cusz:predictor", "predictor style");
     return options;
   }
@@ -139,11 +122,9 @@ public:
     get(options, "cusz:bound", &err_bnd);
     get(options, "cusz:coarse_pardeg", &coarse_pardeg);
     get(options, "cusz:booklen", &booklen);
-    get(options, "cusz:bookstyle", &bookstyle);
     get(options, "cusz:radius", &radius);
     get(options, "cusz:max_outlier_percent", &max_outlier_percent);
     get(options, "cusz:device", &device);
-    get(options, "cusz:huffman_coding_style", &huffman_coding_style);
     get(options, "cusz:predictor", &predictor);
 
     return 0;
@@ -187,13 +168,6 @@ public:
         return predictors.at(s);
       } catch(std::out_of_range const& ex) {
         throw std::domain_error("unsupported predictor_type: " + s);
-      }
-  }
-  psz_hfpartype to_huffman_style(std::string const& s) {
-      try {
-        return huffman_styles.at(s);
-      } catch(std::out_of_range const& ex) {
-        throw std::domain_error("unsupported huffman style: " + s);
       }
   }
 
@@ -263,13 +237,6 @@ public:
         throw std::runtime_error("unsupported mode " + mode);
       }
   }
-  auto to_bookstyle(std::string const& s) {
-      try {
-        return bookstyles.at(s);
-      } catch(std::out_of_range const& ex) {
-        throw std::runtime_error("unsupported bookstyle " + s);
-      }
-  }
   auto to_device(std::string const& s) {
       try {
         return devices.at(s);
@@ -301,30 +268,15 @@ public:
         lp_check_cuda_error(cudaMemcpyAsync(d_uncomp, input->data(), input->size_in_bytes(), cudaMemcpyHostToDevice, stream));
     }
 
-    pszheader header;
-    pszframe* work = new pszframe{
-        pszpredictor{to_cusz_predictor_type(predictor)},
-        pszquantizer{radius},
-        pszhfrc{
-            to_bookstyle(bookstyle),
-            to_huffman_style(huffman_coding_style),
-            booklen,
-            coarse_pardeg 
-        },
-        max_outlier_percent};
-    pszcompressor* comp = psz_create(work, to_cuszdtype(input->dtype()));
-    auto ctx = std::make_unique<pszctx>(pszctx{});
-    ctx->device = to_device(device);
-    ctx->pred_type = to_cusz_predictor_type(predictor);
-    ctx->mode = to_cuszmode(eb_mode);
-    ctx->eb = err_bnd;
-
-    pszlen uncomp_len = pszlen{{dims[0]}, {dims[1]}, {dims[2]}, {dims[3]}};
-    psz::TimeRecord compress_timerecord;
-    psz_compress_init(comp, uncomp_len, ctx.get());
+    psz_header header;
+    void* compress_timerecord;
+    psz_len3 uncomp_len = psz_len3{{dims[0]}, {dims[1]}, {dims[2]}};
+    psz_compressor* comp = psz_create(to_cuszdtype(input->dtype()), uncomp_len, to_cusz_predictor_type(predictor),
+        radius, Huffman); // codectype Huffman is hardcoded. (v0.10rc)
     psz_compress(
-        comp, d_uncomp, uncomp_len, &ptr_compressed, &compressed_len, &header,
-        (void*)&compress_timerecord, stream);
+        comp, d_uncomp, uncomp_len, err_bnd, to_cuszmode(eb_mode), 
+        &ptr_compressed, &compressed_len, &header, compress_timerecord, stream);
+
 
     if(isDevicePtr(input->data())) {
         if(output->has_data() && isDevicePtr(output->data()) && compressed_len <= output->capacity_in_bytes()) {
@@ -375,7 +327,6 @@ public:
         }
     }
 
-
     //call when we are done
     psz_release(comp);
     cudaStreamDestroy(stream);
@@ -391,7 +342,7 @@ public:
     T *d_decomp;
     lp_check_cuda_error(cudaMallocAsync(&d_decomp, output->size_in_bytes(), stream));
     uint8_t* ptr_compressed;
-    pszheader header;
+    psz_header header;
     size_t compressed_len = input->size_in_bytes() - sizeof(header);
     if(isDevicePtr(input->data())) {
         lp_check_cuda_error(cudaMemcpyAsync(&header, input->data(), sizeof(header), cudaMemcpyDeviceToHost, stream));
@@ -403,23 +354,10 @@ public:
         lp_check_cuda_error(cudaMemcpyAsync(ptr_compressed, (uint8_t*)input->data()+sizeof(header), compressed_len, cudaMemcpyHostToDevice, stream));
     }
 
-    psz::TimeRecord decompress_timerecord;
-    pszlen decomp_len = pszlen{{dims[0]}, {dims[1]}, {dims[2]}, {dims[3]}};  // x, y, z, w
-    auto work = std::make_unique<pszframe>(pszframe{
-        .predictor = pszpredictor{.type = to_cusz_predictor_type(predictor)},
-        .quantizer = pszquantizer{.radius = radius},
-        .hfcoder = pszhfrc{
-            .book = to_bookstyle(bookstyle),
-            .style = to_huffman_style(huffman_coding_style),
-            .booklen = booklen,
-            .coarse_pardeg = coarse_pardeg 
-        },
-        .max_outlier_percent = max_outlier_percent});
-    pszcompressor* comp = psz_create(work.get(), to_cuszdtype(output->dtype()));
-    psz_decompress_init(comp, &header);
-    psz_decompress(
-        comp, ptr_compressed, compressed_len, d_decomp, decomp_len,
-        (void*)&decompress_timerecord, stream);
+    void* decompress_timerecord;
+    psz_len3 decomp_len = psz_len3{{dims[0]}, {dims[1]}, {dims[2]}};  // x, y, z
+    psz_compressor* comp = psz_create_from_header(&header);
+    psz_decompress(comp, ptr_compressed, compressed_len, d_decomp, decomp_len, decompress_timerecord, stream);
 
     if(isDevicePtr(input->data())) {
         if(output->has_data() && isDevicePtr(output->data()) && compressed_len <= output->capacity_in_bytes()) {
@@ -469,12 +407,9 @@ public:
   }
 
 
-
   double err_bnd = 1e-5;
   std::string eb_mode = "abs";
   std::string predictor = "lorenzo";
-  std::string huffman_coding_style = "coarse";
-  std::string bookstyle = "canonical";
   std::string device = "cuda";
   float max_outlier_percent = 10.0;
   int32_t radius = 512;
