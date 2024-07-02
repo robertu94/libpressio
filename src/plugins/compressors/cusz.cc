@@ -34,6 +34,46 @@ namespace libpressio { namespace cusz_ns {
             {"spline", Spline},
     };
 
+    struct stream_helper {
+        stream_helper() {
+            cudaStreamCreate(&stream);
+        }
+        ~stream_helper() {
+            if(cleanup) {
+                cudaStreamDestroy(stream);
+            }
+        }
+        stream_helper(stream_helper&) {
+            cudaStreamCreate(&stream);
+        }
+        stream_helper& operator=(stream_helper& rhs) {
+            if(this == &rhs) return *this;
+            cudaStreamCreate(&stream);
+            return *this;
+        }
+        stream_helper& operator=(stream_helper&& rhs) {
+            if(this == &rhs) return *this;
+            rhs.cleanup=false;
+            stream = rhs.stream;
+            return *this;
+        }
+        void reset(cudaStream_t& new_stream) {
+            cudaStreamDestroy(stream);
+            stream = new_stream;
+        }
+        stream_helper(stream_helper&& rhs): stream(rhs.stream) {
+            rhs.cleanup=false;
+        }
+        cudaStream_t& operator* (){
+            return stream;
+        }
+        cudaStream_t* get() const {
+            return const_cast<cudaStream_t*>(&stream);
+        }
+        cudaStream_t stream;
+        bool cleanup = true;
+    };
+
 template <class T>
 std::vector<std::string> to_keys(std::map<std::string, T> const& map) {
     std::set<std::string> s;
@@ -68,6 +108,8 @@ public:
     set(options, "cusz:max_outlier_percent", max_outlier_percent);
     set(options, "cusz:device", device);
     set(options, "cusz:predictor", predictor);
+    set(options, "pressio:cuda_stream", static_cast<void*>(stream.get()));
+    set(options, "cusz:cuda_stream", static_cast<void*>(stream.get()));
 
     return options;
   }
@@ -126,6 +168,17 @@ public:
     get(options, "cusz:max_outlier_percent", &max_outlier_percent);
     get(options, "cusz:device", &device);
     get(options, "cusz:predictor", &predictor);
+  
+    // arbitrary stream
+    void* void_stream;
+    if(get(options, "pressio:cuda_stream", &void_stream) == pressio_options_key_set) {
+        cudaStream_t* cuda_stream = static_cast<cudaStream_t*>(void_stream);
+        stream.reset(*cuda_stream);
+    }
+    if(get(options, "cusz:cuda_stream", &void_stream) == pressio_options_key_set) {
+        cudaStream_t* cuda_stream = static_cast<cudaStream_t*>(void_stream);
+        stream.reset(*cuda_stream);
+    }
 
     return 0;
   }
@@ -252,8 +305,6 @@ public:
 
   template<class T>
   int compress_typed(pressio_data const* input, pressio_data* output) {
-    cudaStream_t stream;
-    lp_check_cuda_error(cudaStreamCreate(&stream));
 
     auto const dims = input->normalized_dims(4, 1);
 
@@ -264,8 +315,8 @@ public:
     if(isDevicePtr(input->data())) {
         d_uncomp = (T*)input->data();
     } else {
-        lp_check_cuda_error(cudaMallocAsync(&d_uncomp, input->size_in_bytes(), stream));
-        lp_check_cuda_error(cudaMemcpyAsync(d_uncomp, input->data(), input->size_in_bytes(), cudaMemcpyHostToDevice, stream));
+        lp_check_cuda_error(cudaMallocAsync(&d_uncomp, input->size_in_bytes(), *stream.get()));
+        lp_check_cuda_error(cudaMemcpyAsync(d_uncomp, input->data(), input->size_in_bytes(), cudaMemcpyHostToDevice, *stream.get()));
     }
 
     psz_header header;
@@ -275,7 +326,7 @@ public:
         radius, Huffman); // codectype Huffman is hardcoded. (v0.10rc)
     psz_compress(
         comp, d_uncomp, uncomp_len, err_bnd, to_cuszmode(eb_mode), 
-        &ptr_compressed, &compressed_len, &header, compress_timerecord, stream);
+        &ptr_compressed, &compressed_len, &header, compress_timerecord, *stream.get());
 
 
     if(isDevicePtr(input->data())) {
@@ -284,23 +335,23 @@ public:
             //compressed data needs to be copied before the compressor is destructed
             lp_check_cuda_error(cudaMemcpyAsync(
                     (uint8_t*)output->data(), &header, sizeof(header),
-                    cudaMemcpyDeviceToDevice, stream));
+                    cudaMemcpyDeviceToDevice, *stream.get()));
             lp_check_cuda_error(cudaMemcpyAsync(
                     (uint8_t*)output->data()+sizeof(header), ptr_compressed, compressed_len,
-                    cudaMemcpyDeviceToDevice, stream));
+                    cudaMemcpyDeviceToDevice, *stream.get()));
             output->set_dimensions({compressed_len + sizeof(header)});
             output->set_dtype(pressio_byte_dtype);
-            lp_check_cuda_error(cudaStreamSynchronize(stream));
+            lp_check_cuda_error(cudaStreamSynchronize(*stream.get()));
 
         } else {
-            lp_check_cuda_error(cudaMallocAsync(&compressed_buf, compressed_len+sizeof(header), stream));
+            lp_check_cuda_error(cudaMallocAsync(&compressed_buf, compressed_len+sizeof(header), *stream.get()));
             lp_check_cuda_error(cudaMemcpyAsync(
                     (uint8_t*)output->data(), &header, sizeof(header),
-                    cudaMemcpyDeviceToDevice, stream));
+                    cudaMemcpyDeviceToDevice, *stream.get()));
             lp_check_cuda_error(cudaMemcpyAsync(
                   compressed_buf+sizeof(header), ptr_compressed, compressed_len,
-                  cudaMemcpyDeviceToDevice, stream));
-            lp_check_cuda_error(cudaStreamSynchronize(stream));
+                  cudaMemcpyDeviceToDevice, *stream.get()));
+            lp_check_cuda_error(cudaStreamSynchronize(*stream.get()));
             *output = pressio_data::move(
                     pressio_byte_dtype, compressed_buf,
                     {compressed_len}, [](void* data, void*){ cudaFree(data);}, nullptr
@@ -313,62 +364,59 @@ public:
             memcpy(output->data(), &header, sizeof(header));
             lp_check_cuda_error(cudaMemcpyAsync(
                   (uint8_t*)output->data() + sizeof(header), ptr_compressed, compressed_len,
-                  cudaMemcpyDeviceToHost, stream));
+                  cudaMemcpyDeviceToHost, *stream.get()));
             output->set_dimensions({compressed_len+sizeof(header)});
             output->set_dtype(pressio_byte_dtype);
-            lp_check_cuda_error(cudaStreamSynchronize(stream));
+            lp_check_cuda_error(cudaStreamSynchronize(*stream.get()));
         } else {
             *output = pressio_data::owning(pressio_byte_dtype, {sizeof(header)+compressed_len});
             memcpy(output->data(), &header, sizeof(header));
             lp_check_cuda_error(cudaMemcpyAsync(
                   (uint8_t*)output->data()+sizeof(header), ptr_compressed, compressed_len,
-                  cudaMemcpyDeviceToHost, stream));
-            lp_check_cuda_error(cudaStreamSynchronize(stream));
+                  cudaMemcpyDeviceToHost, *stream.get()));
+            lp_check_cuda_error(cudaStreamSynchronize(*stream.get()));
         }
     }
 
     //call when we are done
     psz_release(comp);
-    cudaStreamDestroy(stream);
 
     return 0;
   }
 
   template<class T>
   int decompress_typed(pressio_data const* input, pressio_data* output) {
-    cudaStream_t stream;
-    cudaStreamCreate(&stream);
     auto const dims = output->normalized_dims(4, 1);
     T *d_decomp;
-    lp_check_cuda_error(cudaMallocAsync(&d_decomp, output->size_in_bytes(), stream));
+    lp_check_cuda_error(cudaMallocAsync(&d_decomp, output->size_in_bytes(), *stream.get()));
     uint8_t* ptr_compressed;
     psz_header header;
     size_t compressed_len = input->size_in_bytes() - sizeof(header);
     if(isDevicePtr(input->data())) {
-        lp_check_cuda_error(cudaMemcpyAsync(&header, input->data(), sizeof(header), cudaMemcpyDeviceToHost, stream));
-        lp_check_cuda_error(cudaStreamSynchronize(stream));
+        lp_check_cuda_error(cudaMemcpyAsync(&header, input->data(), sizeof(header), cudaMemcpyDeviceToHost, *stream.get()));
+        lp_check_cuda_error(cudaStreamSynchronize(*stream.get()));
         ptr_compressed = (uint8_t*)input->data()+sizeof(header);
     } else {
         memcpy(&header, input->data(), sizeof(header));
-        lp_check_cuda_error(cudaMallocAsync(&ptr_compressed, compressed_len, stream));
-        lp_check_cuda_error(cudaMemcpyAsync(ptr_compressed, (uint8_t*)input->data()+sizeof(header), compressed_len, cudaMemcpyHostToDevice, stream));
+        lp_check_cuda_error(cudaMallocAsync(&ptr_compressed, compressed_len, *stream.get()));
+        lp_check_cuda_error(cudaMemcpyAsync(ptr_compressed, (uint8_t*)input->data()+sizeof(header), compressed_len, cudaMemcpyHostToDevice, *stream.get()));
     }
 
     void* decompress_timerecord;
     psz_len3 decomp_len = psz_len3{{dims[0]}, {dims[1]}, {dims[2]}};  // x, y, z
     psz_compressor* comp = psz_create_from_header(&header);
-    psz_decompress(comp, ptr_compressed, compressed_len, d_decomp, decomp_len, decompress_timerecord, stream);
+    psz_decompress(comp, ptr_compressed, compressed_len, d_decomp, decomp_len, decompress_timerecord, *stream.get());
 
     if(isDevicePtr(input->data())) {
         if(output->has_data() && isDevicePtr(output->data()) && compressed_len <= output->capacity_in_bytes()) {
             //copy to existing device ptr
-            lp_check_cuda_error(cudaMemcpyAsync(output->data(), d_decomp, output->size_in_bytes(), cudaMemcpyDeviceToDevice, stream));
+            lp_check_cuda_error(cudaMemcpyAsync(output->data(), d_decomp, output->size_in_bytes(), cudaMemcpyDeviceToDevice, *stream.get()));
         } else {
             //copy to new device ptr
             T* buf_uncompressed;
-            lp_check_cuda_error(cudaMallocAsync(&buf_uncompressed, output->size_in_bytes(), stream));
-            lp_check_cuda_error(cudaMemcpyAsync(buf_uncompressed, d_decomp, output->size_in_bytes(), cudaMemcpyDeviceToDevice, stream));
-            lp_check_cuda_error(cudaStreamSynchronize(stream));
+            lp_check_cuda_error(cudaMallocAsync(&buf_uncompressed, output->size_in_bytes(), *stream.get()));
+            lp_check_cuda_error(cudaMemcpyAsync(buf_uncompressed, d_decomp, output->size_in_bytes(), cudaMemcpyDeviceToDevice, *stream.get()));
+            lp_check_cuda_error(cudaStreamSynchronize(*stream.get()));
             *output = pressio_data::move(output->dtype(),
                     buf_uncompressed, output->dimensions(),
                     [](void* data, void*){ cudaFree(data);}, nullptr
@@ -377,12 +425,12 @@ public:
     } else {
         //copy to host pointer
         if(output->has_data()) {
-            lp_check_cuda_error(cudaMemcpyAsync(output->data(), d_decomp, output->size_in_bytes(), cudaMemcpyDeviceToHost, stream));
+            lp_check_cuda_error(cudaMemcpyAsync(output->data(), d_decomp, output->size_in_bytes(), cudaMemcpyDeviceToHost, *stream.get()));
         } else {
             *output = pressio_data::owning(output->dtype(), output->dimensions());
-            lp_check_cuda_error(cudaMemcpyAsync(output->data(), d_decomp, output->size_in_bytes(), cudaMemcpyDeviceToHost, stream));
+            lp_check_cuda_error(cudaMemcpyAsync(output->data(), d_decomp, output->size_in_bytes(), cudaMemcpyDeviceToHost, *stream.get()));
         }
-        lp_check_cuda_error(cudaStreamSynchronize(stream));
+        lp_check_cuda_error(cudaStreamSynchronize(*stream.get()));
         lp_check_cuda_error(cudaFree(ptr_compressed));
     }
     psz_release(comp);
@@ -406,6 +454,7 @@ public:
     return compat::make_unique<cusz_compressor_plugin>(*this);
   }
 
+  stream_helper stream; 
 
   double err_bnd = 1e-5;
   std::string eb_mode = "abs";
