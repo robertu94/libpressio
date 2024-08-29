@@ -151,6 +151,7 @@ pressio_numpy_type(long int, int64_t);
 
 namespace std { 
   %template() vector<size_t>;
+  %template(vector_data) vector<struct pressio_data*>;
   %template(vector_string) vector<std::string>;
 }
 

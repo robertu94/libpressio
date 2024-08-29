@@ -2,3 +2,4 @@ CMakeFiles/
 CMakeCache.txt
 build-*
 spack-*
+.clangd

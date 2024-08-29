@@ -1,3 +1,4 @@
+#include "pressio_version.h"
 #include <cstdlib>
 #include <string>
 #include <vector>
@@ -19,8 +20,15 @@
 #include "std_compat/language.h"
 #include "external_parse.h"
 
+#if LIBPRESSIO_HAS_LIBUUID == 1
+#include <uuid.h>
+#else
+#include <random>
+#include <sstream>
+#include <iomanip>
+#endif
+
 #include "libpressio_ext/launch/external_launch.h"
-#include "pressio_version.h"
 
 #if LIBPRESSIO_HAS_JSON
 #include <nlohmann/json.hpp>
@@ -204,9 +212,38 @@ class external_metric_plugin : public libpressio_metrics_plugin {
     std::vector<std::string> build_command(std::vector<std::pair<std::string,std::string>> const& filenames, compat::span<const pressio_data* const> const& input_datasets) const {
       std::vector<std::string> full_command;
       full_command.emplace_back("--api");
-      full_command.emplace_back("5");
+      full_command.emplace_back("6");
       full_command.emplace_back("--config_name");
       full_command.emplace_back(config_name);
+
+      constexpr int uuid_str_size = 36;
+      char uuid_str[uuid_str_size + 1] = {0};
+#if LIBPRESSIO_HAS_LIBUUID
+      uuid_t uuid;
+      uuid_generate(uuid);
+      uuid_unparse(uuid, uuid_str);
+#else
+      constexpr int uuid_byte_size = 16;
+      uint8_t uuid[uuid_byte_size] = {0};
+      std::random_device hw_rng;
+      std::seed_seq seed{hw_rng(), hw_rng()};
+      std::mt19937 gen(seed);
+      std::uniform_int_distribution<uint8_t> dist(0, std::numeric_limits<uint8_t>::max());
+      std::generate_n(uuid, uuid_byte_size, [&]{return dist(gen);});
+      std::stringstream ss;
+      for (int i = 0; i < uuid_byte_size; ++i) {
+          ss << std::hex << uuid[i];
+          if (i == 3 || i == 5 || i == 7 || i == 9) {
+              ss << '-';
+          }
+      }
+      auto s = ss.str();
+      std::copy(s.begin(), s.end(), uuid_str);
+#endif
+
+      full_command.emplace_back("--eval_uuid");
+      full_command.emplace_back(uuid_str);
+
       auto format_arg = [this](size_t i, std::string const& arg) {
         std::ostringstream ss;
         if(i >= field_names.size() || field_names[i].empty()) {

@@ -69,6 +69,8 @@ extern_proc_results launch_impl(std::vector<std::string> const& full_command) co
       curl_easy_setopt(hnd, CURLOPT_HTTPHEADER, headers);
       curl_easy_setopt(hnd, CURLOPT_ERRORBUFFER, errbuf);
 
+      view_command({connection_string, request_str});
+
       ret = curl_easy_perform(hnd);
 
       if(ret != CURLE_OK) {

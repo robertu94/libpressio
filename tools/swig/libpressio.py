@@ -88,6 +88,19 @@ def python_to_pressio_data(x):
                 info['typestr'].encode(),
                 info['data'][0]
                 )
+    if hasattr(x, "__array_interface__"):
+        info = x.__array_interface__
+        if info.get("strides",None) is not None:
+            raise NotImplementedError("stridded numpy arrays are not supported")
+        if info.get("mask", None) is not None:
+            raise NotImplementedError("masked numpy arrays are not supported")
+        if info['version'] != 3:
+            raise NotImplementedError("only version 3 is supported")
+        return pressio.io_data_from_numpy_array(
+                pressio.vector_uint64_t(info['shape']),
+                info['typestr'].encode(),
+                info['data'][0]
+                )
     elif isinstance(x, np.ndarray):
         return pressio.io_data_from_numpy(x)
     else:
@@ -521,7 +534,8 @@ class PressioCompressor(PressioObject, Codec):
         """perform compression
 
         params:
-            uncompressed: np.ndarray - the data to be compressed
+            buf: np.ndarray - the data to be compressed
+            out: Optional[np.ndarray] - the buffer to store the compressed data
         """
         uncompressed_lp = None
         compressed_lp = None
@@ -540,6 +554,26 @@ class PressioCompressor(PressioObject, Codec):
             if cleanup_comp:
                 pressio.data_free(compressed_lp)
         return comp
+
+    def encode_many(self, bufs, outs=None):
+        """preform compress on multiple buffers at once
+
+        params:
+            bufs: np.ndarray - the data to be compressed
+        """
+        uncompressed_lp = None
+        compressed_lp = None
+        cleanup_comp = True
+        try:
+            rc = pressio.compressor_compress_many(compressor, p_inputs, p_compresseds)
+            if rc != 0:
+                raise libpressio.PressioException.from_compressor(compressor)
+        finally:
+            pressio.data_free(uncompressed_lp)
+            if cleanup_comp:
+                pressio.data_free(compressed_lp)
+        return comp
+
 
     def decode(self, buf, out=None):
         """perform decompression

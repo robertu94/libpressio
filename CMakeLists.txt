@@ -740,6 +740,14 @@ if(LIBPRESSIO_HAS_OPENSSL)
     )
 endif()
 
+option(LIBPRESSIO_HAS_LIBUUID "build wiht libuuid support to improve the robustness of UUIDs" OFF)
+if(LIBPRESSIO_HAS_LIBUUID)
+  set(LIBPRESSIO_FEATURES "${LIBPRESSIO_FEATURES} uuid")
+  find_package(PkgConfig REQUIRED)
+  pkg_search_module(UUID IMPORTED_TARGET GLOBAL uuid)
+  target_link_libraries(libpressio PRIVATE PkgConfig::UUID)
+endif()
+
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/src/pressio_version.h.in
   ${CMAKE_CURRENT_BINARY_DIR}/include/pressio_version.h

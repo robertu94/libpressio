@@ -38,6 +38,10 @@ struct libpressio_launch_plugin: public pressio_configurable {
       return ret;
   }
 
+  void view_command(std::vector<std::string> const& args) const {
+      metrics_plugin->view_command(args);
+  }
+
   /**
    * launch the process
    *

@@ -3,6 +3,7 @@
 #include "libpressio_ext/cpp/dtype.h"
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/options.h"
+#include "libpressio_ext/cpp/compressor.h"
 #include <vector>
 #include <cstdint>
 #include <algorithm>
@@ -104,6 +105,36 @@ pressio_data* io_data_from_cuda_array(std::vector<uint64_t> shape, std::string c
     std::reverse(shape.begin(), shape.end());
     void* ptr = reinterpret_cast<void*>(ptr_asint);
     return new pressio_data(pressio_data::nonowning(dtype, ptr, shape, "cudamalloc"));
+}
+
+pressio_data* io_data_from_numpy_array(std::vector<uint64_t> shape, std::string const& typestr, intptr_t ptr_asint) {
+    static std::map<std::string, pressio_dtype> dtypes {
+        {"f4", pressio_float_dtype},
+        {"f8", pressio_double_dtype},
+        {"i1", pressio_int8_dtype},
+        {"i2", pressio_int16_dtype},
+        {"i4", pressio_int32_dtype},
+        {"i8", pressio_int64_dtype},
+        {"u1", pressio_uint8_dtype},
+        {"u2", pressio_uint16_dtype},
+        {"u4", pressio_uint32_dtype},
+        {"u8", pressio_uint64_dtype},
+        {"b1", pressio_bool_dtype},
+        {"i1"  ,pressio_byte_dtype},
+    };
+    pressio_dtype dtype;
+    if(typestr.size() == 3) {
+        auto endian = typestr[0];
+        if (compat::endian::native == compat::endian::little) {
+            if(endian == '>') {
+                throw std::runtime_error("cross endian data not supported");
+            }
+        }
+        dtype = dtypes.at(typestr.substr(1));
+    }
+    std::reverse(shape.begin(), shape.end());
+    void* ptr = reinterpret_cast<void*>(ptr_asint);
+    return new pressio_data(pressio_data::nonowning(dtype, ptr, shape));
 }
 
 template <class T>
@@ -211,4 +242,15 @@ pressio_metrics* new_metrics(struct pressio* library, std::vector<std::string> m
   std::vector<const char*> m;
   std::transform(std::begin(metrics), std::end(metrics), std::back_inserter(m), [](std::string& i){ return i.c_str(); });
   return pressio_new_metrics(library, m.data(), m.size());
+}
+
+int compressor_compress_many(struct pressio_compressor* compressor, std::vector<struct pressio_data*> const& inputs, std::vector<struct pressio_data*>& outputs) {
+    return (*compressor)->compress_many(inputs.begin(), inputs.end(), outputs.begin(), outputs.end());
+}
+int compressor_decompress_many(struct pressio_compressor* compressor, std::vector<struct pressio_data*> const& inputs, std::vector<struct pressio_data*>& outputs) {
+    return (*compressor)->decompress_many(inputs.begin(), inputs.end(), outputs.begin(), outputs.end());
+}
+
+void options_set_strings(pressio_options* options, std::string const& key, std::vector<std::string> const& values){
+    options->set(key, values);
 }

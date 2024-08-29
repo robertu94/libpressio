@@ -35,6 +35,17 @@ extern_proc_results launch_impl(std::vector<std::string> const& full_command) co
         return results;
       }
 
+      std::vector<char*> args;
+      args.reserve(commands.size());
+      for(auto const& command: commands) {
+        args.push_back(const_cast<char*>(command.c_str()));
+      }
+      std::transform(std::begin(full_command), std::end(full_command),
+          std::back_inserter(args), [](std::string const& s){return const_cast<char*>(s.c_str());});
+      args.push_back(nullptr);
+      std::vector<std::string> view_args(args.begin(), args.end() - 1);
+      view_command(view_args);
+
       //run the program
       int child = fork();
       switch (child) {
@@ -57,14 +68,6 @@ extern_proc_results launch_impl(std::vector<std::string> const& full_command) co
             exit(-2);
           }
 
-          std::vector<char*> args;
-          args.reserve(commands.size());
-          for(auto const& command: commands) {
-            args.push_back(const_cast<char*>(command.c_str()));
-          }
-          std::transform(std::begin(full_command), std::end(full_command),
-              std::back_inserter(args), [](std::string const& s){return const_cast<char*>(s.c_str());});
-          args.push_back(nullptr);
           if(args.front() != nullptr) {
             execvp(args.front(), args.data());
             fprintf(stdout, "external:api=5");

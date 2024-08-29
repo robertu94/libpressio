@@ -51,6 +51,14 @@ struct libpressio_launch_metrics_plugin : public pressio_configurable {
   virtual void launch_begin(std::vector<std::string> const&) const {
       return;
   }
+
+  /**
+   * call back at the beginning of a luanch
+   */
+  virtual void view_command(std::vector<std::string> const&) const {
+      return;
+  }
+
   /**
    * call back at the end of a luanch
    */

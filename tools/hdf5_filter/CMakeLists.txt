@@ -40,8 +40,8 @@ lp_add_hdf_deps(pressio_hdf5_filter_tool)
 
 install(FILES ./include/libpressio_hdf5_filter.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libpressio)
 install(TARGETS libpressio_hdf5_filter EXPORT LibPressioTargets
-  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/hdf5/lib/plugin
+  LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/hdf5/lib/plugin
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   )
 install(TARGETS pressio_hdf5_filter_tool EXPORT LibPressioTargets

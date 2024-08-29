@@ -18,6 +18,8 @@ extern_proc_results launch_impl(std::vector<std::string> const& full_command) co
       std::transform(std::begin(full_command), std::end(full_command),
           std::back_inserter(args), [](std::string const& s){return const_cast<char*>(s.c_str());});
       args.push_back(nullptr);
+      std::vector<std::string> view_args(args.begin(), args.end() - 1);
+      view_command(view_args);
 
       MPI_Info info;
       MPI_Info_create(&info);

@@ -49,6 +49,7 @@ extern_proc_results launch_impl(std::vector<std::string> const& full_command) co
           py::str out = "", err = "";
           py::int_ ret = 0;
           auto locals = py::dict("cmd"_a=full_command, "stdout"_a=out, "stderr="_a=err, "ret"_a=ret);
+          view_command({external_script});
           py::exec(external_script, py::globals(), locals);
           results.proc_stdout = locals["stdout"].cast<std::string>();
           results.proc_stderr = locals["stderr"].cast<std::string>();

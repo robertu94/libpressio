@@ -7,6 +7,15 @@
 namespace libpressio { namespace launch_metrics_print {
 struct libpressio_launch_metrics_print_plugin : public libpressio_launch_metrics_plugin {
   virtual void launch_begin(std::vector<std::string> const& args) const {
+      std::cout << "launch_begin ";
+      for (auto const& i : args) {
+          std::cout << i << ' ';
+      }
+      std::cout << std::endl;
+      return;
+  }
+  virtual void view_command(std::vector<std::string> const& args) const {
+      std::cout << "command ";
       for (auto const& i : args) {
           std::cout << i << ' ';
       }
