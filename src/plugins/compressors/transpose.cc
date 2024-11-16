@@ -1,9 +1,8 @@
 #include <vector>
 #include <memory>
-#include <random>
-#include <numeric>
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/compressor.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
 #include "pressio_options.h"
@@ -58,7 +57,7 @@ public:
   int compress_impl(const pressio_data* input,
                     struct pressio_data* output) override
   {
-    auto tmp = input->transpose(axis);
+    auto tmp = domain_manager().make_readable(domain_plugins().build("malloc"),*input).transpose(axis);
     return compressor->compress(&tmp, output);
   }
 
@@ -66,6 +65,7 @@ public:
                       struct pressio_data* output) override
   {
     auto ret = compressor->decompress(input, output);
+    *output = domain_manager().make_readable(domain_plugins().build("malloc"), std::move(*output));
     output->transpose(axis);
     return ret;
   }

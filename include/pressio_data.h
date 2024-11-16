@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "pressio_dtype.h"
+#include "pressio_version.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,6 +33,21 @@ typedef void (*pressio_data_delete_fn)(void* data, void* metadata);
  */
 void pressio_data_libc_free_fn (void* data, void* metadata);
 
+#ifdef LIBPRESSIO_HAS_CUDA
+/**
+ * a custom deleter that uses libc's free and ignores the metadata
+ * \param[in] data to be deallocated with free()
+ * \param[in] metadata  ignored
+ */
+void pressio_data_cuda_free_fn (void* data, void* metadata);
+/**
+ * a custom deleter that uses libc's free and ignores the metadata
+ * \param[in] data to be deallocated with free()
+ * \param[in] metadata  ignored
+ */
+void pressio_data_cudahost_free_fn (void* data, void* metadata);
+#endif
+
 /** 
  *  allocates a new pressio_data structure, it does NOT take ownership of data.
  *
@@ -41,6 +57,20 @@ void pressio_data_libc_free_fn (void* data, void* metadata);
  *  \param[in] dimensions an array corresponding to the dimensions of the data, a copy is made of this on construction
  */
 struct pressio_data* pressio_data_new_nonowning(const enum pressio_dtype dtype, void* data, size_t const num_dimensions, size_t const dimensions[]);
+
+/** 
+ *  allocates a new pressio_data structure, it does NOT take ownership of data.
+ *
+ *  \param[in] source data to create a view over
+ */
+struct pressio_data* pressio_data_new_nonowning_from_data(struct pressio_data* source);
+
+/** 
+ *  allocates a new pressio_data structure, it does NOT take ownership of data.
+ *
+ *  \param[in] source to replicate domain, dimensions, and datatype from
+ */
+struct pressio_data* pressio_data_new_owning_from_data(struct pressio_data* source);
 
 /** 
  *  allocates a new pressio_data structure, it does NOT take ownership of data.

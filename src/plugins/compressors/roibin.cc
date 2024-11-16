@@ -3,6 +3,7 @@
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include "roibin_impl.h"
 
 #include "basic_indexer.h"
@@ -114,11 +115,12 @@ public:
     return 0;
   }
 
-  int compress_impl(const pressio_data* input,
+  int compress_impl(const pressio_data* real_input,
                     struct pressio_data* output) override
   {
     try {
-      pressio_data roi_data = save_roi(*input);
+      pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
+      pressio_data roi_data = save_roi(input);
       pressio_data roi_compressed = pressio_data::empty(pressio_byte_dtype, {});
       pressio_data background_compressed = pressio_data::empty(pressio_byte_dtype, {});
       view_segment(&roi_data, "roi_data");
@@ -132,7 +134,7 @@ public:
       }
       view_segment(&roi_compressed, "roi_compressed");
 
-      int ec = background->compress(input, &background_compressed);
+      int ec = background->compress(&input, &background_compressed);
       if(ec < 0) {
         set_error(ec, background->error_msg());
       } else if (ec > 0) {
@@ -140,6 +142,7 @@ public:
       }
       view_segment(&background_compressed, "background_compressed");
 
+      background_compressed = domain_manager().make_readable(domain_plugins().build("malloc"), std::move(background_compressed));
       *output = pressio_data::owning(
           pressio_byte_dtype,
           {(roi_compressed.size_in_bytes() + background_compressed.size_in_bytes() + 2*sizeof(size_t))}
@@ -155,15 +158,16 @@ public:
     }
   }
 
-  int decompress_impl(const pressio_data* input,
+  int decompress_impl(const pressio_data* real_input,
                       struct pressio_data* output) override
   {
-    const size_t* sizes = static_cast<size_t*>(input->data());
+    pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
+    const size_t* sizes = static_cast<size_t*>(input.data());
     pressio_data roi_compressed = pressio_data::nonowning(pressio_byte_dtype, 
-        static_cast<uint8_t*>(input->data()) + 2*sizeof(size_t),
+        static_cast<uint8_t*>(input.data()) + 2*sizeof(size_t),
         {sizes[0]}); 
     pressio_data backround_compressed = pressio_data::nonowning(pressio_byte_dtype, 
-        static_cast<uint8_t*>(input->data()) + sizes[0] + 2*sizeof(size_t),
+        static_cast<uint8_t*>(input.data()) + sizes[0] + 2*sizeof(size_t),
         {sizes[1]}); 
     if(roi_compressed.size_in_bytes() > 0) {
       size_t regions = locations.get_dimension(1);

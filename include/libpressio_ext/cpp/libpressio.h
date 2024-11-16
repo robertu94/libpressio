@@ -10,3 +10,4 @@
 #include "options.h"
 #include "pressio.h"
 #include "printers.h"
+#include "domain_manager.h"

@@ -4,6 +4,7 @@
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/pressio.h"
 #include "libpressio_ext/cpp/options.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include "std_compat/memory.h"
 #include "std_compat/functional.h"
 #include <numeric>
@@ -113,8 +114,9 @@ class data_gap_plugin : public libpressio_metrics_plugin {
     };
 
     int end_compress_impl(struct pressio_data const* input, pressio_data const*, int) override {
+      if(!input || !input->has_data()) return 0;
       try {
-        gap = pressio_data_for_each<gap_stats>(*input, data_gap{input->dimensions()});
+        gap = pressio_data_for_each<gap_stats>(domain_manager().make_readable(domain_plugins().build("malloc"), *input), data_gap{input->dimensions()});
         return 0;
       } catch( std::exception const& ex ) {
         return set_error(1, ex.what());

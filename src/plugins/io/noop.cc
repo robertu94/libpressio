@@ -1,6 +1,5 @@
 #include <sys/stat.h>
 #include <unistd.h>
-#include <vector>
 #include "pressio_data.h"
 #include "pressio_compressor.h"
 #include "libpressio_ext/io/posix.h"

@@ -353,8 +353,8 @@ private:
         "set_float", &pressio_option::set<float>,
         "set_double", &pressio_option::set<double>,
         "set_string", &pressio_option::set<std::string>,
-        "set_string_arr", &pressio_option::set<std::vector<std::string>>,
-        "set_data", &pressio_option::set<pressio_data>
+        "set_string_arr", &pressio_option::set<std::vector<std::string> const&>,
+        "set_data", &pressio_option::set<pressio_data const&>
         );
 
 
@@ -366,6 +366,7 @@ private:
     });
   }
   void run_compress_script(compat::span<const pressio_data* const> const& inputs, compat::span<pressio_data*> & outputs, lambda_fn_event event) {
+    //TODO provide a way to run the script that moves the data to the host
     auto time = run_script_common(event, [&inputs, &outputs](sol::state& lua){
         lua["inputs"] = std::ref(inputs);
         lua["outputs"] = std::ref(outputs);

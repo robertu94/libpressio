@@ -11,6 +11,7 @@
 #include "std_compat/memory.h"
 #include "std_compat/algorithm.h"
 #include "std_compat/functional.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 
 /**
  * This module largely adapted from NUMPY. License appears below
@@ -239,13 +240,15 @@ public:
   int begin_compress_impl(const struct pressio_data* input,
                       struct pressio_data const*) override
   {
-    input_data = pressio_data::clone(*input);
+    if(!input || !input->has_data()) return 0;
+    input_data = pressio_data::clone(domain_manager().make_readable(domain_plugins().build("malloc"), *input));
     return 0;
   }
   int end_decompress_impl(struct pressio_data const*,
                       struct pressio_data const* output, int) override
   {
-      auto result = pressio_data_for_each<KSTestResult>(input_data, *output, ks_test{});
+      if(!output || !output->has_data() || !input_data.has_data()) return 0;
+      auto result = pressio_data_for_each<KSTestResult>(input_data, domain_manager().make_readable(domain_plugins().build("malloc"), *output), ks_test{});
       pvalue = result.prob;
       d = result.D;
       return 0;

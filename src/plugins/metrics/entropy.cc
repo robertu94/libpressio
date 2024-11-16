@@ -6,6 +6,7 @@
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include "std_compat/memory.h"
 #include <vector>
 #include <map>
@@ -44,12 +45,14 @@ class entropy_plugin : public libpressio_metrics_plugin
 public:
   int begin_compress_impl(const struct pressio_data* input, struct pressio_data const*) override
   {
-    input_entropy = pressio_data_for_each<double>(*input, entropy::compute_metrics{});
+      if(!input || !input->has_data()) return 0;
+    input_entropy = pressio_data_for_each<double>(domain_manager().make_readable(domain_plugins().build("malloc"), *input), entropy::compute_metrics{});
     return 0;
   }
   int end_decompress_impl(struct pressio_data const*, struct pressio_data const* output, int) override
   {
-    dec_entropy = pressio_data_for_each<double>(*output, entropy::compute_metrics{});
+      if(!output || !output->has_data()) return 0;
+    dec_entropy = pressio_data_for_each<double>(domain_manager().make_readable(domain_plugins().build("malloc"), *output), entropy::compute_metrics{});
     return 0;
   }
 

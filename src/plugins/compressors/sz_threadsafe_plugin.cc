@@ -10,6 +10,7 @@
 #include "libpressio_ext/cpp/compressor.h"
 #include "libpressio_ext/cpp/pressio.h"
 #include "libpressio_ext/cpp/options.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include "std_compat/std_compat.h"
 #include "pressio_data.h"
 #include "pressio_compressor.h"
@@ -295,17 +296,18 @@ class sz_threadsafe_plugin: public libpressio_compressor_plugin {
     return 0;
   }
 
-  int compress_impl(const pressio_data *input, struct pressio_data* output) override {
+  int compress_impl(const pressio_data *real_input, struct pressio_data* output) override {
     compat::shared_lock<compat::shared_mutex> lock(init_handle->sz_init_lock);
-    size_t r1 = pressio_data_get_dimension(input, 0);
-    size_t r2 = pressio_data_get_dimension(input, 1);
-    size_t r3 = pressio_data_get_dimension(input, 2);
-    size_t r4 = pressio_data_get_dimension(input, 3);
-    size_t r5 = pressio_data_get_dimension(input, 4);
+    pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
+    size_t r1 = pressio_data_get_dimension(&input, 0);
+    size_t r2 = pressio_data_get_dimension(&input, 1);
+    size_t r3 = pressio_data_get_dimension(&input, 2);
+    size_t r4 = pressio_data_get_dimension(&input, 3);
+    size_t r5 = pressio_data_get_dimension(&input, 4);
     int status = SZ_NSCS;
     size_t outsize = 0;
 
-    unsigned char* compressed_data=SZ_compress_customize_threadsafe(app.c_str(),user_params,libpressio_type_to_sz_type(input->dtype()),input->data(),
+    unsigned char* compressed_data=SZ_compress_customize_threadsafe(app.c_str(),user_params,libpressio_type_to_sz_type(input.dtype()),input.data(),
 		    r5,r4,r3,r2,r1,&outsize,&status);
 
     if(compressed_data != nullptr) {
@@ -315,8 +317,9 @@ class sz_threadsafe_plugin: public libpressio_compressor_plugin {
       return set_error(1, "compression failed");
     }
   }
-  int decompress_impl(const pressio_data *input, struct pressio_data* output) override {
+  int decompress_impl(const pressio_data *real_input, struct pressio_data* output) override {
     compat::shared_lock<compat::shared_mutex> lock(init_handle->sz_init_lock);
+    pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
 
     size_t r[] = {
      pressio_data_get_dimension(output, 0),
@@ -333,8 +336,8 @@ class sz_threadsafe_plugin: public libpressio_compressor_plugin {
         app.c_str(),
         user_params,
         libpressio_type_to_sz_type(output->dtype()),
-        static_cast<unsigned char*>(input->data()),
-        pressio_data_get_dimension(input, 0),
+        static_cast<unsigned char*>(input.data()),
+        pressio_data_get_dimension(&input, 0),
 		    r[4],
         r[3],
         r[2],

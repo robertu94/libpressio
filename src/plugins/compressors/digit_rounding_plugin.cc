@@ -5,6 +5,7 @@
 #include "libpressio_ext/cpp/compressor.h" //for the libpressio_compressor_plugin class
 #include "libpressio_ext/cpp/options.h" // for access to pressio_options
 #include "libpressio_ext/cpp/pressio.h" //for the plugin registries
+#include "libpressio_ext/cpp/domain_manager.h" //for the plugin registries
 #include "pressio_options.h"
 #include "pressio_data.h"
 #include "pressio_compressor.h"
@@ -57,29 +58,31 @@ class digit_rounding_plugin: public libpressio_compressor_plugin {
       return 0;
     }
 
-    int compress_impl(const pressio_data *input, struct pressio_data* output) override {
-      int type = libpressio_type_to_dr_type(pressio_data_dtype(input));
+    int compress_impl(const pressio_data *real_input, struct pressio_data* output) override {
+      pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_output);
+      int type = libpressio_type_to_dr_type(pressio_data_dtype(&input));
       if(type == INVALID_TYPE) {
          return INVALID_TYPE;
       }
 
-      size_t nbEle = pressio_data_num_elements(input);
+      size_t nbEle = pressio_data_num_elements(&input);
       unsigned long outSize;
-      void* data = pressio_data_ptr(input, nullptr);
+      void* data = pressio_data_ptr(&input, nullptr);
       unsigned char* compressed_data = dround_compress(type, data, nbEle, prec, &outSize);
 
       *output = pressio_data::move(pressio_byte_dtype, compressed_data, 1, &outSize, pressio_data_libc_free_fn, nullptr);
       return 0;
     }
 
-    int decompress_impl(const pressio_data *input, struct pressio_data* output) override {
+    int decompress_impl(const pressio_data *real_input, struct pressio_data* output) override {
+      pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_output);
       int type = libpressio_type_to_dr_type(pressio_data_dtype(output));
       if(type == INVALID_TYPE) {
          return INVALID_TYPE;
       }
-      void* bytes = pressio_data_ptr(input, nullptr);
+      void* bytes = pressio_data_ptr(&input, nullptr);
       size_t nbEle = pressio_data_num_elements(output);
-      size_t outSize = input -> size_in_bytes();
+      size_t outSize = input.size_in_bytes();
       void* decompressed_data = dround_decompress(type, (unsigned char*)bytes, nbEle, static_cast<unsigned long>(outSize));
       *output = pressio_data::move(pressio_data_dtype(output), decompressed_data, 1, &nbEle, pressio_data_libc_free_fn, nullptr);
       return 0;

@@ -10,6 +10,7 @@
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
 #include "std_compat/memory.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 
 namespace libpressio {
 namespace kl_divergence{
@@ -50,13 +51,15 @@ public:
   int begin_compress_impl(const struct pressio_data* input,
                       struct pressio_data const*) override
   {
-    input_data = pressio_data::clone(*input);
+    if(!input || !input->has_data()) return 0;
+    input_data = pressio_data::clone(domain_manager().make_readable(domain_plugins().build("malloc"), *input));
     return 0;
   }
   int end_decompress_impl(struct pressio_data const*,
                       struct pressio_data const* output, int) override
   {
-    err_metrics = pressio_data_for_each<kl_divergence::kl_metrics>(input_data, *output,
+    if(!output || !output->has_data() || !input_data.has_data()) return 0;
+    err_metrics = pressio_data_for_each<kl_divergence::kl_metrics>(input_data, domain_manager().make_readable(domain_plugins().build("malloc"), *output),
                                                        kl_divergence::compute_metrics{});
     return 0;
   }

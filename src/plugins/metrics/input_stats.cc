@@ -62,12 +62,16 @@ namespace libpressio { namespace input_stats_metrics_ns {
 class input_stats_plugin : public libpressio_metrics_plugin {
   public:
     int end_compress_impl(struct pressio_data const* input, pressio_data const* output, int rc) override {
+      if(!input || !input->has_data()) return 0;
+      if(!output || !output->has_data()) return 0;
       compat::span<const pressio_data*> inputs(&input, 1);
       compat::span<const pressio_data*> outputs(&output, 1);
       return end_compress_many_impl(inputs, outputs, rc);
     }
 
     int end_decompress_impl(struct pressio_data const* input, pressio_data const* output, int rc) override {
+      if(!input || !input->has_data()) return 0;
+      if(!output || !output->has_data()) return 0;
       compat::span<const pressio_data*> inputs(&input, 1);
       compat::span<const pressio_data*> outputs(&output, 1);
       return end_decompress_many_impl(inputs, outputs, rc);

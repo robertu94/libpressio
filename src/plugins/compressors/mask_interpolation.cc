@@ -4,6 +4,7 @@
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 
 #include "basic_indexer.h"
 
@@ -310,16 +311,17 @@ public:
   };
 
 
-  int compress_impl(const pressio_data* input,
+  int compress_impl(const pressio_data* real_input,
                     struct pressio_data* output) override
   {
-     pressio_data masked = pressio_data::clone(*input);
+     pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
+     pressio_data masked = pressio_data::owning(input, domain_plugins().build("malloc"));
 
      int rc = 0;
      if(mask_mode == "fill") {
-         rc = pressio_data_for_each<int>(*input, masked, fill_apply_mask{this, *input});
+         rc = pressio_data_for_each<int>((pressio_data const&)input, masked, fill_apply_mask{this, input});
      } else if(mask_mode == "interp") {
-         rc = pressio_data_for_each<int>(*input, masked, interp_apply_mask{this, *input});
+         rc = pressio_data_for_each<int>((pressio_data const&)input, masked, interp_apply_mask{this, input});
      }
      if(rc) {
          return rc;

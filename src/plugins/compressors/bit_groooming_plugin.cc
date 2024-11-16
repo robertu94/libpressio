@@ -3,6 +3,7 @@
 #include "libpressio_ext/cpp/options.h"    // for access to pressio_options
 #include "libpressio_ext/cpp/pressio.h"    //for the plugin registries
 #include "pressio_compressor.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include "pressio_data.h"
 #include "pressio_options.h"
 #include "std_compat/memory.h"
@@ -94,7 +95,7 @@ public:
   struct pressio_options get_configuration_impl() const override {
     struct pressio_options options;
     set(options, "pressio:thread_safe", pressio_thread_safety_multiple);
-    set(options, "pressio:stability", "stable");
+    set(options, "pressio:stability", "experimental");
     set(options, "bit_grooming:mode", bg_keys(bitgroom_mode_str_to_code));
     set(options, "bit_grooming:error_control_mode", bg_keys(bitgroom_ec_mode_str_to_code));
     set(options, "predictors:error_agnostic", std::vector<std::string>{"bit_grooming:mode", "bit_grooming:mode_str", "bit_grooming:error_control_mode", "bit_grooming:n_sig_digits", "bit_grooming:n_sig_decimals"});
@@ -126,19 +127,17 @@ public:
     return 0;
   }
 
-  int compress_impl(const pressio_data *input, struct pressio_data *output) override {
-    int type = libpressio_type_to_bg_type(pressio_data_dtype(input));
+  int compress_impl(const pressio_data *real_input, struct pressio_data *output) override {
+    pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
+    int type = libpressio_type_to_bg_type(input.dtype());
     if (type == INVALID_TYPE) {
       return INVALID_TYPE;
     }
 
-    size_t nbEle = pressio_data_num_elements(input);
     unsigned long outSize;
-    void *data = pressio_data_ptr(input, nullptr);
-    unsigned char *compressed_data;
-
-    compressed_data = BG_compress_args(type, data, &outSize, bgMode, errorControlMode,
-                                       nun_sig_digits, num_sig_decimals, nbEle);
+    unsigned char *compressed_data =
+        BG_compress_args(type, static_cast<unsigned char *>(input.data()), &outSize, bgMode,
+                         errorControlMode, nun_sig_digits, num_sig_decimals, input.num_elements());
 
     if (compressed_data == NULL) {
       return set_error(2, "Error when bit grooming is compressing the data");
@@ -149,16 +148,14 @@ public:
     return 0;
   }
 
-  int decompress_impl(const pressio_data *input, struct pressio_data *output) override {
+  int decompress_impl(const pressio_data *real_input, struct pressio_data *output) override {
     int type = libpressio_type_to_bg_type(pressio_data_dtype(output));
     if (type == INVALID_TYPE) {
       return INVALID_TYPE;
     }
-    unsigned char *bytes = (unsigned char *)pressio_data_ptr(input, nullptr);
+    pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
     size_t nbEle = pressio_data_num_elements(output);
-    size_t byteLength = pressio_data_get_bytes(input);
-
-    void *decompressed_data = BG_decompress(type, bytes, byteLength, nbEle);
+    void *decompressed_data = BG_decompress(type, static_cast<unsigned char *>(input.data()), input.size_in_bytes(), output->num_elements());
     *output = pressio_data::move(pressio_data_dtype(output), decompressed_data, 1, &nbEle,
                                  pressio_data_libc_free_fn, nullptr);
     return 0;

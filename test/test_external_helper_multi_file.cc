@@ -16,6 +16,7 @@ struct cmdline_args {
   std::vector<size_t> second_dims;
   pressio_dtype second_type;
   std::string config_name;
+  std::string eval_uuid;
   bool empty = true;
 };
 
@@ -30,6 +31,7 @@ enum class cmdline {
   second_decompressed,
   second_dim,
   second_type,
+  eval_uuid,
   config_name
 };
 
@@ -55,6 +57,7 @@ cmdline_args parse_args(const int argc, const char* argv[])
           else if(arg == "--second_dim") expected = cmdline::second_dim;
           else if(arg == "--second_type") expected = cmdline::second_type;
           else if(arg == "--config_name") expected = cmdline::config_name;
+          else if(arg == "--eval_uuid") expected = cmdline::eval_uuid;
           else {
             std::cerr << "Unexpected flag: " << arg << std::endl;
             exit(1);
@@ -102,6 +105,10 @@ cmdline_args parse_args(const int argc, const char* argv[])
         break;
       case cmdline::first_decompressed:
         args.first_decompressed = arg;
+        expected = cmdline::flag;
+        break;
+      case cmdline::eval_uuid:
+        args.eval_uuid = arg;
         expected = cmdline::flag;
         break;
       case cmdline::first_dim:

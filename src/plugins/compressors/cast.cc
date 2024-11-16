@@ -4,6 +4,7 @@
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 
 namespace libpressio { namespace cast_ns {
 
@@ -36,11 +37,11 @@ public:
   struct pressio_options get_documentation_impl() const override
   {
     struct pressio_options options;
-    set_meta_docs(options, "cast:compressor", "the compressor after removing the background", compressor);
-    set(options, "pressio:description", R"(removes the background from an image and then compresses)");
+    set_meta_docs(options, "cast:compressor", "change the datatype of the input", compressor);
+    set(options, "pressio:description", R"(cast inputs to different datatypes before compression/decompression)");
     set(options, "cast:dtype", R"(cast to on copmress)");
     set(options, "cast:decompress_dtype", R"(cast to on copmress decompress if restore_type is not true)");
-    set(options, "cast:restore_dtype", R"(set the decompress dtype on call to compress)");
+    set(options, "cast:restore_type", R"(set the decompress dtype on call to compress)");
     return options;
   }
 
@@ -54,11 +55,12 @@ public:
     return 0;
   }
 
-  int compress_impl(const pressio_data* input,
+  int compress_impl(const pressio_data* real_input,
                     struct pressio_data* output) override
   {
-      if(restore_dtype) decompress_dtype = input->dtype();
-      pressio_data casted = input->cast(compress_dtype);
+      pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
+      if(restore_dtype) decompress_dtype = input.dtype();
+      pressio_data casted = input.cast(compress_dtype);
       int rc = compressor->compress(&casted, output);
       if(rc) {
           return set_error(compressor->error_code(), compressor->error_msg());
@@ -67,13 +69,15 @@ public:
   }
 
   int decompress_impl(const pressio_data* input,
-                      struct pressio_data* output) override
+                      struct pressio_data* real_output) override
   {
-      int rc = compressor->decompress(input, output);
+      //TODO real_output's dtype is probably wrong here. it should be the casted compress_dtype
+      int rc = compressor->decompress(input, real_output);
       if(rc) {
           return set_error(compressor->error_code(), compressor->error_msg());
       }
-      *output = output->cast(decompress_dtype);
+      pressio_data output = domain_manager().make_readable(domain_plugins().build("malloc"), *real_output);
+      *real_output = output.cast(decompress_dtype);
       return 0;
   }
 

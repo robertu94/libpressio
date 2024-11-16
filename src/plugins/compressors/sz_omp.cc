@@ -1,5 +1,6 @@
 #include <libpressio_ext/cpp/compressor.h>
 #include <libpressio_ext/cpp/pressio.h>
+#include <libpressio_ext/cpp/domain_manager.h>
 #include <std_compat/memory.h>
 #include <sz/sz.h>
 #include <sz/sz_omp.h>
@@ -195,18 +196,19 @@ class sz_omp: public libpressio_compressor_plugin {
 #endif
     return 0;
   }
-  int compress_impl(const pressio_data *input, struct pressio_data *output) override {
-    if(input->dtype() != pressio_float_dtype) {
+  int compress_impl(const pressio_data *real_input, struct pressio_data *output) override {
+    pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
+    if(input.dtype() != pressio_float_dtype) {
       return set_error(1, "only floating point data is supported");
     }
-    if(input->num_dimensions() != 3) {
+    if(input.num_dimensions() != 3) {
       return set_error(2, "only 3d data is supported");
     }
     compat::unique_lock<compat::shared_mutex> lock(init_handle->sz_init_lock);
     confparams_cpr->dataType = SZ_FLOAT;
-    size_t r1 = pressio_data_get_dimension(input, 0);
-    size_t r2 = pressio_data_get_dimension(input, 1);
-    size_t r3 = pressio_data_get_dimension(input, 2);
+    size_t r1 = pressio_data_get_dimension(&input, 0);
+    size_t r2 = pressio_data_get_dimension(&input, 1);
+    size_t r3 = pressio_data_get_dimension(&input, 2);
     size_t outSize;
     //expected to be set to float, but the user might have other uses, so save it first here before
     //making changes
@@ -217,9 +219,9 @@ class sz_omp: public libpressio_compressor_plugin {
     unsigned char* bytes;
     auto old_threads = omp_get_num_threads();
     omp_set_num_threads(nthreads);
-    switch(input->num_dimensions()) {
+    switch(input.num_dimensions()) {
         case 3:
-					bytes = SZ_compress_float_3D_MDQ_openmp(static_cast<float*>(input->data()), r3, r2, r1, static_cast<float>(confparams_cpr->absErrBound), &outSize);
+					bytes = SZ_compress_float_3D_MDQ_openmp(static_cast<float*>(input.data()), r3, r2, r1, static_cast<float>(confparams_cpr->absErrBound), &outSize);
           break;
     }
     omp_set_num_threads(old_threads);
@@ -232,7 +234,7 @@ class sz_omp: public libpressio_compressor_plugin {
 
     return 0;
   }
-  int decompress_impl(const pressio_data *input, struct pressio_data *output) override {
+  int decompress_impl(const pressio_data *real_input, struct pressio_data *output) override {
     if(output->dtype() != pressio_float_dtype) {
       return set_error(1, "only floating point data is supported");
     }
@@ -245,8 +247,9 @@ class sz_omp: public libpressio_compressor_plugin {
     //making changes
     auto old_dtype = confparams_cpr->dataType;
     confparams_cpr->dataType = SZ_FLOAT;
+    pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
 
-    unsigned char* bytes = static_cast<unsigned char*>(input->data());
+    unsigned char* bytes = static_cast<unsigned char*>(input.data());
     float* output_data = NULL;
     size_t r1 = pressio_data_get_dimension(output, 0);
     size_t r2 = pressio_data_get_dimension(output, 1);

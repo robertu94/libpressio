@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
-project(libpressio VERSION "0.99.6" LANGUAGES CXX C)
+project(libpressio VERSION "1.0.0" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -58,6 +58,7 @@ add_library(libpressio
   #core implementation
   ./src/pressio.cc
   ./src/userptr.cc
+  ./src/pressio_names.cc
   ./src/pressio_posix.cc
   ./src/pressio_configurable.cc
   ./src/pressio_versionable.cc
@@ -77,6 +78,7 @@ add_library(libpressio
   ./src/external_parse.cc
 
   #plugins
+  ./src/plugins/domains_metrics/print.cc
   ./src/plugins/compressors/compressor_base.cc
   ./src/plugins/compressors/noop.cc
   ./src/plugins/compressors/pressio.cc
@@ -195,8 +197,9 @@ libpressio_optional_component(print_options "print the options passed to set_opt
 libpressio_optional_component(data_gap "compute the data_gap" /metrics/data_gap.cc)
 libpressio_optional_component(clipping "compute the number of values that exceed an absolute error bound" /metrics/clipping.cc)
 libpressio_optional_component(ssim "computes the SSIM" /metrics/ssim.cc)
-libpressio_optional_component(ssim "computes the sobolev norm" /metrics/sobolevp2.cc)
-libpressio_optional_component(ssim "computes the gradient length" /metrics/gradlength.cc)
+libpressio_optional_component(sobolev "computes the sobolev norm" /metrics/sobolevp2.cc)
+libpressio_optional_component(gradient "computes the gradient length" /metrics/gradlength.cc)
+libpressio_optional_component(out_of_bounds "computes the gradient length" /metrics/out_of_bounds.cc)
 libpressio_optional_component(write_debug_inputs "metric that writes output buffers for testing" /metrics/write_debug_inputs.cc)
 set(roibin_sources /compressors/roibin.cc /compressors/binning.cc /compressors/masked_binning.cc)
 libpressio_optional_component(roibin "build the roibin metacompressor" "${roibin_sources}")
@@ -607,7 +610,7 @@ if(LIBPRESSIO_HAS_CUSZP)
     PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/cuszp.cc
     )
-  target_link_libraries(libpressio PRIVATE cuSZp::cuSZp)
+  target_link_libraries(libpressio PRIVATE cuSZp::cuSZp_shared)
 endif()
 
 option(LIBPRESSIO_HAS_FPZIP "build the fpzip plugin" OFF)

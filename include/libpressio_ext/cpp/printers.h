@@ -101,8 +101,8 @@ operator<<(std::basic_ostream<CharT, Traits>& out, pressio_data const& data) {
   for (auto const& dim : data.dimensions()) {
     out << dim << ", ";  
   }
-  out << "} has_data=" ;
-  if(data.has_data() &&  data.num_elements() < 10 ) {
+  out << "} domain=" << data.domain()->prefix() << " has_data=" ;
+  if(data.has_data() &&  data.num_elements() < 10 && is_accessible(*data.domain(), *domain_plugins().build("malloc"))) {
     pressio_data_for_each<int>(data, print_elements(out));
     out << '}';
   } else {
@@ -288,6 +288,17 @@ template <class CharT = char, class Traits = std::char_traits<CharT>>
 std::basic_ostream<CharT, Traits>&
 operator<<(std::basic_ostream<CharT, Traits>& out, libpressio_compressor_plugin const& comp) {
 	return out << comp.prefix();
+}
+
+/**
+ * human readable debugging IO function for pressio_domain, the format is unspecified
+ * \param[in] out the stream to write to
+ * \param[in] dom the type to print
+ */
+template <class CharT = char, class Traits = std::char_traits<CharT>>
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& out, pressio_domain const& dom) {
+	return out << '{' << dom.prefix() <<  ',' << dom.domain_id() << ',' << '}';
 }
 
 #endif /* end of include guard: LIBPRESSIO_PRINTERS_H */

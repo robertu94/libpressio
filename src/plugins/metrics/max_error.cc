@@ -4,6 +4,7 @@
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/pressio.h"
 #include "libpressio_ext/cpp/options.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include "std_compat/memory.h"
 #include "std_compat/optional.h"
 #include <cmath>
@@ -36,11 +37,13 @@ class max_error_plugin : public libpressio_metrics_plugin {
     };
   public:
     int begin_compress_impl(struct pressio_data const* input, pressio_data const*) override {
-      in = pressio_data::clone(*input);
+      if(!input || !input->has_data()) return 0;
+      in = pressio_data::clone(domain_manager().make_readable(domain_plugins().build("malloc"), *input));
       return 0; }
 
     int end_decompress_impl(struct pressio_data const* , pressio_data const* output, int) override {
-      errors = pressio_data_for_each<max_error_info>(in, *output, compute_error_info{});
+      if(!output || !output->has_data() || !in.has_data()) return 0;
+      errors = pressio_data_for_each<max_error_info>(in, domain_manager().make_readable(domain_plugins().build("malloc"), *output), compute_error_info{});
       return 0;
     }
 

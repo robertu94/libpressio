@@ -9,6 +9,7 @@
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/io.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include "std_compat/memory.h"
 #include "pressio_posix.h"
 
@@ -127,10 +128,11 @@ struct posix_io : public libpressio_io_plugin {
     return nullptr;
   }
 
-  virtual int write_impl(struct pressio_data const* data) override{
+  virtual int write_impl(struct pressio_data const* indata) override{
+    auto data = domain_manager().make_readable(domain_plugins().build("malloc"), *indata);
     errno = 0;
     if(path) {
-      int ret = pressio_io_data_path_write(data, path->c_str()) != data->size_in_bytes();
+      int ret = pressio_io_data_path_write(&data, path->c_str()) != data.size_in_bytes();
       if(ret) {
         if(errno) return set_error(2, errno_to_error());
         else return set_error(3, "unknown failure");
@@ -138,7 +140,7 @@ struct posix_io : public libpressio_io_plugin {
       return ret;
     }
     else if(file_ptr) {
-      int ret = pressio_io_data_fwrite(data, *file_ptr) != data->size_in_bytes();
+      int ret = pressio_io_data_fwrite(&data, *file_ptr) != data.size_in_bytes();
       if(ret) {
         if(errno) set_error(2, errno_to_error());
         else set_error(3, "unknown failure");
@@ -146,7 +148,7 @@ struct posix_io : public libpressio_io_plugin {
       return ret;
     }
     else if(fd) {
-      int ret = pressio_io_data_write(data, *fd) != data->size_in_bytes();
+      int ret = pressio_io_data_write(&data, *fd) != data.size_in_bytes();
       if(ret) {
         if(errno) set_error(2, errno_to_error());
         else set_error(3, "unknown failure");

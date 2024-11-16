@@ -11,6 +11,7 @@
 #include <type_traits>
 #include "std_compat/string_view.h"
 #include "registry.h"
+#include <libpressio_ext/cpp/names.h>
 
 /**
  * \file
@@ -35,14 +36,74 @@ domain_option_key_status set(domain_options& opts, std::string const& key, T&& v
 }
 template <class T>
 domain_option_key_status set(domain_options& opts, std::string const& name, std::string const& key, T&& value) {
-    std::string full_name;
-    if(name.empty()) {
-        full_name = key;
-    } else  {
-        full_name = '/' + name + ':' +  key;
-    }
+    std::string full_name = libpressio::names::format_name(name, key);
     return set(opts, full_name, std::forward<T>(value));
 }
+
+template <class T>
+domain_option_key_status get(domain_options const& opts, std::string const& key, T& value) {
+    auto it = opts.find(key);
+    if (it != opts.end()) {
+        if (std::holds_alternative<typename std::decay<T>::type>(it->second)) {
+            value = std::get<typename std::decay<T>::type>(it->second);
+            return domain_option_key_status::key_set;
+        } else {
+            return domain_option_key_status::key_exists;
+        }
+
+    } else {
+        return domain_option_key_status::key_does_not_exist;
+    }
+}
+template <class T>
+domain_option_key_status get(domain_options const& opts, std::string const& name, std::string const& key, T& value) {
+    std::string prefix_key;
+    for (auto path: libpressio::names::search(name)) {
+        prefix_key = libpressio::names::format_name(std::string(path), key);
+        if(opts.find(prefix_key) != opts.end()) {
+            return get(opts, prefix_key, value);
+        }
+    }
+    return get(opts, key, value);
+}
+
+template <class Wrapper>
+domain_option_key_status set_meta(domain_options& opts, std::string const& name, std::string const& key, Wrapper&& current_value) {
+    auto ret = set(opts, name, key, current_value->prefix());
+    auto child = current_value->get_options();
+    for(auto i: child) {
+        opts.insert_or_assign(i.first, i.second);
+    }
+    return ret;
+}
+template <class Wrapper, class Registry>
+domain_option_key_status get_meta(domain_options& opts, std::string const& name, std::string const& key, Registry const& registry, Wrapper&& current_value) {
+    std::string new_plugin;
+    auto ret = domain_option_key_status::key_exists;
+    if(get(opts, name, key, new_plugin) == domain_option_key_status::key_set) {
+        if (new_plugin != current_value->prefix()) {
+            auto new_value = registry.build(new_plugin);
+            if(new_value) {
+                current_value = std::move(new_value);
+                ret = domain_option_key_status::key_set;
+            } else {
+                return domain_option_key_status::key_does_not_exist;
+            }
+        }
+        if(not name.empty()) {
+            //TODO this should call back to the set_name function on the caller
+            //this does the wrong thing because the parent may name the child in some
+            //specific way
+            current_value->set_name(name);
+        }
+    }
+    current_value->set_options(opts);
+    return ret;
+}
+
+
+std::string to_string(domain_options const& op);
+std::string to_string(domain_option const& op);
 
 
 namespace detail {
@@ -189,12 +250,22 @@ struct pressio_domain {
     }
     /**
      * a unique identifier for all domains that can memcpy from this domain
+     *
+     * it MUST be pass-able to domain_plugins().build(x) to construct an allocator
+     * that can allocate in domains that share this id
+     *
+     * the prefix and the domain_id MAY be different
      */
     virtual std::string const& domain_id() const {
         return prefix();
     }
     /**
      * a unique identifier for all domains that compare equal to this domain
+     *
+     * it MUST be pass-able to domain_plugins().build(x) to construct an allocator
+     * that can free in domains that share this id
+     *
+     * the prefix and the domain_id MAY be different
      */
     virtual std::string const& prefix() const=0;
     /**

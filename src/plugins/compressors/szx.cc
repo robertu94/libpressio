@@ -4,6 +4,7 @@
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include "cleanup.h"
 #include <szx.h>
 #include <omp.h>
@@ -156,7 +157,7 @@ public:
     return 0;
   }
 
-  int compress_impl(const pressio_data* input,
+  int compress_impl(const pressio_data* real_input,
                     struct pressio_data* output) override
   {
     try {
@@ -168,26 +169,31 @@ public:
             omp_set_num_threads(old_threads);
         };
     }
+
+    //as of szx@3a0f875afb0de045517aad150caa6f3842e867b5
+    //cuSZx expects to copy from the host, so ensure that the data is there.
+    pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
+
     size_t outsize = 0;
-    auto dims = input->normalized_dims(5);
+    auto dims = input.normalized_dims(5);
     unsigned char* bytes = nullptr;
 #if LIBPRESSIO_HAS_CUSZx
     if (use_cuda) {
-        if(input->dtype() != pressio_float_dtype) {
+        if(input.dtype() != pressio_float_dtype) {
             return set_error(1, "unsupported type");
         }
         bytes = cuSZx_fast_compress_args_unpredictable_blocked_float(
-                static_cast<float*>(input->data()),
+                static_cast<float*>(input.data()),
                 &outsize,
                 static_cast<float>(absErrBound),
-                input->num_elements(),
+                input.num_elements(),
                 blockSize);
     } else {
 #endif
     bytes = SZx_fast_compress_args(
         fastMode,
-        to_szx_type(input->dtype()),
-        input->data(),
+        to_szx_type(input.dtype()),
+        input.data(),
         &outsize,
         errBoundMode,
         static_cast<float>(absErrBound),
@@ -214,7 +220,7 @@ public:
     }
   }
 
-  int decompress_impl(const pressio_data* input,
+  int decompress_impl(const pressio_data* real_input,
                       struct pressio_data* output) override
   {
     try {
@@ -226,19 +232,21 @@ public:
             omp_set_num_threads(old_threads);
         };
     }
+    //as of szx@3a0f875afb0de045517aad150caa6f3842e867b5
+    //cuSZx expects to copy from the host, so ensure that the data is there.
+    pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
     auto dims = output->normalized_dims(5);
     void* output_bytes = nullptr;
 #if LIBPRESSIO_HAS_CUSZx
     if(use_cuda) {
-
-        cuSZx_fast_decompress_args_unpredictable_blocked_float(reinterpret_cast<float**>(&output_bytes), output->num_elements(), static_cast<unsigned char*>(input->data()));
+        cuSZx_fast_decompress_args_unpredictable_blocked_float(reinterpret_cast<float**>(&output_bytes), output->num_elements(), static_cast<unsigned char*>(input.data()));
     } else {
 #endif
     output_bytes = SZx_fast_decompress(
         fastMode,
         to_szx_type(output->dtype()),
-        static_cast<unsigned char*>(input->data()),
-        input->size_in_bytes(),
+        static_cast<unsigned char*>(input.data()),
+        input.size_in_bytes(),
         dims[4],
         dims[3],
         dims[2],

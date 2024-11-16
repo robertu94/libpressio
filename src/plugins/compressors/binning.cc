@@ -3,6 +3,7 @@
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include "roibin_impl.h"
 
 namespace libpressio { namespace binning_ns {
@@ -146,11 +147,12 @@ public:
     return 0;
   }
 
-  int compress_impl(const pressio_data* input,
+  int compress_impl(const pressio_data* real_input,
                     struct pressio_data* output) override
   {
     try {
-      auto tmp = pressio_data_for_each<pressio_data>(*input, bin_op{input->dimensions(), bins, n_threads});
+      auto input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
+      auto tmp = pressio_data_for_each<pressio_data>(input, bin_op{input.dimensions(), bins, n_threads});
       int rc = comp->compress(&tmp, output);
       if(rc) {
         return set_error(comp->error_code(), comp->error_msg());
@@ -165,8 +167,8 @@ public:
 public:
 
   template <size_t N>
-  int decompress_impl_sized(pressio_data const* input, pressio_data *output) {
-      auto dims_v = output->dimensions();
+  int decompress_impl_sized(pressio_data const* input, pressio_data *real_output) {
+      auto dims_v = real_output->dimensions();
       if (dims_v.size() != N) {
         throw std::runtime_error("mismatch in size in dims");
       }
@@ -179,7 +181,7 @@ public:
       indexer<N> bins{bins_v.begin(), bins_v.end()};
 
       indexer<N> binned_storage = roibin_ns::to_binned_index(id, bins);
-      pressio_data tmp_out = pressio_data::owning(output->dtype(), binned_storage.as_vec());
+      pressio_data tmp_out = pressio_data::owning(real_output->dtype(), binned_storage.as_vec());
       int rc = comp->decompress(input, &tmp_out);
 
       if(rc > 0) {
@@ -188,7 +190,9 @@ public:
         set_error(comp->error_code(), comp->error_msg());
       }
 
-      pressio_data_for_each<int>(tmp_out, *output, restore_op<N>{id, bins, binned_storage, n_threads});
+      pressio_data output = domain_manager().make_writeable(domain_plugins().build("malloc"), *real_output);
+      pressio_data_for_each<int>(tmp_out, output, restore_op<N>{id, bins, binned_storage, n_threads});
+      *real_output = std::move(output);
       return 0;
   }
 

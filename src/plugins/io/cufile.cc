@@ -131,7 +131,8 @@ class cufile_plugin : public libpressio_io_plugin {
           dev_ptr,
           buf->dimensions(),
           cufile_free_fn,
-          metadata
+          metadata,
+          {"cudamalloc"}
           ));
     }
 

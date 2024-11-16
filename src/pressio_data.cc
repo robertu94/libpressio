@@ -7,7 +7,34 @@
 #include "multi_dimensional_iterator.h"
 #include "libpressio_ext/cpp/data.h"
 #include "./plugins/domains/user.h"
+#include "libpressio_ext/cpp/domain.h"
 
+#ifdef LIBPRESSIO_HAS_CUDA
+#include <cuda_runtime.h>
+void pressio_data_cuda_free_fn (void* data, void*) {
+    cudaFree(data);
+}
+void pressio_data_cudahost_free_fn (void* data, void*) {
+    cudaFreeHost(data);
+}
+#endif
+
+bool is_pressio_new_free_fn(void (*deleter)(void*, void*)) 
+{
+    return (deleter == pressio_new_free_fn<unsigned char>()
+       || deleter == pressio_new_free_fn<char>()
+       || deleter == pressio_new_free_fn<int8_t>()
+       || deleter == pressio_new_free_fn<int16_t>()
+       || deleter == pressio_new_free_fn<int32_t>()
+       || deleter == pressio_new_free_fn<int64_t>()
+       || deleter == pressio_new_free_fn<uint8_t>()
+       || deleter == pressio_new_free_fn<uint16_t>()
+       || deleter == pressio_new_free_fn<uint32_t>()
+       || deleter == pressio_new_free_fn<uint64_t>()
+       || deleter == pressio_new_free_fn<float>()
+       || deleter == pressio_new_free_fn<double>()
+       );
+}
 
 void pressio_data_libc_free_fn(void* data, void*) {
   free(data);
@@ -146,12 +173,18 @@ namespace {
   };
 }
 
+pressio_data pressio_data::empty(const pressio_dtype dtype, std::vector<size_t> const& dimensions, std::shared_ptr<pressio_domain> && domain) {
+    return pressio_data(dtype, dimensions, pressio_memory(std::move(domain)));
+  }
 pressio_data pressio_data::empty(const pressio_dtype dtype, std::vector<size_t> const& dimensions) {
     return pressio_data(dtype, dimensions, pressio_memory());
   }
+pressio_data pressio_data::empty(const pressio_dtype dtype, size_t const num_dimensions, size_t const dimensions[], std::shared_ptr<pressio_domain>&& domain) {
+    return pressio_data::empty(dtype, std::vector<size_t>(dimensions, dimensions+num_dimensions), std::move(domain));
+}
 pressio_data pressio_data::empty(const pressio_dtype dtype, size_t const num_dimensions, size_t const dimensions[]) {
     return pressio_data::empty(dtype, std::vector<size_t>(dimensions, dimensions+num_dimensions));
-  }
+}
 
 pressio_data pressio_data::nonowning(const pressio_dtype dtype, void* data, std::vector<size_t> const& dimensions) {
     return pressio_data(dtype, dimensions, pressio_memory(data, data_size_in_bytes(dtype, dimensions.size(), dimensions.data()), domain_plugins().build("nonowning")));
@@ -167,15 +200,24 @@ pressio_data pressio_data::nonowning(const pressio_dtype dtype, void* data, std:
   pressio_data pressio_data::nonowning(const pressio_dtype dtype, void* data, size_t const num_dimensions, size_t const dimensions[], std::string const& domain_id) {
     return pressio_data::nonowning(dtype, data, std::vector<size_t>(dimensions, dimensions+num_dimensions), domain_id);
   }
+pressio_data pressio_data::nonowning(pressio_data const& src) {
+    return pressio_data::nonowning(src.dtype(),src.data(), src.dimensions(), src.domain()->domain_id());
+}
 
-pressio_data pressio_data::copy(const enum pressio_dtype dtype, const void* src, std::vector<size_t> const& dimensions) {
+pressio_data pressio_data::copy(const enum pressio_dtype dtype, const void* src, std::vector<size_t> const& dimensions, std::string const& domain_id) {
     size_t capacity = data_size_in_bytes(dtype, dimensions.size(), dimensions.data());
     pressio_memory src_mem(const_cast<void*>(src), capacity);
-    pressio_memory mem = src_mem;
+    pressio_memory mem(src_mem, domain_plugins().build(domain_id));
     return pressio_data(dtype, dimensions, std::move(mem));
+  }
+pressio_data pressio_data::copy(const enum pressio_dtype dtype, const void* src, std::vector<size_t> const& dimensions) {
+    return pressio_data::copy(dtype, src, dimensions, "malloc");
   }
 pressio_data pressio_data::copy(const enum pressio_dtype dtype, const void* src, size_t const num_dimensions, size_t const dimensions[]) {
       return pressio_data::copy(dtype, src, std::vector<size_t>(dimensions, dimensions+num_dimensions));
+  }
+pressio_data pressio_data::copy(const enum pressio_dtype dtype, const void* src, size_t const num_dimensions, size_t const dimensions[], std::string const& domain_id) {
+      return pressio_data::copy(dtype, src, std::vector<size_t>(dimensions, dimensions+num_dimensions), domain_id);
   }
 
 pressio_data pressio_data::owning(const pressio_dtype dtype, std::vector<size_t> const& dimensions) {
@@ -193,23 +235,47 @@ pressio_data pressio_data::owning(const pressio_dtype dtype, std::vector<size_t>
 pressio_data pressio_data::owning(const pressio_dtype dtype, size_t const num_dimensions, size_t const dimensions[]) {
     return pressio_data::owning(dtype, std::vector<size_t>(dimensions, dimensions+num_dimensions));
   }
+pressio_data pressio_data::owning(pressio_data const& src) {
+    return pressio_data::owning(src.dtype(), src.dimensions(), src.domain());
+}
+pressio_data pressio_data::owning(pressio_data && src) {
+    return std::move(src);
+}
+pressio_data pressio_data::owning(pressio_data const& src, std::shared_ptr<pressio_domain> const& domain) {
+    return pressio_data::owning(src.dtype(), src.dimensions(), domain);
+}
+pressio_data pressio_data::owning(pressio_data && src, std::shared_ptr<pressio_domain> const& domain) {
+    if(is_accessible(*src.domain(), *domain)) return std::move(src);
+    else return pressio_data::owning(src.dtype(), src.dimensions(), domain);
+}
 
 
 pressio_data pressio_data::move(const pressio_dtype dtype,
       void* data,
       std::vector<size_t> const& dimensions,
       pressio_data_delete_fn deleter,
-      void* metadata) {
-    return pressio_data(dtype, dimensions,  pressio_memory(data, data_size_in_bytes(dtype, dimensions.size(), dimensions.data()), std::make_shared<pressio_user_domain>(deleter, metadata)));
+      void* metadata,
+      std::vector<std::string> const& accessible
+      ) {
+    return pressio_data(dtype, dimensions,  pressio_memory(data, data_size_in_bytes(dtype, dimensions.size(), dimensions.data()), std::make_shared<pressio_user_domain>(deleter, metadata, accessible)));
   }
 pressio_data pressio_data::move(const pressio_dtype dtype,
       void* data,
       size_t const num_dimensions,
       size_t const dimensions[],
       pressio_data_delete_fn deleter,
-      void* metadata) {
-    return pressio_data::move(dtype, data, std::vector<size_t>(dimensions, dimensions+num_dimensions), deleter, metadata);
+      void* metadata,
+      std::vector<std::string> const& accessible) {
+    return pressio_data::move(dtype, data, std::vector<size_t>(dimensions, dimensions+num_dimensions), deleter, metadata, accessible);
   }
+
+pressio_data pressio_data::move(const pressio_dtype dtype,
+  void* data,
+  std::vector<size_t> const& dimensions,
+  std::shared_ptr<pressio_domain>&& domain) {
+
+  return pressio_data(dtype, dimensions,  pressio_memory(data, data_size_in_bytes(dtype, dimensions.size(), dimensions.data()), std::move(domain)));
+}
 
 
 pressio_data pressio_data::select(std::vector<size_t> const& start,
@@ -405,6 +471,14 @@ struct pressio_data* pressio_data_new_nonowning(const enum pressio_dtype dtype, 
 
 struct pressio_data* pressio_data_new_nonowning_domain(const enum pressio_dtype dtype, void* data, size_t const num_dimensions, size_t const dimensions[], const char* domain) {
   return new pressio_data(pressio_data::nonowning(dtype, data, num_dimensions, dimensions, domain));
+}
+
+struct pressio_data* pressio_data_new_nonowning_from_data(struct pressio_data* source) {
+  return new pressio_data(pressio_data::nonowning(*source));
+}
+
+struct pressio_data* pressio_data_new_owning_from_data(struct pressio_data* source) {
+  return new pressio_data(pressio_data::owning(*source));
 }
 
 struct pressio_data* pressio_data_new_empty(const pressio_dtype dtype, size_t const num_dimensions, size_t const dimensions[]) {

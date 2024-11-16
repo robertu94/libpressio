@@ -1,5 +1,6 @@
 #include <libpressio_ext/cpp/libpressio.h>
 #include <std_compat/memory.h>
+#include "libpressio_ext/cpp/domain_manager.h"
 
 namespace libpressio { namespace mask1d {
 struct apply_mask{
@@ -42,13 +43,15 @@ class mask_metrics: public libpressio_metrics_plugin {
   }
 
   int begin_compress_impl(pressio_data const* input, pressio_data const* output) override {
-    auto masked(pressio_data_for_each<pressio_data>(*input, mask, apply_mask{}));
+      if(!input || !input->has_data()) return 0;
+    auto masked(pressio_data_for_each<pressio_data>(domain_manager().make_readable(domain_plugins().build("malloc"), *input), mask, apply_mask{}));
     plugin->begin_compress(&masked, output);
     return 0;
   }
 
   int end_decompress_impl(pressio_data const* input, pressio_data const* output, int rc) override {
-    auto masked(pressio_data_for_each<pressio_data>(*output, mask, apply_mask{}));
+    if(!output || !output->has_data()) return 0;
+    auto masked(pressio_data_for_each<pressio_data>(domain_manager().make_readable(domain_plugins().build("malloc"), *output), mask, apply_mask{}));
     plugin->end_decompress(input, &masked, rc);
     return 0;
   }

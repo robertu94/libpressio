@@ -4,6 +4,7 @@
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 
 #include <arc.h>
 
@@ -100,13 +101,14 @@ public:
     } else if(rc < 0) {
       set_error(impl->error_code(), impl->error_msg());
     }
+    pressio_data compressed = domain_manager().make_readable(domain_plugins().build("malloc"), *output);
 
     uint8_t* arc_encoded;
     uint32_t arc_encoded_size;
     auto begin = std::chrono::steady_clock::now();
     auto err = arc_encode(
-        static_cast<unsigned char*>(output->data()),
-        output->size_in_bytes(),
+        static_cast<unsigned char*>(compressed.data()),
+        compressed.size_in_bytes(),
         memory_constraint,
         throughput_constraint,
         ecc_choices.data(), static_cast<int>(ecc_choices.size()),
@@ -115,14 +117,15 @@ public:
     encode_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
 
     (void)err; //TODO what to do here?
-
-    *output = pressio_data::move(
+    compressed = pressio_data::move(
         pressio_byte_dtype,
         arc_encoded,
         {arc_encoded_size},
         pressio_data_libc_free_fn,
         nullptr
         );
+
+    *output = std::move(compressed);
 
     return 0;
   }
@@ -132,8 +135,9 @@ public:
   {
     uint8_t* arc_decoded;
     uint32_t arc_decoded_size;
+    pressio_data arc_input = domain_manager().make_readable(domain_plugins().build("malloc"), *input);
     auto begin = std::chrono::steady_clock::now();
-    auto err = arc_decode(static_cast<uint8_t*>(input->data()), input->size_in_bytes(), &arc_decoded, &arc_decoded_size);
+    auto err = arc_decode(static_cast<uint8_t*>(arc_input.data()), arc_input.size_in_bytes(), &arc_decoded, &arc_decoded_size);
     auto end = std::chrono::steady_clock::now();
     decode_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count();
 

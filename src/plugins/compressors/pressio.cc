@@ -3,6 +3,7 @@
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 
 namespace libpressio { namespace pressio_ns {
 
@@ -134,10 +135,12 @@ public:
     return 0;
   }
 
-  int compress_impl(const pressio_data* input,
+  int compress_impl(const pressio_data* real_input,
                     struct pressio_data* output) override
   {
     auto child = comp->get_options();
+    //default to non-owning, and then move if needed
+    pressio_data input = pressio_data::nonowning(*real_input);
     switch(mode) {
       case pressio_mode::passthrough:
       case pressio_mode::forward:
@@ -155,7 +158,9 @@ public:
           //should already be set by inheritance, ignore
         } else if(child_supports_mode(child, "pressio:abs")) {
           pressio_options options;
-          double value_range = pressio_data_for_each<double>(*input, compute_value_range{});
+          input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
+          //TODO add fallback for devices to avoid unnecessary copies
+          double value_range = pressio_data_for_each<double>(*real_input, compute_value_range{});
           set(options, "pressio:abs", target*value_range);
           comp->set_options(options);
         }
@@ -171,7 +176,7 @@ public:
         return set_error(1, "unknown mode mode");
     }
 
-    if(comp->compress(input, output)) {
+    if(comp->compress(&input, output)) {
       return set_error(comp->error_code(), comp->error_msg());
     }
     return 0;

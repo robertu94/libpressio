@@ -163,7 +163,7 @@ public:
           }
 
 
-          return response_t{index, std::move(new_options), output_data, error_code, error_msg};
+          return response_t{index, std::move(new_options), std::move(output_data), error_code, error_msg};
         },
         [&outputs, &outstanding, &next_task, &ret, this](response_t response, TaskManager<request_t, MPI_Comm>& task_manager) {
           //one less outstanding

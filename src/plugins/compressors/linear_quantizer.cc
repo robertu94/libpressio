@@ -1,5 +1,6 @@
 #include <libpressio_ext/cpp/compressor.h>
 #include <libpressio_ext/cpp/pressio.h>
+#include <libpressio_ext/cpp/domain_manager.h>
 #include <std_compat/memory.h>
 #include <sstream>
 
@@ -97,12 +98,13 @@ applies linear_quantizer encoding to prior to compression and reverses it post d
     get(options, "linear_quantizer:auto_step", &auto_step);
     return 0;
   }
-  int compress_impl(const pressio_data *input, struct pressio_data *output) override {
+  int compress_impl(const pressio_data *real_input, struct pressio_data *output) override {
+    pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
     if(auto_step) {
-      step = pressio_data_for_each<double>(*input, linear_quantizer_step_finder{auto_step});
+      step = pressio_data_for_each<double>(input, linear_quantizer_step_finder{auto_step});
     }
-    auto linear_quantizer_encoded = pressio_data_for_each<pressio_data>(*input, linear_quantizer_encoder{step});
-    linear_quantizer_encoded.set_dimensions(std::vector<size_t>(input->dimensions()));
+    auto linear_quantizer_encoded = pressio_data_for_each<pressio_data>(input, linear_quantizer_encoder{step});
+    linear_quantizer_encoded.set_dimensions(std::vector<size_t>(input.dimensions()));
     if(meta->compress(&linear_quantizer_encoded, output) != 0) {
       set_error(meta->error_code(), meta->error_msg());
     }
@@ -119,6 +121,7 @@ applies linear_quantizer encoding to prior to compression and reverses it post d
     } else if(ret < 0) {
       set_error(meta->error_code(), meta->error_msg());
     }
+    *output = domain_manager().make_readable(domain_plugins().build("malloc"), std::move(*output));
     pressio_data_for_each<int>(quantized_output, *output, linear_quantizer_decoder{step});
     return ret;
   }

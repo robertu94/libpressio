@@ -5,6 +5,7 @@
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/pressio.h"
 #include "libpressio_ext/cpp/options.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include "std_compat/memory.h"
 #include <cmath>
 
@@ -418,8 +419,9 @@ class qcatsobolevp2_plugin : public libpressio_metrics_plugin {
       if(run_input) {
           int datatype;
           if(input == nullptr) return 0;
-          if(input->dtype() == pressio_float_dtype) datatype = QCAT_FLOAT;
-          else if(input->dtype() == pressio_double_dtype) datatype = QCAT_DOUBLE;
+          auto input_host = domain_manager().make_readable(domain_plugins().build("malloc"), *input);
+          if(input_host.dtype() == pressio_float_dtype) datatype = QCAT_FLOAT;
+          else if(input_host.dtype() == pressio_double_dtype) datatype = QCAT_DOUBLE;
           else {
               return 0;
           }
@@ -434,14 +436,15 @@ class qcatsobolevp2_plugin : public libpressio_metrics_plugin {
       if(run_output) {
           int datatype;
           if(rc > 0 || output == nullptr) return 0;
-          if(output->dtype() == pressio_float_dtype) datatype = QCAT_FLOAT;
-          else if(output->dtype() == pressio_double_dtype) datatype = QCAT_DOUBLE;
+          auto output_host = domain_manager().make_readable(domain_plugins().build("malloc"), *output);
+          if(output_host.dtype() == pressio_float_dtype) datatype = QCAT_FLOAT;
+          else if(output_host.dtype() == pressio_double_dtype) datatype = QCAT_DOUBLE;
           else {
               return 0;
           }
-          auto dims = output->normalized_dims(4);
+          auto dims = output_host.normalized_dims(4);
 
-          decompressed_result = calculateSobolevNorm_p2(output->data(), datatype, order, 0, dims[3], dims[2], dims[1], dims[0]);
+          decompressed_result = calculateSobolevNorm_p2(output_host.data(), datatype, order, 0, dims[3], dims[2], dims[1], dims[0]);
       }
       return 0;
     }

@@ -3,6 +3,7 @@
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include <bzlib.h>
 #include <cmath>
 
@@ -69,7 +70,7 @@ public:
       if(temp >= 0 && temp <= 250) {
         blockSize100k = temp;
       } else {
-        set_error(1, "workFactor out of range");
+        set_error(1, "lossless out of range");
       }
     }
     if(get(options, "bzip2:work_factor", &temp) == pressio_options_key_set) {
@@ -89,55 +90,68 @@ public:
     return 0;
   }
 
-  int compress_impl(const pressio_data* input,
-                    struct pressio_data* output) override
+  int compress_impl(const pressio_data* real_input,
+                    struct pressio_data* real_output) override
   {
     
-    if(!output->has_data()) {
-      //suggested size is input.num_bytes()*1.01 + 600
-      *output = pressio_data::owning(pressio_byte_dtype, {static_cast<size_t>(std::ceil(static_cast<double>(input->size_in_bytes()) * 1.01)) + 600});
-    }
-    if(input->size_in_bytes() > std::numeric_limits<unsigned int>::max()) {
+    pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
+    pressio_data output =
+        (real_output->has_data())
+            ? (domain_manager().make_writeable(domain_plugins().build("malloc"),
+                                               std::move(*real_output)))
+            : (pressio_data::owning(pressio_byte_dtype,
+                                    {static_cast<size_t>(std::ceil(
+                                         static_cast<double>(input.size_in_bytes()) * 1.01)) +
+                                     600}));
+    if(input.size_in_bytes() > std::numeric_limits<unsigned int>::max()) {
       return set_error(1, "input is too large for bzip, max size is " + std::to_string(std::numeric_limits<unsigned int>::max()));
     }
-    if( output->size_in_bytes() > std::numeric_limits<unsigned int>::max()) {
+    if( output.size_in_bytes() > std::numeric_limits<unsigned int>::max()) {
       return set_error(1, "output is too large for bzip, max size is " + std::to_string(std::numeric_limits<unsigned int>::max()));
     }
-    unsigned int destLen = output->size_in_bytes();
+    unsigned int destLen = output.size_in_bytes();
     int rc = BZ2_bzBuffToBuffCompress(
-        static_cast<char*>(output->data()),
+        static_cast<char*>(output.data()),
         &destLen,
-        static_cast<char*>(input->data()),
-        input->size_in_bytes(),
+        static_cast<char*>(input.data()),
+        input.size_in_bytes(),
         blockSize100k,
         verbosity,
         workFactor
         );
-    output->set_dimensions({destLen});
+    output.set_dimensions({destLen});
+    *real_output = std::move(output);
 
     return lp_bz_error(rc);
   }
 
-  int decompress_impl(const pressio_data* input,
-                      struct pressio_data* output) override
+  int decompress_impl(const pressio_data* real_input,
+                      struct pressio_data* real_output) override
   {
-    unsigned int destLen = output->size_in_bytes();
-    if(input->size_in_bytes() > std::numeric_limits<unsigned int>::max()) {
+    if(real_input->size_in_bytes() > std::numeric_limits<unsigned int>::max()) {
       return set_error(1, "input is too large for bzip, max size is " + std::to_string(std::numeric_limits<unsigned int>::max()));
     }
-    if( output->size_in_bytes() > std::numeric_limits<unsigned int>::max()) {
+    if( real_output->size_in_bytes() > std::numeric_limits<unsigned int>::max()) {
       return set_error(1, "output is too large for bzip, max size is " + std::to_string(std::numeric_limits<unsigned int>::max()));
     }
+    pressio_data input =
+        domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
+    pressio_data output =
+        (real_output->has_data())
+            ? (domain_manager().make_writeable(domain_plugins().build("malloc"),
+                                               std::move(*real_output)))
+            : (pressio_data::owning(real_output->dtype(), real_output->dimensions()));
+    unsigned int destLen = output.size_in_bytes();
     int rc = BZ2_bzBuffToBuffDecompress(
-        static_cast<char*>(output->data()),
+        static_cast<char*>(output.data()),
         &destLen,
-        static_cast<char*>(input->data()),
-        input->size_in_bytes(),
+        static_cast<char*>(input.data()),
+        input.size_in_bytes(),
         small,
         verbosity);
+    *real_output = std::move(output);
 
     return lp_bz_error(rc);
-
   }
 
   static std::array<int,3> parse_bz2version() {

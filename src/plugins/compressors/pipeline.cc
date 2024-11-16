@@ -3,6 +3,7 @@
 #include "libpressio_ext/cpp/compressor.h"
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/options.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include "libpressio_ext/cpp/pressio.h"
 
 namespace libpressio { namespace pipeline_ns {
@@ -52,7 +53,7 @@ public:
                     struct pressio_data* output) override
   {
     int ec = 0;
-    pressio_data tmp_in = pressio_data::nonowning(input->dtype(), input->data(), input->dimensions());
+    pressio_data tmp_in = pressio_data::nonowning(*input);
     pressio_data tmp_out = pressio_data::empty(pressio_byte_dtype, {});
     std::vector<pressio_data> metadata;
 
@@ -85,8 +86,10 @@ public:
         ); /*stage_dims*/
         std::swap(tmp_in, tmp_out);
     }
-    //tmp_in now holds the output;
+    //tmp_in now holds the output; move to host to add header
+    tmp_in = domain_manager().make_readable(domain_plugins().build("malloc"), std::move(tmp_in));
 
+    //output needs to be on the host to add the header
     *output = pressio_data::owning(
             pressio_byte_dtype,
             {tmp_in.size_in_bytes() + header_size}
@@ -111,11 +114,13 @@ public:
     return 0;
   }
 
-  int decompress_impl(const pressio_data* input,
+  int decompress_impl(const pressio_data* real_input,
                       struct pressio_data* output) override
   {
       //decode metadata
-      const uint64_t* metadata_ptr = static_cast<uint64_t*>(input->data());
+      //move to host to read header
+      pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
+      const uint64_t* metadata_ptr = static_cast<uint64_t*>(input.data());
       uint64_t idx = 0;
       const uint64_t format_id = metadata_ptr[idx++];
       std::vector<pressio_data> outputs;
@@ -137,10 +142,10 @@ public:
                               );
                   }
                   const size_t header_size_in_bytes = sizeof(uint64_t)*idx;
-                  const size_t data_size_in_bytes = input->size_in_bytes() - header_size_in_bytes;
+                  const size_t data_size_in_bytes = input.size_in_bytes() - header_size_in_bytes;
                   pressio_data tmp_in = pressio_data::nonowning(
                       pressio_byte_dtype,
-                      static_cast<uint8_t *>(input->data()) + header_size_in_bytes,
+                      static_cast<uint8_t *>(input.data()) + header_size_in_bytes,
                       {data_size_in_bytes});
 
                   //now decode them in reverse

@@ -1,5 +1,6 @@
 #include <libpressio_ext/cpp/compressor.h>
 #include <libpressio_ext/cpp/pressio.h>
+#include <libpressio_ext/cpp/domain_manager.h>
 #include <std_compat/memory.h>
 #include <sstream>
 #include <cmath>
@@ -87,12 +88,14 @@ y[0] = log(x[0]);
     get_meta(options, "log_transform:compressor", compressor_plugins(), meta_id, meta);
     return 0;
   }
-  int compress_impl(const pressio_data *input, struct pressio_data *output) override {
-    auto log_encoded = pressio_data_for_each<pressio_data>(*input, log_encoder{});
+  int compress_impl(const pressio_data *real_input, struct pressio_data *output) override {
+    pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
+    auto log_encoded = pressio_data_for_each<pressio_data>(input, log_encoder{});
     return meta->compress(&log_encoded, output);
   }
   int decompress_impl(const pressio_data *input, struct pressio_data *output) override {
     int ret = meta->decompress(input, output);
+    *output = domain_manager().make_readable(domain_plugins().build("malloc"), std::move(*output));
     *output = pressio_data_for_each<pressio_data>(*output, log_decoder{});
     return ret;
   }

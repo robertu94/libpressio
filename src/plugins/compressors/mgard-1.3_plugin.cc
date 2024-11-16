@@ -3,6 +3,7 @@
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include "cleanup.h"
 #include <sstream>
 #include <mgard/compress_x.hpp>
@@ -271,6 +272,21 @@ Reference [6] covers the design and implementation on GPU heterogeneous systems.
       size_t compressed_size;
       bool pre_allocated = output->has_data();
       auto const& dims = input->normalized_dims();
+      // as of CODARCode/mgard@1.4, MGARD expects inputs to 
+      // if cuda, use Cuda Unified Virtual Addressing infers the kind of the copy based on the pointer attributes
+      // if sycl, use Sycl Unified Shared Memory allows memory shared between src and target automatically with the OS
+      // if hip, use HIP Unified Virtual Addessing which infers the kind of the copy based on the pointer attributes
+      // if serial/openmp use host memory
+      //
+      // As such, we should perform a make_readable(malloc, data) if kind == serial || openmp
+      // but in other cases, we should not perform movement and allow MGARD to do this for us
+      pressio_data real_input;
+      if(config.dev_type == mgard_x::device_type::SERIAL || config.dev_type == mgard_x::device_type::OPENMP) {
+          real_input = domain_manager().make_readable(domain_plugins().build("malloc"), *input);
+          *output = domain_manager().make_writeable(domain_plugins().build("malloc"), std::move(*output));
+      } else {
+          real_input = pressio_data::nonowning(*input);
+      }
       mgard_x::compress(dims.size(), to_mgard_type(input->dtype()), dims, tolerance, s,
                       bound_type, input->data(),
                       output_data, compressed_size, config, pre_allocated);
@@ -301,11 +317,21 @@ Reference [6] covers the design and implementation on GPU heterogeneous systems.
       omp_set_num_threads(nthreads);
       cleanup restore_threads([save_threads]{omp_set_num_threads(save_threads);});
 #endif
+    //see comment in compress_impl
+    pressio_data real_input;
+    if(config.dev_type == mgard_x::device_type::SERIAL || config.dev_type == mgard_x::device_type::OPENMP) {
+          real_input = domain_manager().make_readable(domain_plugins().build("malloc"), *input);
+          *output = domain_manager().make_writeable(domain_plugins().build("malloc"), std::move(*output));
+    } else {
+          real_input = pressio_data::nonowning(real_input);
+    }
     void* output_data = output->data();
     bool pre_allocated = output->has_data();
     mgard_x::decompress(input->data(), input->size_in_bytes(),
                         output_data, config, pre_allocated);
     if(!pre_allocated) {
+        //TODO this may not be correct if passing a cuda memory buffer, but MGARD doesn't document
+        //what it does
       *output = pressio_data::move(
           output->dtype(),
           output_data,

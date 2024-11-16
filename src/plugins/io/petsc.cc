@@ -3,6 +3,7 @@
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
 #include "libpressio_ext/io/posix.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include "pressio_compressor.h"
 #include "pressio_data.h"
 #include <mutex>
@@ -106,21 +107,22 @@ struct petsc_io : public libpressio_io_plugin {
     return ret;
   }
 
-  virtual int write_impl(struct pressio_data const *data) override {
+  virtual int write_impl(struct pressio_data const *indata) override {
+    pressio_data data = domain_manager().make_readable(domain_plugins().build("malloc"), *indata);
     Mat mat = nullptr;
-    if (pressio_data_num_dimensions(data) != 2)
+    if (pressio_data_num_dimensions(&data) != 2)
       return unsupported_dimensions();
 
-    size_t dims[2] = {pressio_data_get_dimension(data, 0), pressio_data_get_dimension(data, 1)};
+    size_t dims[2] = {pressio_data_get_dimension(&data, 0), pressio_data_get_dimension(&data, 1)};
     PetscScalar *data_ptr;
     pressio_data *tmp = nullptr;
 
-    if (pressio_data_dtype(data) == pressio_dtype_from_type<PetscScalar>()) {
+    if (pressio_data_dtype(&data) == pressio_dtype_from_type<PetscScalar>()) {
       // don't make a copy if we already have the correct type
-      data_ptr = static_cast<PetscScalar *>(pressio_data_ptr(data, nullptr));
+      data_ptr = static_cast<PetscScalar *>(pressio_data_ptr(&data, nullptr));
     } else {
       // otherwise convert the  type
-      tmp = pressio_data_cast(data, pressio_dtype_from_type<PetscScalar>());
+      tmp = pressio_data_cast(&data, pressio_dtype_from_type<PetscScalar>());
       data_ptr = static_cast<PetscScalar *>(pressio_data_ptr(tmp, nullptr));
     }
     MatCreateSeqDense(PETSC_COMM_SELF, dims[0], dims[1], data_ptr, &mat);

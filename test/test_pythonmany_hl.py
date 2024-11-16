@@ -5,15 +5,16 @@ np.random.seed(0)
 
 input1 = np.random.rand(300,300,300)
 input2 = np.random.rand(300,300,300)
-inputs = [input1, input2]
-output1 = input1.copy()
-output2 = input2.copy()
-outputs = [output1, output2]
+inputs = [np.random.rand(300,300,300), np.random.rand(300,300,300)]
+outputs = [inputs[0].copy(), inputs[1].copy()]
 
 compressor = libpressio.PressioCompressor("many_independent_threaded",
                                           early_config={
-                                              "many_independent_threaded:compressor": b"sz3",
-                                              "many_independent_threaded:metric": b"size"
+                                              "many_independent_threaded:compressor": "sz3",
+                                              "many_independent_threaded:metric": "size",
+                                              "sz3:metric": "historian",
+                                              "historian:events": ["decompress_many", "clone"],
+                                              "historian:metrics": "size",
                                               },
                                           compressor_config={
                                               'many_independent_threaded:collect_metrics_on_compression': 0,
@@ -22,8 +23,9 @@ compressor = libpressio.PressioCompressor("many_independent_threaded",
                                               }
                                           )
 
+pprint(compressor.get_options())
 
 compressed = compressor.encode_many(inputs)
 outputs = compressor.decode_many(compressed, outputs)
 
-pprint(compressor.metrics_results())
+pprint(compressor.get_metrics())

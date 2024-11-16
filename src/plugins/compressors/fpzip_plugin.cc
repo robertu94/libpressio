@@ -9,6 +9,7 @@
 #include "libpressio_ext/cpp/compressor.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/printers.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include "libpressio_ext/cpp/pressio.h"
 #include "std_compat/memory.h"
 
@@ -121,14 +122,16 @@ class fpzip_plugin: public libpressio_compressor_plugin {
     return 0;
   };
 
-   int 	decompress_impl (const pressio_data *input, struct pressio_data *output) override {
+   int 	decompress_impl (const pressio_data *real_input, struct pressio_data *output) override {
     int type = pressio_type_to_fpzip_type(output);
     if(type == INVALID_TYPE) {
       return INVALID_TYPE;
     }
 
+    pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
+
     FPZ* fpz = fpzip_read_from_buffer(
-        pressio_data_ptr(input, nullptr)
+        pressio_data_ptr(&input, nullptr)
     );
     if(has_header) {
       fpzip_read_header(fpz);
@@ -141,6 +144,7 @@ class fpzip_plugin: public libpressio_compressor_plugin {
       fpz->type = type;
       fpz->prec = prec;
     }
+    *output = domain_manager().make_writeable(domain_plugins().build("malloc"), std::move(*output));
     size_t read = fpzip_read(fpz, pressio_data_ptr(output, nullptr));
     fpzip_read_close(fpz);
     if(read == 0) {

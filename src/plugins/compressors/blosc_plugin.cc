@@ -6,6 +6,7 @@
 #include "libpressio_ext/cpp/compressor.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include "pressio_options.h"
 #include "pressio_data.h"
 #include "pressio_compressor.h"
@@ -101,60 +102,55 @@ class blosc_plugin: public libpressio_compressor_plugin {
       return 0;
     }
 
-    int compress_impl(const pressio_data *input, struct pressio_data* output) override {
-      int typesize = pressio_dtype_size(pressio_data_dtype(input));
-      size_t nbytes = 0, destsize = 0;
-      const void* src = pressio_data_ptr(input, &nbytes);
-      *output = pressio_data::owning(pressio_byte_dtype, {nbytes + BLOSC_MAX_OVERHEAD});
-      void* dest = pressio_data_ptr(output, &destsize);
-
-      auto ret = blosc_compress_ctx(
+    int compress_impl(const pressio_data *real_input, struct pressio_data* real_output) override {
+      pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
+      pressio_data output = (real_output->has_data())
+                                ? (domain_manager().make_writeable(domain_plugins().build("malloc"),
+                                                                   std::move(*real_output)))
+                                : (pressio_data::owning(pressio_byte_dtype, {input.size_in_bytes() +
+                                                                             BLOSC_MAX_OVERHEAD}));
+      size_t compressed_size = blosc_compress_ctx(
           clevel,
           doshuffle,
-          typesize,
-          nbytes,
-          src,
-          dest,
-          destsize,
+          pressio_dtype_size(input.dtype()),
+          input.size_in_bytes(),
+          input.data(),
+          output.data(),
+          output.size_in_bytes(),
           compressor.c_str(),
           blocksize,
           static_cast<int32_t>(numinternalthreads)
           );
       //deliberately ignoring warnings from reshape since new size guaranteed to be smaller
-      size_t compressed_size = ret;
-      if(pressio_data_reshape(output, 1, &compressed_size) > 0) { 
+      
+      if(output.reshape({compressed_size}) > 0) { 
         return reshape_error();
       }
+      *real_output = std::move(output);
 
-      if (ret > 0) {
+      if (compressed_size > 0) {
         return 0;
       } else {
-        return internal_error(ret);
+        return internal_error(compressed_size);
       }
     }
 
-    int decompress_impl(const pressio_data *input, struct pressio_data* output) override {
-      const void* src = pressio_data_ptr(input, nullptr);
-      if(pressio_data_has_data(output)) {
-        std::vector<size_t> dims;
-        for (size_t i = 0; i < pressio_data_num_dimensions(output); ++i) {
-          dims.push_back(pressio_data_get_dimension(output, i));
-        }
-        *output = pressio_data::owning(
-            pressio_data_dtype(output),
-            dims
-            );
-      }
-
-      size_t destsize;
-      void* dest = pressio_data_ptr(output, &destsize);
+    int decompress_impl(const pressio_data *real_input, struct pressio_data* real_output) override {
+      pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
+      pressio_data output =
+          (real_output->has_data())
+              ? (pressio_data::owning(real_output->dtype(), real_output->dimensions()))
+              : (domain_manager().make_writeable(domain_plugins().build("malloc"),
+                                                 std::move(*real_output)));
 
       int ret = blosc_decompress_ctx(
-          src,
-          dest,
-          destsize,
+          input.data(),
+          output.data(),
+          output.size_in_bytes(),
           static_cast<int32_t>(numinternalthreads)
           );
+
+      *real_output = std::move(output);
 
       if(ret >= 0) {
         return 0;

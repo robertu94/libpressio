@@ -4,6 +4,7 @@
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/pressio.h"
 #include "libpressio_ext/cpp/options.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include "std_compat/memory.h"
 
 namespace libpressio { namespace clipping_metrics_ns {
@@ -11,7 +12,8 @@ namespace libpressio { namespace clipping_metrics_ns {
 class clipping_plugin : public libpressio_metrics_plugin {
   public:
     int end_compress_impl(struct pressio_data const* input, pressio_data const*, int) override {
-      this->input = pressio_data::clone(*input);
+      if(!input || !input->has_data()) return 0;
+      this->input = pressio_data::clone(domain_manager().make_readable(domain_plugins().build("malloc"), *input));
       return 0;
     }
 
@@ -35,7 +37,8 @@ class clipping_plugin : public libpressio_metrics_plugin {
     };
 
     int end_decompress_impl(struct pressio_data const* , pressio_data const* output, int) override {
-      clips = pressio_data_for_each<uint64_t>(input, *output, clipping_op{this});
+      if(!output || !output->has_data() || !this->input.has_data()) return 0;
+      clips = pressio_data_for_each<uint64_t>(input, domain_manager().make_readable(domain_plugins().build("malloc"), *output), clipping_op{this});
       return 0;
     }
 

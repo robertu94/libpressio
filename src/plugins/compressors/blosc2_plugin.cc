@@ -6,6 +6,7 @@
 #include "libpressio_ext/cpp/compressor.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include "pressio_options.h"
 #include "pressio_data.h"
 #include "pressio_compressor.h"
@@ -107,12 +108,13 @@ class blosc2_plugin: public libpressio_compressor_plugin {
       return 0;
     }
 
-    int compress_impl(const pressio_data *input, struct pressio_data* output) override {
-      int typesize = pressio_dtype_size(pressio_data_dtype(input));
+    int compress_impl(const pressio_data *real_input, struct pressio_data* real_output) override {
+      pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
+      int typesize = pressio_dtype_size(input.dtype());
       size_t nbytes = 0, destsize = 0;
-      const void* src = pressio_data_ptr(input, &nbytes);
-      *output = pressio_data::owning(pressio_byte_dtype, {nbytes + BLOSC2_MAX_OVERHEAD});
-      void* dest = pressio_data_ptr(output, &destsize);
+      pressio_data output = (real_output->has_data()) ? (domain_manager().make_writeable(domain_plugins().build("malloc"), *real_output)) :
+          (pressio_data::owning(pressio_byte_dtype, {nbytes + BLOSC2_MAX_OVERHEAD}));
+
 
       blosc2_cparams params = BLOSC2_CPARAMS_DEFAULTS;
       params.clevel = clevel;
@@ -122,13 +124,15 @@ class blosc2_plugin: public libpressio_compressor_plugin {
       auto cleanup_ctx = make_cleanup([ctx]{blosc2_free_ctx(ctx);});
 
       auto ret = blosc2_compress_ctx(
-              ctx, src, static_cast<int32_t>(nbytes), dest, static_cast<int32_t>(destsize)
+              ctx, input.data(), static_cast<int32_t>(nbytes), output.data(), static_cast<int32_t>(destsize)
           );
       //deliberately ignoring warnings from reshape since new size guaranteed to be smaller
       size_t compressed_size = ret;
-      if(pressio_data_reshape(output, 1, &compressed_size) > 0) { 
+      if(output.reshape({compressed_size}) > 0) { 
         return reshape_error();
       }
+
+      *real_output = std::move(output);
 
       if (ret > 0) {
         return 0;
@@ -137,22 +141,9 @@ class blosc2_plugin: public libpressio_compressor_plugin {
       }
     }
 
-    int decompress_impl(const pressio_data *input, struct pressio_data* output) override {
-      size_t src_size;
-      const void* src = pressio_data_ptr(input, &src_size);
-      if(pressio_data_has_data(output)) {
-        std::vector<size_t> dims;
-        for (size_t i = 0; i < pressio_data_num_dimensions(output); ++i) {
-          dims.push_back(pressio_data_get_dimension(output, i));
-        }
-        *output = pressio_data::owning(
-            pressio_data_dtype(output),
-            dims
-            );
-      }
-
-      size_t destsize;
-      void* dest = pressio_data_ptr(output, &destsize);
+    int decompress_impl(const pressio_data *real_input, struct pressio_data* real_output) override {
+      pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
+      pressio_data output = (real_output->has_data())?(domain_manager().make_writeable(domain_plugins().build("malloc"), *real_output)):(pressio_data::owning(real_output->dtype(), real_output->dimensions()));
 
       blosc2_dparams params = BLOSC2_DPARAMS_DEFAULTS;
       params.nthreads = static_cast<int16_t>(this->numinternalthreads);
@@ -161,11 +152,13 @@ class blosc2_plugin: public libpressio_compressor_plugin {
 
       int ret = blosc2_decompress_ctx(
           ctx,
-          src,
-          static_cast<int32_t>(src_size), 
-          dest,
-          static_cast<int32_t>(destsize)
+          input.data(),
+          static_cast<int32_t>(input.size_in_bytes()), 
+          output.data(),
+          static_cast<int32_t>(output.size_in_bytes())
           );
+
+      *real_output = std::move(output);
 
       if(ret >= 0) {
         return 0;

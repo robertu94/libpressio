@@ -1,5 +1,6 @@
 #include <libpressio_ext/cpp/compressor.h>
 #include <libpressio_ext/cpp/pressio.h>
+#include <libpressio_ext/cpp/domain_manager.h>
 #include <std_compat/memory.h>
 #include <sstream>
 
@@ -80,12 +81,22 @@ y[i] = x[i] - x[i-1];
     get_meta(options, "delta_encoding:compressor", compressor_plugins(), meta_id, meta);
     return 0;
   }
-  int compress_impl(const pressio_data *input, struct pressio_data *output) override {
-    auto delta_encoded = pressio_data_for_each<pressio_data>(*input, delta_encoder{});
-    return meta->compress(&delta_encoded, output);
+  int compress_impl(const pressio_data *real_input, struct pressio_data *output) override {
+    pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
+    auto delta_encoded = pressio_data_for_each<pressio_data>(input, delta_encoder{});
+    int rc = meta->compress(&delta_encoded, output);
+    if(rc) {
+        set_error(meta->error_code(), meta->error_msg());
+    }
+    return rc;
   }
   int decompress_impl(const pressio_data *input, struct pressio_data *output) override {
     int ret = meta->decompress(input, output);
+    set_error(meta->error_code(), meta->error_msg());
+    if(ret < 0) {
+        return ret;
+    }
+    *output = domain_manager().make_readable(domain_plugins().build("malloc"), std::move(*output));
     *output = pressio_data_for_each<pressio_data>(*output, delta_decoder{});
     return ret;
   }

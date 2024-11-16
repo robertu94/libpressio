@@ -5,6 +5,7 @@
 #include "libpressio_ext/cpp/io.h"
 #include "libpressio_ext/cpp/pressio.h"
 #include "libpressio_ext/cpp/options.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include "std_compat/memory.h"
 #include "cleanup.h"
 #include <matio.h>
@@ -96,14 +97,15 @@ class matio_plugin : public libpressio_io_plugin {
         return nullptr;
       }
     }
-  virtual int write_impl(struct pressio_data const* data) override{
+  virtual int write_impl(struct pressio_data const* indata) override{
+      pressio_data data = domain_manager().make_readable(domain_plugins().build("malloc"),*indata);
       try {
         mat_t* mat = Mat_Open(filename.c_str(), MAT_ACC_RDWR);
         auto close_mat = make_cleanup([mat]{ Mat_Close(mat);});
 
-        auto matio_dims = data->dimensions();
+        auto matio_dims = data.dimensions();
         std::reverse(matio_dims.begin(), matio_dims.end());
-        matvar_t* matvar = Mat_VarCreate(varname.c_str(), to_matio_ctype(data->dtype()),  to_matio_type(data->dtype()), static_cast<int>(matio_dims.size()), matio_dims.data(), data->data(), 0);
+        matvar_t* matvar = Mat_VarCreate(varname.c_str(), to_matio_ctype(data.dtype()),  to_matio_type(data.dtype()), static_cast<int>(matio_dims.size()), matio_dims.data(), data.data(), 0);
 
         auto free_matvar = make_cleanup([matvar]{Mat_VarFree(matvar);});
 

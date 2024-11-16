@@ -11,6 +11,7 @@
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/io.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include "std_compat/memory.h"
 #include "std_compat/algorithm.h"
 
@@ -99,8 +100,9 @@ struct csv_io : public libpressio_io_plugin
         outfile << headers[i] << ((i == headers.size()-1)? line_delim.front(): field_delim.front());
       }
     }
+    auto host_data = domain_manager().make_readable(domain_plugins().build("malloc"), *data);
     size_t rows = pressio_data_get_dimension(data, 1), columns = pressio_data_get_dimension(data, 0);
-    pressio_data_for_each<int>(*data, csv_printer{outfile, rows, columns, line_delim.front(), field_delim.front()});
+    pressio_data_for_each<int>(host_data, csv_printer{outfile, rows, columns, line_delim.front(), field_delim.front()});
 
     return 0;
   }

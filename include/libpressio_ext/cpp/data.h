@@ -31,6 +31,10 @@ pressio_data_delete_fn pressio_new_free_fn() {
   delete[] data_t;
   };
 }
+/**
+ * \returns true if a deleter is an implementation of pressio_new_free_fn with an standard integer, character, or float type.
+ */
+bool is_pressio_new_free_fn(void (*deleter)(void*, void*)); 
 
 
 /**
@@ -65,6 +69,23 @@ struct pressio_data {
    * */
   static pressio_data empty(const pressio_dtype dtype, std::vector<size_t> const& dimensions);
   /**  
+   * allocates a new empty data buffer in the specified domain
+   *
+   * \param[in] dtype the type the buffer will contain
+   * \param[in] dimensions the dimensions of the expected buffer
+   * \returns an empty data object (i.e. has no data)
+   * \see pressio_data_new_empty
+   * */
+  static pressio_data empty(const pressio_dtype dtype, std::vector<size_t> const& dimensions, std::shared_ptr<pressio_domain>&& domain);
+  /**  
+   * creates a non-owning view of an existing data
+   *
+   * \param[in] src the type of the buffer
+   * \returns an non-owning data object (i.e. calling pressio_data_free will not deallocate this memory)
+   * \see pressio_data_new_nonowning
+   * */
+  static pressio_data nonowning(pressio_data const& src);
+  /**  
    * creates a non-owning reference to data
    *
    * \param[in] dtype the type of the buffer
@@ -86,13 +107,19 @@ struct pressio_data {
    * */
   static pressio_data nonowning(const pressio_dtype dtype, void* data, std::vector<size_t> const& dimensions, std::string const& domain_id);
   /**  
-   * creates a copy of a data buffer
+   * creates a copy of a data buffer; assumes the source is the malloc domain
    *
    * \param[in] dtype the type of the buffer
    * \param[in] src the buffer to copy \param[in] dimensions the dimensions of the buffer \returns an owning copy of the data object \see pressio_data_new_copy */
   static pressio_data copy(const enum pressio_dtype dtype, const void* src, std::vector<size_t> const& dimensions);
   /**  
    * creates a copy of a data buffer
+   *
+   * \param[in] dtype the type of the buffer
+   * \param[in] src the buffer to copy \param[in] dimensions the dimensions of the buffer \returns an owning copy of the data object \see pressio_data_new_copy */
+  static pressio_data copy(const enum pressio_dtype dtype, const void* src, std::vector<size_t> const& dimensions, std::string const& domain_id);
+  /**  
+   * creates a new owning data buffer
    *
    * \param[in] dtype the type of the buffer
    * \param[in] dimensions the dimensions of the buffer
@@ -111,7 +138,7 @@ struct pressio_data {
    * */
   static pressio_data owning(const pressio_dtype dtype, std::vector<size_t> const& dimensions, std::shared_ptr<pressio_domain> && domain);
   /**  
-   * creates a copy of a data buffer in the specified domain
+   * creates an owning data buffer in the specified domain
    *
    * \param[in] dtype the type of the buffer
    * \param[in] dimensions the dimensions of the buffer
@@ -120,6 +147,43 @@ struct pressio_data {
    * \see pressio_data_new_owning
    * */
   static pressio_data owning(const pressio_dtype dtype, std::vector<size_t> const& dimensions, std::shared_ptr<pressio_domain> const& domain);
+  /**  
+   * creates an owning data buffer in the same domain of the same size and type
+   *
+   * \param[in] src the source
+   * \returns an owning data object with uninitialized memory
+   * \see pressio_data_new_owning
+   * */
+  static pressio_data owning(pressio_data const& src);
+  /**  
+   * creates an owning data buffer in the specified domain of the same size and type
+   *
+   * \param[in] src the source
+   * \param[in] domain for the new allocation
+   * \returns an owning data object with uninitialized memory
+   * \see pressio_data_new_owning
+   * */
+  static pressio_data owning(pressio_data const& src, std::shared_ptr<pressio_domain> const& domain);
+  /**  
+   * moves src into the return value
+   *
+   * \param[in] src the source
+   * \returns an owning data object with uninitialized memory
+   * \see pressio_data_new_owning
+   * */
+  static pressio_data owning(pressio_data && src);
+  /**  
+   * if is_accessible(src.domain(), domain) moves src into the return value.
+   * else allocates on the destination domain
+   *
+   * exists as an optimization for owning(src)
+   *
+   * \param[in] src the source
+   * \param[in] domain for the new allocation
+   * \returns an owning data object with uninitialized memory
+   * \see pressio_data_new_owning
+   * */
+  static pressio_data owning(pressio_data && src, std::shared_ptr<pressio_domain> const& domain);
   /**  
    * takes ownership of an existing data buffer
    *
@@ -135,7 +199,24 @@ struct pressio_data {
       void* data,
       std::vector<size_t> const& dimensions,
       pressio_data_delete_fn deleter,
-      void* metadata);
+      void* metadata,
+      std::vector<std::string> const& accessible = {}
+      );
+
+  /**  
+   * takes ownership of an existing data buffer in the specified domain
+   *
+   * \param[in] dtype the type of the buffer
+   * \param[in] data the buffer
+   * \param[in] dimensions the dimensions of the buffer
+   * \param[in] domain the data was allocated from
+   * \returns an owning data object with uninitialized memory
+   * \see pressio_data_new_move
+   * */
+  static pressio_data move(const pressio_dtype dtype,
+      void* data,
+      std::vector<size_t> const& dimensions,
+      std::shared_ptr<pressio_domain>&& domain);
 
   /**  
    * allocates a new empty data buffer
@@ -147,6 +228,16 @@ struct pressio_data {
    * \see pressio_data_new_empty
    * */
   static pressio_data empty(const pressio_dtype dtype, size_t const num_dimensions, size_t const dimensions[]);
+  /**  
+   * allocates a new empty data buffer
+   *
+   * \param[in] dtype the type the buffer will contain
+   * \param[in] num_dimensions the length of dimensions
+   * \param[in] dimensions the dimensions of the expected buffer
+   * \returns an empty data object (i.e. has no data)
+   * \see pressio_data_new_empty
+   * */
+  static pressio_data empty(const pressio_dtype dtype, size_t const num_dimensions, size_t const dimensions[], std::shared_ptr<pressio_domain> && domain);
 
   /**  
    * creates a non-owning reference to data
@@ -173,7 +264,7 @@ struct pressio_data {
   static pressio_data nonowning(const pressio_dtype dtype, void* data, size_t const num_dimensions, size_t const dimensions[], std::string const& domain_id);
 
   /**  
-   * creates a copy of a data buffer
+   * creates a copy of a data buffer; assumes the source is in the malloc domain
    *
    * \param[in] dtype the type of the buffer
    * \param[in] src the buffer to copy
@@ -183,6 +274,19 @@ struct pressio_data {
    * \see pressio_data_new_copy
    * */
   static pressio_data copy(const enum pressio_dtype dtype, const void* src, size_t const num_dimensions, size_t const dimensions[]);
+
+  /**  
+   * creates a copy of a data buffer
+   *
+   * \param[in] dtype the type of the buffer
+   * \param[in] src the buffer to copy
+   * \param[in] num_dimensions the number of entries in dimensions
+   * \param[in] dimensions the dimensions of the data
+   * \returns an owning copy of the data object
+   * \see pressio_data_new_copy
+   * */
+  static pressio_data copy(const enum pressio_dtype dtype, const void* src, size_t const num_dimensions, size_t const dimensions[], std::string const& domain_id);
+
 
   /**  
    * creates a copy of a data buffer
@@ -213,19 +317,27 @@ struct pressio_data {
       size_t const num_dimensions,
       size_t const dimensions[],
       pressio_data_delete_fn deleter,
-      void* metadata);
+      void* metadata,
+      std::vector<std::string> const& accessible = {}
+      );
 
   /**
-   * clones a existing data buffer
+   * clones a existing data buffer in the same domain_id.
    *
-   * Does not use the copy constructor to enforce strict semantics around copies
+   * + Does not use the copy constructor to enforce strict semantics around copies
+   * + NOTE: for domains such as nonowning that have differing prefix and domain_id, we do not
+   *   re-used the domain object just it's domain_id this is because for non-owning, it cannot
+   *   allocate so we need to get another domain which can.
    *
    * \param[in] src the object
    * \returns a new data structure
    *
    */
   static pressio_data clone(pressio_data const& src){
-      pressio_memory cloned(src.memory);
+      auto src_domain = src.domain();
+      pressio_memory cloned(src.memory, ((src_domain->prefix() == src_domain->domain_id())
+                                             ? std::move(src_domain)
+                                             : domain_plugins().build(src_domain->domain_id())));
       return pressio_data(src.dtype(), src.dimensions(), std::move(cloned));
   }
 
@@ -255,6 +367,24 @@ struct pressio_data {
    */
   void* data() const {
     return memory.data();
+  }
+
+  /**
+   * calls release on the underlying memory.  The caller is responsible for
+   * freeing the memory associated with the returned pointer.
+   *
+   * The caller SHOULD free the returned pointer with domain()->free() or MAY use appropriate
+   * underlying free function
+   */
+  void* release() {
+    return memory.release();
+  }
+  /**
+   * calls reset on the underlying memory. The caller is responsible to ensure
+   * that the domain is capable of freeing this pointer.
+   **/
+  void reset(void* ptr) {
+    return memory.reset(ptr);
   }
 
   /**

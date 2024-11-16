@@ -3,6 +3,7 @@
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 
 namespace libpressio { namespace remove_background_ns {
 
@@ -62,13 +63,14 @@ public:
       pressio_data const& background;
   };
 
-  int compress_impl(const pressio_data* input,
+  int compress_impl(const pressio_data* real_input,
                     struct pressio_data* output) override
   {
-      if(input->dimensions() != background.dimensions()) {
+      if(real_input->dimensions() != background.dimensions()) {
           return set_error(1, "input and background dimensions do not match");
       }
-      pressio_data background_removed = pressio_data_for_each<pressio_data>(*input, remove_background{*input, background});
+      pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
+      pressio_data background_removed = pressio_data_for_each<pressio_data>(input, remove_background{input, background});
       int rc = compressor->compress(&background_removed, output);
       if(rc) {
           return set_error(compressor->error_code(), compressor->error_msg());
@@ -101,6 +103,7 @@ public:
       if(rc) {
           return set_error(compressor->error_code(), compressor->error_msg());
       }
+      *output = domain_manager().make_readable(domain_plugins().build("malloc"), std::move(*output));
       pressio_data_for_each<int>(*output, restore_background{*output, background});
       return 0;
   }

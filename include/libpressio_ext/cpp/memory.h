@@ -156,6 +156,17 @@ public:
    */
   void *data() const;
   /**
+   * release the memory without deallocating it placing the responsibility of the caller to
+   * dispose of it correctly.
+   */
+  void *release();
+  /**
+   * replace the pointer contained in this memory object with the provided pointer
+   *
+   * \param[in] ptr new pointer to associate this object
+   */
+  void reset(void* ptr);
+  /**
    * capacity of the memory
    */
   size_t capacity() const;

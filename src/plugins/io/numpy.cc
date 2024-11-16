@@ -10,6 +10,7 @@
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/io.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include "std_compat/memory.h"
 #include "std_compat/bit.h"
 #include "std_compat/string_view.h"
@@ -291,13 +292,14 @@ struct numpy_io : public libpressio_io_plugin {
     }
   }
 
-  virtual int write_impl(struct pressio_data const* data) override{
+  virtual int write_impl(struct pressio_data const* indata) override{
+    pressio_data data = domain_manager().make_readable(domain_plugins().build("malloc"), *indata);
     std::ofstream ofs(path, std::ios::binary| std::ios::trunc | std::ios::out);
     ofs.exceptions(std::ofstream::failbit | std::ofstream::badbit);
     try{
-        return libpressio_write_np(ofs, data);
+        return libpressio_write_np(ofs, &data);
     } catch(const std::ios_base::failure& e) {
-        set_error(1, e.what());
+        return set_error(1, e.what());
     }
   }
 

@@ -25,8 +25,8 @@ class write_debug_inputs_plugin : public libpressio_metrics_plugin {
     output,
   };
   public:
-    int end_compress_impl(struct pressio_data const* input, pressio_data const*, int) override {
-      if(write_input) {
+    int end_compress_impl(struct pressio_data const* input, pressio_data const* compressed, int) override {
+      if(write_input && input && input->has_data()) {
         std::string path = build_path(mode::input);
         if(display_paths) {
           std::cerr << std::quoted(path) << ' ' << *input << std::endl;
@@ -34,19 +34,19 @@ class write_debug_inputs_plugin : public libpressio_metrics_plugin {
         io->set_options({{"io:path", path}});
         io->write(input);
       }
-      if(write_compressed) {
+      if(write_compressed && compressed && compressed->has_data()) {
         std::string path = build_path(mode::compressed);
         if(display_paths) {
-          std::cerr << std::quoted(path) << ' ' << *input << std::endl;
+          std::cerr << std::quoted(path) << ' ' << *compressed << std::endl;
         }
         io->set_options({{"io:path", path}});
-        io->write(input);
+        io->write(compressed);
       }
       return 0;
     }
 
     int end_decompress_impl(struct pressio_data const* , pressio_data const* output, int) override {
-      if(write_output) {
+      if(write_output && output && output->has_data()) {
         std::string path = build_path(mode::output);
         if(display_paths) {
           std::cerr << std::quoted(path) << ' ' << *output << std::endl;

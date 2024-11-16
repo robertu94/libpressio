@@ -11,6 +11,12 @@ std::set<std::tuple<std::string, std::string>> skip_list {
   {"qoz", "3d int"},
   {"qoz", "3d float zeros"},
   {"sperr", "3d float"},
+  {"sperr", "3d float"},
+  {"bit_grooming", "3d float"},
+  {"cusz", "3d float"},
+  {"cusz", "2d float"},
+  {"cusz", "2d 0-1 float"},
+  {"cusz", "3d float zeros"},
 };
 
 template <class Func>

@@ -1,4 +1,5 @@
 find_package(GTest)
+if(NOT GTEST_FOUND)
 configure_file(GTestCMakeLists.txt.in googletest-download/CMakeLists.txt)
 
 execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
@@ -26,6 +27,7 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googletest-src
   ${CMAKE_CURRENT_BINARY_DIR}/googletest-build
   EXCLUDE_FROM_ALL)
+endif()
 include(GoogleTest)
 
 function(add_gtest)

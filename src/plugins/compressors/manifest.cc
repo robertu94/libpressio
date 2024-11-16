@@ -5,6 +5,7 @@
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include <nlohmann/json.hpp>
 #include "libpressio_ext/cpp/json.h"
 #include <sstream>
@@ -95,37 +96,39 @@ public:
     memmove(tmp.data(), &version, sizeof(version));
     memmove(reinterpret_cast<uint8_t*>(tmp.data()) + sizeof(version), &header_size, sizeof(header_size));
     memmove(reinterpret_cast<uint8_t*>(tmp.data()) + sizeof(version) + sizeof(header_size), msgpk.data(), msgpk.size());
-    memmove(reinterpret_cast<uint8_t*>(tmp.data()) + sizeof(version) + sizeof(header_size) + msgpk.size(), output->data(), output->size_in_bytes());
+    auto host_output = domain_manager().make_readable(domain_plugins().build("malloc"), *output);
+    memmove(reinterpret_cast<uint8_t*>(tmp.data()) + sizeof(version) + sizeof(header_size) + msgpk.size(), host_output.data(), host_output.size_in_bytes());
 
     *output = std::move(tmp);
 
     return 0;
   }
 
-  int decompress_impl(const pressio_data* input,
+  int decompress_impl(const pressio_data* method_input,
                       struct pressio_data* output) override
   {
-    uint32_t version = *reinterpret_cast<uint32_t*>(input->data());
+    pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *method_input);
+    uint32_t version = *reinterpret_cast<uint32_t*>(input.data());
     if (compat::endian::native == compat::endian::big) {
       version = compat::byteswap(version);
     }
     if(version == 1) {
-      uint64_t header_size = *reinterpret_cast<uint64_t*>(reinterpret_cast<uint8_t*>(input->data()) + sizeof(uint32_t));
+      uint64_t header_size = *reinterpret_cast<uint64_t*>(reinterpret_cast<uint8_t*>(input.data()) + sizeof(uint32_t));
       if (compat::endian::native == compat::endian::big) {
         header_size = compat::byteswap(header_size);
       }
       this->header_size = header_size + sizeof(uint32_t) + sizeof(uint64_t);
 
       compat::string_view sv (
-            reinterpret_cast<char*>(input->data()) + sizeof(uint32_t) + sizeof(uint64_t),
+            reinterpret_cast<char*>(input.data()) + sizeof(uint32_t) + sizeof(uint64_t),
             header_size
           );
 
       nlohmann::json j = nlohmann::json::from_msgpack(sv);
       auto real_input = pressio_data::nonowning(
           pressio_byte_dtype,
-          reinterpret_cast<uint8_t*>(input->data()) + sizeof(uint32_t) + sizeof(uint64_t) + header_size,
-          {input->size_in_bytes() - (sizeof(uint32_t) + sizeof(uint64_t) + header_size)}
+          reinterpret_cast<uint8_t*>(input.data()) + sizeof(uint32_t) + sizeof(uint64_t) + header_size,
+          {input.size_in_bytes() - (sizeof(uint32_t) + sizeof(uint64_t) + header_size)}
           );
       pressio_dtype dtype = j["t"].get<pressio_dtype>();
       auto dims = j["d"].get<std::vector<size_t>>();

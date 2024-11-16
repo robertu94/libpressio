@@ -13,6 +13,7 @@
 #include "libpressio_ext/cpp/compressor.h"
 #include "libpressio_ext/cpp/pressio.h"
 #include "libpressio_ext/cpp/options.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include "std_compat/std_compat.h"
 #include "pressio_data.h"
 #include "pressio_compressor.h"
@@ -328,14 +329,15 @@ class sz_plugin: public libpressio_compressor_plugin {
     return 0;
   }
 
-  int compress_impl(const pressio_data *input, struct pressio_data* output) override {
+  int compress_impl(const pressio_data *real_input, struct pressio_data* output) override {
     compat::shared_lock<compat::shared_mutex> lock(init_handle->sz_init_lock);
-    auto r = input->normalized_dims(5,0);
+    pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
+    auto r = input.normalized_dims(5,0);
     int status = SZ_NSCS;
     size_t outsize = 0;
     unsigned char* compressed_data = SZ_compress_customize(app.c_str(), user_params,
-        libpressio_type_to_sz_type(pressio_data_dtype(input)),
-        pressio_data_ptr(input, nullptr),
+        libpressio_type_to_sz_type(pressio_data_dtype(&input)),
+        pressio_data_ptr(&input, nullptr),
         r[4],
         r[3],
         r[2],
@@ -351,8 +353,9 @@ class sz_plugin: public libpressio_compressor_plugin {
       return set_error(1, "compression failed");
     }
   }
-  int decompress_impl(const pressio_data *input, struct pressio_data* output) override {
+  int decompress_impl(const pressio_data *real_input, struct pressio_data* output) override {
     compat::shared_lock<compat::shared_mutex> lock(init_handle->sz_init_lock);
+    pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
     auto r = output->normalized_dims();
     r.resize(5);
 
@@ -362,8 +365,8 @@ class sz_plugin: public libpressio_compressor_plugin {
         app.c_str(),
         user_params,
         libpressio_type_to_sz_type(type),
-        (unsigned char*)pressio_data_ptr(input, nullptr),
-        pressio_data_get_dimension(input, 0),
+        (unsigned char*)pressio_data_ptr(&input, nullptr),
+        pressio_data_get_dimension(&input, 0),
         r[4],
         r[3],
         r[2],

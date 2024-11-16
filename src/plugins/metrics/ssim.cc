@@ -5,6 +5,7 @@
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/pressio.h"
 #include "libpressio_ext/cpp/options.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include "std_compat/memory.h"
 #include <sstream>
 #include <cmath>
@@ -974,20 +975,22 @@ double calculateSSIM(void* oriData, void* decData, int dataType, size_t r4, size
 class ssim_plugin : public libpressio_metrics_plugin {
   public:
     int begin_compress_impl(struct pressio_data const* input, pressio_data const*) override {
-      input_data = pressio_data::clone(*input);
+      if(!input || !input->has_data()) return 0;
+      input_data = pressio_data::clone(domain_manager().make_readable(domain_plugins().build("malloc"), *input));
       return 0;
     }
 
     int end_decompress_impl(struct pressio_data const* , pressio_data const* output, int rc) override {
 
-      if(rc > 0 || output == nullptr) return 0;
+      if(!output || !output->has_data() || !input_data.has_data()) return 0;
       int datatype = 0;
-      if(output->dtype() == pressio_float_dtype) datatype = QCAT_FLOAT;
-      else if(output->dtype() == pressio_double_dtype) datatype = QCAT_DOUBLE;
+      auto output_host = domain_manager().make_readable(domain_plugins().build("malloc"), *output);
+      if(output_host.dtype() == pressio_float_dtype) datatype = QCAT_FLOAT;
+      else if(output_host.dtype() == pressio_double_dtype) datatype = QCAT_DOUBLE;
       else return 0;
 
-      auto norm_dims = output->normalized_dims(4);
-      result = ssim::calculateSSIM(input_data.data(), output->data(), datatype, norm_dims[3], norm_dims[2], norm_dims[1], norm_dims[0]);
+      auto norm_dims = output_host.normalized_dims(4);
+      result = ssim::calculateSSIM(input_data.data(), output_host.data(), datatype, norm_dims[3], norm_dims[2], norm_dims[1], norm_dims[0]);
 
       return 0;
     }

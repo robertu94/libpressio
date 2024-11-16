@@ -3,6 +3,7 @@
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include "roibin_impl.h"
 
 namespace libpressio { namespace mask_binning_ns {
@@ -158,11 +159,12 @@ public:
     return 0;
   }
 
-  int compress_impl(const pressio_data* input,
+  int compress_impl(const pressio_data* m_input,
                     struct pressio_data* output) override
   {
     try {
-      auto tmp = pressio_data_for_each<pressio_data>(*input, bin_op{input->dimensions(), bins, mask, n_threads});
+      auto input = domain_manager().make_readable(domain_plugins().build("malloc"), *m_input);
+      auto tmp = pressio_data_for_each<pressio_data>(input, bin_op{input.dimensions(), bins, mask, n_threads});
       int rc = comp->compress(&tmp, output);
       if(rc) {
         return set_error(comp->error_code(), comp->error_msg());
@@ -200,6 +202,8 @@ public:
         set_error(comp->error_code(), comp->error_msg());
       }
 
+      tmp_out = domain_manager().make_readable(domain_plugins().build("malloc"), std::move(tmp_out));
+      *output = domain_manager().make_writeable(domain_plugins().build("malloc"), *output);
       pressio_data_for_each<int>(tmp_out, *output, restore_op<N>{id, bins, binned_storage, n_threads});
       return 0;
   }

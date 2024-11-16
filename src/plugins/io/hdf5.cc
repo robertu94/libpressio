@@ -29,6 +29,7 @@
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/io.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include "std_compat/memory.h"
 namespace libpressio { namespace hdf5 {
 
@@ -253,8 +254,9 @@ struct hdf5_io: public libpressio_io_plugin {
     }
   }
 
-  virtual int write_impl(struct pressio_data const* data) override{
+  virtual int write_impl(struct pressio_data const* indata) override{
     //check if the file exists
+    auto data = domain_manager().make_readable(domain_plugins().build("malloc"), *indata);
     hid_t file;
     int perms_ok = access(filename.c_str(), W_OK);
     cleanup cleanup_facl;
@@ -292,9 +294,9 @@ struct hdf5_io: public libpressio_io_plugin {
       dataset = H5Dopen(file, dataset_name.c_str(), H5P_DEFAULT);
     } else {
       //create a filespace to create the dataset
-      std::vector<hsize_t> h5_dims(data->num_dimensions());
+      std::vector<hsize_t> h5_dims(data.num_dimensions());
       if(file_extent.empty()) {
-        std::vector<size_t> dims = data->dimensions();
+        std::vector<size_t> dims = data.dimensions();
         std::copy(compat::rbegin(dims), compat::rend(dims), std::begin(h5_dims));
       } else {
         std::copy(compat::rbegin(file_extent), compat::rend(file_extent), std::begin(h5_dims));
@@ -316,7 +318,7 @@ struct hdf5_io: public libpressio_io_plugin {
       auto cleanup_lapl = make_cleanup([&]{ H5Pclose(lcpl_id);});
       dataset = H5Dcreate2(file,
           dataset_name.c_str(),
-          pressio_to_h5t(pressio_data_dtype(data)),
+          pressio_to_h5t(data.dtype()),
           creation_filespace,
           lcpl_id,
           H5P_DEFAULT,
@@ -344,7 +346,7 @@ struct hdf5_io: public libpressio_io_plugin {
     }
 
     //prepare the memspace
-    std::vector<size_t> pressio_dims = data->dimensions();
+    std::vector<size_t> pressio_dims = data.dimensions();
     std::vector<hsize_t> memspace_dims(compat::rbegin(pressio_dims), compat::rend(pressio_dims));
     hid_t memspace = H5Screate_simple(static_cast<int>(memspace_dims.size()), memspace_dims.data(), nullptr);
     if(memspace < 0) {
@@ -365,11 +367,11 @@ struct hdf5_io: public libpressio_io_plugin {
     //write the dataset
     return (H5Dwrite(
         dataset,
-        pressio_to_h5t(pressio_data_dtype(data)),
+        pressio_to_h5t(pressio_data_dtype(&data)),
         memspace,
         filespace,
         dxpl_plist,
-        pressio_data_ptr(data,nullptr)
+        pressio_data_ptr(&data,nullptr)
         ) < 0);
   }
 

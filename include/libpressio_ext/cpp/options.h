@@ -13,6 +13,7 @@
 #include "pressio_compressor.h"
 #include "userptr.h"
 #include "libpressio_ext/cpp/data.h"
+#include "libpressio_ext/cpp/names.h"
 #include "std_compat/string_view.h"
 #include "std_compat/optional.h"
 #include "std_compat/variant.h"
@@ -209,8 +210,8 @@ struct pressio_option final {
    * \param[in] v the value to set the option to
    */
   template <class T, typename std::enable_if<!std::is_same<T, void*>::value, bool>::type = false>
-  void set(T v) {
-    option = compat::optional<T>(v);
+  void set(T&& v) {
+    option = compat::optional<std::decay_t<T>>(std::forward<T>(v));
   }
 
   /**
@@ -306,7 +307,7 @@ struct pressio_options final {
    */
   template <class StringType>
   pressio_options_key_status key_status(StringType const& name, std::string const& key) const {
-    return key_status(format_name(name, key));
+    return key_status(libpressio::names::format_name(name, key));
   }
 
   /**
@@ -321,14 +322,35 @@ struct pressio_options final {
 
   /**
    * sets a key to the specified value
+   * \param[in] key the key to use
+   * \param[in] value the value to use
+   */
+  template <class StringType>
+  void set(StringType&& key,  pressio_option && value) {
+    options[std::forward<StringType>(key)] = std::move(value);
+  }
+
+  /**
+   * sets a key to the specified value
    * \param[in] name the name to use
    * \param[in] key the key to use
    * \param[in] value the value to use
    */
   template <class StringType, class StringType2>
   void set(StringType const& name, StringType2 const& key,  pressio_option const& value) {
-    set(format_name(name, key), value);
+    set(libpressio::names::format_name(name, key), value);
   }
+  /**
+   * sets a key to the specified value
+   * \param[in] name the name to use
+   * \param[in] key the key to use
+   * \param[in] value the value to use
+   */
+  template <class StringType, class StringType2>
+  void set(StringType const& name, StringType2 const& key,  pressio_option && value) {
+    set(libpressio::names::format_name(name, key), std::move(value));
+  }
+
 
 
   /**
@@ -347,7 +369,35 @@ struct pressio_options final {
       default:
         return pressio_options_key_does_not_exist;
     }
+  }
+  /**
+   * converts value according the conversion safety to the type of the option at the stored key specified and stores the result if the cast succeeds
+   * \param[in] key the option key
+   * \param[in] value the option to assign to this option
+   * \param[in] safety the specified safety to use \see pressio_conversion_safety
+   */
+  template <class StringType>
+  enum pressio_options_key_status cast_set(StringType && key,  pressio_option && value, enum pressio_conversion_safety safety= pressio_conversion_implicit) {
+    switch(key_status(key))
+    {
+      case pressio_options_key_set:
+      case pressio_options_key_exists:
+        return options[std::forward<StringType>(key)].cast_set(std::move(value), safety);
+      default:
+        return pressio_options_key_does_not_exist;
+    }
+  }
 
+  /**
+   * converts value according the conversion safety to the type of the option at the stored key specified and stores the result if the cast succeeds
+   * \param[in] name the name to use
+   * \param[in] key the option key
+   * \param[in] value the option to assign to this option
+   * \param[in] safety the specified safety to use \see pressio_conversion_safety
+   */
+  template <class StringType, class StringType2>
+  enum pressio_options_key_status cast_set(StringType const& name, StringType2 const& key,  pressio_option && value, enum pressio_conversion_safety safety= pressio_conversion_implicit) {
+    return cast_set(libpressio::names::format_name(name, key), std::move(value), safety);
   }
 
   /**
@@ -359,7 +409,7 @@ struct pressio_options final {
    */
   template <class StringType, class StringType2>
   enum pressio_options_key_status cast_set(StringType const& name, StringType2 const& key,  pressio_option const& value, enum pressio_conversion_safety safety= pressio_conversion_implicit) {
-    return cast_set(format_name(name, key), value, safety);
+    return cast_set(libpressio::names::format_name(name, key), value, safety);
   }
 
   /**
@@ -380,7 +430,7 @@ struct pressio_options final {
    */
   template <class StringType, class StringType2>
   void set_type(StringType const& name, StringType2 const& key, pressio_option_type type) {
-    set_type(format_name(name, key), type);
+    set_type(libpressio::names::format_name(name, key), type);
   }
 
   /**
@@ -400,8 +450,8 @@ struct pressio_options final {
   template <class StringType, class StringType2>
   pressio_option const& get(compat::string_view const& name, StringType2 const& key) const {
     std::string prefix_key;
-    for (auto path : search(name)) {
-      prefix_key = format_name(std::string(path), std::string(key));
+    for (auto path : libpressio::names::search(name)) {
+      prefix_key = libpressio::names::format_name(std::string(path), std::string(key));
       if(options.find(prefix_key) != options.end()) {
         return get(prefix_key);
       }
@@ -478,8 +528,8 @@ struct pressio_options final {
   template <class PointerType, class StringType, class StringType2>
   enum pressio_options_key_status get(StringType const& name, StringType2 const& key, PointerType value) const {
     std::string prefix_key;
-    for (auto path : search(name)) {
-      prefix_key = format_name(std::string(path), key);
+    for (auto path : libpressio::names::search(name)) {
+      prefix_key = libpressio::names::format_name(std::string(path), key);
       if(options.find(prefix_key) != options.end()) {
         return get(prefix_key, value);
       }
@@ -531,19 +581,14 @@ struct pressio_options final {
   template <class PointerType, class StringType, class StringType2>
   enum pressio_options_key_status cast(StringType const& name, StringType2 const& key, PointerType value, enum pressio_conversion_safety safety) const {
     std::string prefix_key;
-    for (auto path : search(name)) {
-      prefix_key = format_name(std::string(path), std::string(key));
+    for (auto path : libpressio::names::search(name)) {
+      prefix_key = libpressio::names::format_name(std::string(path), std::string(key));
       if(options.find(prefix_key) != options.end()) {
         return cast(prefix_key, value, safety);
       }
     }
     return cast(key, value, safety);
   }
-
-  /**
-   * returns a vector containing the search order for a given string
-   */
-  static std::vector<compat::string_view> search(compat::string_view const& value);
 
   /**
    * removes all options
@@ -563,10 +608,6 @@ struct pressio_options final {
 
   private:
 
-  std::string format_name(std::string const& name, std::string const& key) const {
-    if(name == "") return key;
-    else return '/' + name + ':' + key;
-  }
 
   std::map<std::string, pressio_option, compat::less<>> options;
 

@@ -68,7 +68,7 @@ public:
   int compress_impl(const pressio_data* input,
                     struct pressio_data* output) override
   {
-    auto tmp = pressio_data::clone(*input);
+    auto tmp = pressio_data::nonowning(*input);
     if(!compressed_dims.empty()) {
       tmp.reshape(compressed_dims);
     }

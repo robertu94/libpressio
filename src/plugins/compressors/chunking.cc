@@ -5,6 +5,7 @@
 #include "libpressio_ext/cpp/options.h" // for access to pressio_options
 #include "libpressio_ext/cpp/pressio.h" //for the plugin registries
 #include "pressio_options.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include "pressio_data.h"
 #include "chunking_impl.h"
 #include "pressio_compressor.h"
@@ -100,11 +101,11 @@ class chunking_plugin: public libpressio_compressor_plugin {
   }
 
 
-    int compress_impl(const pressio_data *input, struct pressio_data* output) override {
+    int compress_impl(const pressio_data *real_input, struct pressio_data* real_output) override {
       auto chunk_begin = std::chrono::steady_clock::now();
       //partition data into chunks
       pressio_data tmp;
-      size_t num_chunks = compute_num_chunks(input);
+      size_t num_chunks = compute_num_chunks(real_input);
       std::vector<pressio_data> inputs; 
       std::vector<pressio_data> outputs; 
       std::vector<pressio_data const*> inputs_ptr; 
@@ -114,25 +115,28 @@ class chunking_plugin: public libpressio_compressor_plugin {
       inputs_ptr.reserve(num_chunks);
       outputs_ptr.reserve(num_chunks);
       std::vector<size_t> empty_dims = {};
-      size_t stride = std::accumulate(chunk_size.begin(), chunk_size.end(), pressio_dtype_size(input->dtype()), compat::multiplies<>{});
+      size_t stride = std::accumulate(chunk_size.begin(), chunk_size.end(), pressio_dtype_size(real_input->dtype()), compat::multiplies<>{});
       if (num_chunks == 1) {
-          inputs_ptr.emplace_back(input);
+          //no copy to the host
+          inputs_ptr.emplace_back(real_input);
           outputs.emplace_back(pressio_data::empty(pressio_byte_dtype, empty_dims));
           outputs_ptr.emplace_back(&outputs.back());
-      } else if (check_contigous(input) and check_valid_dims(input)){
-        auto* ptr = reinterpret_cast<unsigned char*>(input->data());
+      } else if (check_contigous(real_input) and check_valid_dims(real_input)){
+        //no copy to the host, everything is nonowning, so we don't need to move data here
+        auto* ptr = reinterpret_cast<unsigned char*>(real_input->data());
         for (size_t i = 0; i < num_chunks; ++i) {
-          inputs.emplace_back(pressio_data::nonowning(input->dtype(), ptr+(i*stride), chunk_size));
+          inputs.emplace_back(pressio_data::nonowning(real_input->dtype(), ptr+(i*stride), chunk_size, real_input->domain()->domain_id()));
           inputs_ptr.emplace_back(&inputs.back());
           outputs.emplace_back(pressio_data::empty(pressio_byte_dtype, empty_dims));
           outputs_ptr.emplace_back(&outputs.back());
         }
       } else {
         //non-contigious, need to copy
-        tmp = libpressio::chunking::chunk_data(*input, chunk_size, {{"nthreads", nthreads}});
+        pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
+        tmp = libpressio::chunking::chunk_data(input, chunk_size, {{"nthreads", nthreads}});
         auto ptr = static_cast<uint8_t*>(tmp.data());
         for (size_t i = 0; i < num_chunks; ++i) {
-          inputs.emplace_back(pressio_data::nonowning(input->dtype(), ptr+(i*stride), chunk_size));
+          inputs.emplace_back(pressio_data::nonowning(real_input->dtype(), ptr+(i*stride), chunk_size, "malloc"));
           inputs_ptr.emplace_back(&inputs.back());
           outputs.emplace_back(pressio_data::empty(pressio_byte_dtype, empty_dims));
           outputs_ptr.emplace_back(&outputs.back());
@@ -168,10 +172,14 @@ class chunking_plugin: public libpressio_compressor_plugin {
           });
       size_t header_size = sizeof(uint64_t)*(outputs.size() + 1);
 
-      *output = pressio_data::owning(pressio_byte_dtype, {header_size + total_compsize});
+      pressio_data output =
+          (real_output->has_data())
+              ? (domain_manager().make_writeable(domain_plugins().build("malloc"),
+                                                 std::move(*real_output)))
+              : (pressio_data::owning(pressio_byte_dtype, {header_size + total_compsize}));
 
       //write header
-      unsigned char* outptr = reinterpret_cast<unsigned char*>(output->data());
+      unsigned char* outptr = reinterpret_cast<unsigned char*>(output.data());
       uint64_t* outputs_ptr64 = reinterpret_cast<uint64_t*>(outptr);
       *outputs_ptr64 = outputs.size();
       outputs_ptr64++;
@@ -191,6 +199,8 @@ class chunking_plugin: public libpressio_compressor_plugin {
       }
       auto write_chunk_end = std::chrono::steady_clock::now();
       write_chunk_time = std::chrono::duration_cast<std::chrono::milliseconds>(write_chunk_end-write_chunk_begin).count();
+
+      *real_output = std::move(output);
       return rc;
     }
 

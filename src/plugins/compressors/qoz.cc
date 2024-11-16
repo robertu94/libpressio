@@ -232,81 +232,84 @@ public:
     return 0;
   }
 
-  int compress_impl(const pressio_data* input,
+  int compress_impl(const pressio_data* real_input,
                     struct pressio_data* output) override
   {
-    auto reg_dims = input->normalized_dims();
+    pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
+    auto reg_dims = input.normalized_dims();
     std::reverse(reg_dims.begin(), reg_dims.end());
     config.dims = reg_dims;
     if(reg_dims.size() > std::numeric_limits<char>::max()) {
       set_error(-1, "overflow of sz3 N parameter");
     }
-    *output = pressio_data_for_each<pressio_data>(*input, impl_compress{*input, config, reg_dims});
+    *output = pressio_data_for_each<pressio_data>(input, impl_compress{input, config, reg_dims});
     return 0;
   }
 
-  int decompress_impl(const pressio_data* input,
+  int decompress_impl(const pressio_data* real_input,
                       struct pressio_data* output) override
   {
+    pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
+
     switch(output->dtype()) {
       case pressio_float_dtype:
         {
           auto decData = static_cast<float*>(output->data());
-          SZ_decompress(config, static_cast<char*>(input->data()), input->num_elements(), decData);
+          SZ_decompress(config, static_cast<char*>(input.data()), input.num_elements(), decData);
           break;
         }
       case pressio_double_dtype:
         {
           auto decData = static_cast<double*>(output->data());
-          SZ_decompress(config, static_cast<char*>(input->data()), input->num_elements(), decData);
+          SZ_decompress(config, static_cast<char*>(input.data()), input.num_elements(), decData);
           break;
         }
       case pressio_int8_dtype:
         {
           auto decData = static_cast<int8_t*>(output->data());
-          SZ_decompress(config, static_cast<char*>(input->data()), input->num_elements(), decData);
+          SZ_decompress(config, static_cast<char*>(input.data()), input.num_elements(), decData);
           break;
         }
       case pressio_int16_dtype:
         {
           auto decData = static_cast<int16_t*>(output->data());
-          SZ_decompress(config, static_cast<char*>(input->data()), input->num_elements(), decData);
+          SZ_decompress(config, static_cast<char*>(input.data()), input.num_elements(), decData);
           break;
         }
       case pressio_int32_dtype:
         {
           auto decData = static_cast<int32_t*>(output->data());
-          SZ_decompress(config, static_cast<char*>(input->data()), input->num_elements(), decData);
+          SZ_decompress(config, static_cast<char*>(input.data()), input.num_elements(), decData);
           break;
         }
       case pressio_int64_dtype:
         {
           auto decData = static_cast<int64_t*>(output->data());
-          SZ_decompress(config, static_cast<char*>(input->data()), input->num_elements(), decData);
+          SZ_decompress(config, static_cast<char*>(input.data()), input.num_elements(), decData);
           break;
         }
       case pressio_uint8_dtype:
         {
           auto decData = static_cast<uint8_t*>(output->data());
-          SZ_decompress(config, static_cast<char*>(input->data()), input->num_elements(), decData);
+          SZ_decompress(config, static_cast<char*>(input.data()), input.num_elements(), decData);
           break;
         }
       case pressio_uint16_dtype:
         {
           auto decData = static_cast<uint16_t*>(output->data());
-          SZ_decompress(config, static_cast<char*>(input->data()), input->num_elements(), decData);
+          SZ_decompress(config, static_cast<char*>(input.data()), input.num_elements(), decData);
           break;
         }
       case pressio_uint32_dtype:
         {
           auto decData = static_cast<uint32_t*>(output->data());
-          SZ_decompress(config, static_cast<char*>(input->data()), input->num_elements(), decData);
+          SZ_decompress(config, static_cast<char*>(input.data()), input.num_elements(), decData);
           break;
         }
       case pressio_uint64_dtype:
         {
           auto decData = static_cast<uint64_t*>(output->data());
-          SZ_decompress(config, static_cast<char*>(input->data()), input->num_elements(), decData);
+          SZ_decompress(config, static_cast<char*>(input.data()), input.num_elements(), decData);
           break;
         }
       default:

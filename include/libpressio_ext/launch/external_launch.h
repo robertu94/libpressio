@@ -131,7 +131,12 @@ struct libpressio_launch_plugin: public pressio_configurable {
    * base set_name to set the name of the launch metric
    */
   void set_name(std::string const& new_name) final {
-	  metrics_plugin->set_name(new_name +'/'+metrics_plugin->prefix());
+      pressio_configurable::set_name(new_name);
+      if(new_name != "") {
+          metrics_plugin->set_name(new_name +'/'+metrics_plugin->prefix());
+      } else {
+          metrics_plugin->set_name(new_name);
+      }
   };
 
   /**

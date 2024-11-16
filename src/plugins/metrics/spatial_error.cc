@@ -7,6 +7,7 @@
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include "std_compat/memory.h"
 
 namespace libpressio {
@@ -47,14 +48,16 @@ public:
   int begin_compress_impl(const struct pressio_data* input,
                       struct pressio_data const*) override
   {
-    input_data = pressio_data::clone(*input);
+      if(!input || !input->has_data()) return 0;
+    input_data = pressio_data::clone(domain_manager().make_readable(domain_plugins().build("malloc"), *input));
     return 0;
   }
   int end_decompress_impl(struct pressio_data const*,
                       struct pressio_data const* output, int) override
   {
+    if(!output || !output->has_data() || !input_data.has_data()) return 0;
     spatial_error =
-      pressio_data_for_each<double>(input_data, *output, compute_metrics{threshold});
+      pressio_data_for_each<double>(input_data, domain_manager().make_readable(domain_plugins().build("malloc"), *output), compute_metrics{threshold});
     return 0;
   }
 

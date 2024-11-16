@@ -47,8 +47,7 @@ struct lp_cuda_array_interface {
     int stream;
 };
 
-lp_cuda_array_interface io_data_to_cuda_array(struct pressio_data* data) {
-    lp_cuda_array_interface ret;
+std::string dtype_to_typestr(pressio_dtype t) {
     static std::map<pressio_dtype, std::string> dtypes {
         {pressio_float_dtype ,"f4"},
         {pressio_double_dtype,"f8"},
@@ -63,13 +62,46 @@ lp_cuda_array_interface io_data_to_cuda_array(struct pressio_data* data) {
         {pressio_bool_dtype  ,"b1"},
         {pressio_byte_dtype  ,"i1"},
     };
+    return ((t == pressio_byte_dtype)
+                       ? "|"
+                       : (compat::endian::native == compat::endian::little ? "<" : ">")) +
+                  dtypes.at(t);
+}
+
+pressio_dtype dtype_from_typestr(std::string const& typestr) {
+    static std::map<std::string, pressio_dtype> dtypes {
+        {"f4", pressio_float_dtype},
+        {"f8", pressio_double_dtype},
+        {"i1", pressio_int8_dtype},
+        {"i2", pressio_int16_dtype},
+        {"i4", pressio_int32_dtype},
+        {"i8", pressio_int64_dtype},
+        {"u1", pressio_uint8_dtype},
+        {"u2", pressio_uint16_dtype},
+        {"u4", pressio_uint32_dtype},
+        {"u8", pressio_uint64_dtype},
+        {"b1", pressio_bool_dtype},
+        {"i1"  ,pressio_byte_dtype},
+    };
+    pressio_dtype dtype = pressio_byte_dtype;
+    if(typestr.size() == 3) {
+        auto endian = typestr[0];
+        if (compat::endian::native == compat::endian::little) {
+            if(endian == '>') {
+                throw std::runtime_error("cross endian data not supported");
+            }
+        }
+        dtype = dtypes.at(typestr.substr(1));
+    }
+    return dtype;
+}
+
+lp_cuda_array_interface io_data_to_cuda_array(struct pressio_data* data) {
+    lp_cuda_array_interface ret;
     auto dims = data->dimensions();
     std::reverse(dims.begin(), dims.end());
     ret.shape = dims;
-    ret.typestr = ((data->dtype() == pressio_byte_dtype)
-                       ? "|"
-                       : (compat::endian::native == compat::endian::little ? "<" : ">")) +
-                  dtypes.at(data->dtype());
+    ret.typestr = dtype_to_typestr(data->dtype());
     ret.ptr = reinterpret_cast<intptr_t>(data->data());
     ret.read_only = false;
     ret.version = 3;
@@ -78,63 +110,15 @@ lp_cuda_array_interface io_data_to_cuda_array(struct pressio_data* data) {
 }
 
 pressio_data* io_data_from_cuda_array(std::vector<uint64_t> shape, std::string const& typestr, intptr_t ptr_asint) {
-    static std::map<std::string, pressio_dtype> dtypes {
-        {"f4", pressio_float_dtype},
-        {"f8", pressio_double_dtype},
-        {"i1", pressio_int8_dtype},
-        {"i2", pressio_int16_dtype},
-        {"i4", pressio_int32_dtype},
-        {"i8", pressio_int64_dtype},
-        {"u1", pressio_uint8_dtype},
-        {"u2", pressio_uint16_dtype},
-        {"u4", pressio_uint32_dtype},
-        {"u8", pressio_uint64_dtype},
-        {"b1", pressio_bool_dtype},
-        {"i1"  ,pressio_byte_dtype},
-    };
-    pressio_dtype dtype;
-    if(typestr.size() == 3) {
-        auto endian = typestr[0];
-        if (compat::endian::native == compat::endian::little) {
-            if(endian == '>') {
-                throw std::runtime_error("cross endian data not supported");
-            }
-        }
-        dtype = dtypes.at(typestr.substr(1));
-    }
     std::reverse(shape.begin(), shape.end());
     void* ptr = reinterpret_cast<void*>(ptr_asint);
-    return new pressio_data(pressio_data::nonowning(dtype, ptr, shape, "cudamalloc"));
+    return new pressio_data(pressio_data::nonowning(dtype_from_typestr(typestr), ptr, shape, "cudamalloc"));
 }
 
 pressio_data* io_data_from_numpy_array(std::vector<uint64_t> shape, std::string const& typestr, intptr_t ptr_asint) {
-    static std::map<std::string, pressio_dtype> dtypes {
-        {"f4", pressio_float_dtype},
-        {"f8", pressio_double_dtype},
-        {"i1", pressio_int8_dtype},
-        {"i2", pressio_int16_dtype},
-        {"i4", pressio_int32_dtype},
-        {"i8", pressio_int64_dtype},
-        {"u1", pressio_uint8_dtype},
-        {"u2", pressio_uint16_dtype},
-        {"u4", pressio_uint32_dtype},
-        {"u8", pressio_uint64_dtype},
-        {"b1", pressio_bool_dtype},
-        {"i1"  ,pressio_byte_dtype},
-    };
-    pressio_dtype dtype;
-    if(typestr.size() == 3) {
-        auto endian = typestr[0];
-        if (compat::endian::native == compat::endian::little) {
-            if(endian == '>') {
-                throw std::runtime_error("cross endian data not supported");
-            }
-        }
-        dtype = dtypes.at(typestr.substr(1));
-    }
     std::reverse(shape.begin(), shape.end());
     void* ptr = reinterpret_cast<void*>(ptr_asint);
-    return new pressio_data(pressio_data::nonowning(dtype, ptr, shape));
+    return new pressio_data(pressio_data::nonowning(dtype_from_typestr(typestr), ptr, shape));
 }
 
 template <class T>
@@ -212,6 +196,11 @@ std::vector<std::string> option_get_strings(pressio_option const* options) {
 
 void option_set_strings(pressio_option* options, std::vector<std::string> const& strings) {
   *options = strings;
+}
+
+std::vector<uint64_t> data_dimensions(const pressio_data* data) {
+    auto d =  data->dimensions();
+    return std::vector<uint64_t>(d.begin(), d.end());
 }
 
 struct pressio_option* option_new_strings(std::vector<std::string> const& strings) {

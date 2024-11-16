@@ -6,8 +6,10 @@
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include <cusz/cusz.h>
 #include <cusz/context.h>
+#include <cusz/tehm.hh>
 #include <cuda_runtime.h>
 #include <cuda.h>
 #include <cusz/cusz_version.h>
@@ -148,6 +150,8 @@ public:
     set(options, "cusz:max_outlier_percent", "max outlier percent");
     set(options, "cusz:device", "execucution device");
     set(options, "cusz:predictor", "predictor style");
+    set(options, "cusz:cuda_stream", "which cudaStream_t to use");
+    set(options, "pressio:cuda_stream", "which cudaStream_t to use");
     return options;
   }
 
@@ -304,79 +308,27 @@ public:
   }
 
   template<class T>
-  int compress_typed(pressio_data const* input, pressio_data* output) {
+  int compress_typed(pressio_data const* real_input, pressio_data* output) {
 
-    auto const dims = input->normalized_dims(4, 1);
 
-    uint8_t* compressed_buf;
-    uint8_t* ptr_compressed;
-    size_t compressed_len;
-    T* d_uncomp;
-    if(isDevicePtr(input->data())) {
-        d_uncomp = (T*)input->data();
-    } else {
-        lp_check_cuda_error(cudaMallocAsync(&d_uncomp, input->size_in_bytes(), *stream.get()));
-        lp_check_cuda_error(cudaMemcpyAsync(d_uncomp, input->data(), input->size_in_bytes(), cudaMemcpyHostToDevice, *stream.get()));
-    }
+    pressio_data input = domain_manager().make_readable(domain_plugins().build("cudamalloc"), *real_input);
+    auto const dims = input.normalized_dims(4, 1);
+    T* d_uncomp = (T*)input.data();
 
     psz_header header;
-    void* compress_timerecord;
-    psz_len3 uncomp_len = psz_len3{{dims[0]}, {dims[1]}, {dims[2]}};
-    psz_compressor* comp = psz_create(to_cuszdtype(input->dtype()), uncomp_len, to_cusz_predictor_type(predictor),
+    psz::TimeRecord timerecord;
+    psz_len3 uncomp_len = psz_len3{dims[0], dims[1], dims[2]};
+    psz_compressor* comp = psz_create(to_cuszdtype(input.dtype()), uncomp_len, to_cusz_predictor_type(predictor),
         radius, Huffman); // codectype Huffman is hardcoded. (v0.10rc)
+    uint8_t* ptr_compressed;
+    size_t compressed_len;
     psz_compress(
         comp, d_uncomp, uncomp_len, err_bnd, to_cuszmode(eb_mode), 
-        &ptr_compressed, &compressed_len, &header, compress_timerecord, *stream.get());
+        &ptr_compressed, &compressed_len, &header, &timerecord, *stream.get());
 
-
-    if(isDevicePtr(input->data())) {
-        if(output->has_data() && isDevicePtr(output->data()) && compressed_len <= output->capacity_in_bytes()) {
-            //copy off the compressed data
-            //compressed data needs to be copied before the compressor is destructed
-            lp_check_cuda_error(cudaMemcpyAsync(
-                    (uint8_t*)output->data(), &header, sizeof(header),
-                    cudaMemcpyDeviceToDevice, *stream.get()));
-            lp_check_cuda_error(cudaMemcpyAsync(
-                    (uint8_t*)output->data()+sizeof(header), ptr_compressed, compressed_len,
-                    cudaMemcpyDeviceToDevice, *stream.get()));
-            output->set_dimensions({compressed_len + sizeof(header)});
-            output->set_dtype(pressio_byte_dtype);
-            lp_check_cuda_error(cudaStreamSynchronize(*stream.get()));
-
-        } else {
-            lp_check_cuda_error(cudaMallocAsync(&compressed_buf, compressed_len+sizeof(header), *stream.get()));
-            lp_check_cuda_error(cudaMemcpyAsync(
-                    (uint8_t*)output->data(), &header, sizeof(header),
-                    cudaMemcpyDeviceToDevice, *stream.get()));
-            lp_check_cuda_error(cudaMemcpyAsync(
-                  compressed_buf+sizeof(header), ptr_compressed, compressed_len,
-                  cudaMemcpyDeviceToDevice, *stream.get()));
-            lp_check_cuda_error(cudaStreamSynchronize(*stream.get()));
-            *output = pressio_data::move(
-                    pressio_byte_dtype, compressed_buf,
-                    {compressed_len}, [](void* data, void*){ cudaFree(data);}, nullptr
-                    );
-        }
-        lp_check_cuda_error(cudaFree(d_uncomp));
-    } else {
-        //return data to host
-        if(output->has_data()) {
-            memcpy(output->data(), &header, sizeof(header));
-            lp_check_cuda_error(cudaMemcpyAsync(
-                  (uint8_t*)output->data() + sizeof(header), ptr_compressed, compressed_len,
-                  cudaMemcpyDeviceToHost, *stream.get()));
-            output->set_dimensions({compressed_len+sizeof(header)});
-            output->set_dtype(pressio_byte_dtype);
-            lp_check_cuda_error(cudaStreamSynchronize(*stream.get()));
-        } else {
-            *output = pressio_data::owning(pressio_byte_dtype, {sizeof(header)+compressed_len});
-            memcpy(output->data(), &header, sizeof(header));
-            lp_check_cuda_error(cudaMemcpyAsync(
-                  (uint8_t*)output->data()+sizeof(header), ptr_compressed, compressed_len,
-                  cudaMemcpyDeviceToHost, *stream.get()));
-            lp_check_cuda_error(cudaStreamSynchronize(*stream.get()));
-        }
-    }
+    *output = pressio_data::move(pressio_byte_dtype, ptr_compressed, {compressed_len}, domain_plugins().build("cudamalloc"));
+    *output = domain_manager().make_readable(domain_plugins().build("malloc"), std::move(*output));
+    memcpy(output->data(), &header, sizeof(psz_header));
 
     //call when we are done
     psz_release(comp);
@@ -385,54 +337,23 @@ public:
   }
 
   template<class T>
-  int decompress_typed(pressio_data const* input, pressio_data* output) {
-    auto const dims = output->normalized_dims(4, 1);
-    T *d_decomp;
-    lp_check_cuda_error(cudaMallocAsync(&d_decomp, output->size_in_bytes(), *stream.get()));
-    uint8_t* ptr_compressed;
-    psz_header header;
-    size_t compressed_len = input->size_in_bytes() - sizeof(header);
-    if(isDevicePtr(input->data())) {
-        lp_check_cuda_error(cudaMemcpyAsync(&header, input->data(), sizeof(header), cudaMemcpyDeviceToHost, *stream.get()));
-        lp_check_cuda_error(cudaStreamSynchronize(*stream.get()));
-        ptr_compressed = (uint8_t*)input->data()+sizeof(header);
-    } else {
-        memcpy(&header, input->data(), sizeof(header));
-        lp_check_cuda_error(cudaMallocAsync(&ptr_compressed, compressed_len, *stream.get()));
-        lp_check_cuda_error(cudaMemcpyAsync(ptr_compressed, (uint8_t*)input->data()+sizeof(header), compressed_len, cudaMemcpyHostToDevice, *stream.get()));
-    }
+  int decompress_typed(pressio_data const* real_input, pressio_data* output) {
+    auto const dims = output->normalized_dims(3, 1);
+    *output  = domain_manager().make_writeable(domain_plugins().build("cudamalloc"), std::move(*output));
+    T* d_decomp = static_cast<T*>(output->data());
 
-    void* decompress_timerecord;
-    psz_len3 decomp_len = psz_len3{{dims[0]}, {dims[1]}, {dims[2]}};  // x, y, z
-    psz_compressor* comp = psz_create_from_header(&header);
-    psz_decompress(comp, ptr_compressed, compressed_len, d_decomp, decomp_len, decompress_timerecord, *stream.get());
+    pressio_data cpu_input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
+    psz_header* header = (psz_header*)cpu_input.data();
+    auto comp_len = pszheader_filesize(header);
+    psz_len3 decomp_len = psz_len3{dims[0], dims[1], dims[2]};  // x, y, z
+                                                                //
+    pressio_data gpu_input = domain_manager().make_readable(domain_plugins().build("cudamalloc"), *real_input);
+    uint8_t* ptr_compressed = (uint8_t*)gpu_input.data();
 
-    if(isDevicePtr(input->data())) {
-        if(output->has_data() && isDevicePtr(output->data()) && compressed_len <= output->capacity_in_bytes()) {
-            //copy to existing device ptr
-            lp_check_cuda_error(cudaMemcpyAsync(output->data(), d_decomp, output->size_in_bytes(), cudaMemcpyDeviceToDevice, *stream.get()));
-        } else {
-            //copy to new device ptr
-            T* buf_uncompressed;
-            lp_check_cuda_error(cudaMallocAsync(&buf_uncompressed, output->size_in_bytes(), *stream.get()));
-            lp_check_cuda_error(cudaMemcpyAsync(buf_uncompressed, d_decomp, output->size_in_bytes(), cudaMemcpyDeviceToDevice, *stream.get()));
-            lp_check_cuda_error(cudaStreamSynchronize(*stream.get()));
-            *output = pressio_data::move(output->dtype(),
-                    buf_uncompressed, output->dimensions(),
-                    [](void* data, void*){ cudaFree(data);}, nullptr
-                    );
-        }
-    } else {
-        //copy to host pointer
-        if(output->has_data()) {
-            lp_check_cuda_error(cudaMemcpyAsync(output->data(), d_decomp, output->size_in_bytes(), cudaMemcpyDeviceToHost, *stream.get()));
-        } else {
-            *output = pressio_data::owning(output->dtype(), output->dimensions());
-            lp_check_cuda_error(cudaMemcpyAsync(output->data(), d_decomp, output->size_in_bytes(), cudaMemcpyDeviceToHost, *stream.get()));
-        }
-        lp_check_cuda_error(cudaStreamSynchronize(*stream.get()));
-        lp_check_cuda_error(cudaFree(ptr_compressed));
-    }
+    psz::TimeRecord timerecord;
+    psz_compressor* comp = psz_create_from_header(header);
+    psz_decompress(comp, ptr_compressed, comp_len, d_decomp, decomp_len, (void*)&timerecord, *stream.get());
+
     psz_release(comp);
     return 0;
   }

@@ -4,6 +4,7 @@
 #include "libpressio_ext/cpp/compressor.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include "pressio_options.h"
 #include "pressio_data.h"
 #include "pressio_compressor.h"
@@ -266,17 +267,59 @@ class zfp_plugin: public libpressio_compressor_plugin {
       return 0;
     }
 
-    int compress_impl(const pressio_data *input, struct pressio_data* output) override {
+    int compress_impl(const pressio_data *real_input, struct pressio_data* output) override {
+
+      /*if the data is null, estimate compressed data size*/
+      if(real_input->data() == nullptr) {
+         zfp_type type;
+         if(libpressio_type(real_input, &type)) {
+             return invalid_type();
+         }
+         zfp_stream* null_zfp = zfp_stream_open(NULL);
+         null_zfp->maxbits = zfp->maxbits;
+         null_zfp->maxprec = zfp->maxprec;
+         null_zfp->minbits = zfp->minbits;
+         null_zfp->minexp = zfp->minexp;
+         null_zfp->exec = zfp->exec;
+         if(dynamic_rate){
+             zfp_stream_set_rate(zfp, dynamic_rate.value(), type, real_input->normalized_dims().size(), dynamic_wra.value_or(0));
+         }
+
+         zfp_field* in_field;
+         if(int ret = convert_pressio_data_to_field(real_input, &in_field)) {
+           return ret;
+         }
+
+         size_t max_size = zfp_stream_maximum_size(zfp, in_field);
+         *output = pressio_data::empty(pressio_byte_dtype, {max_size});
+         zfp_stream_close(null_zfp);
+         zfp_field_free(in_field);
+         return 0;
+      }
+
+      //migrate to device if needed
+      pressio_data input;
+      switch(zfp_stream_execution(zfp)) {
+          case zfp_exec_cuda:
+              input = domain_manager().make_readable(domain_plugins().build("cudamalloc"), *real_input);
+              *output = domain_manager().make_writeable(domain_plugins().build("cudamalloc"), std::move(*output));
+              break;
+          case zfp_exec_serial:
+          case zfp_exec_omp:
+              input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
+              *output = domain_manager().make_writeable(domain_plugins().build("malloc"), std::move(*output));
+              break;
+      }
 
       zfp_field* in_field;
-      if(int ret = convert_pressio_data_to_field(input, &in_field)) {
+      if(int ret = convert_pressio_data_to_field(&input, &in_field)) {
         return ret;
       }
 
       if(dynamic_rate) {
         zfp_type type;
-        libpressio_type(input, &type);
-        zfp_stream_set_rate(zfp, dynamic_rate.value(), type, input->normalized_dims().size(), dynamic_wra.value_or(0));
+        libpressio_type(&input, &type);
+        zfp_stream_set_rate(zfp, dynamic_rate.value(), type, input.normalized_dims().size(), dynamic_wra.value_or(0));
       }
 
       //create compressed data buffer and stream

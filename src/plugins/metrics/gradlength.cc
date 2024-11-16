@@ -6,6 +6,7 @@
 #include "libpressio_ext/cpp/pressio.h"
 #include "libpressio_ext/cpp/options.h"
 #include "std_compat/memory.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include <cmath>
 
 namespace libpressio { namespace gradlength_metrics_ns {
@@ -591,12 +592,14 @@ class gradlength_plugin : public libpressio_metrics_plugin {
     }
   public:
     int begin_compress_impl(struct pressio_data const* input, pressio_data const*) override {
-      if(run_input) evaluate(*input, input_gradmag);
+      if(!input || !input->has_data()) return 0;
+      if(run_input) evaluate(domain_manager().make_readable(domain_plugins().build("malloc"), *input), input_gradmag);
       return 0;
     }
 
     int end_decompress_impl(struct pressio_data const* , pressio_data const* output, int) override {
-      if(run_output) evaluate(*output, decompressed_gradmag);
+      if(!output || !output->has_data()) return 0;
+      if(run_output) evaluate(domain_manager().make_readable(domain_plugins().build("malloc"), *output), decompressed_gradmag);
       return 0;
     }
 

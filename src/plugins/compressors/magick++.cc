@@ -9,6 +9,7 @@
 #include "libpressio_ext/cpp/compressor.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include "pressio_data.h"
 #include "pressio_compressor.h"
 #include "pressio_options.h"
@@ -120,17 +121,18 @@ class magick_plugin: public libpressio_compressor_plugin {
   /**
    * convert from pressio_data to image, store image in blob-format
    */
-  int compress_impl(const pressio_data *input, struct pressio_data* output) override {
+  int compress_impl(const pressio_data *real_input, struct pressio_data* output) override {
+    pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
     auto apply_compression = [this](Magick::Image& image) {
       image.magick(this->compressed_magick);
       image.quality(this->quality);
     };
-    if(input->num_dimensions() == 2) {
+    if(input.num_dimensions() == 2) {
       //convert a single image
       //convert data to samples
-      auto samples_image = data_to_samples_image(*input);
+      auto samples_image = data_to_samples_image(input);
       if(not samples_image) {
-        return invalid_type(input->dtype());
+        return invalid_type(input.dtype());
       }
       //convert samples image to compressed image
       apply_compression(*samples_image);
@@ -141,20 +143,20 @@ class magick_plugin: public libpressio_compressor_plugin {
       samples_image->write(&blob);
       *output = pressio_data::copy(pressio_byte_dtype, blob.data(),{blob.length()});
       return 0;
-    } else if (input->num_dimensions() == 3) {
+    } else if (input.num_dimensions() == 3) {
       //convert a set of images
       
       if(not Magick::CoderInfo(compressed_magick).isMultiFrame()) return invalid_codec(compressed_magick);
 
-      std::vector<Magick::Image> images(input->get_dimension(0));
-      size_t image_size_in_bytes = input->get_dimension(1) * input->get_dimension(2) * pressio_dtype_size(input->dtype());
-      uint8_t const* pos = reinterpret_cast<uint8_t const*>(input->data());
-      auto storage_type = data_type_to_storage_type(*input);
-      if(storage_type == Magick::UndefinedPixel) return invalid_type(input->dtype());
+      std::vector<Magick::Image> images(input.get_dimension(0));
+      size_t image_size_in_bytes = input.get_dimension(1) * input.get_dimension(2) * pressio_dtype_size(input.dtype());
+      uint8_t const* pos = reinterpret_cast<uint8_t const*>(input.data());
+      auto storage_type = data_type_to_storage_type(input);
+      if(storage_type == Magick::UndefinedPixel) return invalid_type(input.dtype());
       for (auto& image : images) {
         image.read(
-            input->get_dimension(1),
-            input->get_dimension(2),
+            input.get_dimension(1),
+            input.get_dimension(2),
             samples_magick,
             storage_type,
             pos
@@ -169,18 +171,19 @@ class magick_plugin: public libpressio_compressor_plugin {
 
       return 0;
     } else {
-      return invalid_dimensions(input->num_dimensions());
+      return invalid_dimensions(input.num_dimensions());
     }
   }
 
   /**
    * convert from image blob to pressio_data, store data in output
    */
-  int decompress_impl(const pressio_data *input, struct pressio_data* output) override {
+  int decompress_impl(const pressio_data *real_input, struct pressio_data* output) override {
+    pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
     if(output->num_dimensions() == 2) {
       //we are inputting a single image
       //convert data to compressed image
-      Magick::Image samples = data_blob_to_image(input, output);
+      Magick::Image samples = data_blob_to_image(&input, output);
       auto storage_type = data_type_to_storage_type(*output);
       if(storage_type == Magick::UndefinedPixel) return invalid_type(output->dtype());
 
@@ -203,7 +206,7 @@ class magick_plugin: public libpressio_compressor_plugin {
     } else if (output->num_dimensions() == 3) {
       //we are inputting a set of images
       std::vector<Magick::Image> images;
-      Magick::Blob input_blob(input->data(), input->size_in_bytes());
+      Magick::Blob input_blob(input.data(), input.size_in_bytes());
       Magick::readImages(&images, input_blob);
       auto storage_type = data_type_to_storage_type(*output);
       if(storage_type == Magick::UndefinedPixel) return invalid_type(output->dtype());

@@ -1,5 +1,6 @@
 #include "libpressio_ext/cpp/pressio.h"
 #include "libpressio_ext/cpp/io.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include "pressio_compressor.h"
 #include "std_compat/memory.h"
 
@@ -11,8 +12,9 @@ struct select_io: public libpressio_io_plugin {
     return selected_data;
   }
 
-  int write_impl(struct pressio_data const* data) override{
-    auto selected_data = data->select();
+  int write_impl(struct pressio_data const* indata) override{
+    pressio_data data  = domain_manager().make_readable(domain_plugins().build("malloc"), *indata);
+    auto selected_data = data.select();
     return impl->write(&selected_data);
   }
 

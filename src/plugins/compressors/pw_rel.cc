@@ -3,6 +3,7 @@
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include <cmath>
 
 namespace libpressio { namespace pw_rel_ns {
@@ -224,16 +225,17 @@ public:
     return 0;
   }
 
-  int compress_impl(const pressio_data* input,
+  int compress_impl(const pressio_data* real_input,
                     struct pressio_data* output) override
   {
     try {
-      switch(input->dtype()){
+      pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
+      switch(input.dtype()){
         case pressio_float_dtype:
-          *output = compressor{pw_rel, *input, abs_comp, signs_comp}(static_cast<float*>(input->data()), static_cast<float*>(input->data()) + input->num_elements());
+          *output = compressor{pw_rel, input, abs_comp, signs_comp}(static_cast<float*>(input.data()), static_cast<float*>(input.data()) + input.num_elements());
           break;
         case pressio_double_dtype:
-          *output = compressor{pw_rel, *input, abs_comp, signs_comp}(static_cast<double*>(input->data()), static_cast<double*>(input->data()) + input->num_elements());
+          *output = compressor{pw_rel, input, abs_comp, signs_comp}(static_cast<double*>(input.data()), static_cast<double*>(input.data()) + input.num_elements());
           break;
         default:
           return set_error(2, "unsupported type");
@@ -244,11 +246,12 @@ public:
     }
   }
 
-  int decompress_impl(const pressio_data* input,
+  int decompress_impl(const pressio_data* real_input,
                       struct pressio_data* output) override
   {
     try {
-      decompressor{output, abs_comp, signs_comp}(static_cast<unsigned char*>(input->data()));
+      pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
+      decompressor{output, abs_comp, signs_comp}(static_cast<unsigned char*>(input.data()));
       return 0;
     } catch(std::exception const& ex) {
       return set_error(1, ex.what());

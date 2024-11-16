@@ -4,7 +4,7 @@
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
-#include "libpressio_ext/cpp/printers.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 
 namespace libpressio { namespace threshold_small_ns {
 
@@ -69,12 +69,11 @@ public:
       double threshold;
   };
 
-  int compress_impl(const pressio_data* input,
+  int compress_impl(const pressio_data* real_input,
                     struct pressio_data* output) override
   {
-      std::cout << "i " << *input;
-      pressio_data thresholded = pressio_data_for_each<pressio_data>(*input, apply_threshold{*input, threshold});
-      std::cout << "t " << thresholded;
+      pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
+      pressio_data thresholded = pressio_data_for_each<pressio_data>(input, apply_threshold{input, threshold});
       int rc = compressor->compress(&thresholded, output);
       if(rc) {
           return set_error(compressor->error_code(), compressor->error_msg());

@@ -232,7 +232,7 @@ class external_metric_plugin : public libpressio_metrics_plugin {
       std::generate_n(uuid, uuid_byte_size, [&]{return dist(gen);});
       std::stringstream ss;
       for (int i = 0; i < uuid_byte_size; ++i) {
-          ss << std::hex << uuid[i];
+          ss << std::hex << int(uuid[i]);
           if (i == 3 || i == 5 || i == 7 || i == 9) {
               ss << '-';
           }

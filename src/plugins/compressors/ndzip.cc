@@ -3,6 +3,7 @@
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include <ndzip/ndzip.hh>
 
 namespace libpressio { namespace ndzip_ns {
@@ -186,30 +187,36 @@ public:
     return 0;
   }
 
-  int compress_impl(const pressio_data* input,
+  int compress_impl(const pressio_data* real_input,
                     struct pressio_data* output) override
   {
     try {
-      std::vector<size_t> lp_dims = input->normalized_dims();
+      pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
+      std::vector<size_t> lp_dims = input.normalized_dims();
       std::vector<size_t> native_dims(compat::rbegin(lp_dims), compat::rend(lp_dims));
 
-      dispatcher dispatch{executor, native_dims, input->dtype()};
-      *output = dispatch.compress(*input);
+      //ndzip unconditionally copies from the host to the device, so move to CPU if needed
+      //https://github.com/celerity/ndzip/blob/ff4e6702bf0abb86d4aeef8249bd30344dfeef75/src/ndzip/cuda_codec.inl#L730
+      dispatcher dispatch{executor, native_dims, input.dtype()};
+      *output = dispatch.compress(input);
       return 0;
     } catch(std::exception &ex) {
       return set_error(1, ex.what());
     }
   }
 
-  int decompress_impl(const pressio_data* input,
+  int decompress_impl(const pressio_data* real_input,
                       struct pressio_data* output) override
   {
     try {
+      pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
       std::vector<size_t> lp_dims = output->normalized_dims();
       std::vector<size_t> native_dims(compat::rbegin(lp_dims), compat::rend(lp_dims));
 
+      //ndzip unconditionally copies from the host to the device, so move to CPU if needed
+      //https://github.com/celerity/ndzip/blob/ff4e6702bf0abb86d4aeef8249bd30344dfeef75/src/ndzip/cuda_codec.inl#L730
       dispatcher dispatch{executor, native_dims, output->dtype()};
-      *output = dispatch.decompress(*input);
+      *output = dispatch.decompress(input);
       return 0;
     } catch (std::exception &ex){ 
       return set_error(1, ex.what());

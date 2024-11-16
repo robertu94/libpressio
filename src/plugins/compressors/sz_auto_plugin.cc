@@ -6,6 +6,7 @@
 #include "libpressio_ext/cpp/compressor.h" //for the libpressio_compressor_plugin class
 #include "libpressio_ext/cpp/options.h" // for access to pressio_options
 #include "libpressio_ext/cpp/pressio.h" //for the plugin registries
+#include "libpressio_ext/cpp/domain_manager.h" //for the plugin registries
 #include "pressio_options.h"
 #include "pressio_data.h"
 #include "pressio_compressor.h"
@@ -57,16 +58,17 @@ class sz_auto_plugin: public libpressio_compressor_plugin {
       return 0;
     }
 
-    int compress_impl(const pressio_data *input, struct pressio_data* output) override {
-      enum pressio_dtype type = pressio_data_dtype(input);
+    int compress_impl(const pressio_data *real_input, struct pressio_data* output) override {
+      pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
+      enum pressio_dtype type = pressio_data_dtype(&input);
       unsigned long outSize;
-      void* data = pressio_data_ptr(input, nullptr);
+      void* data = pressio_data_ptr(&input, nullptr);
       unsigned char* compressed_data;
 
-      size_t ndims = pressio_data_num_dimensions(input);
-      size_t r1 = pressio_data_get_dimension(input, 0);
-      size_t r2 = pressio_data_get_dimension(input, 1);
-      size_t r3 = pressio_data_get_dimension(input, 2);
+      size_t ndims = pressio_data_num_dimensions(&input);
+      size_t r1 = pressio_data_get_dimension(&input, 0);
+      size_t r2 = pressio_data_get_dimension(&input, 1);
+      size_t r3 = pressio_data_get_dimension(&input, 2);
 
       if(ndims != 3)
       {
@@ -96,7 +98,7 @@ class sz_auto_plugin: public libpressio_compressor_plugin {
       return 0;
     }
 
-    int decompress_impl(const pressio_data *input, struct pressio_data* output) override {
+    int decompress_impl(const pressio_data *real_input, struct pressio_data* output) override {
       enum pressio_dtype dtype = pressio_data_dtype(output);
 
       size_t r[] = {
@@ -110,9 +112,10 @@ class sz_auto_plugin: public libpressio_compressor_plugin {
         return set_error(2, "Error: SZauto only supports 3d decompression");
       }
 
+      pressio_data input = domain_manager().make_readable(domain_plugins.build("malloc"), *real_input);
 
       size_t compressed_size;
-      void* compressedBytes = pressio_data_ptr(input, &compressed_size);
+      void* compressedBytes = pressio_data_ptr(&input, &compressed_size);
 
       void* decompressed_data;
       if(dtype == pressio_float_dtype)

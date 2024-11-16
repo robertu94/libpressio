@@ -6,6 +6,7 @@
 #include "libpressio_ext/cpp/compressor.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include "pressio_options.h"
 #include "pressio_data.h"
 #include "pressio_compressor.h"
@@ -60,8 +61,9 @@ class sample_compressor_plugin: public libpressio_compressor_plugin {
       return 0;
     }
 
-    int compress_impl(const pressio_data *input, struct pressio_data* output) override {
-      std::vector<size_t> const& dims = input->dimensions();
+    int compress_impl(const pressio_data *real_input, struct pressio_data* output) override {
+      pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
+      std::vector<size_t> const& dims = input.dimensions();
       size_t sample_size;
       size_t take_rows = 0;
       const size_t total_rows = dims.back();
@@ -101,14 +103,14 @@ class sample_compressor_plugin: public libpressio_compressor_plugin {
       //actually sample the "rows"
       std::vector<size_t> new_dims = dims;
       new_dims.back() = sample_size;
-      *output = pressio_data::owning(input->dtype(), new_dims);
+      *output = pressio_data::owning(input.dtype(), new_dims);
       unsigned char* output_ptr = static_cast<unsigned char*>(output->data());
-      unsigned char* input_ptr = static_cast<unsigned char*>(input->data());
+      unsigned char* input_ptr = static_cast<unsigned char*>(input.data());
       size_t row_size = std::accumulate(
           std::next(compat::rbegin(dims)),
           compat::rend(dims),
           1ul, compat::multiplies<>{}
-          ) * pressio_dtype_size(input->dtype());
+          ) * pressio_dtype_size(input.dtype());
 
       for (auto row : rows_to_sample) {
         memcpy(output_ptr, input_ptr + (row*row_size), row_size);

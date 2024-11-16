@@ -47,7 +47,7 @@ int main()
 
   auto metrics_results = compressor->get_metrics_results();
   for (auto const& metric : metrics_results) {
-    std::cout << metric.second << std::endl;
+    std::cout << metric.first << metric.second << std::endl;
   }
 
   return 0;
