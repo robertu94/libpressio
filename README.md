@@ -16,7 +16,7 @@ pressio -i ~/git/datasets/hurricane/100x500x500/CLOUDf48.bin.f32 \
     -w /path/to/output.dec
 ```
 
-The reccomended way to learn LibPressio is with self-pased [LibPressio Tutorial](https://github.com/robertu94/libpressio_tutorial).
+The reccomended way to learn LibPressio is with self-paced [LibPressio Tutorial](https://github.com/robertu94/libpressio_tutorial).
 Here you will find examples of how to use LibPressio in a series of lessons for several common languages.
 
 You can also find a [recording of the tutorial on YouTube](https://youtu.be/hZ_dFCMxmGw).
