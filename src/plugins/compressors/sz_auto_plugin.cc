@@ -112,7 +112,7 @@ class sz_auto_plugin: public libpressio_compressor_plugin {
         return set_error(2, "Error: SZauto only supports 3d decompression");
       }
 
-      pressio_data input = domain_manager().make_readable(domain_plugins.build("malloc"), *real_input);
+      pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
 
       size_t compressed_size;
       void* compressedBytes = pressio_data_ptr(&input, &compressed_size);

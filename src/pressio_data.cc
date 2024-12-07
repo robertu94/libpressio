@@ -9,7 +9,7 @@
 #include "./plugins/domains/user.h"
 #include "libpressio_ext/cpp/domain.h"
 
-#ifdef LIBPRESSIO_HAS_CUDA
+#if LIBPRESSIO_HAS_CUDA
 #include <cuda_runtime.h>
 void pressio_data_cuda_free_fn (void* data, void*) {
     cudaFree(data);
