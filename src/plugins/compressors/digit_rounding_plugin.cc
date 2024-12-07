@@ -59,7 +59,7 @@ class digit_rounding_plugin: public libpressio_compressor_plugin {
     }
 
     int compress_impl(const pressio_data *real_input, struct pressio_data* output) override {
-      pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_output);
+      pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
       int type = libpressio_type_to_dr_type(pressio_data_dtype(&input));
       if(type == INVALID_TYPE) {
          return INVALID_TYPE;
@@ -75,7 +75,7 @@ class digit_rounding_plugin: public libpressio_compressor_plugin {
     }
 
     int decompress_impl(const pressio_data *real_input, struct pressio_data* output) override {
-      pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_output);
+      pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
       int type = libpressio_type_to_dr_type(pressio_data_dtype(output));
       if(type == INVALID_TYPE) {
          return INVALID_TYPE;

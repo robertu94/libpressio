@@ -10,7 +10,7 @@ void* pressio_noop_alloc_fn(size_t n, void*) {
 void pressio_libc_memcpy_fn(void* dst, void* src, size_t n, void*) {
     memcpy(dst, src, n);
 }
-#ifdef LIBPRESSIO_HAS_CUDA
+#if LIBPRESSIO_HAS_CUDA
 #include <cuda_runtime.h>
 extern "C" {
     void* pressio_cuda_alloc_fn(size_t n, void*) {
