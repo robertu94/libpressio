@@ -10,7 +10,7 @@
  * \file
  * \brief domain that uses user-defined C allocation and free functions
  */
-#ifdef LIBPRESSIO_HAS_CUDA
+#if LIBPRESSIO_HAS_CUDA
 extern "C" {
     void* pressio_cuda_alloc_fn(size_t n, void*);
     void* pressio_cudahost_alloc_fn(size_t n, void*);
@@ -46,7 +46,7 @@ struct pressio_user_domain: public pressio_domain, std::enable_shared_from_this<
                 this->memcpy_fn = pressio_libc_memcpy_fn;
 
             }
-#ifdef LIBPRESSIO_HAS_CUDA
+#if LIBPRESSIO_HAS_CUDA
             else if(deleter == pressio_data_cuda_free_fn && accessible.empty())  {
                 this->accessible = std::vector<std::string>{""};
                 this->user_prefix = "cudamalloc";

@@ -33,7 +33,7 @@ typedef void (*pressio_data_delete_fn)(void* data, void* metadata);
  */
 void pressio_data_libc_free_fn (void* data, void* metadata);
 
-#ifdef LIBPRESSIO_HAS_CUDA
+#if LIBPRESSIO_HAS_CUDA
 /**
  * a custom deleter that uses libc's free and ignores the metadata
  * \param[in] data to be deallocated with free()
