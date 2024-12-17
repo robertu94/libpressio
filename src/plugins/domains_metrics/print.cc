@@ -1,5 +1,6 @@
 #include <iostream>
 #include <chrono>
+#include <sstream>
 #include <libpressio_ext/cpp/data.h>
 #include <libpressio_ext/cpp/printers.h>
 #include <libpressio_ext/cpp/domain_manager.h>
