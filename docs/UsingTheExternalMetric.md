@@ -48,6 +48,10 @@ These may change from version to version.
 
 *New in external API 3* The following arguments will be "prefixed" according to the `external:field_names` argument if it is set. See the table above in "Configuration Options" and example usage below.
 
+*New in external API 7* When there are multiple datasets provided as input, they always begin with `--input`.
+
+*New in external API 7* `--eval_uuid` a string containing a UUID that _should_ be unique per invocation of the metric
+
 `--input` path to a temporary file containing the input data prior to compression. (new in version 2) It will be interpreted according to the `external:io_format` option
 
 `--decompressed` path to a temporary file containing the input data prior to compression. (new in version 2) It will be interpreted according to the `external:io_format` option
@@ -55,6 +59,7 @@ These may change from version to version.
 `--dim` dimension the dimensions of the dataset from low to high.  This argument may be passed more than once.  If passed more than once, the dimensions are given in order same order as the `pressio_data_new` functions.
 
 `--type` type of the input data.  Valid types include: "bool", "float", "double", "int8", "int16", "int32", "int64", "uint8", "uint16", "uint32", "uint64", "byte".
+
 
 ## "Custom Defined" Command line Arguments
 
@@ -122,7 +127,7 @@ Where:
 
 + `$var_name` is any string that does not contain a literal ascii `=` or `\n` character.  It may not begin with the prefix `external:`.
 + `=` is a literal ascii "=" character
-+ `$value` is a value that can be parsed using `strtod`
++ `$value` is a value treated as a double if parse-able with `strtod` (all versions) or a string containing no newlines otherwise (starting in version 6)
 + `\n` is a newline character
 
 
@@ -220,6 +225,31 @@ No changes were made to the output format.  The `--config_name` argument was int
 
 No changes were made to the output format.  A double field `external:duration` is now included for external metrics which contains the runtime in seconds.
 
+# Version 6
+
+In addition to doubles, strings can now be returned from external metrics.  These strings cannot contain a newline character.
+
+# Version 7
+
+When there are multiple data fields, `--input`  is guaranteed to start each fields arguments
+
+# Version `json:1`
+
+An alternative output format for stdout that allows providing values in a more complex way using JSON.
+
+```
+external:api=json:1
+$json
+```
+
+where `$json` is an object parse-able using `pressio_options_from_json`. Here is an example:
+
+```
+external:api=json:1
+{"auto_cor1":0.0, "auto_cor2": 0.0, "auto_cor3": 0.0, "ssim": 0.0, "my_analysis": 0.0, "foobar": 2.7}
+```
+
+
 # "mpispawn" launch method
 
 This method spawns the exernal metric using the `MPI_Comm_spawn` routine with a series of calls similar to the following:
@@ -237,7 +267,7 @@ MPI_Comm_spawn(args.front(), args.data()+1, 1, info, 0,  MPI_COMM_SELF, &child, 
 
 The `mpispawn` launch method does not  support external metrics api versions 1 or 2.
 
-## Version 3 - 5
+## Version 3 - 7
 
 Equivelent to `forkexec` with the following exceptions.
 
@@ -259,4 +289,64 @@ MPI_Send(&stdout_len, 1, MPI_INT, 0, 0, parent);
 MPI_Send(stdout_str.c_str(), stdout_len, MPI_CHAR, 0, 0, parent);
 MPI_Send(&stderr_len, 1, MPI_INT, 0, 0, parent);
 MPI_Send(stderr_str.c_str(), stderr_len, MPI_CHAR, 0, 0, parent);
+```
+
+# "remote" launch method
+
+This method uses curl to connect to a server that provides the metric
+
+# Version 3-7
+
+Equivelent to `forkexec` with the following exceptions.
+
+When arguments are passed, they are provided in a json list inside a dictionary with the key "args"
+
+example
+
+```json
+{ "args": ["--api=7"] }
+```
+
+When the request is returned it is nested in a json dictionary with keys stderr, stdout, and return_code formatted as described for `forkexec`
+
+example
+
+```json
+{
+    "stdout": "external:api=7\nfoo=3",
+    "stderr": "",
+    "return_code": 0,
+}
+```
+
+# `python` launch method
+
+Equivilent to the `forkexec` method with the following exceptions.
+
+the list of arguments are passed as a python list of strings with the name `cmd`
+the the stdout, stderr, and return code are returned via variables `stdout`, `stderr` and `ret` respectively.
+
+**limitation** this metric implements thread-safety with a global mutex grabbed at invocation time.
+
+example script (assumes python 3.6 or later)`
+
+```python
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument("--api", type=int)
+parser.add_argument("--input")
+parser.add_argument("--decompressed")
+parser.add_argument("--dim", type=int, action="append")
+parser.add_argument("--dtype")
+args, _ = parser.parse_known_args(cmd)
+
+if args.api is not None:
+    foo = 3
+else:
+    foo = 0
+
+stdout = f"""external:api=7
+foo={foo}
+stderr = ""
+"""
 ```

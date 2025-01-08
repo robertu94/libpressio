@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
-project(libpressio VERSION "1.0.3" LANGUAGES CXX C)
+project(libpressio VERSION "1.0.4" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -749,6 +749,17 @@ if(LIBPRESSIO_HAS_LIBUUID)
   find_package(PkgConfig REQUIRED)
   pkg_search_module(UUID IMPORTED_TARGET GLOBAL uuid)
   target_link_libraries(libpressio PRIVATE PkgConfig::UUID)
+endif()
+
+option(LIBPRESSIO_HAS_GRIB "build support for GRIB files using eccodes" OFF)
+if(LIBPRESSIO_HAS_GRIB)
+  set(LIBPRESSIO_FEATURES "${LIBPRESSIO_FEATURES} grib")
+  find_package(eccodes REQUIRED)
+  target_link_libraries(libpressio PRIVATE eccodes)
+  target_sources(libpressio
+    PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/io/grib.cc
+    )
 endif()
 
 configure_file(

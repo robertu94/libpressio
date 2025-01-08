@@ -56,7 +56,7 @@ class external_metric_plugin : public libpressio_metrics_plugin {
 
     int begin_compress_many_impl(compat::span<const pressio_data* const> const& inputs,
                                    compat::span<const pressio_data* const> const&) override {
-      if(use_many or field_names.size() > 1) {
+      if(use_many or inputs.size() > 1) {
         input_data.resize(inputs.size());
         for (size_t i = 0; i < inputs.size(); ++i) {
           input_data[i] = pressio_data::clone(*inputs[i]);
@@ -80,7 +80,7 @@ class external_metric_plugin : public libpressio_metrics_plugin {
 
     int end_decompress_many_impl(compat::span<const pressio_data* const> const& ,
                                    compat::span<const pressio_data* const> const& outputs, int ) override {
-      if(use_many or field_names.size() > 1) {
+      if(use_many or outputs.size() > 1) {
         std::vector<const pressio_data*> input_ptrs(input_data.size());
         for (size_t i = 0; i < input_data.size(); ++i) {
           input_ptrs[i] = &input_data[i];
@@ -295,33 +295,40 @@ class external_metric_plugin : public libpressio_metrics_plugin {
           return {};
         }
       };
+      auto get = [](std::vector<pressio_io>& array, size_t index) -> pressio_io& {
+        if(array.size() != 1){
+          return array[index];
+        } else {
+          return array.front();
+        }
+      };
 
-      for (size_t i = 0; i < io_modules.size(); ++i) {
-        //write uncompressed data to a temporary file
-        std::string input_fd_name = get_or(prefixes, i).value_or("") + std::string(".pressioinXXXXXX") + get_or(suffixes, i).value_or("");
-        int input_fd = mkstemps(&input_fd_name[0], get_or(suffixes, i).value_or("").size());
-        char* resolved_input = realpath(input_fd_name.c_str(), nullptr);
-        input_fd_name = resolved_input;
-        free(resolved_input);
-				if(write_inputs) {
-					io_modules[i]->set_options({{"io:path", std::string(input_fd_name)}});
-					io_modules[i]->write(input_data[i]);
-				}
+      for (size_t i = 0; i < std::min(input_data.size(), decompressed_data.size()); ++i) {
+          //write uncompressed data to a temporary file
+          std::string input_fd_name = get_or(prefixes, i).value_or("") + std::string(".pressioinXXXXXX") + get_or(suffixes, i).value_or("");
+          int input_fd = mkstemps(&input_fd_name[0], get_or(suffixes, i).value_or("").size());
+          char* resolved_input = realpath(input_fd_name.c_str(), nullptr);
+          input_fd_name = resolved_input;
+          free(resolved_input);
+          if(write_inputs) {
+              get(io_modules,i)->set_options({{"io:path", std::string(input_fd_name)}});
+              get(io_modules,i)->write(input_data[i]);
+          }
 
-        //write decompressed data to a temporary file
-        std::string output_fd_name = get_or(prefixes, i).value_or("") + std::string(".pressiooutXXXXXX") + get_or(suffixes, i).value_or("");
-        int decompressed_fd = mkstemps(&output_fd_name[0], get_or(suffixes,i).value_or("").size());
-        char* resolved_output = realpath(output_fd_name.c_str(), nullptr);
-        output_fd_name = resolved_output;
-        free(resolved_output);
-				if(write_outputs) {
-					io_modules[i]->set_options({{"io:path", std::string(output_fd_name)}});
-					io_modules[i]->write(decompressed_data[i]);
-				}
-        
-        filenames.emplace_back(input_fd_name, output_fd_name);
-        fds.emplace_back(input_fd);
-        fds.emplace_back(decompressed_fd);
+          //write decompressed data to a temporary file
+          std::string output_fd_name = get_or(prefixes, i).value_or("") + std::string(".pressiooutXXXXXX") + get_or(suffixes, i).value_or("");
+          int decompressed_fd = mkstemps(&output_fd_name[0], get_or(suffixes,i).value_or("").size());
+          char* resolved_output = realpath(output_fd_name.c_str(), nullptr);
+          output_fd_name = resolved_output;
+          free(resolved_output);
+          if(write_outputs) {
+              get(io_modules,i)->set_options({{"io:path", std::string(output_fd_name)}});
+              get(io_modules,i)->write(decompressed_data[i]);
+          }
+
+          filenames.emplace_back(input_fd_name, output_fd_name);
+          fds.emplace_back(input_fd);
+          fds.emplace_back(decompressed_fd);
       }
 
       //get the defaults
