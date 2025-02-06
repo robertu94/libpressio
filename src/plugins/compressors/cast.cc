@@ -88,7 +88,8 @@ public:
   const char* prefix() const override { return "cast"; }
 
   void set_name_impl(std::string const& new_name) override {
-      compressor->set_name(new_name + "/casted");
+      if(!new_name.empty()) compressor->set_name(new_name + "/casted");
+      else compressor->set_name("");
   }
   pressio_options get_metrics_results_impl() const override {
     return compressor->get_metrics_results();
