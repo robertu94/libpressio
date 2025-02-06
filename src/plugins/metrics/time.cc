@@ -1,51 +1,42 @@
-#include <chrono>
 #include "pressio_options.h"
 #include "pressio_compressor.h"
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
 #include "std_compat/memory.h"
+#include "timer.h"
 
 namespace libpressio {
-using std::chrono::high_resolution_clock;
-using std::chrono::time_point;
-using std::chrono::duration_cast;
-using std::chrono::milliseconds;
 
 namespace time_metrics{
-  struct time_range{
-    time_point<high_resolution_clock> begin;
-    time_point<high_resolution_clock> end;
-    unsigned int elapsed() const { return duration_cast<milliseconds>(end-begin).count(); }
-  };
-  using timer = compat::optional<time_range>;
+  using namespace libpressio::utils;
   struct compression_actions {
-    time_metrics::timer check_options;
-    time_metrics::timer set_options;
-    time_metrics::timer get_options;
-    time_metrics::timer get_configuration;
-    time_metrics::timer compress;
-    time_metrics::timer compress_many;
-    time_metrics::timer decompress;
-    time_metrics::timer decompress_many;
+    timer check_options;
+    timer set_options;
+    timer get_options;
+    timer get_configuration;
+    timer compress;
+    timer compress_many;
+    timer decompress;
+    timer decompress_many;
   };
   struct metrics_actions {
-    time_metrics::timer begin_check_options;
-    time_metrics::timer begin_set_options;
-    time_metrics::timer begin_get_options;
-    time_metrics::timer begin_get_configuration;
-    time_metrics::timer begin_compress;
-    time_metrics::timer begin_compress_many;
-    time_metrics::timer begin_decompress;
-    time_metrics::timer begin_decompress_many;
-    time_metrics::timer end_check_options;
-    time_metrics::timer end_set_options;
-    time_metrics::timer end_get_options;
-    time_metrics::timer end_get_configuration;
-    time_metrics::timer end_compress;
-    time_metrics::timer end_compress_many;
-    time_metrics::timer end_decompress;
-    time_metrics::timer end_decompress_many;
+    timer begin_check_options;
+    timer begin_set_options;
+    timer begin_get_options;
+    timer begin_get_configuration;
+    timer begin_compress;
+    timer begin_compress_many;
+    timer begin_decompress;
+    timer begin_decompress_many;
+    timer end_check_options;
+    timer end_set_options;
+    timer end_get_options;
+    timer end_get_configuration;
+    timer end_compress;
+    timer end_compress_many;
+    timer end_decompress;
+    timer end_decompress_many;
   };
 
 class time_plugin : public libpressio_metrics_plugin {
