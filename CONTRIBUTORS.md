@@ -94,7 +94,7 @@ the Laboratory Computing Resource Center at Argonne National Laboratory.
 This research used resources of the Argonne Leadership Computing Facility, a U.S. Department of Energy (DOE) Office of Science user facility at Argonne National Laboratory and is based on research supported by the U.S. DOE Office of Science-Advanced Scientific Computing Research Program, under Contract No. DE-AC02-06CH11357.
 
 
-### Feature Supported by the DOE ZF project (2024-...)
+### Features Supported by the DOE ZF project (2024-...)
 
 The material was supported by the U.S. Department of Energy, Office of Science, Advanced Scientific Computing Research (ASCR), under contract DE-AC02-06CH11357
 
@@ -103,7 +103,7 @@ The material was supported by the U.S. Department of Energy, Office of Science, 
 + Scheme interface for LibPressio Predict
 + Added support for MSZ
 
-### Feature Supported by the NSF [FZ project](https://fzframework.org/) (2023-...)
+### Features Supported by the NSF [FZ project](https://fzframework.org/) (2023-...)
 
 This material is based upon work supported by the National Science Foundation under Grant No. 2311875.
 
@@ -122,7 +122,7 @@ This material is based upon work supported by the National Science Foundation un
 + Added support for $option:min and $option:max and pressio:highlevel to facilitate auto-tuning
 + View_segment Metrics API to inspect compressor internal state
 
-### Feature Supported by [Illumine project](https://lcls.slac.stanford.edu/depts/data-systems/projects/illumine) (2024-...)
+### Features Supported by the [Illumine project](https://lcls.slac.stanford.edu/depts/data-systems/projects/illumine) (2024-...)
 
 This work is supported by the U.S. Department of Energy (DOE) Office of Science, Advanced Scientific Computing Research and Basic Energy Sciences Advanced Scientific Computing Research for DOE User Facilities award ILLUMINE - Intelligent Learning for Light Source and Neutron Source User Measurements Including Navigation and Experiment Steering.
 
@@ -136,7 +136,7 @@ This work is supported by the U.S. Department of Energy (DOE) Office of Science,
 + Added support for pre-allocated buffers
 + Added Python support for Domains to support cuPY/PyTorch/TensorFlow arrays
  
-### Feature Supported by SDR project (June 2021-...)
+### Features Supported by Sheng Di's DOE ECRP Project -- SDR (June 2021-...)
 
 The material was supported by the U.S. Department of Energy, Office of Science, Advanced Scientific Computing Research (ASCR), under contract DE-AC02-06CH11357.
 
@@ -177,7 +177,7 @@ The material was supported by the U.S. Department of Energy, Office of Science, 
 + Added support for SZ2’s multi-threaded mode
 + Added support for MGARD-GPU
 
-### Features supported by the [ECP-EZ Project](https://szcompressor.org/) part of [The Exascale Computing Project](https://www.exascaleproject.org/) (2020-2024)
+### Features supported by the DOE [ECP-EZ Project](https://szcompressor.org/) part of [The Exascale Computing Project](https://www.exascaleproject.org/) (2020-2024)
 
 This research was also supported by the Exascale Computing Project (17-SC-20-SC), a collaborative effort of the U.S. Department of Energy Office of Science and the National Nuclear Security Administration. The material was also supported by the U.S. Department of Energy, Office of Science, under contract DEAC02-06CH11357.
 
