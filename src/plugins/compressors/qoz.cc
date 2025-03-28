@@ -1,8 +1,8 @@
-#include "std_compat/memory.h"
 #include "libpressio_ext/cpp/compressor.h"
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
+#include "libpressio_ext/cpp/domain_manager.h"
 #include "iless.h"
 
 #include <QoZ/api/sz.hpp>
@@ -41,7 +41,7 @@ struct impl_compress{
 struct sz3_option_maps {
   std::map<std::string, QoZ::EB, iless> error_bounds;
   std::map<std::string, QoZ::ALGO, iless> algo;
-  std::map<std::string, QoZ::INTERP_ALGO, iless> interp_algo;
+  //std::map<std::string, QoZ::INTERP_ALGO, iless> interp_algo; //hided due to code update
   std::map<std::string, QoZ::TUNING_TARGET, iless> tuning_options;
   sz3_option_maps() {
     for (size_t i = 0; i < std::size(QoZ::EB_STR); ++i) {
@@ -50,9 +50,11 @@ struct sz3_option_maps {
     for (size_t i = 0; i < std::size(QoZ::ALGO_STR); ++i) {
       algo[QoZ::ALGO_STR[i]] = QoZ::ALGO_OPTIONS[i];
     }
+    /*
     for (size_t i = 0; i < std::size(QoZ::INTERP_ALGO_STR); ++i) {
       interp_algo[QoZ::INTERP_ALGO_STR[i]] = QoZ::INTERP_ALGO_OPTIONS[i];
     }
+    *///hided due to code update
     for (size_t i = 0; i < std::size(QoZ::TUNING_TARGET_STR); ++i) {
       tuning_options[QoZ::TUNING_TARGET_STR[i]] = QoZ::TUNING_TARGET_OPTIONS[i];
     }
@@ -76,8 +78,8 @@ class sz3_compressor_plugin : public libpressio_compressor_plugin {
 public:
   sz3_compressor_plugin() {
     config.absErrorBound = 1e-6;
-    config.errorBoundMode = QoZ::EB_ABS;
-    config.QoZ = 1;
+    config.errorBoundMode = QoZ::EB_ABS;//Should EB_REL be better?
+    config.QoZ = 3;//updated
     config.verbose = 0;
   }
 
@@ -107,19 +109,19 @@ public:
     set(options, "qoz:openmp", config.openmp);
     set(options, "qoz:lossless", config.lossless);
     set(options, "qoz:encoder", config.encoder);
-    set(options, "qoz:interp_algo", config.interpAlgo);
-    set(options, "qoz:interp_direction", config.interpDirection);
+    //set(options, "qoz:interp_algo", config.interpAlgo); //hided due to code update
+    //set(options, "qoz:interp_direction", config.interpDirection); //hided due to code update
     set(options, "qoz:interp_block_size", config.interpBlockSize);
     set(options, "qoz:quant_bin_size", config.quantbinCnt);
     set(options, "qoz:stride", config.stride);
     set(options, "qoz:pred_dim", config.pred_dim);
-    set(options, "qoz:use_qoz", config.QoZ);
+    set(options, "qoz:qoz_level", config.QoZ);//Updated the option name.
     set(options, "qoz:maxstep", config.maxStep);
     set(options, "qoz:test_lorenzo", config.testLorenzo);
-    set(options, "qoz:turning_target", config.tuningTarget);
-    set_type(options, "qoz:turning_target_str", pressio_option_charptr_type);
+    set(options, "qoz:tuning_target", config.tuningTarget);//fixed a typo. turning to tuning
+    set_type(options, "qoz:tuning_target_str", pressio_option_charptr_type);
     set_type(options, "qoz:error_bound_mode_str", pressio_option_charptr_type);
-    set_type(options, "qoz:intrep_algo_str", pressio_option_charptr_type);
+    //set_type(options, "qoz:intrep_algo_str", pressio_option_charptr_type);//hided due to code update
     set_type(options, "qoz:algorithm_str", pressio_option_charptr_type);
     return options;
   }
@@ -130,10 +132,11 @@ public:
     set(options, "pressio:thread_safe", pressio_thread_safety_multiple);
     set(options, "pressio:stability", "experimental");
     set(options, "qoz:error_bound_mode_str", keys(sz3_options().error_bounds));
-    set(options, "qoz:intrep_algo_str", keys(sz3_options().interp_algo));
+    //set(options, "qoz:intrep_algo_str", keys(sz3_options().interp_algo));//hided due to code update
+    set(options, "qoz:tuning_target_str", keys(sz3_options().tuning_options));
     set(options, "qoz:algorithm_str", keys(sz3_options().algo));
     
-        std::vector<std::string> invalidations {"qoz:abs_error_bound", "qoz:rel_error_bound", "qoz:psnr_error_bound", "qoz:l2_norm_error_bound", "qoz:error_bound_mode", "qoz:algorithm", "qoz:lorenzo", "qoz:lorenzo2", "qoz:regression", "qoz:regression2", "qoz:openmp", "qoz:lossless", "qoz:encoder", "qoz:interp_algo", "qoz:interp_direction", "qoz:interp_block_size", "qoz:quant_bin_size", "qoz:stride", "qoz:pred_dim", "qoz:use_qoz", "qoz:maxstep", "qoz:test_lorenzo", "qoz:turning_target", "pressio:abs", "pressio:rel", "qoz:error_bound_mode_str", "qoz:intrep_algo_str", "qoz:algorithm_str", "qoz:turning_target_str"}; 
+        std::vector<std::string> invalidations {"qoz:abs_error_bound", "qoz:rel_error_bound", "qoz:psnr_error_bound", "qoz:l2_norm_error_bound", "qoz:error_bound_mode", "qoz:algorithm", "qoz:lorenzo", "qoz:lorenzo2", "qoz:regression", "qoz:regression2", "qoz:openmp", "qoz:lossless", "qoz:encoder", "qoz:interp_algo", "qoz:interp_direction", "qoz:interp_block_size", "qoz:quant_bin_size", "qoz:stride", "qoz:pred_dim", "qoz:use_qoz", "qoz:maxstep", "qoz:test_lorenzo", "qoz:tuning_target", "pressio:abs", "pressio:rel", "qoz:error_bound_mode_str", "qoz:intrep_algo_str", "qoz:algorithm_str", "qoz:tuning_target_str"}; 
         std::vector<pressio_configurable const*> invalidation_children {}; 
         
         set(options, "predictors:error_dependent", get_accumulate_configuration("predictors:error_dependent", invalidation_children, invalidations));
@@ -163,20 +166,20 @@ public:
     set(options, "qoz:openmp", "use openmp parallelization");
     set(options, "qoz:lossless", "lossless compression method to apply; 1 bypass lossless, 1 zstd");
     set(options, "qoz:encoder", "which encoder to use, 0 skip encoder, 1 huffman, 2 arithmatic");
-    set(options, "qoz:interp_algo", "which intrepolation algorithm to use");
-    set(options, "qoz:interp_direction", "which interpolation direction to use");
+    //set(options, "qoz:interp_algo", "which intrepolation algorithm to use");
+   // set(options, "qoz:interp_direction", "which interpolation direction to use");
     set(options, "qoz:interp_block_size", "what block size to use for interpolation to use");
     set(options, "qoz:quant_bin_size", "number of quantization bins");
     set(options, "qoz:stride", "stride between items");
     set(options, "qoz:pred_dim", "prediction dimension");
     set(options, "qoz:algorithm_str", "compression algorithm");
     set(options, "qoz:error_bound_mode_str", "error bound");
-    set(options, "qoz:intrep_algo_str", "interpolation algorithm mode");
-    set(options, "qoz:use_qoz", "enable extra quality preserving features");
+    //set(options, "qoz:intrep_algo_str", "interpolation algorithm mode");
+    set(options, "qoz:qoz_level", "optimization level of QoZ compression. 0/1/2/3/4 are available. 0 is SZ3, 1 is QoZ1, 2 or 3 are recommended for QoZ2.");
     set(options, "qoz:maxstep", "set the maximum step size");
     set(options, "qoz:test_lorenzo", "test lorenzo predictor and use it when it is better");
-    set(options, "qoz:turning_target", "the tuning target for quality");
-    set(options, "qoz:turning_target_str", "the tuning target as a string");
+    set(options, "qoz:tuning_target", "the tuning target for quality");
+    set(options, "qoz:tuning_target_str", "the tuning target as a string");
     return options;
   }
 
@@ -202,28 +205,29 @@ public:
     get(options, "qoz:openmp", &config.openmp);
     get(options, "qoz:lossless", &config.lossless);
     get(options, "qoz:encoder", &config.encoder);
-    get(options, "qoz:interp_algo", &config.interpAlgo);
-    get(options, "qoz:interp_direction", &config.interpDirection);
+    //get(options, "qoz:interp_algo", &config.interpAlgo);
+    //get(options, "qoz:interp_direction", &config.interpDirection);
     get(options, "qoz:interp_block_size", &config.interpBlockSize);
     get(options, "qoz:quant_bin_size", &config.quantbinCnt);
     get(options, "qoz:stride", &config.stride);
     get(options, "qoz:pred_dim", &config.pred_dim);
-    get(options, "qoz:use_qoz", &config.QoZ);
+    get(options, "qoz:qoz_level", &config.QoZ);
     get(options, "qoz:maxstep", &config.maxStep);
     get(options, "qoz:test_lorenzo", &config.testLorenzo);
-    get(options, "qoz:turning_target", &config.tuningTarget);
+    get(options, "qoz:tuning_target", &config.tuningTarget);
     std::string tmp;
     try {
       if(get(options, "qoz:error_bound_mode_str", &tmp) == pressio_options_key_set) {
         config.errorBoundMode = sz3_options().error_bounds.at(tmp);
       }
+      /*
       if(get(options, "qoz:intrep_algo_str", &tmp) == pressio_options_key_set) {
         config.interpAlgo = sz3_options().interp_algo.at(tmp);
-      }
+      }*/
       if(get(options, "qoz:algorithm_str", &tmp) == pressio_options_key_set) {
         config.cmprAlgo = sz3_options().algo.at(tmp);
       }
-      if(get(options, "qoz:turning_target_str", &tmp) == pressio_options_key_set ) {
+      if(get(options, "qoz:tuning_target_str", &tmp) == pressio_options_key_set ) {
         config.tuningTarget = sz3_options().tuning_options.at(tmp);
       }
     } catch(std::out_of_range const& ex) {
@@ -318,10 +322,10 @@ public:
     return 0;
   }
 
-  int major_version() const override { return atoi(PROJECT_VER_MAJOR); }
-  int minor_version() const override { return atoi(PROJECT_VER_MINOR); }
-  int patch_version() const override { return atoi(PROJECT_VER_PATCH); }
-  const char* version() const override { return PROJECT_VER; }
+  int major_version() const override { return QoZ_VER_MAJOR; }
+  int minor_version() const override { return QoZ_VER_MINOR; }
+  int patch_version() const override { return QoZ_VER_PATCH; }
+  const char* version() const override { return QoZ_VER; }
   const char* prefix() const override { return "qoz"; }
 
   pressio_options get_metrics_results_impl() const override {
