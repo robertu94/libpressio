@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
-project(libpressio VERSION "1.0.4" LANGUAGES CXX C)
+project(libpressio VERSION "1.0.5" LANGUAGES CXX C)
 
 #correct was to set a default build type
 # https://blog.kitware.com/cmake-and-the-default-build-type/
@@ -98,37 +98,40 @@ add_library(libpressio
   ./src/plugins/domains/malloc.cc
   ./src/plugins/domains/nonowning.cc
   ./src/plugins/domains/user.cc
+
+  #private utilities headers
+  ./src/timer.cc
   ./src/iless.cc
+  ./src/cleanup.h
+  ./src/timer.h
+  ./src/iless.h
+  ./src/external_parse.h
+  ./src/multi_dimensional_iterator.h
 
   #public headers
-  include/libpressio.h
-  include/libpressio_ext/cpp/compressor.h
-  include/libpressio_ext/cpp/configurable.h
-  include/libpressio_ext/cpp/data.h
-  include/libpressio_ext/cpp/errorable.h
-  include/libpressio_ext/cpp/io.h
-  include/libpressio_ext/cpp/libpressio.h
-  include/libpressio_ext/cpp/metrics.h
-  include/libpressio_ext/cpp/options.h
-  include/libpressio_ext/cpp/pressio.h
-  include/libpressio_ext/cpp/printers.h
-  include/libpressio_ext/cpp/subgroup_manager.h
-  include/libpressio_ext/cpp/versionable.h
-  include/libpressio_ext/io/posix.h
-  include/libpressio_ext/io/pressio_io.h
-  include/pressio.h
-  include/pressio_compressor.h
-  include/pressio_data.h
-  include/pressio_dtype.h
-  include/pressio_metrics.h
-  include/pressio_option.h
-  include/pressio_options.h
-  include/pressio_options_iter.h
-  
-  #private headers
-  src/external_parse.h
-  src/multi_dimensional_iterator.h
-  src/cleanup.h
+  ./include/libpressio.h
+  ./include/libpressio_ext/cpp/compressor.h
+  ./include/libpressio_ext/cpp/configurable.h
+  ./include/libpressio_ext/cpp/data.h
+  ./include/libpressio_ext/cpp/errorable.h
+  ./include/libpressio_ext/cpp/io.h
+  ./include/libpressio_ext/cpp/libpressio.h
+  ./include/libpressio_ext/cpp/metrics.h
+  ./include/libpressio_ext/cpp/options.h
+  ./include/libpressio_ext/cpp/pressio.h
+  ./include/libpressio_ext/cpp/printers.h
+  ./include/libpressio_ext/cpp/subgroup_manager.h
+  ./include/libpressio_ext/cpp/versionable.h
+  ./include/libpressio_ext/io/posix.h
+  ./include/libpressio_ext/io/pressio_io.h
+  ./include/pressio.h
+  ./include/pressio_compressor.h
+  ./include/pressio_data.h
+  ./include/pressio_dtype.h
+  ./include/pressio_metrics.h
+  ./include/pressio_option.h
+  ./include/pressio_options.h
+  ./include/pressio_options_iter.h
   )
 
 if(NOT LIBPRESSIO_BUILD_MODE)
@@ -759,6 +762,18 @@ if(LIBPRESSIO_HAS_GRIB)
   target_sources(libpressio
     PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/io/grib.cc
+    )
+endif()
+
+
+option(LIBPRESSIO_HAS_MSz "build support for MSz for feature preservation" OFF)
+if(LIBPRESSIO_HAS_MSz)
+    set(LIBPRESSIO_FEATURES "${LIBPRESSIO_FEATURES} MSz")
+    find_package(MSz REQUIRED)
+    target_link_libraries(libpressio PRIVATE MSz::MSz)
+  target_sources(libpressio
+    PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/compressors/msz.cc
     )
 endif()
 
