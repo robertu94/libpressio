@@ -8,7 +8,7 @@
 #include "libpressio_ext/cpp/options.h"
 #include "std_compat/memory.h"
 
-namespace libpressio { namespace by_extension_io_ns {
+namespace libpressio { namespace io { namespace by_extension_ns {
 
 class by_extension_plugin : public libpressio_io_plugin {
   public:
@@ -136,5 +136,5 @@ class by_extension_plugin : public libpressio_io_plugin {
   pressio_io plugin = io_plugins().build(plugin_id);
 };
 
-static pressio_register io_by_extension_plugin(io_plugins(), "by_extension", [](){ return compat::make_unique<by_extension_plugin>(); });
-}}
+pressio_register registration(io_plugins(), "by_extension", [](){ return compat::make_unique<by_extension_plugin>(); });
+}}}

@@ -23,7 +23,9 @@
 #include "sz_common.h"
 #include "iless.h"
 
-namespace libpressio { namespace sz {
+namespace libpressio { namespace compressors { namespace sz_ns {
+
+    using namespace libpressio::compressors::sz_common;
 
 std::string get_version_sz(){
         static std::string
@@ -456,8 +458,8 @@ std::unique_ptr<libpressio_compressor_plugin> make_c_sz() {
 
 std::string const sz_plugin::sz_version = get_version_sz();
 
-static pressio_register compressor_sz_plugin(compressor_plugins(), "sz", [](){
+pressio_register registration(compressor_plugins(), "sz", [](){
     return compat::make_unique<sz_plugin>(pressio_get_sz_init_handle()); 
 });
 
-} }
+} } }

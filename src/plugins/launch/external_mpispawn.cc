@@ -6,6 +6,7 @@
 #include "pressio_compressor.h"
 #include "std_compat/memory.h"
 
+namespace libpressio { namespace launch { namespace external_mpispawn_ns {
 struct external_mpispawn: public libpressio_launch_plugin {
 extern_proc_results launch_impl(std::vector<std::string> const& full_command) const override {
       extern_proc_results results;
@@ -90,4 +91,5 @@ extern_proc_results launch_impl(std::vector<std::string> const& full_command) co
   std::vector<std::string> commands;
 };
 
-static pressio_register launch_spawn_plugin(launch_plugins(), "mpispawn", [](){ return compat::make_unique<external_mpispawn>();});
+pressio_register registration(launch_plugins(), "mpispawn", [](){ return compat::make_unique<external_mpispawn>();});
+}}}

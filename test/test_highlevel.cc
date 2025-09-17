@@ -7,7 +7,7 @@
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
 
-namespace libpressio { namespace highlevel_mock_ns {
+namespace libpressio { namespace compressors { namespace highlevel_mock_ns {
 
 class highlevel_mock_compressor_plugin : public libpressio_compressor_plugin {
 public:
@@ -76,11 +76,11 @@ public:
   std::string s = "";
 };
 
-static pressio_register compressor_many_fields_plugin(compressor_plugins(), "highlevel_mock", []() {
+pressio_register compressor_many_fields_plugin(compressor_plugins(), "highlevel_mock", []() {
   return compat::make_unique<highlevel_mock_compressor_plugin>();
 });
 
-} }
+} } }
 
 void test_contains(pressio_options const& actual, pressio_options const& expected) {
     for (auto const& i : expected) {

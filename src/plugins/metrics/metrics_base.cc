@@ -2,6 +2,8 @@
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/options.h"
 
+namespace libpressio { namespace metrics {
+
 libpressio_metrics_plugin::libpressio_metrics_plugin():
   pressio_configurable()
 {}
@@ -195,3 +197,4 @@ int libpressio_metrics_plugin::view_segment_impl(pressio_data const*, const char
 void libpressio_metrics_plugin::set_name(std::string const& new_name) {
   pressio_configurable::set_name(new_name);
 }
+}}

@@ -21,7 +21,7 @@
  * print the registry
  */
 template <class CharT, class Traits, class T>
-std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& out, pressio_registry<T>& reg) {
+std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>& out, libpressio::pressio_registry<T>& reg) {
     for (auto const& i : reg) {
         out << i.first << ' ';
     }
@@ -57,6 +57,7 @@ operator<<(std::basic_ostream<CharT, Traits>& out, pressio_options_key_status co
   }
 }
 
+namespace libpressio { namespace printers {
 /**
  * print the elements of an iterable container
  * \internal
@@ -76,6 +77,7 @@ struct print_elements_helper{
   /** the stream to output to */
   std::basic_ostream<CharT, Traits>& out;
 };
+} }
 
 /**
  * helper to construct the print_elements_helper for printing iterable collections
@@ -83,8 +85,8 @@ struct print_elements_helper{
  * \internal
  */
 template <class CharT = char, class Traits = std::char_traits<CharT>>
-print_elements_helper<CharT, Traits> print_elements(std::basic_ostream<CharT, Traits> &out) {
-  return print_elements_helper<CharT, Traits>{out};
+libpressio::printers::print_elements_helper<CharT, Traits> print_elements(std::basic_ostream<CharT, Traits> &out) {
+  return libpressio::printers::print_elements_helper<CharT, Traits>{out};
 }
 
 /**
@@ -102,7 +104,7 @@ operator<<(std::basic_ostream<CharT, Traits>& out, pressio_data const& data) {
     out << dim << ", ";  
   }
   out << "} domain=" << data.domain()->prefix() << " has_data=" ;
-  if(data.has_data() &&  data.num_elements() < 10 && is_accessible(*data.domain(), *domain_plugins().build("malloc"))) {
+  if(data.has_data() &&  data.num_elements() < 10 && libpressio::domains::is_accessible(*data.domain(), *libpressio::domain_plugins().build("malloc"))) {
     pressio_data_for_each<int>(data, print_elements(out));
     out << '}';
   } else {
@@ -286,7 +288,7 @@ operator<<(std::basic_ostream<CharT, Traits>& out, enum pressio_dtype type)
  */
 template <class CharT = char, class Traits = std::char_traits<CharT>>
 std::basic_ostream<CharT, Traits>&
-operator<<(std::basic_ostream<CharT, Traits>& out, libpressio_compressor_plugin const& comp) {
+operator<<(std::basic_ostream<CharT, Traits>& out, libpressio::compressors::libpressio_compressor_plugin const& comp) {
 	return out << comp.prefix();
 }
 
@@ -297,7 +299,7 @@ operator<<(std::basic_ostream<CharT, Traits>& out, libpressio_compressor_plugin 
  */
 template <class CharT = char, class Traits = std::char_traits<CharT>>
 std::basic_ostream<CharT, Traits>&
-operator<<(std::basic_ostream<CharT, Traits>& out, pressio_domain const& dom) {
+operator<<(std::basic_ostream<CharT, Traits>& out, libpressio::domains::pressio_domain const& dom) {
 	return out << '{' << dom.prefix() <<  ',' << dom.domain_id() << ',' << '}';
 }
 

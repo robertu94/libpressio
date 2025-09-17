@@ -8,7 +8,7 @@
 
 #include <arc.h>
 
-namespace libpressio { namespace arc_ns {
+namespace libpressio { namespace compressors { namespace arc_ns {
 
   struct arc_init_state {
     arc_init_state() {
@@ -205,8 +205,8 @@ public:
   uint64_t encode_time_ms = 0, decode_time_ms = 0;
 };
 
-static pressio_register compressor_many_fields_plugin(compressor_plugins(), "arc", []() {
+pressio_register registration(compressor_plugins(), "arc", []() {
   return compat::make_unique<arc_compressor_plugin>(get_arc_init_state());
 });
 
-} }
+} } }

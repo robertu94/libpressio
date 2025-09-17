@@ -5,6 +5,7 @@
 /** \file 
  * \brief interface for versionable types */
 
+namespace libpressio {
 /**
  * interface for objects which have version information in libpressio
  */
@@ -39,6 +40,6 @@ class pressio_versionable {
    */
   virtual int patch_version() const;
 };
-
+}
 
 #endif /* end of include guard: VERSIONABLE_H_AMFI0DYW */

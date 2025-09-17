@@ -13,7 +13,7 @@
 #include "std_compat/memory.h"
 #include "cleanup.h"
 
-namespace libpressio { namespace blosc2 {
+namespace libpressio { namespace compressors { namespace blosc2_ns {
 
 class blosc2_plugin: public libpressio_compressor_plugin {
   public:
@@ -202,6 +202,6 @@ class blosc2_plugin: public libpressio_compressor_plugin {
     
 };
 
-static pressio_register compressor_blosc2_plugin(compressor_plugins(), "blosc2", [](){ return compat::make_unique<blosc2_plugin>(); });
+pressio_register registration(compressor_plugins(), "blosc2", [](){ return compat::make_unique<blosc2_plugin>(); });
 
-}}
+}}}

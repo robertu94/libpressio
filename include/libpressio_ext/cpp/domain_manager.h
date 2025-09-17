@@ -6,6 +6,9 @@
 #include <libpressio_ext/cpp/registry.h>
 #include <libpressio_ext/cpp/names.h>
 
+namespace libpressio { namespace domains_metrics {
+    using domains::domain_options;
+    using domains::set;
 /**
  * callback class for the domain manager
  */
@@ -15,19 +18,19 @@ struct pressio_domain_manager_metrics_plugin {
     /**
      * called before memory is allocated from a domain
      */
-    virtual void alloc_begin(std::shared_ptr<pressio_domain> const& domain, pressio_dtype dtype, std::vector<size_t> const& dims) { (void)domain;(void)dtype; (void)dims;};
+    virtual void alloc_begin(std::shared_ptr<domains::pressio_domain> const& domain, pressio_dtype dtype, std::vector<size_t> const& dims) { (void)domain;(void)dtype; (void)dims;};
     /**
      * called after memory is allocated from a domain
      */
-    virtual void alloc_end(std::shared_ptr<pressio_domain> const& domain, pressio_dtype dtype, std::vector<size_t> const& dims) { (void)domain; (void)dtype; (void)dims;};
+    virtual void alloc_end(std::shared_ptr<domains::pressio_domain> const& domain, pressio_dtype dtype, std::vector<size_t> const& dims) { (void)domain; (void)dtype; (void)dims;};
     /**
      * called before memory is viewed from a domain
      */
-    virtual void view_begin(std::shared_ptr<pressio_domain> const& dst, pressio_data const& src) { (void)src; (void)dst;};
+    virtual void view_begin(std::shared_ptr<domains::pressio_domain> const& dst, pressio_data const& src) { (void)src; (void)dst;};
     /**
      * called after memory is viewed from a domain
      */
-    virtual void view_end(std::shared_ptr<pressio_domain> const& dst, pressio_data const& src) { (void)src; (void)dst; };
+    virtual void view_end(std::shared_ptr<domains::pressio_domain> const& dst, pressio_data const& src) { (void)src; (void)dst; };
     /**
      * called before data is sent from a domain
      */
@@ -47,19 +50,19 @@ struct pressio_domain_manager_metrics_plugin {
     /**
      * called before data is requested to be writeable with data
      */
-    virtual void make_writeable_begin(std::shared_ptr<pressio_domain> const& dst, pressio_data const& src) {(void)src; (void)dst;};
+    virtual void make_writeable_begin(std::shared_ptr<domains::pressio_domain> const& dst, pressio_data const& src) {(void)src; (void)dst;};
     /**
      * called after data is requested to be writeable with data
      */
-    virtual void make_writeable_end(std::shared_ptr<pressio_domain> const& dst, pressio_data const& src) {(void)src; (void)dst;};
+    virtual void make_writeable_end(std::shared_ptr<domains::pressio_domain> const& dst, pressio_data const& src) {(void)src; (void)dst;};
     /**
      * called before data is requested to be readable on a domain
      */
-    virtual void make_readable_domain_begin(std::shared_ptr<pressio_domain> const& dst, pressio_data const& src) {(void)src; (void)dst;};
+    virtual void make_readable_domain_begin(std::shared_ptr<domains::pressio_domain> const& dst, pressio_data const& src) {(void)src; (void)dst;};
     /**
      * called after data is requested to be readable on a domain
      */
-    virtual void make_readable_domain_end(std::shared_ptr<pressio_domain> const& dst, pressio_data const& src) {(void)src; (void)dst;};
+    virtual void make_readable_domain_end(std::shared_ptr<domains::pressio_domain> const& dst, pressio_data const& src) {(void)src; (void)dst;};
     /**
      * called before data is copied
      */
@@ -71,15 +74,15 @@ struct pressio_domain_manager_metrics_plugin {
     /**
      * set options on this domain metrics
      */
-    virtual int set_options(domain_options const&) { return 0; }
+    virtual int set_options(domains::domain_options const&) { return 0; }
     /**
      * get options on this domain metrics
      */
-    virtual domain_options get_options() const { return domain_options{}; }
+    virtual domains::domain_options get_options() const { return domains::domain_options{}; }
     /**
      * return the metrics from this domain
      */
-    virtual domain_options get_metrics_results() { return domain_options{}; }
+    virtual domains::domain_options get_metrics_results() { return domains::domain_options{}; }
     /**
      * clone this domain metrics object
      */
@@ -114,21 +117,22 @@ struct pressio_domain_manager_metrics_plugin {
     private:
     std::string name;
 };
+}}
 
 /**
  * the registry for metrics plugins
  */
-pressio_registry<std::unique_ptr<pressio_domain_manager_metrics_plugin>>& domain_metrics_plugins();
+libpressio::pressio_registry<std::unique_ptr<libpressio::domains_metrics::pressio_domain_manager_metrics_plugin>>& domain_metrics_plugins();
 
 /**
  * pointer manager object for domain manager metrics
  */
 struct pressio_domain_manager_metrics {
-    pressio_domain_manager_metrics(pressio_domain_manager_metrics_plugin const& rhs): plg(rhs.clone()) {}
-    pressio_domain_manager_metrics(pressio_domain_manager_metrics_plugin & rhs): plg(std::make_unique<pressio_domain_manager_metrics_plugin>(std::move(rhs))) {}
+    pressio_domain_manager_metrics(libpressio::domains_metrics::pressio_domain_manager_metrics_plugin const& rhs): plg(rhs.clone()) {}
+    pressio_domain_manager_metrics(libpressio::domains_metrics::pressio_domain_manager_metrics_plugin & rhs): plg(std::make_unique<libpressio::domains_metrics::pressio_domain_manager_metrics_plugin>(std::move(rhs))) {}
 
-    pressio_domain_manager_metrics(): plg(std::make_unique<pressio_domain_manager_metrics_plugin>()) {}
-    pressio_domain_manager_metrics(std::unique_ptr<pressio_domain_manager_metrics_plugin> && rhs): plg(std::move(rhs)) {}
+    pressio_domain_manager_metrics(): plg(std::make_unique<libpressio::domains_metrics::pressio_domain_manager_metrics_plugin>()) {}
+    pressio_domain_manager_metrics(std::unique_ptr<libpressio::domains_metrics::pressio_domain_manager_metrics_plugin> && rhs): plg(std::move(rhs)) {}
     pressio_domain_manager_metrics(pressio_domain_manager_metrics const& rhs): plg(rhs.plg->clone()) {}
     pressio_domain_manager_metrics(pressio_domain_manager_metrics && rhs) noexcept: plg(std::exchange(rhs.plg, {})) {}
     pressio_domain_manager_metrics& operator=(pressio_domain_manager_metrics const& rhs) noexcept  {
@@ -142,14 +146,15 @@ struct pressio_domain_manager_metrics {
         return *this;
     }
 
-    pressio_domain_manager_metrics_plugin& operator*() { return *plg; }
-    pressio_domain_manager_metrics_plugin* operator->() { return plg.operator->(); }
-    pressio_domain_manager_metrics_plugin const& operator*() const { return *plg; }
-    pressio_domain_manager_metrics_plugin const* operator->() const { return plg.operator->(); }
+    libpressio::domains_metrics::pressio_domain_manager_metrics_plugin& operator*() { return *plg; }
+    libpressio::domains_metrics::pressio_domain_manager_metrics_plugin* operator->() { return plg.operator->(); }
+    libpressio::domains_metrics::pressio_domain_manager_metrics_plugin const& operator*() const { return *plg; }
+    libpressio::domains_metrics::pressio_domain_manager_metrics_plugin const* operator->() const { return plg.operator->(); }
     operator bool() const { return static_cast<bool>(plg); }
-    std::unique_ptr<pressio_domain_manager_metrics_plugin> plg;
+    std::unique_ptr<libpressio::domains_metrics::pressio_domain_manager_metrics_plugin> plg;
 };
 
+namespace libpressio { namespace domains {
 /**
  * manager to send data
  */
@@ -393,10 +398,10 @@ struct pressio_domain_manager {
     pressio_domain_manager_metrics metrics;
 };
 
+} }
 /**
  * returns a reference to the default global domain manager
  */
-pressio_domain_manager& domain_manager();
-
+libpressio::domains::pressio_domain_manager& domain_manager();
 
 #endif /* end of include guard: LIBPRESSIO_DOMAIN_MANAGER_H */

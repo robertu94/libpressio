@@ -2,7 +2,7 @@
 #include <std_compat/memory.h>
 #include "libpressio_ext/cpp/domain_manager.h"
 
-namespace libpressio { namespace mask1d {
+namespace libpressio { namespace metrics { namespace mask1d {
 struct apply_mask{
 
   template <class T, class V>
@@ -113,5 +113,5 @@ class mask_metrics: public libpressio_metrics_plugin {
   pressio_data mask;
 };
 
-pressio_register mask_plugin(metrics_plugins(), "mask", []{ return compat::make_unique<mask_metrics>(); });
-} }
+pressio_register registration(metrics_plugins(), "mask", []{ return compat::make_unique<mask_metrics>(); });
+} } }

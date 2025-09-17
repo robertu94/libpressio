@@ -9,10 +9,9 @@
  * \brief C++ interface to managed memory objects from domaines
  */
 
-
 class pressio_memory {
 private:
-  std::shared_ptr<pressio_domain> data_domain;
+  std::shared_ptr<libpressio::domains::pressio_domain> data_domain;
   void *data_ptr;
   size_t data_capacity;
 
@@ -54,13 +53,13 @@ public:
    *
    * \param[in] domain the domain to create in
    */
-  pressio_memory(std::shared_ptr<pressio_domain> &&domain);
+  pressio_memory(std::shared_ptr<libpressio::domains::pressio_domain> &&domain);
   /**
    * create a memory without data in the provided domain
    *
    * \param[in] domain the domain to create in
    */
-  pressio_memory(std::shared_ptr<pressio_domain> const&domain);
+  pressio_memory(std::shared_ptr<libpressio::domains::pressio_domain> const&domain);
 
   // owning constructors
   /**
@@ -75,14 +74,14 @@ public:
    * \param[in] n the size in bytes to allocate
    * \param[in] domain the domain to create in
    */
-  pressio_memory(size_t n, std::shared_ptr<pressio_domain> &&domain);
+  pressio_memory(size_t n, std::shared_ptr<libpressio::domains::pressio_domain> &&domain);
   /**
    * create a memory with n bytes in the provided domain
    *
    * \param[in] n the size in bytes to allocate
    * \param[in] domain the domain to create in
    */
-  pressio_memory(size_t n, std::shared_ptr<pressio_domain> const&domain);
+  pressio_memory(size_t n, std::shared_ptr<libpressio::domains::pressio_domain> const&domain);
 
   // non-owning constructor
   /**
@@ -99,7 +98,7 @@ public:
    * \param[in] n the capacity of the pointer
    * \param[in] domain the domain of the pointer
    */
-  pressio_memory(void *ptr, size_t n, std::shared_ptr<pressio_domain> &&domain);
+  pressio_memory(void *ptr, size_t n, std::shared_ptr<libpressio::domains::pressio_domain> &&domain);
   /**
    * create a memory from a pre-allocated pointer in the provided domain
    *
@@ -107,7 +106,7 @@ public:
    * \param[in] n the capacity of the pointer
    * \param[in] domain the domain of the pointer
    */
-  pressio_memory(void *ptr, size_t n, std::shared_ptr<pressio_domain> const&domain);
+  pressio_memory(void *ptr, size_t n, std::shared_ptr<libpressio::domains::pressio_domain> const&domain);
   // copy constructor
   /**
    * copy the pointer into the malloc domain
@@ -121,14 +120,14 @@ public:
    * \param[in] rhs the memory to copy from
    * \param[in] domain the domain to copy into
    */
-  pressio_memory(pressio_memory const &rhs, std::shared_ptr<pressio_domain> &&domain);
+  pressio_memory(pressio_memory const &rhs, std::shared_ptr<libpressio::domains::pressio_domain> &&domain);
   /**
    * copy the pointer into the provided domain
    *
    * \param[in] rhs the memory to copy from
    * \param[in] domain the domain to copy into
    */
-  pressio_memory(pressio_memory const &rhs, std::shared_ptr<pressio_domain> const&domain);
+  pressio_memory(pressio_memory const &rhs, std::shared_ptr<libpressio::domains::pressio_domain> const&domain);
   // move constructor
   /**
    * move the pointer into another memory object; cloning the source domain
@@ -142,14 +141,14 @@ public:
    * \param[in] rhs the memory to copy from
    * \param[in] domain the domain to copy into
    */
-  pressio_memory(pressio_memory &&rhs, std::shared_ptr<pressio_domain> &&domain);
+  pressio_memory(pressio_memory &&rhs, std::shared_ptr<libpressio::domains::pressio_domain> &&domain);
   /**
    * move the pointer into another memory object using the provided domain
    *
    * \param[in] rhs the memory to copy from
    * \param[in] domain the domain to copy into
    */
-  pressio_memory(pressio_memory &&rhs, std::shared_ptr<pressio_domain> const&domain);
+  pressio_memory(pressio_memory &&rhs, std::shared_ptr<libpressio::domains::pressio_domain> const&domain);
 
   /**
    * pointer to the data in the memory
@@ -173,7 +172,7 @@ public:
   /**
    * access the domain of the memory
    */
-  std::shared_ptr<pressio_domain> const& domain() const;
+  std::shared_ptr<libpressio::domains::pressio_domain> const& domain() const;
 };
 
 #endif /* end of include guard: MEMORY_H_CXRZOVAC */

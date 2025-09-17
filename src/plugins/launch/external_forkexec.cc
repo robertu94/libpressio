@@ -8,6 +8,8 @@
 #include "pressio_compressor.h"
 #include "std_compat/memory.h"
 
+namespace libpressio { namespace launch { namespace external_forkexec_ns {
+
 struct external_forkexec: public libpressio_launch_plugin {
 extern_proc_results launch_impl(std::vector<std::string> const& full_command) const override {
       extern_proc_results results;
@@ -213,4 +215,6 @@ extern_proc_results launch_impl(std::vector<std::string> const& full_command) co
   std::vector<std::string> commands;
 };
 
-static pressio_register launch_forkexec_plugin(launch_plugins(), "forkexec", [](){ return compat::make_unique<external_forkexec>();});
+pressio_register registration(launch_plugins(), "forkexec", [](){ return compat::make_unique<external_forkexec>();});
+
+}}}

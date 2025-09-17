@@ -100,22 +100,32 @@
 
 #### Metrics
 
-First  provide
+First  provide a subset of
 
-+ `predictors:requires_decompress <char*[]>|bool` list of metrics that a metric requires decompression to collect or a bool to indicate that none of or all or the metrics require decompression.
++ `predictors:requires_compress <char*[]>|bool` list of metrics that a metric requires ompression to collect or a bool to indicate that none of or all or the metrics require compression.  If not provided, it is assumed that `requires_compress` is true.
++ `predictors:requires_decompress <char*[]>|bool` list of metrics that a metric requires decompression to collect or a bool to indicate that none of or all or the metrics require decompression. If not provided, it is assumed that `requires_decompress` is true.
+
 
 Then provide EITHER:
 
-+ `predictors:invalidate <char*[]>` what invalidates all metrics returned by `get_metrics_results()` which contains a possibly empty subest of `predictors:runtime`, `predictors:error_dependent`, `predictors:error_agnostic`, `predictors:data`, or `predictors:nondeterministc`.
++ `predictors:invalidate <char*[]>` what invalidates all metrics returned by `get_metrics_results()` which contains a possibly empty subset of `predictors:runtime`, `predictors:error_dependent`, `predictors:error_agnostic`, `predictors:data`, or `predictors:nondeterministc`.
 
-or a non-empty subset of
+or a possibly-empty subset of
 
-+ `predictors:runtime <char*[]>` the list of metrics returned by `get_metrics_results()` that are effected by runtime
-+ `predictors:error_dependent <char*[]>` list of metrics returned by `get_metrics_results()`that effected by the error characteristics
-+ `predictors:error_agnostic <char*[]>` list of metrics returned by `get_metrics_results()`that are agnostic to errors
-+ `predictors:data <char*[]>` list of metrics returned by `get_metrics_results()` depend only one the uncompressed data
-+ `predictors:nondeterministc <char*[]>` list of metrics returned that are never consistent returned from `get_metrics_results()`
++ `predictors:runtime <char*[]>` the list of metrics returned by `get_metrics_results()` that are effected by runtime, if neither `predictors:invalidate` and none of the other keys in this section are provided, all metrics are assumed to be effected by runtime.  If at least one other metric from this section is provided, it is assumed that this metric is not invalidated.
++ `predictors:error_dependent <char*[]>` list of metrics returned by `get_metrics_results()`that effected by the error characteristic, if neither `predictors:invalidate` and none of the other keys in this section are provided are provided all metrics are assumed to be effected by error_dependent settings.If at least one other metric from this section is provided, it is assumed that this metric is not invalidated.
+
++ `predictors:error_agnostic <char*[]>` list of metrics returned by `get_metrics_results()`that are agnostic to errors, if neither `predictors:invalidate` or none of the other metrics in this section are provided all metrics are assumed to be effected by error_agnostic settings. If at least one other metric from this section is provided, it is assumed that this metric is not invalidated.
+
++ `predictors:data <char*[]>` list of metrics returned by `get_metrics_results()` depend only one the uncompressed data, if neither `predictors:invalidate` or none of the other metrics in this section this are provided all metrics are assumed to be affected by data values. If at least one other metric from this section is provided, it is assumed that this metric is not invalidated.
+
++ `predictors:nondeterministc <char*[]>` list of metrics returned that are never consistent returned from `get_metrics_results()`, if neither `predictors:invalidate` or none of the other metrics in this section this are provided all metrics are assumed to be non-deterministic. If at least one other metric from this section is provided, it is assumed that this metric is not invalidated.
+
+
+
 
 #### Scheme
 
-`predictors:training` is not an option, but is used by schemes, to indicate that a metrics is only required for trianing
+`predictors:training <bool>` is not an option but is used by schemes to indicate that the user is performing training 
+`predictors:collect_labels <bool>` is not an option but is used by schemes to indicate that labels should be collected regardless if the predictor requires it.
+`predictors:all <bool>` is not an option but is used by schemes to indicate that all metrics are invalidated (e.g. on the first call)

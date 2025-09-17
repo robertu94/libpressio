@@ -6,7 +6,7 @@
 #include "libpressio_ext/cpp/pressio.h"
 #include "libpressio_ext/cpp/domain_manager.h"
 
-namespace libpressio { namespace cast_ns {
+namespace libpressio { namespace compressors { namespace cast_ns {
 
 class cast_compressor_plugin : public libpressio_compressor_plugin {
 public:
@@ -107,9 +107,9 @@ public:
 
 };
 
-static pressio_register compressor_many_fields_plugin(compressor_plugins(), "cast", []() {
+pressio_register registration(compressor_plugins(), "cast", []() {
   return compat::make_unique<cast_compressor_plugin>();
 });
 
-} }
+} } }
 

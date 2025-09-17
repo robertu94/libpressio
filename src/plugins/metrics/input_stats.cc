@@ -7,7 +7,7 @@
 #include "libpressio_ext/cpp/options.h"
 #include "std_compat/memory.h"
 
-namespace libpressio { namespace input_stats_metrics_ns {
+namespace libpressio { namespace metrics { namespace input_stats_metrics_ns {
 
   struct input_stat{
     input_stat(compat::span<const pressio_data* const> const& inputs,
@@ -138,6 +138,6 @@ class input_stats_plugin : public libpressio_metrics_plugin {
   input_stat decompression;
 };
 
-static pressio_register metrics_input_stats_plugin(metrics_plugins(), "input_stats", [](){ return compat::make_unique<input_stats_plugin>(); });
+pressio_register registration(metrics_plugins(), "input_stats", [](){ return compat::make_unique<input_stats_plugin>(); });
 }}
-
+}

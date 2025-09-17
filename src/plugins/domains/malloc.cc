@@ -6,6 +6,7 @@
  * \file
  * \brief domain for std::malloc/std::free
  */
+namespace libpressio { namespace domains { namespace malloc_ns {
 struct pressio_malloc_domain: public pressio_domain, std::enable_shared_from_this<pressio_malloc_domain> {
     void* alloc(size_t n) override {
         return std::malloc(n);
@@ -27,12 +28,5 @@ struct pressio_malloc_domain: public pressio_domain, std::enable_shared_from_thi
         return shared_from_this();
     }
 };
-
-
-pressio_register malloc_register(domain_plugins(), "malloc", []{return std::make_shared<pressio_malloc_domain>();});
-
-struct pressio_domain_send_host_to_host: public pressio_domain_send {
-    void send(pressio_data& dst, pressio_data const& src) const override {
-        memcpy(dst.data(), src.data(), dst.size_in_bytes());
-    }
-};
+pressio_register registration(domain_plugins(), "malloc", []{return std::make_shared<pressio_malloc_domain>();});
+}}}

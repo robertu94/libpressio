@@ -9,8 +9,8 @@
 #include "libpressio_ext/cpp/domain_manager.h"
 #include "std_compat/memory.h"
 
-namespace libpressio {
-namespace error_stat {
+namespace libpressio { namespace metrics {
+namespace error_stat_ns {
   struct metrics {
     double psnr;
     double mse;
@@ -118,7 +118,7 @@ class error_stat_plugin : public libpressio_metrics_plugin {
     }
     int end_decompress_impl(struct pressio_data const*, struct pressio_data const* output, int ) override {
       if(!output || !output->has_data() || !input_data.has_data()) return 0;
-      err_metrics = pressio_data_for_each<error_stat::metrics>(input_data, domain_manager().make_readable(domain_plugins().build("malloc"), *output), error_stat::compute_metrics{});
+      err_metrics = pressio_data_for_each<metrics>(input_data, domain_manager().make_readable(domain_plugins().build("malloc"), *output), compute_metrics{});
       return 0;
     }
 
@@ -235,9 +235,9 @@ class error_stat_plugin : public libpressio_metrics_plugin {
 
   private:
   pressio_data input_data = pressio_data::empty(pressio_byte_dtype, {});
-  compat::optional<error_stat::metrics> err_metrics;
+  compat::optional<metrics> err_metrics;
 
 };
 
-static pressio_register metrics_error_stat_plugin(metrics_plugins(), "error_stat", [](){ return compat::make_unique<error_stat_plugin>(); });
-}}
+pressio_register registration(metrics_plugins(), "error_stat", [](){ return compat::make_unique<error_stat_plugin>(); });
+}}}

@@ -11,7 +11,7 @@
 #include "pressio_compressor.h"
 #include "std_compat/memory.h"
 
-namespace libpressio { namespace resize {
+namespace libpressio { namespace compressors { namespace resize {
 
 class resize_meta_compressor_plugin : public libpressio_compressor_plugin
 {
@@ -123,6 +123,6 @@ private:
   std::string compressor_id = "noop";
 };
 
-static pressio_register compressor_resize_plugin(compressor_plugins(), "resize", [](){ return compat::make_unique<resize_meta_compressor_plugin>(); });
+pressio_register registration(compressor_plugins(), "resize", [](){ return compat::make_unique<resize_meta_compressor_plugin>(); });
 
-} }
+} }}

@@ -7,6 +7,7 @@
  * \file
  * \brief domain for cudaMalloc/cudaFree
  */
+namespace libpressio { namespace domains { namespace cuda_ns {
 struct pressio_cudamalloc_domain: public pressio_domain {
     void* alloc(size_t n) override {
         void* ptr = nullptr;
@@ -37,25 +38,6 @@ struct pressio_cudamalloc_domain: public pressio_domain {
     }
 };
 
-struct pressio_domain_send_host_to_device: public pressio_domain_send {
-    void send(pressio_data& dst, pressio_data const& src) const override {
-        auto err = cudaMemcpy(dst.data(), src.data(), dst.size_in_bytes(), cudaMemcpyHostToDevice);
-        if(err != cudaSuccess) {
-            throw std::runtime_error(cudaGetErrorString(err));
-        }
-    }
-};
-struct pressio_domain_send_device_to_host: public pressio_domain_send {
-    void send(pressio_data& dst, pressio_data const& src) const override {
-        auto err = cudaMemcpy(dst.data(), src.data(), dst.size_in_bytes(), cudaMemcpyDeviceToHost);
-        if(err != cudaSuccess) {
-            throw std::runtime_error(cudaGetErrorString(err));
-        }
-    }
-};
 
-pressio_register cudamalloc_register(domain_plugins(), "cudamalloc", []{return std::make_shared<pressio_cudamalloc_domain>();});
-pressio_register cudamalloc_to_malloc(domain_send_plugins(), "cudamalloc>malloc", []{return std::make_unique<pressio_domain_send_device_to_host>();});
-pressio_register malloc_to_cudamalloc(domain_send_plugins(), "malloc>cudamalloc", []{return std::make_unique<pressio_domain_send_host_to_device>();});
-pressio_register cudamallochost_to_cudamalloc(domain_send_plugins(), "cudamallochost>cudamalloc", []{return std::make_unique<pressio_domain_send_device_to_host>();});
-pressio_register cudamalloc_to_cudamallochost(domain_send_plugins(), "cudamalloc>cudamallochost", []{return std::make_unique<pressio_domain_send_host_to_device>();});
+pressio_register registration(domain_plugins(), "cudamalloc", []{return std::make_shared<pressio_cudamalloc_domain>();});
+} } }

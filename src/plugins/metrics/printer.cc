@@ -6,7 +6,7 @@
 #include "std_compat/memory.h"
 #include <iostream>
 
-namespace libpressio {namespace printer {
+namespace libpressio { namespace metrics { namespace printer {
     class printer_plugin : public libpressio_metrics_plugin {
             std::string maybe_name() {
                 if(get_name().empty()) return "";
@@ -148,6 +148,6 @@ namespace libpressio {namespace printer {
             std::vector<std::string> log;
     };
 
-    static pressio_register printer_time_plugin(metrics_plugins(), "printer",
+    pressio_register registration(metrics_plugins(), "printer",
             []() { return compat::make_unique<printer_plugin>(); });
-} }
+} }}

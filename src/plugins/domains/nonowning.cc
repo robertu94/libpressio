@@ -4,6 +4,7 @@
  * \file
  * \brief domain that does not own pointers, and thus cannot allocate of free them
  */
+namespace libpressio { namespace domains { namespace nonowning_ns {
 struct pressio_nonowning_domain: public pressio_domain, std::enable_shared_from_this<pressio_nonowning_domain> {
     domain_options get_configuration_impl() const override {
         domain_options opts;
@@ -60,5 +61,6 @@ struct pressio_nonowning_domain: public pressio_domain, std::enable_shared_from_
     std::string prefix_str = "malloc";
     std::vector<std::string> accessible_domains{prefix_str};
 };
-pressio_register nonowning_domain(domain_plugins(), "nonowning", []{return std::make_shared<pressio_nonowning_domain>();});
+pressio_register registration(domain_plugins(), "nonowning", []{return std::make_shared<pressio_nonowning_domain>();});
 
+}}}

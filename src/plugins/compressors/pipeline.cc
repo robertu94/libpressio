@@ -6,7 +6,7 @@
 #include "libpressio_ext/cpp/domain_manager.h"
 #include "libpressio_ext/cpp/pressio.h"
 
-namespace libpressio { namespace pipeline_ns {
+namespace libpressio { namespace compressors { namespace pipeline_ns {
 
 class pipeline_compressor_plugin : public libpressio_compressor_plugin {
 public:
@@ -201,9 +201,9 @@ public:
   std::vector<pressio_compressor> plugins;
 };
 
-static pressio_register compressor_many_fields_plugin(compressor_plugins(), "pipeline", []() {
+pressio_register registration(compressor_plugins(), "pipeline", []() {
   return compat::make_unique<pipeline_compressor_plugin>();
 });
 
 } }
-
+}

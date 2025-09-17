@@ -111,7 +111,7 @@ install(TARGETS pressio_smoke_tests)
 if(LIBPRESSIO_HAS_LIBDISTRIBUTED AND LIBPRESSIO_HAS_MPI)
   find_package(MPI)
   add_gtest(test_distributed.cc)
-  target_link_libraries(test_distributed PRIVATE MPI::MPI_CXX)
+  target_link_libraries(test_distributed PRIVATE MPI::MPI_CXX LibDistributed::libdistributed)
 endif()
 
 if(BUILD_PYTHON_WRAPPER AND LIBPRESSIO_HAS_SZ AND ${LIBPRESSIO_BUILD_MODE} STREQUAL FULL)

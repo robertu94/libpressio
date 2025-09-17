@@ -414,6 +414,7 @@ struct cmdline_args {
   bool generate_compressors = false;
   bool generate_io = false;
   bool generate_metrics = false;
+  bool load_extensions = false;
   std::string outfile_path = "/proc/self/fd/0";
 };
 
@@ -439,6 +440,9 @@ cmdline_args parse_args(int argc, char* const argv[]) {
             break;
           case 'i':
             args.generate_io = true;
+            break;
+          case 'p':
+            args.load_extensions = true;
             break;
           default:
             std::cerr << "unexpected mode: " << optarg << std::endl;
@@ -612,11 +616,13 @@ int main(int argc, char* const argv[])
 {
   auto args = parse_args(argc, argv);
 
-  void* extensions = dlopen("liblibpressio_meta.so", RTLD_NOW|RTLD_GLOBAL);
-  if(extensions) {
-      void (*libpressio_register_all)();
-      libpressio_register_all = (void (*)())dlsym(extensions, "libpressio_register_all");
-      libpressio_register_all();
+  if(args.load_extensions) {
+      void* extensions = dlopen("liblibpressio_meta.so", RTLD_NOW|RTLD_GLOBAL);
+      if(extensions) {
+          void (*libpressio_register_all)();
+          libpressio_register_all = (void (*)())dlsym(extensions, "libpressio_register_all");
+          libpressio_register_all();
+      }
   }
 
   auto* instance = pressio_instance();

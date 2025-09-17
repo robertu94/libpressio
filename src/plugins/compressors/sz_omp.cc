@@ -8,7 +8,9 @@
 #include "sz_common.h"
 #include "iless.h"
 
-namespace libpressio { namespace sz_omp {
+namespace libpressio { namespace compressors { namespace sz_omp_ns {
+
+    using namespace libpressio::compressors::sz_common;
 
 static std::map<std::string, int, iless> const sz_omp_mode_str_to_code {
     {"abs", ABS},
@@ -288,7 +290,7 @@ class sz_omp: public libpressio_compressor_plugin {
   uint32_t nthreads = 1;
 };
 
-static pressio_register sz_omp_register(
+pressio_register registration(
     compressor_plugins(),
     "sz_omp",
     []{
@@ -296,4 +298,4 @@ static pressio_register sz_omp_register(
     }
     );
 
-} }
+} } }

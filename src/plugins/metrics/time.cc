@@ -6,13 +6,13 @@
 #include "libpressio_ext/cpp/pressio.h"
 #include "std_compat/memory.h"
 
-namespace libpressio {
-using std::chrono::high_resolution_clock;
-using std::chrono::time_point;
-using std::chrono::duration_cast;
-using std::chrono::milliseconds;
+namespace libpressio { namespace metrics {
 
-namespace time_metrics{
+namespace time_ns {
+    using std::chrono::high_resolution_clock;
+    using std::chrono::time_point;
+    using std::chrono::duration_cast;
+    using std::chrono::milliseconds;
   struct time_range{
     time_point<high_resolution_clock> begin;
     time_point<high_resolution_clock> end;
@@ -20,32 +20,32 @@ namespace time_metrics{
   };
   using timer = compat::optional<time_range>;
   struct compression_actions {
-    time_metrics::timer check_options;
-    time_metrics::timer set_options;
-    time_metrics::timer get_options;
-    time_metrics::timer get_configuration;
-    time_metrics::timer compress;
-    time_metrics::timer compress_many;
-    time_metrics::timer decompress;
-    time_metrics::timer decompress_many;
+    timer check_options;
+    timer set_options;
+    timer get_options;
+    timer get_configuration;
+    timer compress;
+    timer compress_many;
+    timer decompress;
+    timer decompress_many;
   };
   struct metrics_actions {
-    time_metrics::timer begin_check_options;
-    time_metrics::timer begin_set_options;
-    time_metrics::timer begin_get_options;
-    time_metrics::timer begin_get_configuration;
-    time_metrics::timer begin_compress;
-    time_metrics::timer begin_compress_many;
-    time_metrics::timer begin_decompress;
-    time_metrics::timer begin_decompress_many;
-    time_metrics::timer end_check_options;
-    time_metrics::timer end_set_options;
-    time_metrics::timer end_get_options;
-    time_metrics::timer end_get_configuration;
-    time_metrics::timer end_compress;
-    time_metrics::timer end_compress_many;
-    time_metrics::timer end_decompress;
-    time_metrics::timer end_decompress_many;
+    timer begin_check_options;
+    timer begin_set_options;
+    timer begin_get_options;
+    timer begin_get_configuration;
+    timer begin_compress;
+    timer begin_compress_many;
+    timer begin_decompress;
+    timer begin_decompress_many;
+    timer end_check_options;
+    timer end_set_options;
+    timer end_get_options;
+    timer end_get_configuration;
+    timer end_compress;
+    timer end_compress_many;
+    timer end_decompress;
+    timer end_decompress_many;
   };
 
 class time_plugin : public libpressio_metrics_plugin {
@@ -61,10 +61,10 @@ class time_plugin : public libpressio_metrics_plugin {
   }
 
   int begin_check_options_impl(struct pressio_options const* opts) override {
-    self_time.check_options = time_metrics::time_range();
+    self_time.check_options = time_range();
     self_time.check_options->begin = high_resolution_clock::now();
 
-    child_time.begin_check_options = time_metrics::time_range();
+    child_time.begin_check_options = time_range();
     child_time.begin_check_options->begin = high_resolution_clock::now();
     child->begin_check_options(opts);
     child_time.begin_check_options->end = high_resolution_clock::now();
@@ -74,7 +74,7 @@ class time_plugin : public libpressio_metrics_plugin {
   int end_check_options_impl(struct pressio_options const* opts, int rc) override {
     self_time.check_options->end = high_resolution_clock::now(); // NOLINT(bugprone-unchecked-optional-access)
 
-    child_time.end_check_options = time_metrics::time_range();
+    child_time.end_check_options = time_range();
     child_time.end_check_options->begin = high_resolution_clock::now();
     child->end_check_options(opts, rc);
     child_time.end_check_options->end = high_resolution_clock::now();
@@ -82,10 +82,10 @@ class time_plugin : public libpressio_metrics_plugin {
   }
 
   int begin_get_options_impl() override {
-    self_time.get_options = time_metrics::time_range();
+    self_time.get_options = time_range();
     self_time.get_options->begin = high_resolution_clock::now();
 
-    child_time.begin_get_options = time_metrics::time_range();
+    child_time.begin_get_options = time_range();
     child_time.begin_get_options->begin = high_resolution_clock::now();
     child->begin_get_options();
     child_time.begin_get_options->end = high_resolution_clock::now();
@@ -95,7 +95,7 @@ class time_plugin : public libpressio_metrics_plugin {
   int end_get_options_impl(struct pressio_options const* opts) override {
     self_time.get_options->end = high_resolution_clock::now();  // NOLINT(bugprone-unchecked-optional-access)
 
-    child_time.end_get_options = time_metrics::time_range();
+    child_time.end_get_options = time_range();
     child_time.end_get_options->begin = high_resolution_clock::now();
     child->end_get_options(opts);
     child_time.end_get_options->end = high_resolution_clock::now();
@@ -103,10 +103,10 @@ class time_plugin : public libpressio_metrics_plugin {
   }
 
   int begin_get_configuration_impl() override {
-    self_time.get_configuration = time_metrics::time_range();
+    self_time.get_configuration = time_range();
     self_time.get_configuration->begin = high_resolution_clock::now();
 
-    child_time.begin_get_configuration = time_metrics::time_range();
+    child_time.begin_get_configuration = time_range();
     child_time.begin_get_configuration->begin = high_resolution_clock::now();
     child->begin_get_configuration();
     child_time.begin_get_configuration->end = high_resolution_clock::now();
@@ -116,7 +116,7 @@ class time_plugin : public libpressio_metrics_plugin {
   int end_get_configuration_impl(struct pressio_options const& opts) override {
     self_time.get_configuration->end = high_resolution_clock::now();// NOLINT(bugprone-unchecked-optional-access)
 
-    child_time.end_get_configuration = time_metrics::time_range();
+    child_time.end_get_configuration = time_range();
     child_time.end_get_configuration->begin = high_resolution_clock::now();
     child->end_get_configuration(opts);
     child_time.end_get_configuration->end = high_resolution_clock::now();
@@ -124,10 +124,10 @@ class time_plugin : public libpressio_metrics_plugin {
   }
 
   int begin_set_options_impl(struct pressio_options const& opts) override {
-    self_time.set_options = time_metrics::time_range();
+    self_time.set_options = time_range();
     self_time.set_options->begin = high_resolution_clock::now();
 
-    child_time.begin_set_options = time_metrics::time_range();
+    child_time.begin_set_options = time_range();
     child_time.begin_set_options->begin = high_resolution_clock::now();
     child->begin_set_options(opts);
     child_time.begin_set_options->end = high_resolution_clock::now();
@@ -137,7 +137,7 @@ class time_plugin : public libpressio_metrics_plugin {
   int end_set_options_impl(struct pressio_options const& opts, int rc) override {
     self_time.set_options->end = high_resolution_clock::now();// NOLINT(bugprone-unchecked-optional-access)
 
-    child_time.end_set_options = time_metrics::time_range();
+    child_time.end_set_options = time_range();
     child_time.end_set_options->begin = high_resolution_clock::now();
     child->end_set_options(opts, rc);
     child_time.end_set_options->end = high_resolution_clock::now();
@@ -145,10 +145,10 @@ class time_plugin : public libpressio_metrics_plugin {
   }
 
   int begin_compress_impl(const struct pressio_data * input, struct pressio_data const * output) override {
-    self_time.compress = time_metrics::time_range();
+    self_time.compress = time_range();
     self_time.compress->begin = high_resolution_clock::now();
 
-    child_time.begin_compress = time_metrics::time_range();
+    child_time.begin_compress = time_range();
     child_time.begin_compress->begin = high_resolution_clock::now();
     child->begin_compress(input, output);
     child_time.begin_compress->end = high_resolution_clock::now();
@@ -158,7 +158,7 @@ class time_plugin : public libpressio_metrics_plugin {
   int end_compress_impl(struct pressio_data const* input, pressio_data const * output, int rc) override {
     self_time.compress->end = high_resolution_clock::now();// NOLINT(bugprone-unchecked-optional-access)
 
-    child_time.end_compress = time_metrics::time_range();
+    child_time.end_compress = time_range();
     child_time.end_compress->begin = high_resolution_clock::now();
     child->end_compress(input, output, rc);
     child_time.end_compress->end = high_resolution_clock::now();
@@ -166,10 +166,10 @@ class time_plugin : public libpressio_metrics_plugin {
   }
 
   int begin_decompress_impl(struct pressio_data const* input, pressio_data const* output) override {
-    self_time.decompress = time_metrics::time_range();
+    self_time.decompress = time_range();
     self_time.decompress->begin = high_resolution_clock::now();
 
-    child_time.begin_decompress = time_metrics::time_range();
+    child_time.begin_decompress = time_range();
     child_time.begin_decompress->begin = high_resolution_clock::now();
     child->begin_decompress(input, output);
     child_time.begin_decompress->end = high_resolution_clock::now();
@@ -179,7 +179,7 @@ class time_plugin : public libpressio_metrics_plugin {
   int end_decompress_impl(struct pressio_data const* input, pressio_data const* output, int rc) override {
     self_time.decompress->end = high_resolution_clock::now();// NOLINT(bugprone-unchecked-optional-access)
 
-    child_time.end_decompress = time_metrics::time_range();
+    child_time.end_decompress = time_range();
     child_time.end_decompress->begin = high_resolution_clock::now();
     child->end_decompress(input, output, rc);
     child_time.end_decompress->end = high_resolution_clock::now();
@@ -188,10 +188,10 @@ class time_plugin : public libpressio_metrics_plugin {
 
   int begin_compress_many_impl(compat::span<const pressio_data* const> const& inputs,
                                    compat::span<const pressio_data* const> const& outputs) override {
-    self_time.compress_many = time_metrics::time_range();
+    self_time.compress_many = time_range();
     self_time.compress_many->begin = high_resolution_clock::now();
 
-    child_time.begin_compress_many = time_metrics::time_range();
+    child_time.begin_compress_many = time_range();
     child_time.begin_compress_many->begin = high_resolution_clock::now();
     child->begin_compress_many(inputs, outputs);
     child_time.begin_compress_many->end = high_resolution_clock::now();
@@ -202,7 +202,7 @@ class time_plugin : public libpressio_metrics_plugin {
                                    compat::span<const pressio_data* const> const& outputs, int rc) override {
     self_time.compress_many->end = high_resolution_clock::now();// NOLINT(bugprone-unchecked-optional-access)
 
-    child_time.end_compress_many = time_metrics::time_range();
+    child_time.end_compress_many = time_range();
     child_time.end_compress_many->begin = high_resolution_clock::now();
     child->end_compress_many(inputs, outputs, rc);
     child_time.end_compress_many->end = high_resolution_clock::now();
@@ -212,10 +212,10 @@ class time_plugin : public libpressio_metrics_plugin {
 
   int begin_decompress_many_impl(compat::span<const pressio_data* const> const& inputs,
                                    compat::span<const pressio_data* const> const& outputs) override {
-    self_time.decompress_many = time_metrics::time_range();
+    self_time.decompress_many = time_range();
     self_time.decompress_many->begin = high_resolution_clock::now();
 
-    child_time.begin_decompress_many = time_metrics::time_range();
+    child_time.begin_decompress_many = time_range();
     child_time.begin_decompress_many->begin = high_resolution_clock::now();
     child->begin_decompress_many(inputs, outputs);
     child_time.begin_decompress_many->end = high_resolution_clock::now();
@@ -226,7 +226,7 @@ class time_plugin : public libpressio_metrics_plugin {
                                    compat::span<const pressio_data* const> const& outputs, int rc) override {
     self_time.decompress_many->end = high_resolution_clock::now();// NOLINT(bugprone-unchecked-optional-access)
 
-    child_time.end_decompress_many = time_metrics::time_range();
+    child_time.end_decompress_many = time_range();
     child_time.end_decompress_many->begin = high_resolution_clock::now();
     child->end_decompress_many(inputs, outputs, rc);
     child_time.end_decompress_many->end = high_resolution_clock::now();
@@ -278,7 +278,7 @@ class time_plugin : public libpressio_metrics_plugin {
   pressio_options get_metrics_results(pressio_options const & parent)  override {
     struct pressio_options opt = child->get_metrics_results(parent);
 
-    auto set_or = [&opt, this](const char* key, time_metrics::timer time) {
+    auto set_or = [&opt, this](const char* key, timer time) {
       if(time) {
         set(opt, key, time->elapsed());
       } else {
@@ -341,6 +341,6 @@ class time_plugin : public libpressio_metrics_plugin {
   pressio_metrics child = metrics_plugins().build("noop");
 };
 
-static pressio_register metrics_time_plugin(metrics_plugins(), "time", [](){ return compat::make_unique<time_plugin>(); });
+pressio_register registration(metrics_plugins(), "time", [](){ return compat::make_unique<time_plugin>(); });
 }
-}
+}}

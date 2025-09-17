@@ -8,7 +8,7 @@
 #include "cleanup.h"
 #include <netcdf.h>
 
-namespace libpressio { namespace netcdf_io_ns {
+namespace libpressio { namespace io { namespace netcdf_ns {
 
 class netcdf_plugin : public libpressio_io_plugin {
 
@@ -182,5 +182,5 @@ class netcdf_plugin : public libpressio_io_plugin {
     std::string filename;
 };
 
-static pressio_register io_netcdf_plugin(io_plugins(), "netcdf", [](){ return compat::make_unique<netcdf_plugin>(); });
-}}
+pressio_register registration(io_plugins(), "netcdf", [](){ return compat::make_unique<netcdf_plugin>(); });
+}}}

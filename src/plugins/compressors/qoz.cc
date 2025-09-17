@@ -8,7 +8,7 @@
 #include <QoZ/api/sz.hpp>
 
 
-namespace libpressio { namespace qoz_ns {
+namespace libpressio { namespace compressors { namespace qoz_ns {
 
 
 struct impl_compress{
@@ -336,8 +336,8 @@ public:
   QoZ::Config config;
 };
 
-static pressio_register compressor_many_fields_plugin(compressor_plugins(), "qoz", []() {
+pressio_register registration(compressor_plugins(), "qoz", []() {
   return compat::make_unique<sz3_compressor_plugin>();
 });
 
-} }
+} }}

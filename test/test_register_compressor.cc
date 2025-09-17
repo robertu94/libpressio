@@ -34,7 +34,7 @@ namespace {
   };
 }
 
-class log_transform : public libpressio_compressor_plugin {
+class log_transform : public libpressio::compressors::libpressio_compressor_plugin {
   public:
   //compress and decompress
   int compress_impl(pressio_data const* input, pressio_data* output) override {
@@ -55,7 +55,7 @@ class log_transform : public libpressio_compressor_plugin {
     return options;
   }
   int set_options_impl(pressio_options const& options) override {
-    get_meta(options, "log:compressor", compressor_plugins(), compressor_id,  compressor);
+    get_meta(options, "log:compressor", libpressio::compressor_plugins(), compressor_id,  compressor);
     return 0;
   }
   pressio_options get_documentation_impl() const override {
@@ -86,7 +86,7 @@ class log_transform : public libpressio_compressor_plugin {
   int patch_version() const override {
     return 0;
   }
-  std::shared_ptr<libpressio_compressor_plugin> clone() override {
+  std::shared_ptr<libpressio::compressors::libpressio_compressor_plugin> clone() override {
     return compat::make_unique<log_transform>(*this);
   }
 
@@ -105,11 +105,11 @@ class log_transform : public libpressio_compressor_plugin {
     }
     return rc;
   }
-  pressio_compressor compressor = compressor_plugins().build("noop");
+  pressio_compressor compressor = libpressio::compressor_plugins().build("noop");
   std::string compressor_id = "noop";
 };
 
-static pressio_register X(compressor_plugins(), "log", [](){ return compat::make_unique<log_transform>();});
+static libpressio::pressio_register registration(libpressio::compressor_plugins(), "log", [](){ return compat::make_unique<log_transform>();});
 
 TEST(ExternalPlugin, TestLogCompressor) {
   pressio library;

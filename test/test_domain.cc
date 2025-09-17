@@ -8,7 +8,9 @@
 #include <string_view>
 
 
+using namespace ::libpressio::domains;
 
+namespace libpressio { namespace domains_metrics {
 
 struct tracking : public pressio_domain_manager_metrics_plugin {
     static std::string const& if_domain_prefix(pressio_data const& src) {
@@ -97,9 +99,10 @@ struct tracking : public pressio_domain_manager_metrics_plugin {
 
     std::vector<std::string> events;
 };
+}}
 
 TEST(Domains, TestReadableDomains) {
-    if(!domain_plugins().build("cudamalloc")) {
+    if(!libpressio::domain_plugins().build("cudamalloc")) {
         GTEST_SKIP() << "this test requires cuda";
     }
 
@@ -107,7 +110,7 @@ TEST(Domains, TestReadableDomains) {
     ASSERT_EQ(1,1); // have some instruction before scope ends
     {
         std::vector<size_t> dims{50,50};
-        auto src = pressio_data::owning(pressio_float_dtype, dims, domain_plugins().build("cudamallochost"));
+        auto src = pressio_data::owning(pressio_float_dtype, dims, libpressio::domain_plugins().build("cudamallochost"));
         float* src_ptr = static_cast<float*>(src.data());
         for (size_t i = 0; i < dims[1]; ++i) {
             for (size_t j = 0; j < dims[0]; ++j) {
@@ -116,7 +119,7 @@ TEST(Domains, TestReadableDomains) {
         }
 
         pressio_domain_manager mgr;
-        mgr.set_metrics(tracking{});
+        mgr.set_metrics(libpressio::domains_metrics::tracking{});
         auto test_readable = [&](
                 auto&& dst,
                 pressio_data const& src,
@@ -139,35 +142,35 @@ TEST(Domains, TestReadableDomains) {
 
         //owning
         {
-        auto malloc_tgt = test_readable(pressio_data::owning(pressio_float_dtype, dims, domain_plugins().build("malloc")), src, 
+        auto malloc_tgt = test_readable(pressio_data::owning(pressio_float_dtype, dims, libpressio::domain_plugins().build("malloc")), src, 
                       "cudamallochost->malloc: should copy",
                       {"readable_begin malloc<cudamallochost", "view_begin malloc<cudamallochost"},
                       {"alloc_begin malloc", "send_begin malloc<cudamallochost"}
                       );
         EXPECT_EQ(malloc_tgt, src);
-        auto cuda_tgt = test_readable( pressio_data::owning(pressio_float_dtype, dims, domain_plugins().build("cudamalloc")), src, 
+        auto cuda_tgt = test_readable( pressio_data::owning(pressio_float_dtype, dims, libpressio::domain_plugins().build("cudamalloc")), src, 
                       "cudamallochost->cudamalloc: should send",
                       {"readable_begin cudamalloc<cudamallochost", "send_begin cudamalloc<cudamallochost"},
                       {"alloc_begin cudamalloc"}
                       );
-        auto mallochost_tgt = test_readable( pressio_data::owning(pressio_float_dtype, dims, domain_plugins().build("cudamallochost")), src, 
+        auto mallochost_tgt = test_readable( pressio_data::owning(pressio_float_dtype, dims, libpressio::domain_plugins().build("cudamallochost")), src, 
                       "cudamallochost->cudamallochost: should view",
                       {"readable_begin cudamallochost<cudamallochost","view_begin cudamallochost<cudamallochost" },
                       {"alloc_begin cudamalloc", "send_begin cudamalloc<cudamallochost"}
                       );
         EXPECT_EQ(mallochost_tgt, src);
 
-        test_readable(pressio_data::owning(pressio_float_dtype, dims, domain_plugins().build("malloc")), cuda_tgt, 
+        test_readable(pressio_data::owning(pressio_float_dtype, dims, libpressio::domain_plugins().build("malloc")), cuda_tgt, 
                       "cudamalloc->malloc: should send",
                       {"readable_begin malloc<cudamalloc", "send_begin malloc<cudamalloc"},
                       {"alloc_begin malloc"});
 
-        auto malloc_domtgt = test_readable(domain_plugins().build("malloc"), src, 
+        auto malloc_domtgt = test_readable(libpressio::domain_plugins().build("malloc"), src, 
                       "cudamallochost->malloc: should view",
                       {"readable_domain_begin malloc<cudamallochost", "view_begin malloc<cudamallochost"},
                       {"send_begin malloc<cudamallochost"}
                       );
-        test_readable(domain_plugins().build("malloc"), cuda_tgt, 
+        test_readable(libpressio::domain_plugins().build("malloc"), cuda_tgt, 
                       "cudamalloc->malloc: should send",
                       {"readable_domain_begin malloc<cudamalloc", "send_begin malloc<cudamalloc", "alloc_begin malloc"},
                       {});
@@ -176,35 +179,35 @@ TEST(Domains, TestReadableDomains) {
         //nonowning source
         {
             auto nonowning = pressio_data::nonowning(src);
-            auto malloc_tgt = test_readable(pressio_data::owning(pressio_float_dtype, dims, domain_plugins().build("malloc")), nonowning, 
+            auto malloc_tgt = test_readable(pressio_data::owning(pressio_float_dtype, dims, libpressio::domain_plugins().build("malloc")), nonowning, 
                     "nonowning cudamallochost->malloc: should copy",
                     {"readable_begin malloc<nonowning", "view_begin malloc<nonowning"},
                     {"alloc_begin malloc", "send_begin malloc<cudamallochost"}
                     );
             ASSERT_EQ(malloc_tgt, nonowning);
-            auto cuda_tgt = test_readable( pressio_data::owning(pressio_float_dtype, dims, domain_plugins().build("cudamalloc")), nonowning, 
+            auto cuda_tgt = test_readable( pressio_data::owning(pressio_float_dtype, dims, libpressio::domain_plugins().build("cudamalloc")), nonowning, 
                     "nonowning cudamallochost->cudamalloc: should send",
                     {"readable_begin cudamalloc<nonowning", "send_begin cudamalloc<nonowning"},
                     {"alloc_begin cudamalloc"}
                     );
-            auto mallochost_tgt = test_readable( pressio_data::owning(pressio_float_dtype, dims, domain_plugins().build("cudamallochost")), nonowning, 
+            auto mallochost_tgt = test_readable( pressio_data::owning(pressio_float_dtype, dims, libpressio::domain_plugins().build("cudamallochost")), nonowning, 
                     "nonowning cudamallochost->cudamallochost: should view",
                     {"readable_begin cudamallochost<nonowning","view_begin cudamallochost<nonowning" },
                     {"alloc_begin cudamalloc", "send_begin cudamalloc<cudamallochost"}
                     );
             ASSERT_EQ(mallochost_tgt, nonowning);
 
-            test_readable(pressio_data::owning(pressio_float_dtype, dims, domain_plugins().build("malloc")), cuda_tgt, 
+            test_readable(pressio_data::owning(pressio_float_dtype, dims, libpressio::domain_plugins().build("malloc")), cuda_tgt, 
                     "nonowning cudamalloc->malloc: should send",
                     {"readable_begin malloc<cudamalloc", "send_begin malloc<cudamalloc"},
                     {"alloc_begin malloc"});
 
-            auto malloc_domtgt = test_readable(domain_plugins().build("malloc"), nonowning, 
+            auto malloc_domtgt = test_readable(libpressio::domain_plugins().build("malloc"), nonowning, 
                     "nonowning cudamallochost->malloc: should view",
                     {"readable_domain_begin malloc<nonowning", "view_begin malloc<nonowning"},
                     {"send_begin malloc<nonowning"}
                     );
-            test_readable(domain_plugins().build("malloc"), cuda_tgt, 
+            test_readable(libpressio::domain_plugins().build("malloc"), cuda_tgt, 
                     "nonowning cudamalloc->malloc: should send",
                     {"readable_domain_begin malloc<cudamalloc", "send_begin malloc<cudamalloc", "alloc_begin malloc"},
                     {});
@@ -212,8 +215,8 @@ TEST(Domains, TestReadableDomains) {
 
         //nonowning target
         {
-            auto malloc_owning_target = pressio_data::owning(pressio_float_dtype, dims, domain_plugins().build("malloc"));
-            auto cudamalloc_owning_target = pressio_data::owning(pressio_float_dtype, dims, domain_plugins().build("cudamalloc"));
+            auto malloc_owning_target = pressio_data::owning(pressio_float_dtype, dims, libpressio::domain_plugins().build("malloc"));
+            auto cudamalloc_owning_target = pressio_data::owning(pressio_float_dtype, dims, libpressio::domain_plugins().build("cudamalloc"));
             auto malloc_tgt = test_readable(pressio_data::nonowning(malloc_owning_target), src, 
                     "nonowningtarget cudamallochost->malloc: should copy",
                     {"readable_begin nonowning<cudamallochost", "view_begin nonowning<cudamallochost"},
@@ -242,7 +245,7 @@ TEST(Domains, TestReadableDomains) {
         //test empty source -> domain; these should preserve the empty property as a nonowning buffer
         {
             auto empty_malloc = test_readable(
-                    domain_plugins().build("malloc"),
+                    libpressio::domain_plugins().build("malloc"),
                     /*src*/pressio_data::empty(pressio_float_dtype, {50, 50}),
                     "empty malloc domain, should do metadata only",
                         {"view_begin malloc<malloc", "view_begin malloc<malloc"},
@@ -255,7 +258,7 @@ TEST(Domains, TestReadableDomains) {
             EXPECT_EQ(empty_malloc.domain()->prefix(), "nonowning");
 
             auto empty_cudamalloc = test_readable(
-                    domain_plugins().build("cudamalloc"),
+                    libpressio::domain_plugins().build("cudamalloc"),
                     /*src*/pressio_data::empty(pressio_float_dtype, {50, 50}),
                     "empty cudamalloc domain, should do metadata only",
                         {},
@@ -285,7 +288,7 @@ TEST(Domains, TestReadableDomains) {
             EXPECT_EQ(empty_malloc.domain()->prefix(), "nonowning");
 
             auto empty_cudamalloc = test_readable(
-                    pressio_data::owning(pressio_double_dtype, {50,50}, domain_plugins().build("cudamalloc")),
+                    pressio_data::owning(pressio_double_dtype, {50,50}, libpressio::domain_plugins().build("cudamalloc")),
                     /*src*/pressio_data::empty(pressio_float_dtype, {50, 50}),
                     "empty cudamalloc domain, should do metadata only",
                         {},
@@ -303,7 +306,7 @@ TEST(Domains, TestReadableDomains) {
 }
 
 TEST(Domains, TestWritableDomains) {
-    if(!domain_plugins().build("cudamalloc")) {
+    if(!libpressio::domain_plugins().build("cudamalloc")) {
         GTEST_SKIP() << "this test requires cuda";
     }
 
@@ -311,7 +314,7 @@ TEST(Domains, TestWritableDomains) {
     ASSERT_EQ(1,1); // have some instruction before scope ends
     {
         std::vector<size_t> dims{50,50};
-        auto src = pressio_data::owning(pressio_float_dtype, dims, domain_plugins().build("cudamallochost"));
+        auto src = pressio_data::owning(pressio_float_dtype, dims, libpressio::domain_plugins().build("cudamallochost"));
         float* src_ptr = static_cast<float*>(src.data());
         for (size_t i = 0; i < dims[1]; ++i) {
             for (size_t j = 0; j < dims[0]; ++j) {
@@ -320,7 +323,7 @@ TEST(Domains, TestWritableDomains) {
         }
 
         pressio_domain_manager mgr;
-        mgr.set_metrics(tracking{});
+        mgr.set_metrics(libpressio::domains_metrics::tracking{});
         auto test_writeable = [&](
                 std::shared_ptr<pressio_domain>&& dst,
                 auto&& src,
@@ -344,40 +347,40 @@ TEST(Domains, TestWritableDomains) {
         };
 
         //passes an pressio_data const&, where are domains equal
-        test_writeable(domain_plugins().build("cudamallochost"), src, 
+        test_writeable(libpressio::domain_plugins().build("cudamallochost"), src, 
                       "cudamallochost const&->cudamallocmalloc&&: should allocate",
                       "cudamallochost",
                       {"alloc_begin cudamallochost", "alloc_end cudamallochost"},
                       {}
                       );
         //passes an pressio_data&&, where domains are equal
-        test_writeable(domain_plugins().build("cudamallochost"), pressio_data::clone(src), 
+        test_writeable(libpressio::domain_plugins().build("cudamallochost"), pressio_data::clone(src), 
                       "cudamallochost &&->cudamallochost&&: should view",
                       "cudamallochost",
                       {"view_begin cudamallochost<cudamallochost", "view_end cudamallochost<{moved}"},
                       {});
         //passes an pressio_data const&, where domains are accessible
-        test_writeable(domain_plugins().build("malloc"), src, 
+        test_writeable(libpressio::domain_plugins().build("malloc"), src, 
                       "cudamallochost const&->malloc&&: should allocate",
                       "malloc",
                       {"alloc_begin malloc", "alloc_end malloc"},
                       {}
                       );
         //passes an pressio_data&&, where domains are accessible
-        test_writeable(domain_plugins().build("malloc"), pressio_data::clone(src), 
+        test_writeable(libpressio::domain_plugins().build("malloc"), pressio_data::clone(src), 
                       "cudamallochost &&->malloc&&: should view",
                       "cudamallochost",
                       {"view_begin malloc<cudamallochost", "view_end malloc<{moved}"},
                       {});
         //passes an pressio_data const&, where domains are not accessible
-        test_writeable(domain_plugins().build("cudamalloc"), src, 
+        test_writeable(libpressio::domain_plugins().build("cudamalloc"), src, 
                       "cudamallochost const&->cudamalloc&&: should allocate",
                       "cudamalloc",
                       {"alloc_begin cudamalloc", "alloc_end cudamalloc"},
                       {}
                       );
         //passes an pressio_data&&, where domains are not accessible
-        test_writeable(domain_plugins().build("cudamalloc"), pressio_data::clone(src), 
+        test_writeable(libpressio::domain_plugins().build("cudamalloc"), pressio_data::clone(src), 
                       "cudamallochost &&->cudamalloc&&: should allocate",
                       "cudamalloc",
                       {"alloc_begin cudamalloc", "alloc_end cudamalloc"},
@@ -393,40 +396,40 @@ TEST(Domains, TestWritableDomains) {
         EXPECT_EQ(cloned.domain()->domain_id(), "cudamallochost") << "a clone of a non-owning domain should inherit its source";
 
         //passes an pressio_data const&, where are domains equal
-        test_writeable(domain_plugins().build("cudamallochost"), nonowning, 
+        test_writeable(libpressio::domain_plugins().build("cudamallochost"), nonowning, 
                       "nonowning cudamallochost const&->cudamallocmalloc&&: should allocate",
                       "cudamallochost",
                       {"alloc_begin cudamallochost", "alloc_end cudamallochost"},
                       {}
                       );
         //passes an pressio_data&&, where domains are equal
-        test_writeable(domain_plugins().build("cudamallochost"), pressio_data::nonowning(nonowning), 
+        test_writeable(libpressio::domain_plugins().build("cudamallochost"), pressio_data::nonowning(nonowning), 
                       "nonowning cudamallochost &&->cudamallochost&&: should view",
                       "cudamallochost",
                       {"view_begin cudamallochost<nonowning", "view_end cudamallochost<{moved}"},
                       {});
         //passes an pressio_data const&, where domains are accessible
-        test_writeable(domain_plugins().build("malloc"), nonowning, 
+        test_writeable(libpressio::domain_plugins().build("malloc"), nonowning, 
                       "nonowning cudamallochost const&->malloc&&: should allocate",
                       "malloc",
                       {"alloc_begin malloc", "alloc_end malloc"},
                       {}
                       );
         //passes an pressio_data&&, where domains are accessible
-        test_writeable(domain_plugins().build("malloc"), pressio_data::nonowning(nonowning), 
+        test_writeable(libpressio::domain_plugins().build("malloc"), pressio_data::nonowning(nonowning), 
                       "nonowning cudamallochost &&->malloc&&: should view",
                       "cudamallochost",
                       {"view_begin malloc<nonowning", "view_end malloc<{moved}"},
                       {});
         //passes an pressio_data const&, where domains are not accessible
-        test_writeable(domain_plugins().build("cudamalloc"), nonowning, 
+        test_writeable(libpressio::domain_plugins().build("cudamalloc"), nonowning, 
                       "nonowning cudamallochost const&->cudamalloc&&: should allocate",
                       "cudamalloc",
                       {"alloc_begin cudamalloc", "alloc_end cudamalloc"},
                       {}
                       );
         //passes an pressio_data&&, where domains are not accessible
-        test_writeable(domain_plugins().build("cudamalloc"), pressio_data::nonowning(nonowning), 
+        test_writeable(libpressio::domain_plugins().build("cudamalloc"), pressio_data::nonowning(nonowning), 
                       "nonowning cudamallochost &&->cudamalloc&&: should allocate",
                       "cudamalloc",
                       {"alloc_begin cudamalloc", "alloc_end cudamalloc"},
@@ -468,7 +471,7 @@ TEST(Domains, TestUserDomainsAndMoves) {
     {
         constexpr size_t N = 50;
         double* data = static_cast<double*>(malloc(sizeof(double)*N*N));
-        pressio_data user_malloc(pressio_data::move(pressio_double_dtype, data, {N,N}, domain_plugins().build("malloc")));
+        pressio_data user_malloc(pressio_data::move(pressio_double_dtype, data, {N,N}, libpressio::domain_plugins().build("malloc")));
         ASSERT_EQ(user_malloc.domain()->domain_id(), "malloc");
         ASSERT_EQ(user_malloc.domain()->prefix(), "malloc");
         ASSERT_EQ(user_malloc.data(), data);

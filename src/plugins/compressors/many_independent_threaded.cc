@@ -13,7 +13,8 @@
 #include <random>
 #include <vector>
 
-namespace libpressio { namespace many_independent_threaded_ns {
+namespace libpressio { namespace compressors { namespace many_independent_threaded_ns {
+    using namespace libpressio::distributed;
   enum class MetricsAction {
     Ignore, /// do not collect metrics on sub operations at all
     Archive, /// save off the metrics object after compression
@@ -288,8 +289,8 @@ private:
   int32_t preserve_metrics = 0;
 };
 
-static pressio_register compressor_many_fields_plugin(compressor_plugins(), "many_independent_threaded", []() {
+pressio_register registration(compressor_plugins(), "many_independent_threaded", []() {
   return compat::make_unique<many_independent_threaded_compressor_plugin>();
 });
 
-} }
+} }}

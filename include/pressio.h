@@ -14,6 +14,11 @@ struct pressio_compressor;
 struct pressio_metrics;
 
 /**
+ * ensure that all libpressio components are initialized, this is called by pressio_instance
+ */
+void pressio_register_all();
+
+/**
  * gets a reference to a new instance of libpressio; initializes the library if necessary
  * \returns a pointer to a library instance
  */

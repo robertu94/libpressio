@@ -9,6 +9,7 @@
  * \brief C++ Interface for registries of construct-able objects
  */
 
+namespace libpressio {
 
 /**
  * a type that registers constructor functions
@@ -35,10 +36,17 @@ struct pressio_registry {
    *
    * \param[in] name the name to register
    * \param[in] factory the constructor function which takes 0 arguments
+   * \return true if the module has already not been registered
    */
   template <class Name, class Factory>
-  void regsiter_factory(Name&& name, Factory&& factory) {
-    factories.emplace(std::forward<Name>(name), std::forward<Factory>(factory));
+  bool regsiter_factory(Name&& name, Factory&& factory) {
+    std::string name_copy(name);
+    if (factories.find(name) == factories.end()) {
+        factories.emplace(std::move(name_copy), std::forward<Factory>(factory));
+        return false;
+    } else {
+        return true;
+    }
   }
 
   private:
@@ -121,21 +129,29 @@ class pressio_register{
    * \param[in] factory the factory to register
    */
   template <class RegistryType, class NameType, class Factory>
-  pressio_register(pressio_registry<RegistryType>& registry, NameType&& name, Factory&& factory):
+  pressio_register(pressio_registry<RegistryType>& registry, NameType&& name, Factory factory):
       name(name),
-      unregister([&registry, name]{ registry.erase(name);})
+      unregister([&registry, name]{ registry.erase(name);}),
+      do_register([&registry, factory, name]{ return registry.regsiter_factory(name, factory);})
     {
-    registry.regsiter_factory(name, factory);
+    do_register();
   }
 
   ~pressio_register(){
       unregister();
   }
 
+  bool ensure_registered() {
+      return do_register();
+  }
+
   /** the name of the registered plugin */
   std::string name;
   /** call to unregister the plugin */
   std::function<void()> unregister;
+  std::function<bool()> do_register;
 };
+
+}
 
 #endif /* end of include guard: LIBPRESSIO_REGISTRY_H */

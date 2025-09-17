@@ -13,7 +13,7 @@
 #include "std_compat/memory.h"
 #include "std_compat/utility.h"
 
-namespace libpressio { namespace zfp_plugin {
+namespace libpressio { namespace compressors { namespace zfp_ns {
 
 class zfp_plugin: public libpressio_compressor_plugin {
   public:
@@ -300,6 +300,7 @@ class zfp_plugin: public libpressio_compressor_plugin {
       //migrate to device if needed
       pressio_data input;
       switch(zfp_stream_execution(zfp)) {
+          case zfp_exec_hip:
           case zfp_exec_cuda:
               input = domain_manager().make_readable(domain_plugins().build("cudamalloc"), *real_input);
               *output = domain_manager().make_writeable(domain_plugins().build("cudamalloc"), std::move(*output));
@@ -520,6 +521,6 @@ class zfp_plugin: public libpressio_compressor_plugin {
     compat::optional<int> dynamic_wra;
 };
 
-static pressio_register compressor_zfp_plugin(compressor_plugins(), "zfp", [](){ return compat::make_unique<zfp_plugin>(); });
+pressio_register registration(compressor_plugins(), "zfp", [](){ return compat::make_unique<zfp_plugin>(); });
 
-} }
+} } }

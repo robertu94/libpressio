@@ -1,15 +1,18 @@
 #include "user.h"
 #include <cstddef>
 #include <cstring>
+extern "C" {
 void* pressio_libc_alloc_fn(size_t n, void*) {
     return malloc(n);
 }
-void* pressio_noop_alloc_fn(size_t n, void*) {
+void* pressio_noop_alloc_fn(size_t , void*) {
     return nullptr;
 }
 void pressio_libc_memcpy_fn(void* dst, void* src, size_t n, void*) {
     memcpy(dst, src, n);
 }
+}
+
 #if LIBPRESSIO_HAS_CUDA
 #include <cuda_runtime.h>
 extern "C" {

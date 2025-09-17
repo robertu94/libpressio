@@ -11,7 +11,7 @@
 #include "pressio_compressor.h"
 #include "std_compat/memory.h"
 
-namespace libpressio  { namespace digit_rounding {
+namespace libpressio  { namespace compressors { namespace digit_rounding {
 
 #define INVALID_TYPE -1
 
@@ -139,5 +139,5 @@ class digit_rounding_plugin: public libpressio_compressor_plugin {
     
 };
 
-static pressio_register compressor_digit_rounding_plugin(compressor_plugins(), "digit_rounding", [](){return compat::make_unique<digit_rounding_plugin>(); });
-} }
+pressio_register registration(compressor_plugins(), "digit_rounding", [](){return compat::make_unique<digit_rounding_plugin>(); });
+} }}

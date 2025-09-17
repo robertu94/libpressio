@@ -13,7 +13,7 @@
 #include <mgard/compress.hpp>
 #include <mgard/TensorQuantityOfInterest.hpp>
 
-namespace libpressio { namespace mgard10_ns {
+namespace libpressio { namespace compressors { namespace mgard_1_0_ns {
 
 namespace qoi {
 struct caller {
@@ -630,8 +630,8 @@ public:
   mgard_cuda::Config config = mgard_cuda::Config();
 };
 
-static pressio_register compressor_many_fields_plugin(compressor_plugins(), "mgard", []() {
+static pressio_register registration(compressor_plugins(), "mgard", []() {
   return compat::make_unique<mgard10_compressor_plugin>();
 });
 
-} }
+} } }

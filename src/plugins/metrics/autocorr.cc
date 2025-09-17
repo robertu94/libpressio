@@ -9,7 +9,7 @@
 #include "libpressio_ext/cpp/domain_manager.h"
 #include "std_compat/memory.h"
 
-namespace libpressio {
+namespace libpressio { namespace metrics {
 namespace autocorr {
   struct metrics {
     pressio_data autocorr;
@@ -184,5 +184,5 @@ class autocorr_plugin : public libpressio_metrics_plugin {
   compat::optional<autocorr::metrics> err_metrics;
 };
 
-static pressio_register metrics_autocorr_plugin(metrics_plugins(), "autocorr", [](){ return compat::make_unique<autocorr_plugin>(); });
-} }
+pressio_register registration(metrics_plugins(), "autocorr", [](){ return compat::make_unique<autocorr_plugin>(); });
+} }}

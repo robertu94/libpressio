@@ -12,6 +12,7 @@
 #include <vector>
 #include <set>
 
+namespace libpressio { namespace distributed {
 /** 
  *  \file
  *  \brief helper for subgroups in meta-objects which support multiple inputs 
@@ -147,4 +148,5 @@ private:
   std::vector<int> input_data_groups, output_data_groups;
 };
 
+}}
 #endif /* end of include guard: LIBPRESSSIO_SUBGROUP_MANAGER */

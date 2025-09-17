@@ -15,7 +15,7 @@
 #include <sol/sol.hpp>
 #endif
 
-namespace libpressio { namespace composite {
+namespace libpressio { namespace metrics { namespace composite_ns {
     template <class T>
     struct reversed {
         T& t;
@@ -348,11 +348,11 @@ class composite_plugin : public libpressio_metrics_plugin {
 #endif
 };
 
-static pressio_register metrics_composite_plugin(metrics_plugins(), "composite", [](){ return compat::make_unique<composite_plugin>(); });
+pressio_register registration(metrics_plugins(), "composite", [](){ return compat::make_unique<composite_plugin>(); });
 
-
-} }
-
+}
 std::unique_ptr<libpressio_metrics_plugin> make_m_composite(std::vector<pressio_metrics>&& plugins) {
-  return compat::make_unique<libpressio::composite::composite_plugin>(std::move(plugins));
+  return compat::make_unique<composite_ns::composite_plugin>(std::move(plugins));
+}
+}
 }

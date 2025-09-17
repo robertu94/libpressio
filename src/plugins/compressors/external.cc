@@ -17,7 +17,13 @@
 #include <nlohmann/json.hpp>
 #include "libpressio_ext/cpp/json.h"
 
-namespace libpressio { namespace external_compressor_ns {
+namespace libpressio { namespace compressors { namespace external_ns {
+
+using std::chrono::high_resolution_clock;
+using std::chrono::time_point;
+using std::chrono::duration;
+using std::chrono::duration_cast;
+using std::chrono::milliseconds;
 
 class external_compressor_compressor_plugin : public libpressio_compressor_plugin {
 public:
@@ -129,9 +135,12 @@ public:
           in_config.io[i]->set_options({{"io:path", input_fd_name}});
           args.push_back(format_flag("input", in_config.field_names[i]));
           args.push_back(input_fd_name);
+          auto begin = high_resolution_clock::now();
           if(in_config.io[i]->write(data)) {
               return set_error(in_config.io[i]->error_code(), in_config.io[i]->error_msg());
           }
+          auto end = high_resolution_clock::now();
+          input_times.emplace_back(duration_cast<duration<double, std::milli>>(end-begin).count());
       }
 
       for (size_t i = 0; i < outputs.size(); ++i) {
@@ -386,10 +395,11 @@ public:
   std::string config_name = "external";
   std::string launch_str = "forkexec";
   pressio_launcher launch = launch_plugins().build(launch_str);
+  std::vector<double> input_times, output_times;
 };
 
-static pressio_register compressor_many_fields_plugin(compressor_plugins(), "external_compressor", []() {
+pressio_register registration(compressor_plugins(), "external_compressor", []() {
   return compat::make_unique<external_compressor_compressor_plugin>();
 });
 
-} }
+} }}

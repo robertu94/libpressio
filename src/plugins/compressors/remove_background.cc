@@ -5,7 +5,7 @@
 #include "libpressio_ext/cpp/pressio.h"
 #include "libpressio_ext/cpp/domain_manager.h"
 
-namespace libpressio { namespace remove_background_ns {
+namespace libpressio { namespace compressors { namespace remove_background_ns {
 
 class remove_background_compressor_plugin : public libpressio_compressor_plugin {
 public:
@@ -131,9 +131,9 @@ public:
   pressio_compressor compressor = compressor_plugins().build(compressor_id);
 };
 
-static pressio_register compressor_many_fields_plugin(compressor_plugins(), "remove_background", []() {
+pressio_register registration(compressor_plugins(), "remove_background", []() {
   return compat::make_unique<remove_background_compressor_plugin>();
 });
 
 } }
-
+}

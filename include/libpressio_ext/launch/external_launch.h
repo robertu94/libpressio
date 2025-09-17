@@ -17,6 +17,8 @@
 #include "external_launch_metrics.h"
 
 
+namespace libpressio { namespace launch {
+
 /**
  * an extension point for launching processes
  */
@@ -170,6 +172,12 @@ struct libpressio_launch_plugin: public pressio_configurable {
    */
   pressio_launcher_metrics metrics_plugin = launch_metrics_plugins().build("noop");
 };
+}
+/**
+ * the registry for launch plugins
+ */
+pressio_registry<std::unique_ptr<launch::libpressio_launch_plugin>>& launch_plugins();
+}
 
 /**
  * wrapper for launching processes
@@ -186,7 +194,7 @@ struct pressio_launcher {
    *
    * \param[in] ptr the pointer to move from
    */
-  pressio_launcher(std::unique_ptr<libpressio_launch_plugin>&& ptr): plugin(std::move(ptr)) {}
+  pressio_launcher(std::unique_ptr<libpressio::launch::libpressio_launch_plugin>&& ptr): plugin(std::move(ptr)) {}
 
   /**
    * launch methods are copy constructible and have the effect of cloning the plugin
@@ -219,26 +227,22 @@ struct pressio_launcher {
   /**
    * pressio_launcher are dereference-able
    */
-  libpressio_launch_plugin& operator*() const noexcept {
+  libpressio::launch::libpressio_launch_plugin& operator*() const noexcept {
     return *plugin;
   }
 
   /**
    * pressio_launcher are dereference-able
    */
-  libpressio_launch_plugin* operator->() const noexcept {
+  libpressio::launch::libpressio_launch_plugin* operator->() const noexcept {
     return plugin.get();
   }
 
   /**
    * the underlying plugin
    */
-  std::unique_ptr<libpressio_launch_plugin> plugin;
+  std::unique_ptr<libpressio::launch::libpressio_launch_plugin> plugin;
 };
 
-/**
- * the registry for launch plugins
- */
-pressio_registry<std::unique_ptr<libpressio_launch_plugin>>& launch_plugins();
 
 #endif /* end of include guard: LIBPRESSIO_EXTERNAL_LAUNCH_H */

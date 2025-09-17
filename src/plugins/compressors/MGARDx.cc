@@ -6,7 +6,7 @@
 #include "MGARDx/decompose.hpp"
 #include "MGARDx/recompose.hpp"
 
-namespace libpressio { namespace mgardx_ns {
+namespace libpressio { namespace compressor { namespace mgardx_ns {
 
   struct compress_op {
     template <class T>
@@ -132,8 +132,8 @@ public:
   double eb = 1e-5;
 };
 
-static pressio_register compressor_many_fields_plugin(compressor_plugins(), "mgardx", []() {
+pressio_register plugin(compressor_plugins(), "mgardx", []() {
   return compat::make_unique<mgardx_compressor_plugin>();
 });
 
-} }
+} } }

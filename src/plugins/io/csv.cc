@@ -15,7 +15,7 @@
 #include "std_compat/memory.h"
 #include "std_compat/algorithm.h"
 
-namespace libpressio { namespace csv {
+namespace libpressio { namespace io { namespace csv_ns {
 
 namespace {
   struct csv_printer {
@@ -203,6 +203,6 @@ struct csv_io : public libpressio_io_plugin
   }
 };
 
-static pressio_register io_csv_plugin(io_plugins(), "csv",
+pressio_register registration(io_plugins(), "csv",
                           []() { return compat::make_unique<csv_io>(); });
-} }
+} } }

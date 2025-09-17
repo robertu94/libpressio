@@ -4,13 +4,15 @@
 #include <libpressio_ext/cpp/options.h>
 #include <libpressio_ext/cpp/io.h>
 
-pressio_registry<std::unique_ptr<libpressio_io_plugin>>& io_plugins() {
-  static pressio_registry<std::unique_ptr<libpressio_io_plugin>> registry;
+namespace libpressio {
+pressio_registry<std::unique_ptr<io::libpressio_io_plugin>>& io_plugins() {
+  static pressio_registry<std::unique_ptr<io::libpressio_io_plugin>> registry;
   return registry;
+}
 }
 
 extern "C" {
-struct pressio_io* pressio_get_io(struct pressio* library, const char* io_module) {
+struct pressio_io* pressio_get_io(pressio* library, const char* io_module) {
   auto plugin = library->get_io(io_module);
   if(plugin) return new pressio_io(std::move(plugin));
   else return nullptr;
@@ -83,6 +85,7 @@ int pressio_io_read_many(struct pressio_io* io, struct pressio_data** data_begin
 }
 
 }
+namespace libpressio { namespace io {
 
 struct pressio_data* libpressio_io_plugin::read(struct pressio_data* data) {
   clear_error();
@@ -137,3 +140,4 @@ int libpressio_io_plugin::check_options_impl(struct pressio_options const&) {
 void libpressio_io_plugin::set_name(std::string const& new_name) {
   pressio_configurable::set_name(new_name);
 }
+} }

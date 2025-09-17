@@ -6,7 +6,7 @@
 #include "libpressio_ext/cpp/domain_manager.h"
 #include <ndzip/ndzip.hh>
 
-namespace libpressio { namespace ndzip_ns {
+namespace libpressio { namespace compressors { namespace ndzip_ns {
 
   struct dispatcher {
 
@@ -242,8 +242,8 @@ public:
 
 };
 
-static pressio_register compressor_many_fields_plugin(compressor_plugins(), "ndzip", []() {
+pressio_register registration(compressor_plugins(), "ndzip", []() {
   return compat::make_unique<ndzip_compressor_plugin>();
 });
 
-} }
+} }}

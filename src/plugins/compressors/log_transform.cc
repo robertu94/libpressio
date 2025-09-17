@@ -5,7 +5,7 @@
 #include <sstream>
 #include <cmath>
 
-namespace libpressio { namespace log_transform {
+namespace libpressio { namespace compressors { namespace log_transform {
 
 struct log_encoder {
   template <class T>
@@ -126,11 +126,11 @@ y[0] = log(x[0]);
   pressio_compressor meta = compressor_plugins().build("noop");
 };
 
-static pressio_register log_transform_register(
+pressio_register registration(
     compressor_plugins(),
     "log_transform",
     []{
       return compat::make_unique<log_transform>();
     }
     );
-} }
+} }}

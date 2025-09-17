@@ -14,6 +14,7 @@
 /**
  * Base interface for configurable objects in libpressio
  */
+namespace libpressio {
 class pressio_configurable : public pressio_errorable {
   public:
   virtual ~pressio_configurable()=default;
@@ -483,5 +484,6 @@ class pressio_configurable : public pressio_errorable {
   /** the name of the configurable used in nested hierarchies*/
   std::string name;
 };
+}
 
 #endif /* end of include guard: LIBPRESSIO_CONFIGURABLE_H */

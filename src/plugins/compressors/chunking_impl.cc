@@ -10,6 +10,7 @@
 #include "libpressio_ext/cpp/options.h"
 
 namespace libpressio {
+namespace compressors {
 namespace chunking {
 namespace detail {
 
@@ -487,4 +488,5 @@ void restore_data(
 
 } /* chunking */ 
 } /* pressio */ 
+}
 

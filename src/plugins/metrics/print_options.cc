@@ -8,7 +8,7 @@
 #include "std_compat/memory.h"
 #include <iostream>
 
-namespace libpressio { namespace print_options_metrics_ns {
+namespace libpressio { namespace metrics { namespace print_options_metrics_ns {
 
 class print_options_plugin : public libpressio_metrics_plugin {
   public:
@@ -50,6 +50,6 @@ class print_options_plugin : public libpressio_metrics_plugin {
 
 };
 
-static pressio_register metrics_print_options_plugin(metrics_plugins(), "print_options", [](){ return compat::make_unique<print_options_plugin>(); });
+pressio_register metrics_print_options_plugin(metrics_plugins(), "print_options", [](){ return compat::make_unique<print_options_plugin>(); });
 }}
-
+}

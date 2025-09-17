@@ -13,6 +13,7 @@
 #include "registry.h"
 #include <libpressio_ext/cpp/names.h>
 
+namespace libpressio { namespace domains {
 /**
  * \file
  * \brief C++ Interface for domains of memory
@@ -339,13 +340,14 @@ struct pressio_domain {
  * each others memcpy function to copy from one to another)
  */
 bool is_accessible(pressio_domain const& lhs, pressio_domain const& rhs);
-
-pressio_registry<std::shared_ptr<pressio_domain>>& domain_plugins();
+}
+pressio_registry<std::shared_ptr<libpressio::domains::pressio_domain>>& domain_plugins();
 
 /**
  * returns a domain that matches the desired characteristics
  */
-std::shared_ptr<pressio_domain> find_domain(domain_options const& characteristics);
+std::shared_ptr<domains::pressio_domain> find_domain(libpressio::domains::domain_options const& characteristics);
 
 
+ }
 #endif /* end of include guard: PRESSIO_DOMAIN_H_Z2ALCUZG */

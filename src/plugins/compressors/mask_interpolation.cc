@@ -8,7 +8,7 @@
 
 #include "basic_indexer.h"
 
-namespace libpressio { namespace mask_interpolation_ns {
+namespace libpressio { namespace compressors { namespace mask_interpolation_ns {
 
     using namespace utilities;
 
@@ -370,8 +370,8 @@ public:
   uint32_t nthreads = 1;
 };
 
-static pressio_register compressor_many_fields_plugin(compressor_plugins(), "mask_interpolation", []() {
+pressio_register registration(compressor_plugins(), "mask_interpolation", []() {
   return compat::make_unique<mask_interpolation_compressor_plugin>();
 });
 
-} }
+} }}

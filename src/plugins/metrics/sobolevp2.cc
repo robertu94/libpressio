@@ -9,7 +9,7 @@
 #include "std_compat/memory.h"
 #include <cmath>
 
-namespace libpressio { namespace qcatsobolevp2_metrics_ns {
+namespace libpressio { namespace metrics { namespace sobolevp2_ns {
 #define QCAT_FLOAT 0
 #define QCAT_DOUBLE 1
 #define QCAT_INT32 2
@@ -515,6 +515,7 @@ class qcatsobolevp2_plugin : public libpressio_metrics_plugin {
 
 };
 
-static pressio_register metrics_qcatsobolevp2_plugin(metrics_plugins(), "qcatsobolevp2", [](){ return compat::make_unique<qcatsobolevp2_plugin>(); });
+pressio_register registration(metrics_plugins(), "qcatsobolevp2", [](){ return compat::make_unique<qcatsobolevp2_plugin>(); });
 }}
+}
 

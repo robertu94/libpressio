@@ -8,7 +8,7 @@
 #include "libpressio_ext/cpp/domain_manager.h"
 #include "std_compat/memory.h"
 
-namespace libpressio {
+namespace libpressio { namespace metrics {
 namespace diff_pdf {
   static const uint64_t zero = 0;
   struct metrics {
@@ -132,6 +132,6 @@ class diff_pdf_plugin : public libpressio_metrics_plugin {
   compat::optional<diff_pdf::metrics> err_metrics;
 };
 
-static pressio_register metrics_diff_pdf_plugin(metrics_plugins(), "diff_pdf", [](){ return compat::make_unique<diff_pdf_plugin>(); });
+pressio_register registration(metrics_plugins(), "diff_pdf", [](){ return compat::make_unique<diff_pdf_plugin>(); });
 }
-}
+}}

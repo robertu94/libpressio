@@ -6,7 +6,7 @@
 #include "libpressio_ext/cpp/pressio.h"
 #include "libpressio_ext/cpp/domain_manager.h"
 
-namespace libpressio { namespace threshold_small_ns {
+namespace libpressio { namespace compressors { namespace threshold_small_ns {
 
 class threshold_small_compressor_plugin : public libpressio_compressor_plugin {
 public:
@@ -115,9 +115,9 @@ public:
   pressio_compressor compressor = compressor_plugins().build(compressor_id);
 };
 
-static pressio_register compressor_many_fields_plugin(compressor_plugins(), "threshold_small", []() {
+pressio_register registration(compressor_plugins(), "threshold_small", []() {
   return compat::make_unique<threshold_small_compressor_plugin>();
 });
 
-} }
+} } }
 

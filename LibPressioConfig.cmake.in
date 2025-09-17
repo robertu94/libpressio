@@ -1,6 +1,211 @@
 @PACKAGE_INIT@
 
 include("${CMAKE_CURRENT_LIST_DIR}/LibPressioTargets.cmake")
+include(CMakeFindDependencyMacro)
 
 find_package(std_compat REQUIRED)
+
+if(@LIBPRESSIO_HAS_OPENMP@)
+  enable_language(C)
+  find_package(OpenMP)
+endif()
+
+if(@LIBPRESSIO_HAS_ARC@)
+  find_package(ARC REQUIRED)
+endif()
+
+if(@LIBPRESSIO_HAS_DIGIT_ROUNDING@)
+  find_package(dround REQUIRED)
+  find_package(ZLIB REQUIRED)
+endif()
+
+if(@LIBPRESSIO_HAS_BZIP2@)
+  find_package(BZip2 REQUIRED)
+endif()
+
+if(@LIBPRESSIO_HAS_BIT_GROOMING@)
+  find_package(bg REQUIRED)
+  find_package(ZLIB REQUIRED)
+endif()
+
+if(@LIBPRESSIO_HAS_SZ_AUTO@)
+  find_package(szauto REQUIRED)
+  find_package(PkgConfig REQUIRED)
+  pkg_search_module(ZSTD IMPORTED_TARGET GLOBAL libzstd)
+endif()
+
+if(@LIBPRESSIO_HAS_SZx@)
+  find_package(SZx REQUIRED)
+endif()
+
+if(@LIBPRESSIO_HAS_SZP@)
+  find_package(SZp REQUIRED)
+endif()
+
+if(@LIBPRESSIO_HAS_MGARDx@)
+  find_package(MGARDx)
+endif()
+
+if(@LIBPRESSIO_HAS_MGARD@)
+  find_package(mgard REQUIRED)
+endif()
+
+if(@LIBPRESSIO_HAS_ZFP@)
+  find_package(ZFP REQUIRED)
+endif()
+
+if(@LIBPRESSIO_HAS_CUSZ@)
+  find_package(CUSZ REQUIRED)
+endif()
+
+if(@LIBPRESSIO_HAS_SZ3@)
+  find_package(SZ3 REQUIRED)
+  find_package(PkgConfig REQUIRED)
+  pkg_search_module(ZSTD IMPORTED_TARGET GLOBAL libzstd)
+endif()
+
+if(@LIBPRESSIO_HAS_QoZ@)
+  find_package(QoZ REQUIRED)
+  find_package(PkgConfig REQUIRED)
+  pkg_search_module(ZSTD IMPORTED_TARGET GLOBAL libzstd)
+endif()
+
+if(@LIBPRESSIO_HAS_SZ@)
+  find_package(SZ REQUIRED)
+  find_package(ZLIB REQUIRED)
+  find_package(PkgConfig REQUIRED)
+  pkg_search_module(ZSTD IMPORTED_TARGET GLOBAL libzstd)
+  pkg_search_module(FFTW3 QUIET IMPORTED_TARGET GLOBAL fftw3)
+endif()
+
+if(@LIBPRESSIO_HAS_BLOSC@)
+  if(@BLOSC_FOUND@)
+      find_package(PkgConfig REQUIRED)
+      pkg_search_module(BLOSC IMPORTED_TARGET GLOBAL blosc)
+  else()
+      find_library(BLOSC_LIBRARIES blosc)
+      find_file(BLOSC_INCLUDE_FILE blosc.h)
+  endif()
+endif()
+
+if(@LIBPRESSIO_HAS_BLOSC2@)
+    if(@Blosc2_FOUND@)
+        find_package(Blosc2 QUIET)
+    else()
+        find_package(PkgConfig REQUIRED)
+        pkg_search_module(Blosc2 IMPORTED_TARGET GLOBAL blosc2)
+    endif()
+endif()
+
+if(@LIBPRESSIO_HAS_MAGICK@)
+  find_package(PkgConfig REQUIRED)
+  pkg_search_module(Magick++ IMPORTED_TARGET GLOBAL Magick++)
+endif()
+
+if(@LIBPRESSIO_HAS_NETCDF@)
+  find_package(PkgConfig REQUIRED)
+  pkg_search_module(NetCDF REQUIRED IMPORTED_TARGET GLOBAL netcdf)
+endif()
+
+if(@LIBPRESSIO_HAS_CUDA@)
+  find_package(CUDAToolkit REQUIRED)
+endif()
+
+if(@LIBPRESSIO_HAS_CUFILE@)
+  find_package(CUDAToolkit REQUIRED)
+  find_library(CUFile_LIBRARY cufile PATHS ${CUDAToolkit_LIBRARY_DIR} REQUIRED)
+endif()
+
+if(@LIBPRESSIO_HAS_MATLABIO@)
+    find_file(MATIO_HEADER matio.h REQUIRED)
+    find_library(MATIO_LIBRARY matio REQUIRED)
+    get_filename_component(MATIO_HEADER_DIR ${MATIO_HEADER} DIRECTORY)
+endif()
+
+if(@LIBPRESSIO_HAS_HDF@)
+  find_package(HDF5 REQUIRED COMPONENTS C)
+  if(@HDF5_IS_PARALLEL@)
+    find_package(MPI REQUIRED)
+  endif()
+endif()
+
+if(@LIBPRESSIO_HAS_NDZIP@)
+  find_package(NDZip REQUIRED)
+endif()
+
+if(@LIBPRESSIO_HAS_CUSZP@)
+  find_package(cuSZp REQUIRED)
+endif()
+
+if(@LIBPRESSIO_HAS_FPZIP@)
+  find_package(fpzip)
+endif()
+
+if(@LIBPRESSIO_HAS_MPI@)
+  find_package(MPI COMPONENTS CXX)
+endif()
+
+if(@LIBPRESSIO_HAS_PYTHON_LAUNCH@)
+  find_package(pybind11 REQUIRED)
+endif()
+
+if(@LIBPRESSIO_HAS_PETSC@)
+  find_package(PkgConfig REQUIRED)
+  pkg_search_module(PETSc IMPORTED_TARGET PETSc)
+endif()
+
+if(@LIBPRESSIO_HAS_LUA@)
+  find_package(sol2 REQUIRED)
+  if(@LIBPRESSIO_LUA_PKGCONFIG@ OR NOT @Lua_FOUND@)
+      find_package(PkgConfig REQUIRED)
+      pkg_search_module(Lua IMPORTED_TARGET lua luajit)
+  else()
+    find_package(Lua)
+  endif()
+endif()
+
+if(@LIBPRESSIO_HAS_LIBDISTRIBUTED@)
+  find_package(LibDistributed)
+endif()
+
+if(@LIBPRESSIO_HAS_JSON@)
+  find_package(nlohmann_json REQUIRED)
+endif()
+
+if(@LIBPRESSIO_HAS_REMOTELAUNCH@)
+  find_package(nlohmann_json REQUIRED)
+  find_package(CURL REQUIRED)
+endif()
+
+if(@LIBPRESSIO_HAS_OPENSSL@)
+  find_package(OpenSSL REQUIRED)
+endif()
+
+if(@LIBPRESSIO_HAS_LIBUUID@)
+  find_package(PkgConfig REQUIRED)
+  pkg_search_module(UUID IMPORTED_TARGET GLOBAL uuid)
+endif()
+
+if(@LIBPRESSIO_HAS_GRIB@)
+  find_package(eccodes REQUIRED)
+endif()
+
+if(@BUILD_PYTHON_WRAPPER@)
+    find_package(Python3 COMPONENTS Interpreter Development NumPy)
+    find_package(SWIG)
+endif()
+
+if(@BUILD_MIGRATION_TOOLS@)
+    find_package(Clang REQUIRED)
+    find_package(fmt REQUIRED)
+    list(APPEND CMAKE_MODULE_PATH "${CLANG_CMAKE_DIR}")
+    list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_DIR}")
+    include(AddLLVM)
+    include(AddClang)
+endif()
+
+if(@BUILD_DOCS@)
+  find_package(Doxygen REQUIRED dot)
+endif()
+
 check_required_components(LibPressio)

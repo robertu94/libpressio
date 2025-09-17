@@ -5,7 +5,7 @@
 #include "libpressio_ext/cpp/pressio.h"
 #include "libpressio_ext/cpp/domain_manager.h"
 
-namespace libpressio { namespace pressio_ns {
+namespace libpressio { namespace compressors { namespace pressio_ns {
 
   enum class pressio_mode {
     abs,        /*absolute error bound emulation*/
@@ -229,8 +229,8 @@ private:
   pressio_compressor comp = compressor_plugins().build("noop");
 };
 
-static pressio_register compressor_many_fields_plugin(compressor_plugins(), "pressio", []() {
+pressio_register registration(compressor_plugins(), "pressio", []() {
   return compat::make_unique<pressio_compressor_plugin>();
 });
 
-} }
+} }}

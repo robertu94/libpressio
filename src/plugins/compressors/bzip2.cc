@@ -7,7 +7,7 @@
 #include <bzlib.h>
 #include <cmath>
 
-namespace libpressio { namespace bzip2_ns {
+namespace libpressio { namespace compressors { namespace bzip2_ns {
 
 class bzip2_compressor_plugin : public libpressio_compressor_plugin {
 public:
@@ -223,8 +223,8 @@ public:
   int small = 0;
 };
 
-static pressio_register compressor_many_fields_plugin(compressor_plugins(), "bzip2", []() {
+pressio_register registration(compressor_plugins(), "bzip2", []() {
   return compat::make_unique<bzip2_compressor_plugin>();
 });
 
-} }
+} }}

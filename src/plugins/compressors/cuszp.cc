@@ -6,7 +6,7 @@
 #include "libpressio_ext/cpp/pressio.h"
 #include "libpressio_ext/cpp/domain_manager.h"
 
-namespace libpressio { namespace cuszp_ns {
+namespace libpressio { namespace compressors { namespace cuszp_ns {
 
 cuszp_type_t to_cuszp_type(pressio_data const& d) {
     switch(d.dtype()) {
@@ -163,9 +163,9 @@ public:
   cuszp_mode_t mode = CUSZP_MODE_PLAIN;
 };
 
-static pressio_register compressor_many_fields_plugin(compressor_plugins(), "cuszp", []() {
+pressio_register registration(compressor_plugins(), "cuszp", []() {
   return compat::make_unique<cuszp_compressor_plugin>();
 });
 
 } }
-
+}

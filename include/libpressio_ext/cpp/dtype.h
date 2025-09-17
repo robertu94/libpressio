@@ -4,6 +4,7 @@
 #include <std_compat/type_traits.h>
 #include <cstdint>
 
+namespace libpressio {
 /**
  * \file
  * \brief C++ interface to data types
@@ -55,6 +56,7 @@ constexpr pressio_dtype pressio_dtype_from_type() {
       std::is_same<T, bool>::value ? pressio_bool_dtype :
       pressio_byte_dtype
       );
+}
 }
 
 #endif /* end of include guard: LIBPRESSIO_DTYPE_CPP */

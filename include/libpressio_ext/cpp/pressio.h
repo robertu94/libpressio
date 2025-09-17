@@ -8,22 +8,36 @@
 #include "metrics.h"
 #include "std_compat/language.h"
 
-class libpressio_compressor_plugin;
-struct libpressio_io_plugin;
+namespace libpressio {
+    namespace compressors {
+        class libpressio_compressor_plugin;
+    }
+    namespace io {
+        struct libpressio_io_plugin;
+    }
+}
 
+/**
+ * forward declearation of pressio_register_all() to prevent circular dependency
+ * between C and C++
+ */
+extern "C" void pressio_register_all();
+
+namespace libpressio {
 /**
  * the registry for compressor plugins
  */
-pressio_registry<std::shared_ptr<libpressio_compressor_plugin>>& compressor_plugins();
+pressio_registry<std::shared_ptr<libpressio::compressors::libpressio_compressor_plugin>>& compressor_plugins();
 /**
  * the registry for metrics plugins
  */
-pressio_registry<std::unique_ptr<libpressio_metrics_plugin>>& metrics_plugins();
+pressio_registry<std::unique_ptr<libpressio::metrics::libpressio_metrics_plugin>>& metrics_plugins();
 
 /**
  * the registry for metrics plugins
  */
-pressio_registry<std::unique_ptr<libpressio_io_plugin>>& io_plugins();
+pressio_registry<std::unique_ptr<libpressio::io::libpressio_io_plugin>>& io_plugins();
+}
 
 /**
  * the libraries basic state
@@ -31,6 +45,9 @@ pressio_registry<std::unique_ptr<libpressio_io_plugin>>& io_plugins();
 struct pressio {
   public:
 
+  pressio() {
+      pressio_register_all();
+  }
   /**
    * sets an error code and message
    * \param[in] code non-zero represents an error
@@ -56,14 +73,14 @@ struct pressio {
    * \param[in] compressor_id name of the compressor to request
    * \returns an instance of compressor registered at name, or nullptr on error
    */
-  std::shared_ptr<libpressio_compressor_plugin> get_compressor(std::string const& compressor_id);
+  std::shared_ptr<libpressio::compressors::libpressio_compressor_plugin> get_compressor(std::string const& compressor_id);
 
   /**
    * Returns an io module
    * \param[in] io_module_id name of the compressor to request
    * \returns an instance of compressor registered at name, or nullptr on error
    */
-  std::shared_ptr<libpressio_io_plugin> get_io(std::string const& io_module_id);
+  std::shared_ptr<libpressio::io::libpressio_io_plugin> get_io(std::string const& io_module_id);
   
 
   /**
@@ -72,8 +89,8 @@ struct pressio {
    * \returns an instance of compressor registered at name, or nullptr on error
    */
   template <class Str>
-  std::unique_ptr<libpressio_metrics_plugin> get_metric(Str id) {
-    auto ret = metrics_plugins().build(id);
+  std::unique_ptr<libpressio::metrics::libpressio_metrics_plugin> get_metric(Str id) {
+    auto ret = libpressio::metrics_plugins().build(id);
     if(!ret) {
         set_error(2, std::string("failed to construct metrics plugin: ") + id);
         return nullptr;
@@ -88,18 +105,18 @@ struct pressio {
    * \returns an instance of a metrics module regsitered at a name wrapping it in a composite if nessisary
    */
   template <class ForwardIt>
-  std::unique_ptr<libpressio_metrics_plugin> get_metrics(ForwardIt first, ForwardIt last) {
+  std::unique_ptr<libpressio::metrics::libpressio_metrics_plugin> get_metrics(ForwardIt first, ForwardIt last) {
     std::vector<pressio_metrics> plugins;
 
     for (auto metric = first; metric != last; ++metric) {
-      plugins.emplace_back(metrics_plugins().build(*metric));
+      plugins.emplace_back(libpressio::metrics_plugins().build(*metric));
       if(not plugins.back()) {
         set_error(2, std::string("failed to construct metrics plugin: ") + *metric);
         return nullptr;
       }
     }
 
-    auto metrics = make_m_composite(std::move(plugins));
+    auto metrics = libpressio::metrics::make_m_composite(std::move(plugins));
 
     if(metrics) return metrics;
     else {

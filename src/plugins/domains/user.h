@@ -23,9 +23,7 @@ extern "C" {
     void pressio_libc_memcpy_fn(void* dst, void* src, size_t n, void*);
 }
 
-namespace impl {
-}
-
+namespace libpressio { namespace domains {
 struct pressio_user_domain: public pressio_domain, std::enable_shared_from_this<pressio_user_domain> {
     pressio_user_domain(void (*deleter)(void*, void*), void* metadata=nullptr, std::vector<std::string> const& accessible={}):
         metadata_ptr(metadata),
@@ -110,4 +108,5 @@ struct pressio_user_domain: public pressio_domain, std::enable_shared_from_this<
     std::string user_prefix = "user";
     std::vector<std::string> accessible;
 };
+}}
 #endif /* end of include guard: PRESSIO_USER_DOMAIN_H */

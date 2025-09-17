@@ -8,7 +8,7 @@
 #include "pressio_compressor.h"
 
 
-namespace libpressio { namespace python_launch {
+namespace libpressio { namespace launch { namespace external_python_ns {
 
 namespace py = pybind11;
 using namespace py::literals;
@@ -100,8 +100,8 @@ extern_proc_results launch_impl(std::vector<std::string> const& full_command) co
   std::shared_ptr<libpressio_external_pybind_manager> pybind_singleton;
 };
 
-static pressio_register launch_spawn_plugin(launch_plugins(), "python", [](){
+pressio_register registration(launch_plugins(), "python", [](){
     return compat::make_unique<python_external_remote>(get_library());
 });
 
-}}
+}}}

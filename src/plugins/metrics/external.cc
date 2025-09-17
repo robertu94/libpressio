@@ -35,12 +35,20 @@
 #include "libpressio_ext/cpp/json.h"
 #endif
 
-pressio_registry<std::unique_ptr<libpressio_launch_plugin>>& launch_plugins() {
-  static pressio_registry<std::unique_ptr<libpressio_launch_plugin>> registry;
+namespace libpressio {
+pressio_registry<std::unique_ptr<launch::libpressio_launch_plugin>>& launch_plugins() {
+    static pressio_registry<std::unique_ptr<launch::libpressio_launch_plugin>> registry;
   return registry;
 }
+}
 
-namespace libpressio { namespace external_metrics {
+namespace libpressio { namespace metrics { namespace external_ns {
+
+using std::chrono::high_resolution_clock;
+using std::chrono::time_point;
+using std::chrono::duration;
+using std::chrono::duration_cast;
+using std::chrono::milliseconds;
 
 
 class external_metric_plugin : public libpressio_metrics_plugin {
@@ -170,6 +178,8 @@ class external_metric_plugin : public libpressio_metrics_plugin {
         parse_result(default_result, ret, true, get_name(), duration);
         return ret;
       }
+      set(results, "external:input_times", pressio_data(input_times.begin(), input_times.end()));
+      set(results, "external:output_times", pressio_data(output_times.begin(), output_times.end()));
       return results;
     }
 
@@ -286,6 +296,8 @@ class external_metric_plugin : public libpressio_metrics_plugin {
     }
 
     void run_external(compat::span<const pressio_data* const> const& input_data, compat::span<const pressio_data* const> const& decompressed_data) {
+      input_times.clear();
+      output_times.clear();
       std::vector<int> fds;
       std::vector<std::pair<std::string,std::string>> filenames;
       auto get_or = [](std::vector<std::string> const& array, size_t index) -> compat::optional<std::string> {
@@ -311,8 +323,11 @@ class external_metric_plugin : public libpressio_metrics_plugin {
           input_fd_name = resolved_input;
           free(resolved_input);
           if(write_inputs) {
+              auto begin = high_resolution_clock::now();
               get(io_modules,i)->set_options({{"io:path", std::string(input_fd_name)}});
               get(io_modules,i)->write(input_data[i]);
+              auto end = high_resolution_clock::now();
+              input_times.emplace_back(duration_cast<std::chrono::duration<double, std::milli>>(end-begin).count());
           }
 
           //write decompressed data to a temporary file
@@ -322,8 +337,11 @@ class external_metric_plugin : public libpressio_metrics_plugin {
           output_fd_name = resolved_output;
           free(resolved_output);
           if(write_outputs) {
+              auto begin = high_resolution_clock::now();
               get(io_modules,i)->set_options({{"io:path", std::string(output_fd_name)}});
               get(io_modules,i)->write(decompressed_data[i]);
+              auto end = high_resolution_clock::now();
+              output_times.emplace_back(duration_cast<std::chrono::duration<double, std::milli>>(end-begin).count());
           }
 
           filenames.emplace_back(input_fd_name, output_fd_name);
@@ -380,10 +398,12 @@ class external_metric_plugin : public libpressio_metrics_plugin {
 		int write_inputs = 1;
 		int write_outputs = 1;
     double duration = 0.0;
-    std::vector<pressio_io> io_modules = {std::shared_ptr<libpressio_io_plugin>(io_plugins().build("posix"))};
+    std::vector<pressio_io> io_modules = {std::shared_ptr<libpressio::io::libpressio_io_plugin>(io_plugins().build("posix"))};
+    std::vector<double> input_times, output_times;
+    
 
 };
 
 
-static pressio_register metrics_external_plugin(metrics_plugins(), "external", [](){ return compat::make_unique<external_metric_plugin>(); });
-} }
+pressio_register registration(metrics_plugins(), "external", [](){ return compat::make_unique<external_metric_plugin>(); });
+} }}

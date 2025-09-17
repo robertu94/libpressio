@@ -80,7 +80,7 @@ namespace {
             else return {};
         case pressio_option_data_type:
             if (allow_special(safety)) {
-              auto ret = pressio_data::owning(pressio_dtype_from_type<From>(), {1});
+              auto ret = pressio_data::owning(libpressio::pressio_dtype_from_type<From>(), {1});
               *static_cast<From*>(ret.data()) = d;
               return ret;
             }

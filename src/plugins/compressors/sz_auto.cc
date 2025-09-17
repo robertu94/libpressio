@@ -12,7 +12,7 @@
 #include "pressio_compressor.h"
 #include "std_compat/memory.h"
 
-namespace libpressio { namespace sz_auto {
+namespace libpressio { namespace compressor { namespace sz_auto {
 
 class sz_auto_plugin: public libpressio_compressor_plugin {
   public:
@@ -170,6 +170,6 @@ class sz_auto_plugin: public libpressio_compressor_plugin {
     float sample_ratio = 0.05;
 };
 
-static pressio_register compressor_sz_auto_plugin(compressor_plugins(), "SZauto", [](){return compat::make_unique<sz_auto_plugin>(); });
+pressio_register registration(compressor_plugins(), "SZauto", [](){return compat::make_unique<sz_auto_plugin>(); });
 
-} }
+} } }

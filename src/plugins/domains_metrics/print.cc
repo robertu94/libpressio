@@ -5,7 +5,9 @@
 #include <libpressio_ext/cpp/printers.h>
 #include <libpressio_ext/cpp/domain_manager.h>
 
-namespace libpressio { namespace domain_metrics { namespace print {
+namespace libpressio { namespace domains_metrics { namespace print_ns {
+
+    using libpressio::domains::pressio_domain;
 
 std::string prefix_or_name(pressio_domain const& d) {
     std::stringstream ss;
@@ -24,7 +26,7 @@ std::string prefix_or_name(pressio_domain const& d) {
     }
     return ss.str();
 }
-std::string prefix_or_name(std::shared_ptr<const pressio_domain> const& d) {
+std::string prefix_or_name(std::shared_ptr<const libpressio::domains::pressio_domain> const& d) {
     if(d == nullptr) return "{moved}";
     else return prefix_or_name(*d);
 }
@@ -119,7 +121,7 @@ struct print_plugin: public pressio_domain_manager_metrics_plugin {
         std::cout << "writeable_end(" << prefix_or_name(dst) << "<-" << prefix_or_name(src.domain()) << ')' << writeable << std::endl;
     };
 
-    domain_options get_metrics_results() override {
+    libpressio::domains::domain_options get_metrics_results() override {
         domain_options opts;
         set(opts, get_name(), "print:alloc", alloc.elapsed().count());
         set(opts, get_name(), "print:view", view.elapsed().count());
@@ -141,5 +143,5 @@ struct print_plugin: public pressio_domain_manager_metrics_plugin {
 
 };
 
-pressio_register X(domain_metrics_plugins(), "print", []{ return std::make_unique<print_plugin>();} );
+pressio_register registration(domain_metrics_plugins(), "print", []{ return std::make_unique<print_plugin>();} );
 }}}

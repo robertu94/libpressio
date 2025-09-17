@@ -15,7 +15,7 @@
 #include <std_compat/span.h>
 #include "basic_indexer.h"
 
-namespace libpressio { namespace roibin_ns {
+namespace libpressio { namespace compressors { namespace roibin_ns {
 
     using namespace utilities;
 
@@ -738,6 +738,6 @@ indexer<N> to_binned_index(indexer<N> const& dims, indexer<N> const& bins) {
   return indexer<N>{binned_storage};
 }
 
-}}
+}}}
 
 #endif 

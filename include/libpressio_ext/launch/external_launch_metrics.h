@@ -10,36 +10,43 @@
  * \brief interface for gathering metrics from launches
  */
 
+namespace libpressio { 
+    namespace launch {
+    /**
+     * error codes for extern_proc_results
+     */
+    enum extern_proc_error_codes {
+      /**the launch was successful */
+      success=0, 
+      /** there was a failure to create the pipe */
+      pipe_error=1, 
+      /** there was a failure to fork process */
+      fork_error=2,
+      /** there was a failure to exec the process */
+      exec_error=3,
+      /** there was a failure parsing the format */
+      format_error=4
+    };
 
-/**
- * error codes for extern_proc_results
- */
-enum extern_proc_error_codes {
-  /**the launch was successful */
-  success=0, 
-  /** there was a failure to create the pipe */
-  pipe_error=1, 
-  /** there was a failure to fork process */
-  fork_error=2,
-  /** there was a failure to exec the process */
-  exec_error=3,
-  /** there was a failure parsing the format */
-  format_error=4
-};
+    /**
+     * results from launching a process
+     */
+    struct extern_proc_results {
+      /** stdout from the command */
+      std::string proc_stdout; 
+      /** stderr from the command */
+      std::string proc_stderr;
+      /** the return code from the external process */
+      int return_code = 0; 
+      /** used to report errors with run_command */
+      int error_code = success;
+    };
 
-/**
- * results from launching a process
- */
-struct extern_proc_results {
-  /** stdout from the command */
-  std::string proc_stdout; 
-  /** stderr from the command */
-  std::string proc_stderr;
-  /** the return code from the external process */
-  int return_code = 0; 
-  /** used to report errors with run_command */
-  int error_code = success;
-};
+    }
+
+    namespace launch_metrics {
+        using libpressio::launch::extern_proc_results;
+        using libpressio::launch::extern_proc_error_codes;
 
 /**
  * plugin base for gathering metrics on a launch plugin
@@ -62,7 +69,7 @@ struct libpressio_launch_metrics_plugin : public pressio_configurable {
   /**
    * call back at the end of a luanch
    */
-  virtual void launch_end(std::vector<std::string> const&, extern_proc_results const&) const {
+  virtual void launch_end(std::vector<std::string> const&, libpressio::launch::extern_proc_results const&) const {
       return;
   }
   /**
@@ -77,6 +84,10 @@ struct libpressio_launch_metrics_plugin : public pressio_configurable {
 	  return "launchmetric";
   }
 };
+}
+pressio_registry<std::unique_ptr<launch_metrics::libpressio_launch_metrics_plugin>>& launch_metrics_plugins();
+
+}
 
 /**
  * wrapper for launching processes
@@ -93,7 +104,7 @@ struct pressio_launcher_metrics {
    *
    * \param[in] ptr the pointer to move from
    */
-  pressio_launcher_metrics(std::unique_ptr<libpressio_launch_metrics_plugin>&& ptr): plugin(std::move(ptr)) {}
+  pressio_launcher_metrics(std::unique_ptr<libpressio::launch_metrics::libpressio_launch_metrics_plugin>&& ptr): plugin(std::move(ptr)) {}
 
   /**
    * launch methods are copy constructible and have the effect of cloning the plugin
@@ -126,23 +137,21 @@ struct pressio_launcher_metrics {
   /**
    * pressio_launcher are dereference-able
    */
-  libpressio_launch_metrics_plugin& operator*() const noexcept {
+  libpressio::launch_metrics::libpressio_launch_metrics_plugin& operator*() const noexcept {
     return *plugin;
   }
 
   /**
    * pressio_launcher are dereference-able
    */
-  libpressio_launch_metrics_plugin* operator->() const noexcept {
+  libpressio::launch_metrics::libpressio_launch_metrics_plugin* operator->() const noexcept {
     return plugin.get();
   }
 
   /**
    * the underlying plugin
    */
-  std::unique_ptr<libpressio_launch_metrics_plugin> plugin;
+  std::unique_ptr<libpressio::launch_metrics::libpressio_launch_metrics_plugin> plugin;
 };
-
-pressio_registry<std::unique_ptr<libpressio_launch_metrics_plugin>>& launch_metrics_plugins();
 
 #endif /* end of include guard: EXTERNAL_LAUNCH_METRICS_H_DPRI7MVH */

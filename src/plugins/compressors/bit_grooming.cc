@@ -16,7 +16,8 @@
 #define INVALID_TYPE -1
 
 namespace libpressio {
-namespace bitgroomimg {
+namespace compressors {
+namespace bit_grooming_ns {
 
 namespace {
 struct bg_iless {
@@ -193,8 +194,9 @@ private:
   int num_sig_decimals = 5;
 };
 
-static pressio_register compressor_bit_grooming_plugin(compressor_plugins(), "bit_grooming", []() {
+pressio_register registration(compressor_plugins(), "bit_grooming", []() {
   return compat::make_unique<bit_grooming_plugin>();
 });
 } // namespace bitgroomimg
+} // namespace compressors
 } // namespace libpressio

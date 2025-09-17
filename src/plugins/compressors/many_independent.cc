@@ -19,8 +19,9 @@
 #include <vector>
 #include <mpi.h>
 
-namespace libpressio { namespace  many_independent {
+namespace libpressio { namespace compressors { namespace  many_independent_ns {
   
+    using namespace libpressio::distributed;
 
 class many_independent_compressor_plugin : public libpressio_compressor_plugin {
 public:
@@ -161,7 +162,7 @@ private:
     int status = 0;
     status = manager.work_queue(
         std::begin(indicies), std::end(indicies),
-        [this, &inputs, &outputs, &action](request_t request, distributed::queue::TaskManager<request_t, MPI_Comm>& task_manager) {
+        [this, &inputs, &outputs, &action](request_t request, ::distributed::queue::TaskManager<request_t, MPI_Comm>& task_manager) {
           //setup the work groups
           int idx = std::get<0>(request);
           auto input_data = subgroups.get_input_group(inputs, idx);
@@ -233,8 +234,8 @@ private:
   int bcast_outputs = 1;
 };
 
-static pressio_register compressor_many_fields_plugin(compressor_plugins(), "many_independent", []() {
+pressio_register registration(compressor_plugins(), "many_independent", []() {
   return compat::make_unique<many_independent_compressor_plugin>();
 });
 
-} }
+} }}

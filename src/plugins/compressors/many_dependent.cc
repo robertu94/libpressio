@@ -17,7 +17,8 @@
 #include "libpressio_ext/cpp/distributed_manager.h"
 #include <mpi.h>
 
-namespace libpressio { namespace many_dependent_compressor {
+namespace libpressio { namespace compressors { namespace many_dependent_ns {
+    using namespace libpressio::distributed;
 
 class many_dependent_compressor_plugin : public libpressio_compressor_plugin {
 public:
@@ -94,7 +95,7 @@ public:
   int compress_many_impl(compat::span<const pressio_data* const> const& inputs, compat::span<pressio_data*> & outputs) override {
     using request_t = std::tuple<int, pressio_options>; //index, metrics
     using response_t = std::tuple<int, pressio_options, std::vector<pressio_data>, int, std::string>; //index, metrics, compressed, error code, error_message
-    using distributed::queue::TaskManager;
+    using ::distributed::queue::TaskManager;
     std::vector<request_t> requests;
     requests.emplace_back(
       0,
@@ -111,7 +112,7 @@ public:
     int ret = 0;
     ret = manager.work_queue(
         std::begin(requests), std::end(requests),
-        [&inputs, &outputs, this](request_t request, distributed::queue::TaskManager<request_t, MPI_Comm>& task_manager) {
+        [&inputs, &outputs, this](request_t request, ::distributed::queue::TaskManager<request_t, MPI_Comm>& task_manager) {
 
           std::vector<pressio_data> output_data;
           auto index = std::get<0>(request);
@@ -283,8 +284,8 @@ private:
   std::string compressor_id = "noop";
 };
 
-static pressio_register
-    compressor_many_timesteps_plugin(compressor_plugins(), "many_dependent", []() {
+pressio_register
+    registration(compressor_plugins(), "many_dependent", []() {
       return compat::make_unique<many_dependent_compressor_plugin>();
     });
-} }
+} }}

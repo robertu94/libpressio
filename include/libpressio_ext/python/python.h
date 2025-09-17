@@ -7,7 +7,7 @@
  * \brief header to ensure that python is only initialized once by libpressio projects
  */
 
-namespace libpressio { namespace python_launch {
+namespace libpressio { namespace launch { namespace external_python_ns {
 
 /**
  * struct that manages pybind initialization for LibPressio
@@ -22,6 +22,6 @@ struct libpressio_external_pybind_manager;
  */
 std::shared_ptr<libpressio_external_pybind_manager> get_library();
 
-} }
+} } }
 
 #endif /* end of include guard: LIBPRESSIO_EXT_PYTHON */

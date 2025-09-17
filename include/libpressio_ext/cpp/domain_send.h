@@ -3,7 +3,10 @@
 
 #include <memory>
 #include <libpressio_ext/cpp/registry.h>
+
 struct pressio_data;
+
+namespace libpressio { namespace domains {
 
 struct pressio_domain_send {
     pressio_domain_send()=default;
@@ -11,7 +14,8 @@ struct pressio_domain_send {
 
     virtual void send(pressio_data& dst, pressio_data const& src) const = 0;
 };
-
-pressio_registry<std::unique_ptr<pressio_domain_send>>& domain_send_plugins();
+}
+pressio_registry<std::unique_ptr<domains::pressio_domain_send>>& domain_send_plugins();
+}
 
 #endif /* end of include guard: LIBPRESSIO_DOMAIN_SEND_H */

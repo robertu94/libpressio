@@ -1,11 +1,15 @@
 #include "external_parse.h"
 #include "pressio_version.h"
+#include "libpressio_ext/cpp/options.h"
 #include <sstream>
 
 #if LIBPRESSIO_HAS_JSON
 #include <nlohmann/json.hpp>
 #include "libpressio_ext/cpp/json.h"
 #endif
+
+namespace libpressio { namespace launch {
+
 
     //returns the version number parsed, starts at 1, zero means error
     static std::string api_version_number(std::istringstream& stdout_stream)  {
@@ -124,3 +128,4 @@
       return 0;
     }
 
+} }

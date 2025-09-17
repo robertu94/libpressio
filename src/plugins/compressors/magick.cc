@@ -17,7 +17,7 @@
 #include "pressio_version.h"
 #include "std_compat/memory.h"
 
-namespace libpressio { namespace magick{
+namespace libpressio { namespace compressors { namespace magick_ns{
 
 std::mutex magick_init_lock;
 
@@ -337,10 +337,10 @@ class magick_plugin: public libpressio_compressor_plugin {
   unsigned int quality = 100;
   std::string samples_magick = "G";
   std::string compressed_magick = "JPEG";
-  std::shared_ptr<magick::magick_init> init;
+  std::shared_ptr<magick_ns::magick_init> init;
 };
 
-static pressio_register comprssor_magick_plugin(compressor_plugins(), "magick", [](){
-    return std::make_shared<magick_plugin>(magick::magick_init::get_library()); 
+pressio_register registration(compressor_plugins(), "magick", [](){
+    return std::make_shared<magick_plugin>(magick_ns::magick_init::get_library()); 
 });
-} }
+} }}

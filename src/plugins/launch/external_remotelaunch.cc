@@ -6,6 +6,7 @@
 #include <curl/curl.h>
 #include <curl/easy.h>
 
+namespace libpressio { namespace launch { namespace external_remotelaunch_ns {
 static size_t write_to_std_string(char* txt, size_t size, size_t nelms, void* user_data) {
   std::string* user_str = reinterpret_cast<std::string*>(user_data);
   user_str->append(txt, size*nelms);
@@ -137,8 +138,9 @@ extern_proc_results launch_impl(std::vector<std::string> const& full_command) co
   std::shared_ptr<libpressio_external_curl_manager> curl_singleton;
 };
 
-static pressio_register launch_spawn_plugin(launch_plugins(), "remote", [](){
+pressio_register registration(launch_plugins(), "remote", [](){
     return compat::make_unique<external_remote>(
         libpressio_external_curl_manager::get_library()
         );
 });
+}}}

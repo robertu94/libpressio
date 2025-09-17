@@ -9,7 +9,7 @@
 #include "libpressio_ext/cpp/domain_manager.h"
 #include <cmath>
 
-namespace libpressio { namespace gradlength_metrics_ns {
+namespace libpressio { namespace metrics { namespace gradlength_metrics_ns {
 #define QCAT_FLOAT 0
 #define QCAT_DOUBLE 1
 #define QCAT_INT32 2
@@ -660,6 +660,6 @@ class gradlength_plugin : public libpressio_metrics_plugin {
 
 };
 
-static pressio_register metrics_gradlength_plugin(metrics_plugins(), "gradlength", [](){ return compat::make_unique<gradlength_plugin>(); });
+pressio_register registration(metrics_plugins(), "gradlength", [](){ return compat::make_unique<gradlength_plugin>(); });
 }}
-
+}

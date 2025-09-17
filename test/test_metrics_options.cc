@@ -11,7 +11,7 @@
 #include "std_compat/memory.h"
 #include "make_input_data.h"
 
-class hasoptoins_metric : public libpressio_metrics_plugin
+class hasoptoins_metric : public libpressio::metrics::libpressio_metrics_plugin
 {
 public:
   
@@ -34,7 +34,7 @@ public:
   pressio_options get_metrics_results(pressio_options const &options)  override {
     return {};
   }
-  std::unique_ptr<libpressio_metrics_plugin> clone() override {
+  std::unique_ptr<libpressio::metrics::libpressio_metrics_plugin> clone() override {
     return compat::make_unique<hasoptoins_metric>(*this);
   }
 
@@ -46,7 +46,7 @@ public:
 };
 
 //register the plugin in the under the names counts
-static pressio_register X(metrics_plugins(), "hasoptions", []() {
+static libpressio::pressio_register registration(libpressio::metrics_plugins(), "hasoptions", []() {
   return compat::make_unique<hasoptoins_metric>();
 });
 

@@ -10,7 +10,7 @@
 #include "cleanup.h"
 #include <matio.h>
 
-namespace libpressio { namespace matio_io_ns {
+namespace libpressio { namespace io { namespace matio_ns {
 
     pressio_dtype to_pressio_dtype(matio_types type) {
         switch(type) {
@@ -174,6 +174,5 @@ class matio_plugin : public libpressio_io_plugin {
   std::string varname;
 };
 
-static pressio_register io_matio_plugin(io_plugins(), "matio", [](){ return compat::make_unique<matio_plugin>(); });
-}}
-
+pressio_register registration(io_plugins(), "matio", [](){ return compat::make_unique<matio_plugin>(); });
+}}}

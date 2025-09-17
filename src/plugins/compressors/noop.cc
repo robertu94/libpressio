@@ -10,7 +10,7 @@
 #include "libpressio_ext/cpp/options.h"
 #include "std_compat/memory.h"
 
-namespace libpressio { namespace noop_compressor {
+namespace libpressio { namespace compressors { namespace noop_ns {
 
 class noop_compressor_plugin: public libpressio_compressor_plugin {
   public:
@@ -91,6 +91,6 @@ class noop_compressor_plugin: public libpressio_compressor_plugin {
   }
 };
 
-static pressio_register comprssor_noop_plugin(compressor_plugins(), "noop", [](){ return compat::make_unique<noop_compressor_plugin>();});
+pressio_register registration(compressor_plugins(), "noop", [](){ return compat::make_unique<noop_compressor_plugin>();});
 
-} }
+} }}

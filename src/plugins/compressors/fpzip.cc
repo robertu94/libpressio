@@ -13,7 +13,7 @@
 #include "libpressio_ext/cpp/pressio.h"
 #include "std_compat/memory.h"
 
-namespace  libpressio { namespace fpzip { 
+namespace  libpressio { namespace compressors { namespace fpzip_ns { 
 namespace {
   constexpr int INVALID_TYPE = 8;
 }
@@ -207,5 +207,5 @@ class fpzip_plugin: public libpressio_compressor_plugin {
 
 };
 
-static pressio_register compressor_fpzip_plugin(compressor_plugins(), "fpzip", [](){ return std::make_unique<fpzip_plugin>(); });
-} }
+pressio_register registration(compressor_plugins(), "fpzip", [](){ return std::make_unique<fpzip_plugin>(); });
+} }}

@@ -11,7 +11,7 @@
 #include "std_compat/algorithm.h"
 #include "libpressio_ext/cpp/domain_manager.h"
 
-namespace libpressio {
+namespace libpressio { namespace metrics {
   namespace kth_error {
   struct kth_error{
     template <class ForwardIt1, class ForwardIt2>
@@ -113,8 +113,8 @@ private:
   double k = .5;
 };
 
-static pressio_register metrics_kth_error_plugin(metrics_plugins(), "kth_error", []() {
+pressio_register registration(metrics_plugins(), "kth_error", []() {
   return compat::make_unique<kth_error_plugin>();
 });
 }
-}
+}}

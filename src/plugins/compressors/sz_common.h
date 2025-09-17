@@ -4,7 +4,6 @@
 
 
 #include <memory>
-#include <string>
 #include <std_compat/shared_mutex.h>
 #include <std_compat/mutex.h>
 #include <pressio_dtype.h>
@@ -16,7 +15,7 @@
    (SZ_VER_MAJOR == major && SZ_VER_MINOR == minor && SZ_VER_BUILD > build) || \
    (SZ_VER_MAJOR == major && SZ_VER_MINOR == minor && SZ_VER_BUILD == build && SZ_VER_REVISION >= revision))
 
-namespace libpressio {
+namespace libpressio { namespace compressors { namespace sz_common {
 int libpressio_type_to_sz_type(pressio_dtype type);
 
 struct sz_init_handle {
@@ -32,5 +31,5 @@ struct sz_init_handle {
 };
 
 std::shared_ptr<sz_init_handle> pressio_get_sz_init_handle();
-}
-#endif /* end of include guard: LIBPRESSIO_SZ_COMMON_H_QC5YZGML */
+} } }
+#endif /* end of include guard: LIBPRESSIO_SZ_OMMON_H_QC5YZGML */

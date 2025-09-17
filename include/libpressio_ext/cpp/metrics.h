@@ -14,6 +14,7 @@ struct pressio_data;
  * \brief an extension header for adding metrics plugins to libpressio
  */
 
+namespace libpressio { namespace metrics {
 /**
  * plugin to collect metrics about compressors
  */
@@ -294,6 +295,8 @@ protected:
 
 //  virtual pressio_options get_metrics_results_impl(pressio_options const &options)=0;
 };
+ 
+}}
 
 /**
  * C compatible pointer to metrics_plugins
@@ -301,9 +304,9 @@ protected:
 struct pressio_metrics {
 
   /** construct a metrics wrapper*/
-  pressio_metrics(std::unique_ptr<libpressio_metrics_plugin>&& metrics): plugin(std::move(metrics)) {}
+  pressio_metrics(std::unique_ptr<libpressio::metrics::libpressio_metrics_plugin>&& metrics): plugin(std::move(metrics)) {}
   /** construct a metrics wrapper*/
-  pressio_metrics(std::shared_ptr<libpressio_metrics_plugin>&& metrics): plugin(std::move(metrics)) {}
+  pressio_metrics(std::shared_ptr<libpressio::metrics::libpressio_metrics_plugin>&& metrics): plugin(std::move(metrics)) {}
 
   /** allow default construction*/
   pressio_metrics()=default;
@@ -330,20 +333,22 @@ struct pressio_metrics {
 
 
   /** allow access to underlying plugin*/
-  libpressio_metrics_plugin* operator->() const noexcept {return plugin.get();}
+  libpressio::metrics::libpressio_metrics_plugin* operator->() const noexcept {return plugin.get();}
   /** allow access to underlying plugin*/
-  libpressio_metrics_plugin& operator*() const noexcept {return *plugin;}
+  libpressio::metrics::libpressio_metrics_plugin& operator*() const noexcept {return *plugin;}
   /** returns true if the pointer is not nullptr */
   operator bool() const { return plugin.get() != nullptr; }
 
   private:
-  std::shared_ptr<libpressio_metrics_plugin> plugin;
+  std::shared_ptr<libpressio::metrics::libpressio_metrics_plugin> plugin;
 };
 
+namespace libpressio { namespace metrics {
 /**
  * returns a composite metrics plugin from a vector of metrics_plugins
  */
 std::unique_ptr<libpressio_metrics_plugin> make_m_composite(std::vector<pressio_metrics>&& plugins); 
+}}
 
 
 #endif

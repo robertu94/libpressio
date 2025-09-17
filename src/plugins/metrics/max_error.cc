@@ -9,7 +9,7 @@
 #include "std_compat/optional.h"
 #include <cmath>
 
-namespace libpressio { namespace max_error_metrics_ns {
+namespace libpressio { namespace metrics { namespace max_error_metrics_ns {
 
 class max_error_plugin : public libpressio_metrics_plugin {
     struct max_error_info {
@@ -89,5 +89,5 @@ class max_error_plugin : public libpressio_metrics_plugin {
   compat::optional<max_error_info> errors = compat::nullopt;
 };
 
-static pressio_register metrics_max_error_plugin(metrics_plugins(), "max_error", [](){ return compat::make_unique<max_error_plugin>(); });
-}}
+pressio_register registration(metrics_plugins(), "max_error", [](){ return compat::make_unique<max_error_plugin>(); });
+}}}

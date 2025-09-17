@@ -12,7 +12,7 @@
 #include "pressio_posix.h"
 #include "cleanup.h"
 
-namespace libpressio { namespace grib_io_ns {
+namespace libpressio { namespace io { namespace grib_ns {
 
 class grib_plugin : public libpressio_io_plugin {
   public:
@@ -173,6 +173,6 @@ class grib_plugin : public libpressio_io_plugin {
     std::string namespace_id;
 };
 
-static pressio_register io_grib_plugin(io_plugins(), "grib", [](){ return compat::make_unique<grib_plugin>(); });
-}}
+pressio_register registration(io_plugins(), "grib", [](){ return compat::make_unique<grib_plugin>(); });
+}}}
 

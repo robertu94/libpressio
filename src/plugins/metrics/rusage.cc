@@ -7,7 +7,8 @@
 #include <sys/resource.h>
 
 namespace libpressio {
-namespace memory_metrics{
+namespace metrics {
+namespace rusage_ns {
   struct memory_range{
     uint64_t begin = 0;
     uint64_t end = 0;
@@ -24,103 +25,103 @@ class memory_plugin : public libpressio_metrics_plugin {
   public:
 
   int begin_check_options_impl(struct pressio_options const* ) override {
-    check_options = memory_metrics::memory_range();
-    check_options->begin = memory_metrics::now();
+    check_options = memory_range();
+    check_options->begin = now();
     return 0;
   }
 
   int end_check_options_impl(struct pressio_options const*, int ) override {
-    check_options->end = memory_metrics::now();
+    check_options->end = now();
     return 0;
   }
 
   int begin_get_options_impl() override {
-    get_options = memory_metrics::memory_range();
-    get_options->begin = memory_metrics::now();
+    get_options = memory_range();
+    get_options->begin = now();
     return 0;
   }
 
   int end_get_options_impl(struct pressio_options const* ) override {
-    get_options->end = memory_metrics::now();
+    get_options->end = now();
     return 0;
   }
 
   int begin_get_configuration_impl() override {
-    get_configuration_tracker = memory_metrics::memory_range();
-    get_configuration_tracker->begin = memory_metrics::now();
+    get_configuration_tracker = memory_range();
+    get_configuration_tracker->begin = now();
     return 0;
   }
 
   int end_get_configuration_impl(struct pressio_options const& ) override {
-    get_configuration_tracker->end = memory_metrics::now();
+    get_configuration_tracker->end = now();
     return 0;
   }
 
 
   int begin_set_options_impl(struct pressio_options const& ) override {
-    set_options = memory_metrics::memory_range();
-    set_options->begin = memory_metrics::now();
+    set_options = memory_range();
+    set_options->begin = now();
     return 0;
   }
 
   int end_set_options_impl(struct pressio_options const& , int ) override {
-    set_options->end = memory_metrics::now();
+    set_options->end = now();
     return 0;
   }
 
   int begin_compress_impl(const struct pressio_data * , struct pressio_data const * ) override {
-    compress = memory_metrics::memory_range();
-    compress->begin = memory_metrics::now();
+    compress = memory_range();
+    compress->begin = now();
     return 0;
   }
 
   int end_compress_impl(struct pressio_data const* , pressio_data const * , int ) override {
-    compress->end = memory_metrics::now();
+    compress->end = now();
     return 0;
   }
 
   int begin_decompress_impl(struct pressio_data const* , pressio_data const* ) override {
-    decompress = memory_metrics::memory_range();
-    decompress->begin = memory_metrics::now();
+    decompress = memory_range();
+    decompress->begin = now();
     return 0;
   }
 
   int end_decompress_impl(struct pressio_data const* , pressio_data const* , int ) override {
-    decompress->end = memory_metrics::now();
+    decompress->end = now();
     return 0;
   }
 
   int begin_compress_many_impl(compat::span<const pressio_data* const> const&,
                                    compat::span<const pressio_data* const> const&) override {
-    compress_many = memory_metrics::memory_range();
-    compress_many->begin = memory_metrics::now();
+    compress_many = memory_range();
+    compress_many->begin = now();
     return 0;
   }
 
   int end_compress_many_impl(compat::span<const pressio_data* const> const& ,
                                    compat::span<const pressio_data* const> const& , int ) override {
-    compress_many->end = memory_metrics::now();
+    compress_many->end = now();
     return 0;
    
   }
 
   int begin_decompress_many_impl(compat::span<const pressio_data* const> const& ,
                                    compat::span<const pressio_data* const> const& ) override {
-    decompress_many = memory_metrics::memory_range();
-    decompress_many->begin = memory_metrics::now();
+    decompress_many = memory_range();
+    decompress_many->begin = now();
     return 0;
   }
 
   int end_decompress_many_impl(compat::span<const pressio_data* const> const& ,
                                    compat::span<const pressio_data* const> const& , int ) override {
-    decompress_many->end = memory_metrics::now();
+    decompress_many->end = now();
     return 0;
   }
 
   struct pressio_options get_metrics_results(pressio_options const&) override {
     struct pressio_options opt;
 
-    auto set_or = [&opt, this](const char* key, memory_metrics::tracker memory) {
+    auto set_or = [&opt, this](const char* key, tracker memory) {
       if(memory) {
         this->set(opt, key, memory->used());
       } else {
@@ -173,17 +174,17 @@ class memory_plugin : public libpressio_metrics_plugin {
   }
 
   private:
-  memory_metrics::tracker check_options;
-  memory_metrics::tracker set_options;
-  memory_metrics::tracker get_options;
-  memory_metrics::tracker get_configuration_tracker;
-  memory_metrics::tracker compress;
-  memory_metrics::tracker compress_many;
-  memory_metrics::tracker decompress;
-  memory_metrics::tracker decompress_many;
+  tracker check_options;
+  tracker set_options;
+  tracker get_options;
+  tracker get_configuration_tracker;
+  tracker compress;
+  tracker compress_many;
+  tracker decompress;
+  tracker decompress_many;
 };
 
-static pressio_register metrics_memory_plugin(metrics_plugins(), "memory", [](){ return compat::make_unique<memory_plugin>(); });
+pressio_register registration(metrics_plugins(), "memory", [](){ return compat::make_unique<memory_plugin>(); });
 
 }
-}
+}}

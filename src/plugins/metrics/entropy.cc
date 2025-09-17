@@ -12,7 +12,7 @@
 #include <map>
 #include <cmath>
 
-namespace libpressio {
+namespace libpressio { namespace metrics {
 namespace entropy {
   struct compute_metrics{
     template <class ForwardIt1>
@@ -97,7 +97,7 @@ private:
   compat::optional<double> dec_entropy;
 };
 
-static pressio_register metrics_entropy_plugin(metrics_plugins(), "entropy", []() {
+pressio_register registration(metrics_plugins(), "entropy", []() {
   return compat::make_unique<entropy_plugin>();
 });
-}}
+}}}

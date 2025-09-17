@@ -4,7 +4,7 @@
 #include <iomanip>
 
 
-namespace libpressio { namespace launch_metrics_print {
+namespace libpressio { namespace launch_metrics { namespace print_ns {
 struct libpressio_launch_metrics_print_plugin : public libpressio_launch_metrics_plugin {
   virtual void launch_begin(std::vector<std::string> const& args) const {
       std::cout << "launch_begin ";
@@ -38,7 +38,7 @@ struct libpressio_launch_metrics_print_plugin : public libpressio_launch_metrics
   }
 };
 
-static pressio_register launch_metrics_print_plugin(launch_metrics_plugins(), "print", [](){ return compat::make_unique<libpressio_launch_metrics_print_plugin>();});
+pressio_register registration(launch_metrics_plugins(), "print", [](){ return compat::make_unique<libpressio_launch_metrics_print_plugin>();});
 
 }}
-
+}

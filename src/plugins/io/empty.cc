@@ -14,7 +14,7 @@
 #include "libpressio_ext/cpp/io.h"
 #include "std_compat/memory.h"
 
-namespace libpressio { namespace empty {
+namespace libpressio { namespace io { namespace empty_ns {
 
 namespace {
   struct zero {
@@ -78,7 +78,7 @@ struct empty_io : public libpressio_io_plugin
   private:
 };
 
-static pressio_register io_empty_plugin(io_plugins(), "empty",
+pressio_register registration(io_plugins(), "empty",
                           []() { return compat::make_unique<empty_io>(); });
 
-} }
+} } }

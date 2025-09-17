@@ -6,7 +6,7 @@
 #include "std_compat/memory.h"
 #include "libpressio_ext/cpp/libpressio.h"
 
-namespace libpressio { namespace lambda_fn_ns {
+namespace libpressio { namespace compressors { namespace lambda_fn_ns {
 
 enum class lambda_fn_event {
   compress,
@@ -419,8 +419,8 @@ private:
   int32_t on_compress=1, on_set_options=0;
 };
 
-static pressio_register compressor_many_fields_plugin(compressor_plugins(), "lambda_fn", []() {
+pressio_register registration(compressor_plugins(), "lambda_fn", []() {
   return compat::make_unique<lambda_fn_compressor_plugin>();
 });
 
-} }
+} }}

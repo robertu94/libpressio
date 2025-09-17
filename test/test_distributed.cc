@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <ostream>
 #include <libpressio_ext/cpp/distributed_manager.h>
+using namespace libpressio::distributed;
 
 using ret_type = compat::optional<std::vector<size_t>>;
 

@@ -4,7 +4,7 @@
 #include <std_compat/memory.h>
 #include <sstream>
 
-namespace  libpressio { namespace linear_quantizer {
+namespace  libpressio { namespace compressors { namespace linear_quantizer {
 
 struct linear_quantizer_step_finder {
   template <class T>
@@ -157,11 +157,11 @@ applies linear_quantizer encoding to prior to compression and reverses it post d
   pressio_compressor meta = compressor_plugins().build("noop");
 };
 
-static pressio_register linear_quantizer_register(
+pressio_register registration(
     compressor_plugins(),
     "linear_quantizer",
     []{
       return compat::make_unique<linear_quantizer>();
     }
     );
-} }
+} }}

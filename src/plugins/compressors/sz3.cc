@@ -10,7 +10,7 @@
 #include <SZ3/api/sz.hpp>
 
 
-namespace libpressio { namespace sz_interp_ns {
+namespace libpressio { namespace compressors { namespace sz3_ns {
 
 
 struct impl_compress{
@@ -19,8 +19,7 @@ struct impl_compress{
     config.N = static_cast<char>(reg_dims.size());
     config.num = std::accumulate(reg_dims.begin(), reg_dims.end(), (size_t) 1, compat::multiplies<>());
     config.blockSize = (config.N == 1 ? 128 : (config.N == 2 ? 16 : 6));
-    config.pred_dim = static_cast<unsigned char>(config.N);
-    config.stride = config.blockSize;
+    config.predDim = static_cast<unsigned char>(config.N);
     size_t outSize = 0;
     char *compressedData = SZ_compress(config, in_data, outSize);
     return pressio_data::move(
@@ -45,14 +44,14 @@ struct sz3_option_maps {
   std::map<std::string, SZ3::ALGO, iless> algo;
   std::map<std::string, SZ3::INTERP_ALGO, iless> interp_algo;
   sz3_option_maps() {
-    for (size_t i = 0; i < std::size(SZ3::EB_STR); ++i) {
-      error_bounds[SZ3::EB_STR[i]] = SZ3::EB_OPTIONS[i];
+    for (auto const& [eb_str, eb_val]: SZ3::EB_MAP) {
+      error_bounds[eb_str] = eb_val;
     }
-    for (size_t i = 0; i < std::size(SZ3::ALGO_STR); ++i) {
-      algo[SZ3::ALGO_STR[i]] = SZ3::ALGO_OPTIONS[i];
+    for (auto const& [algo_str, algo_val]: SZ3::ALGO_MAP) {
+      algo[algo_str] = algo_val;
     }
-    for (size_t i = 0; i < std::size(SZ3::INTERP_ALGO_STR); ++i) {
-      interp_algo[SZ3::INTERP_ALGO_STR[i]] = SZ3::INTERP_ALGO_OPTIONS[i];
+    for (auto const& [interp_str, interp_val]: SZ3::INTERP_ALGO_MAP) {
+      interp_algo[interp_str] = interp_val;
     }
   }
 };
@@ -70,7 +69,7 @@ std::vector<K> keys(std::map<K,V,Sort> const& map) {
   return k;
 }
 
-class sz3_compressor_plugin : public libpressio_compressor_plugin {
+class sz3_compressor_plugin : public libpressio::compressors::libpressio_compressor_plugin {
 public:
   sz3_compressor_plugin() {
     config.absErrorBound = 1e-6;
@@ -102,13 +101,10 @@ public:
     set(options, "sz3:regression", config.regression);
     set(options, "sz3:regression2", config.regression2);
     set(options, "sz3:openmp", config.openmp);
-    set(options, "sz3:lossless", config.lossless);
-    set(options, "sz3:encoder", config.encoder);
     set(options, "sz3:interp_algo", config.interpAlgo);
     set(options, "sz3:interp_direction", config.interpDirection);
     set(options, "sz3:quant_bin_size", config.quantbinCnt);
-    set(options, "sz3:stride", config.stride);
-    set(options, "sz3:pred_dim", config.pred_dim);
+    set(options, "sz3:pred_dim", config.predDim);
     set_type(options, "sz3:error_bound_mode_str", pressio_option_charptr_type);
     set_type(options, "sz3:intrep_algo_str", pressio_option_charptr_type);
     set_type(options, "sz3:algorithm_str", pressio_option_charptr_type);
@@ -199,13 +195,9 @@ public:
     get(options, "sz3:regression", &config.regression);
     get(options, "sz3:regression2", &config.regression2);
     get(options, "sz3:openmp", &config.openmp);
-    get(options, "sz3:lossless", &config.lossless);
-    get(options, "sz3:encoder", &config.encoder);
     get(options, "sz3:interp_algo", &config.interpAlgo);
     get(options, "sz3:interp_direction", &config.interpDirection);
     get(options, "sz3:quant_bin_size", &config.quantbinCnt);
-    get(options, "sz3:stride", &config.stride);
-    get(options, "sz3:pred_dim", &config.pred_dim);
     std::string tmp;
     try {
       if(get(options, "sz3:error_bound_mode_str", &tmp) == pressio_options_key_set) {
@@ -344,8 +336,8 @@ public:
   SZ3::Config config{};
 };
 
-static pressio_register compressor_many_fields_plugin(compressor_plugins(), "sz3", []() {
+pressio_register registration(compressor_plugins(), "sz3", []() {
   return compat::make_unique<sz3_compressor_plugin>();
 });
 
-} }
+} } }

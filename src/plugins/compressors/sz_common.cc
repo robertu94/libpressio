@@ -1,24 +1,15 @@
-#include <algorithm>
-#include <iterator>
 #include <memory>
-#include <sstream>
-#include <cstdlib>
 
 #include <sz/sz.h>
 
 #include "libpressio_ext/cpp/data.h"
-#include "libpressio_ext/cpp/compressor.h"
-#include "libpressio_ext/cpp/pressio.h"
-#include "libpressio_ext/cpp/options.h"
-#include "std_compat/std_compat.h"
 #include "pressio_data.h"
 #include "pressio_compressor.h"
 #include "pressio_options.h"
 #include "pressio_option.h"
-#include "std_compat/memory.h"
 #include "sz_common.h"
 
-namespace libpressio {
+namespace libpressio { namespace compressors { namespace sz_common {
 
 int libpressio_type_to_sz_type(pressio_dtype type) {
     switch(type)
@@ -59,4 +50,4 @@ std::shared_ptr<sz_init_handle> pressio_get_sz_init_handle() {
   }
 }
 
-}
+} } }

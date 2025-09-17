@@ -11,7 +11,7 @@
 
 #include "basic_indexer.h"
 
-namespace libpressio { namespace data_gap_metrics_ns {
+namespace libpressio { namespace metrics { namespace data_gap_ns {
 //assume dims are fastest to slowest
 
     using namespace utilities;
@@ -169,5 +169,5 @@ class data_gap_plugin : public libpressio_metrics_plugin {
 
 };
 
-static pressio_register metrics_data_gap_plugin(metrics_plugins(), "data_gap", [](){ return compat::make_unique<data_gap_plugin>(); });
-}}
+pressio_register registration(metrics_plugins(), "data_gap", [](){ return compat::make_unique<data_gap_plugin>(); });
+}}}

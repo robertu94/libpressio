@@ -12,7 +12,7 @@
 #include <omp.h>
 #endif
 
-namespace libpressio { namespace mgard_ns {
+namespace libpressio { namespace compressors { namespace mgard_1_3_ns {
 
 
   template <class Enum>
@@ -375,8 +375,8 @@ Reference [6] covers the design and implementation on GPU heterogeneous systems.
   }();
 };
 
-static pressio_register compressor_many_fields_plugin(compressor_plugins(), "mgard", []() {
+pressio_register registration(compressor_plugins(), "mgard", []() {
   return compat::make_unique<mgard_compressor_plugin>();
 });
 
-} }
+} } }

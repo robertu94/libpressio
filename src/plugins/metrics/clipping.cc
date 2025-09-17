@@ -7,7 +7,7 @@
 #include "libpressio_ext/cpp/domain_manager.h"
 #include "std_compat/memory.h"
 
-namespace libpressio { namespace clipping_metrics_ns {
+namespace libpressio { namespace metrics { namespace clipping_metrics_ns {
 
 class clipping_plugin : public libpressio_metrics_plugin {
   public:
@@ -93,5 +93,5 @@ class clipping_plugin : public libpressio_metrics_plugin {
   pressio_data input;
 };
 
-static pressio_register metrics_clipping_plugin(metrics_plugins(), "clipping", [](){ return compat::make_unique<clipping_plugin>(); });
-}}
+pressio_register registration(metrics_plugins(), "clipping", [](){ return compat::make_unique<clipping_plugin>(); });
+}}}

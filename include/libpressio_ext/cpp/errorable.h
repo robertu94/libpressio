@@ -2,6 +2,7 @@
 #define LIBPRESSIO_ERRORS_H
 #include <string>
 
+namespace libpressio {
 /**
  * \file
  * \brief interface for types which can report and have errors
@@ -42,5 +43,6 @@ class pressio_errorable {
     std::string msg;
   } error = {0, ""};
 };
+}
 
 #endif /* end of include guard: LIBPRESSIO_ERRORS_H */

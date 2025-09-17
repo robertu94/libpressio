@@ -5,6 +5,7 @@
  * \file
  * \brief domain for cudamallochost/cudaFree
  */
+namespace libpressio {namespace domains { namespace cudahost_ns {
 struct pressio_cudamallochost_domain: public pressio_domain, std::enable_shared_from_this<pressio_cudamallochost_domain> {
     void* alloc(size_t n) override {
         void* ptr = nullptr;
@@ -43,4 +44,5 @@ struct pressio_cudamallochost_domain: public pressio_domain, std::enable_shared_
 };
 
 
-pressio_register cudamallochost_register(domain_plugins(), "cudamallochost", []{return std::make_shared<pressio_cudamallochost_domain>();});
+pressio_register registration(domain_plugins(), "cudamallochost", []{return std::make_shared<pressio_cudamallochost_domain>();});
+}}}

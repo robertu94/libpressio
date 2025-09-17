@@ -3,19 +3,19 @@
 #include <algorithm>
 #include "libpressio_ext/cpp/domain.h"
 
-namespace libpressio { namespace domain { namespace detail {
+namespace libpressio { namespace domains { namespace detail {
     template<class... Ts>
     struct overloaded : Ts... { using Ts::operator()...; };
     // explicit deduction guide (not needed as of C++20)
     template<class... Ts>
     overloaded(Ts...) -> overloaded<Ts...>;
-}}}
+}
 
 std::string to_string(domain_option const& op) {
     using s = std::ostream&;
     std::stringstream ss;
     std::visit(
-            libpressio::domain::detail::overloaded {
+            libpressio::domains::detail::overloaded {
                 [&](std::monostate const&) -> s {
                     return ss << "<null>";
                 },
@@ -71,7 +71,7 @@ bool is_accessible(pressio_domain const& lhs, pressio_domain const& rhs) {
 
     return false;
 }
-
+}}
 namespace detail {
 std::vector<compat::string_view> search(compat::string_view const& value) {
   std::vector<compat::string_view> order;

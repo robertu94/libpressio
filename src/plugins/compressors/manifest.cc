@@ -12,7 +12,7 @@
 #include <iostream>
 
 
-namespace libpressio { namespace manifest_ns {
+namespace libpressio { namespace compressors { namespace manifest_ns {
 
 class manifest_compressor_plugin : public libpressio_compressor_plugin {
 public:
@@ -253,9 +253,9 @@ private:
   bool record_on_decompress = false;
 };
 
-static pressio_register compressor_many_fields_plugin(compressor_plugins(), "manifest", []() {
+pressio_register registration(compressor_plugins(), "manifest", []() {
   return compat::make_unique<manifest_compressor_plugin>();
 });
 
 } }
-
+}

@@ -10,14 +10,16 @@
 
 
 
-pressio_registry<std::shared_ptr<libpressio_compressor_plugin>>& compressor_plugins() {
-  static pressio_registry<std::shared_ptr<libpressio_compressor_plugin>> registry;
+namespace libpressio {
+pressio_registry<std::shared_ptr<compressors::libpressio_compressor_plugin>>& compressor_plugins() {
+  static pressio_registry<std::shared_ptr<compressors::libpressio_compressor_plugin>> registry;
   return registry;
 }
 
-pressio_registry<std::unique_ptr<libpressio_metrics_plugin>>& metrics_plugins() {
-  static pressio_registry<std::unique_ptr<libpressio_metrics_plugin>> registry;
+pressio_registry<std::unique_ptr<metrics::libpressio_metrics_plugin>>& metrics_plugins() {
+  static pressio_registry<std::unique_ptr<metrics::libpressio_metrics_plugin>> registry;
   return registry;
+}
 }
 
 extern "C" {
@@ -91,8 +93,8 @@ unsigned int pressio_patch_version() {
 
 }
 
-std::shared_ptr<libpressio_compressor_plugin> pressio::get_compressor(std::string const& compressor_id) {
-    auto compressor = compressor_plugins().build(compressor_id);
+std::shared_ptr<libpressio::compressors::libpressio_compressor_plugin> pressio::get_compressor(std::string const& compressor_id) {
+    auto compressor = libpressio::compressor_plugins().build(compressor_id);
     if (compressor) return compressor;
     else {
       set_error(1, std::string("invalid compressor id ") + compressor_id);
@@ -100,8 +102,8 @@ std::shared_ptr<libpressio_compressor_plugin> pressio::get_compressor(std::strin
     }
   }
 
-std::shared_ptr<libpressio_io_plugin> pressio::get_io(std::string const& io_module_id) {
-    auto io_module = io_plugins().build(io_module_id);
+std::shared_ptr<libpressio::io::libpressio_io_plugin> pressio::get_io(std::string const& io_module_id) {
+    auto io_module = libpressio::io_plugins().build(io_module_id);
     if (io_module)
       return RVO_MOVE(io_module);
     else {
@@ -130,17 +132,17 @@ static std::string build_from(T const& plugins) {
 }
 
 const char* pressio::supported_compressors() {
-  static std::string modules = build_from(compressor_plugins());
+  static std::string modules = build_from(libpressio::compressor_plugins());
   return modules.c_str();
 }
 
 const char* pressio::supported_metrics() {
-  static std::string modules = build_from(metrics_plugins());
+  static std::string modules = build_from(libpressio::metrics_plugins());
   return modules.c_str();
 }
 
 const char* pressio::supported_io() {
-  static std::string modules = build_from(io_plugins());
+  static std::string modules = build_from(libpressio::io_plugins());
   return modules.c_str();
 }
 

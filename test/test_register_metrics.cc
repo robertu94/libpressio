@@ -11,7 +11,7 @@
 #include "std_compat/memory.h"
 #include "make_input_data.h"
 
-class counting_metric: public libpressio_metrics_plugin {
+class counting_metric: public libpressio::metrics::libpressio_metrics_plugin {
   public:
   counting_metric() {
     //operator[] is non-const, so explicits instantiate each of the values we need
@@ -78,7 +78,7 @@ class counting_metric: public libpressio_metrics_plugin {
 };
 
 //register the plugin in the under the names counts
-static pressio_register X(metrics_plugins(), "mycounts", [](){ return compat::make_unique<counting_metric>(); });
+static libpressio::pressio_register registeration(libpressio::metrics_plugins(), "mycounts", [](){ return compat::make_unique<counting_metric>(); });
 
 TEST(ExternalPlugin, TestMetricCounts) {
   pressio library;

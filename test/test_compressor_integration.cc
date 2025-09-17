@@ -4,6 +4,8 @@
 #include <libpressio_ext/cpp/libpressio.h>
 #include <libpressio_ext/launch/external_launch.h>
 
+using namespace libpressio;
+
 std::set<std::tuple<std::string, std::string>> skip_list {
   {"SZauto", "3d float zeros"},
   {"qoz", "1d float"},
@@ -237,7 +239,7 @@ void test_has_configuration(pressio_configurable& c) {
       //we know that the configurable is a metric because we checked above by looking at type()
       //now dynamic cast to a metrics plugin so that get the list of metrics that this metric returns
       //the list of metrics that can be invalidated must be in this list
-      auto& metric = dynamic_cast<libpressio_metrics_plugin&>(c);
+      auto& metric = dynamic_cast<libpressio::metrics::libpressio_metrics_plugin&>(c);
       auto const& metrics_results = metric.get_metrics_results({});
       std::set<std::string> keys;
       for (auto const& i : metrics_results) {
@@ -281,7 +283,7 @@ void test_has_configuration(pressio_configurable& c) {
       //we know that the configurable is a compressor because we checked above by looking at type()
       //now dynamic cast to a metrics plugin so that get the list of options that this compressors
       //the list of options that invalidate metrics must be in this list
-      auto& compressor = dynamic_cast<libpressio_compressor_plugin&>(c);
+      auto& compressor = dynamic_cast<libpressio::compressors::libpressio_compressor_plugin&>(c);
       auto const& compressor_options = compressor.get_options();
       std::set<std::string> keys;
       for (auto const& i : compressor_options) {

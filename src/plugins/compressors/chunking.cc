@@ -13,7 +13,7 @@
 #include "std_compat/numeric.h"
 #include "std_compat/functional.h"
 
-namespace libpressio { namespace chunking {
+namespace libpressio { namespace compressors { namespace chunking {
 
 class chunking_plugin: public libpressio_compressor_plugin {
   public:
@@ -133,7 +133,7 @@ class chunking_plugin: public libpressio_compressor_plugin {
       } else {
         //non-contigious, need to copy
         pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
-        tmp = libpressio::chunking::chunk_data(input, chunk_size, {{"nthreads", nthreads}});
+        tmp = libpressio::compressors::chunking::chunk_data(input, chunk_size, {{"nthreads", nthreads}});
         auto ptr = static_cast<uint8_t*>(tmp.data());
         for (size_t i = 0; i < num_chunks; ++i) {
           inputs.emplace_back(pressio_data::nonowning(real_input->dtype(), ptr+(i*stride), chunk_size, "malloc"));
@@ -265,7 +265,7 @@ class chunking_plugin: public libpressio_compressor_plugin {
           memcpy(outptr+accum_size_out, outputs[i].data(), stride_in_bytes);
           accum_size_out += stride_in_bytes;
         }
-        libpressio::chunking::restore_data(*output, combined, chunk_size, {{"nthreads", nthreads}});
+        libpressio::compressors::chunking::restore_data(*output, combined, chunk_size, {{"nthreads", nthreads}});
       }
       auto dechunk_end = std::chrono::steady_clock::now();
       dechunk_time = std::chrono::duration_cast<std::chrono::milliseconds>(dechunk_end-dechunk_begin).count();
@@ -353,5 +353,5 @@ class chunking_plugin: public libpressio_compressor_plugin {
     uint64_t nthreads = 1;
 };
 
-static pressio_register compressor_chunking_plugin(compressor_plugins(), "chunking", [](){return compat::make_unique<chunking_plugin>(); });
-} }
+pressio_register registration(compressor_plugins(), "chunking", [](){return compat::make_unique<chunking_plugin>(); });
+} } }

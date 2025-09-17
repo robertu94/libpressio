@@ -4,7 +4,7 @@
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
 
-namespace libpressio { namespace repeat_ns {
+namespace libpressio { namespace compressors { namespace repeat_ns {
 
 class repeat_compressor_plugin : public libpressio_compressor_plugin {
 public:
@@ -129,8 +129,8 @@ public:
   bool clone_output = false;
 };
 
-static pressio_register compressor_many_fields_plugin(compressor_plugins(), "repeat", []() {
+pressio_register registration(compressor_plugins(), "repeat", []() {
   return compat::make_unique<repeat_compressor_plugin>();
 });
 
-} }
+} }}

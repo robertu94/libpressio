@@ -6,7 +6,7 @@
 #include "libpressio_ext/cpp/options.h"
 #include "std_compat/memory.h"
 
-namespace libpressio { namespace size {
+namespace libpressio { namespace metrics { namespace size_ns {
 
 class size_plugin : public libpressio_metrics_plugin {
   public:
@@ -118,5 +118,5 @@ class size_plugin : public libpressio_metrics_plugin {
 
 };
 
-static pressio_register metrics_size_plugin(metrics_plugins(), "size", [](){ return compat::make_unique<size_plugin>(); });
-} }
+pressio_register registration(metrics_plugins(), "size", [](){ return compat::make_unique<size_plugin>(); });
+} } }

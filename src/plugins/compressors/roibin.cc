@@ -8,7 +8,7 @@
 
 #include "basic_indexer.h"
 
-namespace libpressio { namespace roibin_ns {
+namespace libpressio { namespace compressors { namespace roibin_ns {
 
     using namespace utilities;
 
@@ -464,8 +464,8 @@ public:
   uint32_t n_threads = 1;
 };
 
-static pressio_register compressor_many_fields_plugin(compressor_plugins(), "roibin", []() {
+pressio_register registration(compressor_plugins(), "roibin", []() {
   return compat::make_unique<roibin_compressor_plugin>();
 });
 
-} }
+} }}

@@ -30,7 +30,7 @@ namespace {
   pressio_data*
   _pressio_io_data_from_numpy_impl(T* data, std::vector<size_t> dims) {
     return pressio_data_new_copy(
-        pressio_dtype_from_type<T>(),
+        libpressio::pressio_dtype_from_type<T>(),
         data,
         dims.size(),
         dims.data()

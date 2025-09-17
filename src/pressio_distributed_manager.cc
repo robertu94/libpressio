@@ -1,6 +1,7 @@
 #include "libpressio_ext/cpp/distributed_manager.h"
 #include <cassert>
 
+namespace libpressio { namespace distributed {
 size_t pressio_distributed_manager::unlimited = 0;
 
 compat::optional<std::vector<size_t>> distributed_build_groups(const unsigned int size, const unsigned int n_workers_groups, const unsigned int n_masters, const unsigned int root) {
@@ -68,3 +69,4 @@ int distributed_world_size() {
   }
   return size;
 }
+}}

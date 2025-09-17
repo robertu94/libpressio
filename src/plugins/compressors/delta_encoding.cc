@@ -4,7 +4,7 @@
 #include <std_compat/memory.h>
 #include <sstream>
 
-namespace libpressio { namespace delta_encoder {
+namespace libpressio { namespace compressors { namespace delta_encoder {
 
 struct delta_encoder {
   template <class T>
@@ -130,11 +130,11 @@ y[i] = x[i] - x[i-1];
   pressio_compressor meta = compressor_plugins().build("noop");
 };
 
-static pressio_register delta_encoding_register(
+pressio_register registration(
     compressor_plugins(),
     "delta_encoding",
     []{
       return compat::make_unique<delta_encoding>();
     }
     );
-} }
+} }}

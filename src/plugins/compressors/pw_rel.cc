@@ -6,7 +6,7 @@
 #include "libpressio_ext/cpp/domain_manager.h"
 #include <cmath>
 
-namespace libpressio { namespace pw_rel_ns {
+namespace libpressio { namespace compressors { namespace pw_rel_ns {
 
   struct compressor {
     template <class T>
@@ -295,8 +295,8 @@ public:
   double pw_rel = 1e-3;
 };
 
-static pressio_register compressor_many_fields_plugin(compressor_plugins(), "pw_rel", []() {
+pressio_register registration(compressor_plugins(), "pw_rel", []() {
   return compat::make_unique<pw_rel_compressor_plugin>();
 });
 
-} }
+} }}

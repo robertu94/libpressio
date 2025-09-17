@@ -15,6 +15,7 @@ struct pressio_data;
 struct pressio_options;
 class libpressio_metrics_plugin;
 
+namespace libpressio { namespace compressors {
 /**
  * plugin to provide a new compressor
  */
@@ -318,6 +319,8 @@ class libpressio_compressor_plugin :public pressio_configurable, public pressio_
   int32_t metrics_copy_impl_results = 1;
 };
 
+} }
+
 /**
  * wrapper for the compressor to use in C
  */
@@ -325,7 +328,7 @@ struct pressio_compressor {
   /**
    * \param[in] impl a newly constructed compressor plugin
    */
-  pressio_compressor(std::shared_ptr<libpressio_compressor_plugin>&& impl): plugin(std::forward<std::shared_ptr<libpressio_compressor_plugin>>(impl)) {}
+  pressio_compressor(std::shared_ptr<libpressio::compressors::libpressio_compressor_plugin>&& impl): plugin(std::forward<std::shared_ptr<libpressio::compressors::libpressio_compressor_plugin>>(impl)) {}
   /**
    * defaults constructs a compressor with a nullptr
    */
@@ -358,19 +361,20 @@ struct pressio_compressor {
   }
 
   /** make libpressio_compressor_plugin behave like a shared_ptr */
-  libpressio_compressor_plugin& operator*() const noexcept {
+  libpressio::compressors::libpressio_compressor_plugin& operator*() const noexcept {
     return *plugin;
   }
 
   /** make libpressio_compressor_plugin behave like a shared_ptr */
-  libpressio_compressor_plugin* operator->() const noexcept {
+  libpressio::compressors::libpressio_compressor_plugin* operator->() const noexcept {
     return plugin.get();
   }
 
   /**
    * pointer to the implementation
    */
-  std::shared_ptr<libpressio_compressor_plugin> plugin;
+  std::shared_ptr<libpressio::compressors::libpressio_compressor_plugin> plugin;
 };
+
 
 #endif

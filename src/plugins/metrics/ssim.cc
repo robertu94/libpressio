@@ -10,7 +10,7 @@
 #include <sstream>
 #include <cmath>
 
-namespace libpressio { namespace ssim_metrics_ns {
+namespace libpressio { namespace metrics { namespace ssim_ns {
 
  /* Code taken from CODARCode/qcat
  *  (C) 2015 by Mathematics and Computer Science (MCS), Argonne National Laboratory.
@@ -980,7 +980,7 @@ class ssim_plugin : public libpressio_metrics_plugin {
       return 0;
     }
 
-    int end_decompress_impl(struct pressio_data const* , pressio_data const* output, int rc) override {
+    int end_decompress_impl(struct pressio_data const* , pressio_data const* output, int ) override {
 
       if(!output || !output->has_data() || !input_data.has_data()) return 0;
       int datatype = 0;
@@ -1037,6 +1037,5 @@ class ssim_plugin : public libpressio_metrics_plugin {
   pressio_data input_data;
 };
 
-static pressio_register metrics_ssim_plugin(metrics_plugins(), "ssim", [](){ return compat::make_unique<ssim_plugin>(); });
-}}
-
+pressio_register registration(metrics_plugins(), "ssim", [](){ return compat::make_unique<ssim_plugin>(); });
+}}}

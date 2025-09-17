@@ -13,7 +13,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-namespace libpressio { namespace cufile_io_ns {
+namespace libpressio { namespace io { namespace cufile_ns {
 
 struct pressio_cufile_metadata {
     CUfileHandle_t cf_handle;
@@ -205,5 +205,5 @@ class cufile_plugin : public libpressio_io_plugin {
   int64_t dev_offset = 0;
 };
 
-static pressio_register io_cufile_plugin(io_plugins(), "cufile", [](){ return compat::make_unique<cufile_plugin>(); });
-}}
+pressio_register registration(io_plugins(), "cufile", [](){ return compat::make_unique<cufile_plugin>(); });
+}} }

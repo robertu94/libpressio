@@ -6,7 +6,7 @@
 #include "libpressio_ext/cpp/domain_manager.h"
 #include "roibin_impl.h"
 
-namespace libpressio { namespace mask_binning_ns {
+namespace libpressio { namespace compressors { namespace mask_binning_ns {
 
     using namespace utilities;
 
@@ -263,8 +263,8 @@ public:
   uint32_t n_threads = 1;
 };
 
-static pressio_register compressor_many_fields_plugin(compressor_plugins(), "mask_binning", []() {
+pressio_register registration(compressor_plugins(), "mask_binning", []() {
   return compat::make_unique<binning_compressor_plugin>();
 });
 
-} }
+} }}

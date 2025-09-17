@@ -1,8 +1,8 @@
 #ifndef LIBPRESIO_DISTRIBUTED_MANAGER_H
 #define LIBPRESIO_DISTRIBUTED_MANAGER_H
 #include <mpi.h>
-#include <libdistributed/libdistributed_work_queue.h>
-#include <libdistributed/libdistributed_work_queue_options.h>
+#include <libdistributed_work_queue.h>
+#include <libdistributed_work_queue_options.h>
 #include <std_compat/optional.h>
 #include <utility>
 #include "configurable.h"
@@ -11,6 +11,7 @@
 #include <pressio_option.h>
 #include <pressio_options.h>
 
+namespace libpressio { namespace distributed {
 /**
  * \file
  * \brief a helper class and functions for using libdistributed with libpressio
@@ -67,10 +68,10 @@ class pressio_distributed_manager: public pressio_configurable {
     if(!initalized) {
       return set_error(1, "MPI must be initialized");
     }
-    distributed::queue::work_queue_options<typename distributed::queue::iterator_to_request_type<TaskRandomIt>::type> options(comm);
+    ::distributed::queue::work_queue_options<typename ::distributed::queue::iterator_to_request_type<TaskRandomIt>::type> options(comm);
     options.set_root(root);
     options.set_groups(groups);
-    distributed::queue::work_queue( options, begin, end, std::forward<WorkerFn>(workerfn), std::forward<MasterFn>(masterfn));
+    ::distributed::queue::work_queue( options, begin, end, std::forward<WorkerFn>(workerfn), std::forward<MasterFn>(masterfn));
     return error_code();
   }
 
@@ -83,7 +84,7 @@ class pressio_distributed_manager: public pressio_configurable {
    */
   template <class T>
   int send(T const& t, int dest, int tag=0) {
-    return distributed::comm::send(t, dest, tag, comm);
+      return ::distributed::comm::send(t, dest, tag, comm);
   }
 
 
@@ -97,7 +98,7 @@ class pressio_distributed_manager: public pressio_configurable {
    */
   template <class T>
   int recv(T& t, int source, int tag=0, MPI_Status* s=nullptr) {
-    return distributed::comm::recv(t, source, tag, comm, s);
+      return ::distributed::comm::recv(t, source, tag, comm, s);
   }
 
 
@@ -109,7 +110,7 @@ class pressio_distributed_manager: public pressio_configurable {
    */
   template <class T>
   int bcast(T& t, int bcast_root) {
-    return distributed::comm::bcast(t, bcast_root, comm);
+      return ::distributed::comm::bcast(t, bcast_root, comm);
   }
 
   /**
@@ -119,7 +120,7 @@ class pressio_distributed_manager: public pressio_configurable {
    */
   template <class T>
   int bcast(T& t) {
-    return distributed::comm::bcast(t, root, comm);
+      return ::distributed::comm::bcast(t, root, comm);
   }
 
   /**
@@ -231,4 +232,5 @@ class pressio_distributed_manager: public pressio_configurable {
   unsigned int max_ranks_per_worker = 1;
   compat::optional<unsigned int> n_workers, n_masters;
 };
+}}
 #endif /* end of include guard: LIBPRESIO_DISTRIBUTED_MANAGER_H */

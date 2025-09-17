@@ -11,7 +11,7 @@
 #include "libpressio_ext/cpp/domain_manager.h"
 #include "std_compat/memory.h"
 
-namespace libpressio { namespace out_of_bounds_metrics_ns {
+namespace libpressio { namespace metrics { namespace out_of_bounds_metrics_ns {
 
 class out_of_bounds_plugin : public libpressio_metrics_plugin {
   public:
@@ -156,6 +156,6 @@ class out_of_bounds_plugin : public libpressio_metrics_plugin {
 
 };
 
-static pressio_register metrics_out_of_bounds_plugin(metrics_plugins(), "out_of_bounds", [](){ return compat::make_unique<out_of_bounds_plugin>(); });
+pressio_register registration(metrics_plugins(), "out_of_bounds", [](){ return compat::make_unique<out_of_bounds_plugin>(); });
 }}
-
+}

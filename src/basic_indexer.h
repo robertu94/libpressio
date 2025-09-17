@@ -10,7 +10,7 @@
 namespace libpressio { namespace utilities {
 
 //assume dims are fastest to slowest
-template <class SizeType, SizeType N>
+template <class SizeType, size_t N>
 struct basic_indexer {
   template <class... T, typename std::enable_if<compat::conjunction<std::is_integral<typename std::decay<T>::type>...>::value,int>::type = 0>
   basic_indexer(T&&... args) noexcept: max_dims{static_cast<SizeType>(args)...} {}

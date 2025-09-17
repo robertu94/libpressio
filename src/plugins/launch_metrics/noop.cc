@@ -1,12 +1,14 @@
 #include <libpressio_ext/launch/external_launch_metrics.h>
 #include <std_compat/memory.h>
 
-pressio_registry<std::unique_ptr<libpressio_launch_metrics_plugin>>& launch_metrics_plugins() {
-  static pressio_registry<std::unique_ptr<libpressio_launch_metrics_plugin>> registry;
+namespace libpressio {
+pressio_registry<std::unique_ptr<libpressio::launch_metrics::libpressio_launch_metrics_plugin>>& launch_metrics_plugins() {
+  static pressio_registry<std::unique_ptr<libpressio::launch_metrics::libpressio_launch_metrics_plugin>> registry;
   return registry;
 }
+}
 
-namespace libpressio { namespace launch_metrics_noop {
+namespace libpressio { namespace launch_metrics { namespace noop_ns {
 struct libpressio_launch_metrics_noop_plugin : public libpressio_launch_metrics_plugin {
   virtual void launch_begin(std::vector<std::string> const&) const {
       return;
@@ -23,6 +25,6 @@ struct libpressio_launch_metrics_noop_plugin : public libpressio_launch_metrics_
   }
 };
 
-static pressio_register launch_metrics_noop_plugin(launch_metrics_plugins(), "noop", [](){ return compat::make_unique<libpressio_launch_metrics_noop_plugin>();});
+pressio_register registration(launch_metrics_plugins(), "noop", [](){ return compat::make_unique<libpressio_launch_metrics_noop_plugin>();});
 
-}}
+}}}

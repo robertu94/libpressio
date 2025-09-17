@@ -11,6 +11,8 @@
 #include "pressio_options_iter.h"
 #include "pressio_options.h"
 
+namespace libpressio { namespace compressors {
+
 libpressio_compressor_plugin::libpressio_compressor_plugin() noexcept :
   pressio_configurable(),
   metrics_plugin(metrics_plugins().build("noop")),
@@ -318,3 +320,5 @@ int libpressio_compressor_plugin::view_segment(pressio_data* data, const char* s
     }
     return 0;
 }
+
+}}

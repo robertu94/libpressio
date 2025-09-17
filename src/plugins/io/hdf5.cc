@@ -31,7 +31,7 @@
 #include "libpressio_ext/cpp/io.h"
 #include "libpressio_ext/cpp/domain_manager.h"
 #include "std_compat/memory.h"
-namespace libpressio { namespace hdf5 {
+namespace libpressio { namespace io { namespace hdf5_ns {
 
 namespace {
   compat::optional<pressio_dtype> h5t_to_pressio(hid_t h5type) {
@@ -536,5 +536,5 @@ struct hdf5_io: public libpressio_io_plugin {
 #endif
 };
 
-static pressio_register io_hdf5_plugin(io_plugins(), "hdf5", [](){ return compat::make_unique<hdf5_io>(); });
-} }
+pressio_register registration(io_plugins(), "hdf5", [](){ return compat::make_unique<hdf5_io>(); });
+} } }

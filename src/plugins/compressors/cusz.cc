@@ -15,7 +15,7 @@
 #include <cusz/cusz_version.h>
 #include <cusz/utils/viewer.hh>
 
-namespace libpressio { namespace cusz_ns {
+namespace libpressio { namespace compressors { namespace cusz_ns {
 
     const std::map<std::string, decltype(Rel)> bounds {
         {"abs", Abs},
@@ -388,9 +388,9 @@ public:
 
 };
 
-static pressio_register compressor_many_fields_plugin(compressor_plugins(), "cusz", []() {
+pressio_register registration(compressor_plugins(), "cusz", []() {
   return compat::make_unique<cusz_compressor_plugin>();
 });
 
 } }
-
+}

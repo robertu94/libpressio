@@ -5,7 +5,7 @@
 #ifndef LIBPRESSIO_SERIALIZABLE_H
 #define LIBPRESSIO_SERIALIZABLE_H
 
-#include <libdistributed/libdistributed_comm.h>
+#include <libdistributed_comm.h>
 #include <pressio_dtype.h>
 #include <pressio_compressor.h>
 

@@ -38,29 +38,29 @@ pressio_memory::~pressio_memory() {
 
 // default
 pressio_memory::pressio_memory()
-    : data_domain(domain_plugins().build("malloc")), data_ptr(nullptr), data_capacity(0) {}
-pressio_memory::pressio_memory(std::shared_ptr<pressio_domain> &&domain)
+    : data_domain(libpressio::domain_plugins().build("malloc")), data_ptr(nullptr), data_capacity(0) {}
+pressio_memory::pressio_memory(std::shared_ptr<libpressio::domains::pressio_domain> &&domain)
     : data_domain(domain), data_ptr(nullptr), data_capacity(0) {}
-pressio_memory::pressio_memory(std::shared_ptr<pressio_domain> const&domain)
+pressio_memory::pressio_memory(std::shared_ptr<libpressio::domains::pressio_domain> const&domain)
     : data_domain(domain), data_ptr(nullptr), data_capacity(0) {}
 
 // owning constructor
 pressio_memory::pressio_memory(size_t n)
-    : data_domain(domain_plugins().build("malloc")), data_ptr(data_domain->alloc(n)),
+    : data_domain(libpressio::domain_plugins().build("malloc")), data_ptr(data_domain->alloc(n)),
       data_capacity(n) {}
 
-pressio_memory::pressio_memory(size_t n, std::shared_ptr<pressio_domain> &&domain)
+pressio_memory::pressio_memory(size_t n, std::shared_ptr<libpressio::domains::pressio_domain> &&domain)
     : data_domain(domain), data_ptr(this->data_domain->alloc(n)), data_capacity(n) {}
-pressio_memory::pressio_memory(size_t n, std::shared_ptr<pressio_domain> const&domain)
+pressio_memory::pressio_memory(size_t n, std::shared_ptr<libpressio::domains::pressio_domain> const&domain)
     : data_domain(domain), data_ptr(this->data_domain->alloc(n)), data_capacity(n) {}
 
 // non-owning constructor
 pressio_memory::pressio_memory(void *ptr, size_t n)
-    : data_domain(domain_plugins().build("nonowning")), data_ptr(ptr), data_capacity(n) {}
+    : data_domain(libpressio::domain_plugins().build("nonowning")), data_ptr(ptr), data_capacity(n) {}
 
-pressio_memory::pressio_memory(void *ptr, size_t n, std::shared_ptr<pressio_domain> &&domain)
+pressio_memory::pressio_memory(void *ptr, size_t n, std::shared_ptr<libpressio::domains::pressio_domain> &&domain)
     : data_domain(domain), data_ptr(ptr), data_capacity(n) {}
-pressio_memory::pressio_memory(void *ptr, size_t n, std::shared_ptr<pressio_domain> const&domain)
+pressio_memory::pressio_memory(void *ptr, size_t n, std::shared_ptr<libpressio::domains::pressio_domain> const&domain)
     : data_domain(domain), data_ptr(ptr), data_capacity(n) {}
 
 // copy constructor
@@ -70,12 +70,12 @@ pressio_memory::pressio_memory(pressio_memory const &rhs)
   operator=(rhs);
 }
 
-pressio_memory::pressio_memory(pressio_memory const &rhs, std::shared_ptr<pressio_domain> &&domain)
+pressio_memory::pressio_memory(pressio_memory const &rhs, std::shared_ptr<libpressio::domains::pressio_domain> &&domain)
     : data_domain(domain), data_ptr(this->data_domain->alloc(rhs.capacity())),
       data_capacity(rhs.capacity()) {
   operator=(rhs);
 }
-pressio_memory::pressio_memory(pressio_memory const &rhs, std::shared_ptr<pressio_domain> const&domain)
+pressio_memory::pressio_memory(pressio_memory const &rhs, std::shared_ptr<libpressio::domains::pressio_domain> const&domain)
     : data_domain(domain), data_ptr(this->data_domain->alloc(rhs.capacity())),
       data_capacity(rhs.capacity()) {
   operator=(rhs);
@@ -84,12 +84,12 @@ pressio_memory::pressio_memory(pressio_memory const &rhs, std::shared_ptr<pressi
 pressio_memory::pressio_memory(pressio_memory &&rhs) noexcept
     : data_domain(compat::exchange(rhs.data_domain, nullptr)), data_ptr(compat::exchange(rhs.data_ptr, nullptr)),
       data_capacity(compat::exchange(rhs.data_capacity, 0)) {}
-pressio_memory::pressio_memory(pressio_memory &&rhs, std::shared_ptr<pressio_domain> &&domain)
+pressio_memory::pressio_memory(pressio_memory &&rhs, std::shared_ptr<libpressio::domains::pressio_domain> &&domain)
     : data_domain(std::move(domain)), data_ptr(this->data_domain->alloc(rhs.capacity())),
       data_capacity(rhs.capacity()) {
   operator=(rhs);
 }
-pressio_memory::pressio_memory(pressio_memory &&rhs, std::shared_ptr<pressio_domain> const&domain)
+pressio_memory::pressio_memory(pressio_memory &&rhs, std::shared_ptr<libpressio::domains::pressio_domain> const&domain)
     : data_domain(domain), data_ptr(this->data_domain->alloc(rhs.capacity())),
       data_capacity(rhs.capacity()) {
   operator=(rhs);
@@ -104,4 +104,4 @@ void pressio_memory::reset(void* ptr) {
     data_ptr = ptr;
 }
 size_t pressio_memory::capacity() const { return data_capacity; }
-std::shared_ptr<pressio_domain> const& pressio_memory::domain() const { return data_domain; }
+std::shared_ptr<libpressio::domains::pressio_domain> const& pressio_memory::domain() const { return data_domain; }

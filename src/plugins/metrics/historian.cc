@@ -5,7 +5,7 @@
 #include "std_compat/memory.h"
 #include "std_compat/string_view.h"
 
-namespace libpressio { namespace historian {
+namespace libpressio { namespace metrics { namespace historian {
 
 class pressio_historian_metric: public libpressio_metrics_plugin {
 
@@ -302,11 +302,11 @@ class pressio_historian_metric: public libpressio_metrics_plugin {
   } events;
 };
 
-static pressio_register register_pressio_historian_metric (
+pressio_register registration (
     metrics_plugins(),
     "historian",
     []{
       return compat::make_unique<pressio_historian_metric>();
     }
 );
-} }
+} }}

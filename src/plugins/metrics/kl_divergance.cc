@@ -12,7 +12,7 @@
 #include "std_compat/memory.h"
 #include "libpressio_ext/cpp/domain_manager.h"
 
-namespace libpressio {
+namespace libpressio { namespace metrics {
 namespace kl_divergence{
   struct kl_metrics {
     double p_q=0;
@@ -106,7 +106,7 @@ private:
   compat::optional<kl_divergence::kl_metrics> err_metrics;
 };
 
-static pressio_register metrics_kl_divergance_plugin(metrics_plugins(), "kl_divergence",
+pressio_register registration(metrics_plugins(), "kl_divergence",
                           []() { return compat::make_unique<kl_divergance_plugin>(); });
 }
-}
+}}

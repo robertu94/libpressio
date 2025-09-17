@@ -8,6 +8,7 @@ struct pressio_data;
 struct pressio_options;
 
 namespace libpressio {
+namespace compressors {
 namespace chunking {
 
 /**
@@ -46,6 +47,7 @@ void restore_data(pressio_data &data, pressio_data const& memory, std::vector<si
 
 
 } /* chunking */ 
+} /* compressors */ 
 } /* pressio */ 
 
 #endif /* end of include guard: LIBPRESSIO_CHUNKING_IMPL */

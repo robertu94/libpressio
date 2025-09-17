@@ -6,7 +6,7 @@
 #include "cleanup.h"
 #include <cuda_runtime.h>
 
-namespace libpressio { namespace cuda_device_selector_ns {
+namespace libpressio { namespace compressors { namespace cuda_device_selector_ns {
 
 class cuda_device_selector_compressor_plugin : public libpressio_compressor_plugin {
 public:
@@ -148,9 +148,9 @@ public:
 
 };
 
-static pressio_register compressor_many_fields_plugin(compressor_plugins(), "cuda_device_selector", []() {
+pressio_register registration(compressor_plugins(), "cuda_device_selector", []() {
   return compat::make_unique<cuda_device_selector_compressor_plugin>();
 });
 
 } }
-
+ }

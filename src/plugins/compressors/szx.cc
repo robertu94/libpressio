@@ -13,7 +13,7 @@
 #include <cuszx_entry.h>
 #endif
 
-namespace libpressio { namespace szx_ns {
+namespace libpressio { namespace compressors { namespace szx_ns {
 
 
   const std::map<std::string,int> ERR_MODES {
@@ -316,8 +316,8 @@ private:
 #endif
 };
 
-static pressio_register compressor_many_fields_plugin(compressor_plugins(), "szx", []() {
+pressio_register registration(compressor_plugins(), "szx", []() {
   return compat::make_unique<szx_compressor_plugin>();
 });
 
-} }
+} } }

@@ -13,6 +13,7 @@
 
 struct pressio_data;
 
+namespace libpressio { namespace io {
 /**
  * plugin extension base class for io modules
  */
@@ -190,6 +191,7 @@ struct libpressio_io_plugin: public pressio_configurable, public pressio_version
 
   private:
 };
+} }
 
 /**
  * wrapper for the io module to use in C
@@ -198,11 +200,11 @@ struct pressio_io {
   /**
    * \param[in] impl a newly constructed io plugin
    */
-  pressio_io(std::unique_ptr<libpressio_io_plugin>&& impl): plugin(std::forward<std::unique_ptr<libpressio_io_plugin>>(impl)) {}
+  pressio_io(std::unique_ptr<libpressio::io::libpressio_io_plugin>&& impl): plugin(std::forward<std::unique_ptr<libpressio::io::libpressio_io_plugin>>(impl)) {}
   /**
    * \param[in] impl a newly constructed io plugin
    */
-  pressio_io(std::shared_ptr<libpressio_io_plugin>&& impl): plugin(std::forward<std::shared_ptr<libpressio_io_plugin>>(impl)) {}
+  pressio_io(std::shared_ptr<libpressio::io::libpressio_io_plugin>&& impl): plugin(std::forward<std::shared_ptr<libpressio::io::libpressio_io_plugin>>(impl)) {}
   /**
    * defaults constructs a io with a nullptr
    */
@@ -234,19 +236,19 @@ struct pressio_io {
   }
 
   /** make libpressio_io_plugin behave like a shared_ptr */
-  libpressio_io_plugin& operator*() const noexcept {
+  libpressio::io::libpressio_io_plugin& operator*() const noexcept {
     return *plugin;
   }
 
   /** make libpressio_io_plugin behave like a shared_ptr */
-  libpressio_io_plugin* operator->() const noexcept {
+  libpressio::io::libpressio_io_plugin* operator->() const noexcept {
     return plugin.get();
   }
 
   /**
    * pointer to the implementation
    */
-  std::shared_ptr<libpressio_io_plugin> plugin;
+  std::shared_ptr<libpressio::io::libpressio_io_plugin> plugin;
 };
 
 #endif /* end of include guard: PRESSIO_IO_PLUGIN_H */

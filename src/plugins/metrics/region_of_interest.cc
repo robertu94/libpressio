@@ -11,6 +11,7 @@
 #include "std_compat/numeric.h"
 
 namespace libpressio {
+    namespace metrics {
 namespace region_of_interest {
   struct region_of_interest_metrics {
     compat::optional<double> input_avg;
@@ -168,8 +169,8 @@ private:
   region_of_interest_metrics err_metrics;
 };
 
-static pressio_register metrics_region_of_interest_plugin(metrics_plugins(), "region_of_interest", []() {
+pressio_register registration(metrics_plugins(), "region_of_interest", []() {
   return compat::make_unique<region_of_interest_plugin>();
 });
 }
-}
+}}
