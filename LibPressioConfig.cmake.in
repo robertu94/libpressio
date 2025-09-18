@@ -123,10 +123,10 @@ if(@LIBPRESSIO_HAS_MATLABIO@)
 endif()
 
 if(@LIBPRESSIO_HAS_HDF@)
-  find_package(HDF5 REQUIRED COMPONENTS C)
   if(@HDF5_IS_PARALLEL@)
-    find_package(MPI REQUIRED)
+      find_package(MPI REQUIRED)
   endif()
+  find_package(HDF5 REQUIRED COMPONENTS C)
 endif()
 
 if(@LIBPRESSIO_HAS_NDZIP@)
