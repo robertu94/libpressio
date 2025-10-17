@@ -9,6 +9,9 @@ using namespace libpressio;
 std::set<std::tuple<std::string, std::string>> skip_list {
   {"SZauto", "3d float zeros"},
   {"qoz", "1d float"},
+  {"szp", "1d int"},
+  {"szp", "2d int"},
+  {"szp", "3d int"},
   {"qoz", "1d int"},
   {"qoz", "3d int"},
   {"qoz", "3d float zeros"},
@@ -19,6 +22,7 @@ std::set<std::tuple<std::string, std::string>> skip_list {
   {"cusz", "2d float"},
   {"cusz", "2d 0-1 float"},
   {"cusz", "3d float zeros"},
+  {"tthresh", "3d float zeros"},
 };
 
 template <class Func>

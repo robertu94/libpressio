@@ -120,8 +120,8 @@ public:
     set(options, "sz3:intrep_algo_str", keys(sz3_options().interp_algo));
     set(options, "sz3:algorithm_str", keys(sz3_options().algo));
     
-        std::vector<std::string> invalidations {"sz3:abs_error_bound", "sz3:rel_error_bound", "sz3:psnr_error_bound", "sz3:l2_norm_error_bound", "sz3:error_bound_mode", "sz3:algorithm", "sz3:lorenzo", "sz3:lorenzo2", "sz3:regression", "sz3:regression2", "sz3:openmp", "sz3:lossless", "sz3:encoder", "sz3:interp_algo", "sz3:interp_direction", "sz3:interp_block_size", "sz3:quant_bin_size", "sz3:stride", "sz3:pred_dim", "pressio:abs", "pressio:rel",  "sz3:error_bound_mode_str", "sz3:intrep_algo_str", "sz3:algorithm_str"}; 
-        std::vector<std::string> runtime_invalidations {"sz3:abs_error_bound", "sz3:rel_error_bound", "sz3:psnr_error_bound", "sz3:l2_norm_error_bound", "sz3:error_bound_mode", "sz3:algorithm", "sz3:lorenzo", "sz3:lorenzo2", "sz3:regression", "sz3:regression2", "sz3:openmp", "sz3:lossless", "sz3:encoder", "sz3:interp_algo", "sz3:interp_direction", "sz3:interp_block_size", "sz3:quant_bin_size", "sz3:stride", "sz3:pred_dim", "pressio:abs", "pressio:rel", "pressio:nthreads", "sz3:error_bound_mode_str", "sz3:intrep_algo_str", "sz3:algorithm_str"}; 
+        std::vector<std::string> invalidations {"sz3:abs_error_bound", "sz3:rel_error_bound", "sz3:psnr_error_bound", "sz3:l2_norm_error_bound", "sz3:error_bound_mode", "sz3:algorithm", "sz3:lorenzo", "sz3:lorenzo2", "sz3:regression", "sz3:regression2", "sz3:openmp",   "sz3:interp_algo", "sz3:interp_direction",  "sz3:quant_bin_size",  "sz3:pred_dim", "pressio:abs", "pressio:rel",  "sz3:error_bound_mode_str", "sz3:intrep_algo_str", "sz3:algorithm_str"}; 
+        std::vector<std::string> runtime_invalidations {"sz3:abs_error_bound", "sz3:rel_error_bound", "sz3:psnr_error_bound", "sz3:l2_norm_error_bound", "sz3:error_bound_mode", "sz3:algorithm", "sz3:lorenzo", "sz3:lorenzo2", "sz3:regression", "sz3:regression2", "sz3:openmp",   "sz3:interp_algo", "sz3:interp_direction",  "sz3:quant_bin_size",  "sz3:pred_dim", "pressio:abs", "pressio:rel", "pressio:nthreads", "sz3:error_bound_mode_str", "sz3:intrep_algo_str", "sz3:algorithm_str"}; 
         std::vector<pressio_configurable const*> invalidation_children {}; 
         
         set(options, "predictors:error_dependent", get_accumulate_configuration("predictors:error_dependent", invalidation_children, invalidations));
@@ -149,13 +149,9 @@ public:
     set(options, "sz3:regression", "use the regression predictor");
     set(options, "sz3:regression2", "use the 2nd order regression predictor");
     set(options, "sz3:openmp", "use openmp parallelization");
-    set(options, "sz3:lossless", "lossless compression method to apply; 1 bypass lossless, 1 zstd");
-    set(options, "sz3:encoder", "which encoder to use, 0 skip encoder, 1 huffman, 2 arithmatic");
     set(options, "sz3:interp_algo", "which intrepolation algorithm to use");
     set(options, "sz3:interp_direction", "which interpolation direction to use");
-    set(options, "sz3:interp_block_size", "what block size to use for interpolation to use");
     set(options, "sz3:quant_bin_size", "number of quantization bins");
-    set(options, "sz3:stride", "stride between items");
     set(options, "sz3:pred_dim", "prediction dimension");
     set(options, "sz3:algorithm_str", "compression algorithm");
     set(options, "sz3:error_bound_mode_str", "error bound");

@@ -9,6 +9,7 @@
 #include <cstring>
 #include <utility>
 #include <algorithm>
+#include <numeric>
 #include "pressio_data.h"
 #include "memory.h"
 
@@ -17,6 +18,37 @@
 #include <std_compat/memory.h>
 
 namespace libpressio {
+
+    namespace detail {
+        template <class... T>
+        size_t tuple_bytes(std::tuple<T...> const&) {
+            return (0 + ... + sizeof(T));
+        }
+
+        template<class... T>
+      std::array<size_t, std::tuple_size<std::tuple<T...>>::value> tuple_sizes(std::tuple<T...> const&){
+          std::array<size_t, std::tuple_size<std::tuple<T...>>::value> s {sizeof(T)...};
+          return s;
+      };
+        template<class... T>
+      std::array<size_t, std::tuple_size<std::tuple<T...>>::value> sizes(){
+          std::array<size_t, std::tuple_size<std::tuple<T...>>::value> s {sizeof(T)...};
+          return s;
+      };
+
+
+        template <class Tuple, class F, size_t... I>
+        void tuple_for_each_with_index_impl(Tuple&& t, F&& f, std::index_sequence<I...>) {
+            (f(std::get<I>(t), I),...);
+        }
+
+        template <class Tuple, class F>
+        void tuple_for_each_with_index(Tuple&& t, F&& f) {
+            return tuple_for_each_with_index_impl(std::forward<Tuple>(t), std::forward<F>(f),
+                    std::make_index_sequence<
+                        std::tuple_size<std::remove_reference_t<Tuple>>::value>{});
+        }
+    }
 
 /**
  * \file
@@ -57,11 +89,36 @@ size_t data_size_in_bytes(pressio_dtype type, size_t const dimensions, size_t co
 }
 
 
+enum pressio_data_header {
+    pressio_data_header_none = 0,
+    pressio_data_header_len = 1,
+    pressio_data_header_lentype = 2,
+    pressio_data_header_dimstype = 3,
+    pressio_data_header_full = 4
+};
+
 /**
  * represents a data buffer that may or may not be owned by the class
  */
 struct pressio_data {
 
+  /**
+   * allocates a new buffer with the contents of all of the bufs concatenated together
+   * \param[in] bufs the data to concatonate
+   * \param[in] header include a header with offsets or not
+   * \param[in] domain which domain to create the buffer in
+   */
+  static pressio_data join(std::vector<pressio_data>&& bufs, pressio_data_header header, std::shared_ptr<libpressio::domains::pressio_domain>&& domain);
+  static pressio_data join(std::vector<pressio_data>&& bufs, pressio_data_header header);
+  static pressio_data join(std::vector<pressio_data>&& bufs);
+  /**
+   * Splits the buffer created with ::join
+   * \param[in] input the buffer to be split
+   * \param[in] has_header if the data has a header or not
+   * \param[out] bufs if the
+   */
+  static void split(pressio_data input, pressio_data_header header, std::vector<pressio_data>& bufs);
+  static void split(pressio_data input, std::vector<pressio_data>& bufs);
   /**  
    * allocates a new empty data buffer
    *
@@ -531,6 +588,35 @@ struct pressio_data {
     }
   }
 
+  template <class... T>
+  pressio_data(std::tuple<T...>const& t): pressio_data(pressio_data::owning(pressio_byte_dtype, {::libpressio::detail::tuple_bytes(t)}))
+  {
+      auto sizes = ::libpressio::detail::sizes<T...>();
+      auto offsets = sizes;
+      std::exclusive_scan(sizes.begin(), sizes.end(), offsets.begin(), 0);
+      auto copy = [this, &offsets, &sizes](auto&& v, size_t i) {
+        memcpy(static_cast<uint8_t*>(data()) + offsets[i], &v, sizes[i]);
+      };
+      ::libpressio::detail::tuple_for_each_with_index(t, copy);
+
+  }
+  /**
+   * convert a packed binary pressio_data structure into std::tuple
+   * \returns the tuple containing the data
+   */
+  template <class T>
+  T to_tuple() const {
+      T t;
+      auto sizes = ::libpressio::detail::tuple_sizes(t);
+      auto offsets = sizes;
+      std::exclusive_scan(sizes.begin(), sizes.end(), offsets.begin(), 0);
+      auto copy = [this, &offsets, &sizes](auto&& v, size_t i) {
+        memcpy(&v, static_cast<uint8_t*>(data()) + offsets[i], sizes[i]);
+      };
+      ::libpressio::detail::tuple_for_each_with_index(t, copy);
+
+      return t;
+  }
   /**
    * convert a pressio_data structure into a 1d c++ standard vector.  If the type doesn't match, it will be casted first
    * \returns the vector containing the data

@@ -133,9 +133,13 @@ public:
     }
     auto input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
     size_t outSize = 0;
-    unsigned char *bytes = szp_compress(fastMode, to_dtype(input.dtype()), input.data(), &outSize, errBoundMode, absBound, relBound, input.num_elements(), block_size);  
-    *output = pressio_data::move(pressio_byte_dtype, bytes, {outSize}, domain_plugins().build("malloc"));
-    return 0;
+    try {
+        unsigned char *bytes = szp_compress(fastMode, to_dtype(input.dtype()), input.data(), &outSize, errBoundMode, absBound, relBound, input.num_elements(), block_size);  
+        *output = pressio_data::move(pressio_byte_dtype, bytes, {outSize}, domain_plugins().build("malloc"));
+        return 0;
+    } catch (std::runtime_error const& ex) {
+        set_error(1, ex.what());
+    }
   }
 
   int decompress_impl(const pressio_data* real_input,
@@ -148,9 +152,13 @@ public:
         num_threads = [old_threads]{omp_set_num_threads(old_threads);};
     }
     auto input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
-    void* data = (void*)szp_decompress(fastMode, to_dtype(output->dtype()), reinterpret_cast<unsigned char*>(input.data()), input.num_elements(), output->num_elements(), block_size);
-    *output = pressio_data::move(output->dtype(), data, output->dimensions(), domain_plugins().build("malloc"));
-    return 0;
+    try {
+        void* data = (void*)szp_decompress(fastMode, to_dtype(output->dtype()), reinterpret_cast<unsigned char*>(input.data()), input.num_elements(), output->num_elements(), block_size);
+        *output = pressio_data::move(output->dtype(), data, output->dimensions(), domain_plugins().build("malloc"));
+        return 0;
+    } catch(std::runtime_error const& ex) {
+        set_error(1, ex.what());
+    }
   }
 
   int major_version() const override { return 0; }
