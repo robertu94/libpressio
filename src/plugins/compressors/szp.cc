@@ -136,10 +136,10 @@ public:
     try {
         unsigned char *bytes = szp_compress(fastMode, to_dtype(input.dtype()), input.data(), &outSize, errBoundMode, absBound, relBound, input.num_elements(), block_size);  
         *output = pressio_data::move(pressio_byte_dtype, bytes, {outSize}, domain_plugins().build("malloc"));
-        return 0;
     } catch (std::runtime_error const& ex) {
-        set_error(1, ex.what());
+        return set_error(1, ex.what());
     }
+    return 0;
   }
 
   int decompress_impl(const pressio_data* real_input,
@@ -155,10 +155,10 @@ public:
     try {
         void* data = (void*)szp_decompress(fastMode, to_dtype(output->dtype()), reinterpret_cast<unsigned char*>(input.data()), input.num_elements(), output->num_elements(), block_size);
         *output = pressio_data::move(output->dtype(), data, output->dimensions(), domain_plugins().build("malloc"));
-        return 0;
     } catch(std::runtime_error const& ex) {
-        set_error(1, ex.what());
+        return set_error(1, ex.what());
     }
+    return 0;
   }
 
   int major_version() const override { return 0; }

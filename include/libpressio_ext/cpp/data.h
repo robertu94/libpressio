@@ -90,11 +90,10 @@ size_t data_size_in_bytes(pressio_dtype type, size_t const dimensions, size_t co
 
 
 enum pressio_data_header {
-    pressio_data_header_none = 0,
-    pressio_data_header_len = 1,
-    pressio_data_header_lentype = 2,
-    pressio_data_header_dimstype = 3,
-    pressio_data_header_full = 4
+    pressio_data_header_none = 0, /*no header, all type info must be stored separately*/
+    pressio_data_header_len = 1, /*just the length of each buffer must be stored*/
+    pressio_data_header_lentype = 2, /*just the length and type of each buffer must be stored*/
+    pressio_data_header_dimstype = 3, /*just the dimension and type of each buffer must be stored*/
 };
 
 /**
@@ -105,19 +104,25 @@ struct pressio_data {
   /**
    * allocates a new buffer with the contents of all of the bufs concatenated together
    * \param[in] bufs the data to concatonate
-   * \param[in] header include a header with offsets or not
+   * \param[in] header include a header to aid in restoring
    * \param[in] domain which domain to create the buffer in
    */
   static pressio_data join(std::vector<pressio_data>&& bufs, pressio_data_header header, std::shared_ptr<libpressio::domains::pressio_domain>&& domain);
   static pressio_data join(std::vector<pressio_data>&& bufs, pressio_data_header header);
   static pressio_data join(std::vector<pressio_data>&& bufs);
+
   /**
    * Splits the buffer created with ::join
    * \param[in] input the buffer to be split
    * \param[in] has_header if the data has a header or not
-   * \param[out] bufs if the
+   * \param[out] bufs the split buffers
    */
   static void split(pressio_data input, pressio_data_header header, std::vector<pressio_data>& bufs);
+  /**
+   * Splits the buffer created with ::join
+   * \param[in] input the buffer to be split
+   * \param[out] bufs the split buffers
+   */
   static void split(pressio_data input, std::vector<pressio_data>& bufs);
   /**  
    * allocates a new empty data buffer

@@ -326,17 +326,28 @@ TEST(test_to_from_tuple, test_to_from_tuple) {
     auto result = tuple_data.to_tuple<decltype(t)>();
     EXPECT_EQ(t, result);
 }
-TEST(test_join_split, test_join_split) {
+TEST(test_join_split, test_join_split_headerlen) {
     pressio_data a{1,2,3};
     pressio_data b{1.2,2.3,3.4};
     pressio_data c{1.2f,2.3f};
-    pressio_data joined = pressio_data::join({a,b,c});
+    pressio_data joined = pressio_data::join({a,b,c}, pressio_data_header_len);
     std::vector<pressio_data> s{
         pressio_data::empty(pressio_int32_dtype, {}),
         pressio_data::empty(pressio_double_dtype, {}),
         pressio_data::empty(pressio_float_dtype, {}),
     };
-    pressio_data::split(joined, s);
+    pressio_data::split(joined, pressio_data_header_len, s);
+    EXPECT_EQ(s[0], a);
+    EXPECT_EQ(s[1], b);
+    EXPECT_EQ(s[2], c);
+}
+TEST(test_join_split, test_join_split_dimstype) {
+    pressio_data a{1,2,3};
+    pressio_data b{1.2,2.3,3.4};
+    pressio_data c{1.2f,2.3f};
+    pressio_data joined = pressio_data::join({a,b,c}, pressio_data_header_dimstype);
+    std::vector<pressio_data> s(3);
+    pressio_data::split(joined, pressio_data_header_dimstype, s);
     EXPECT_EQ(s[0], a);
     EXPECT_EQ(s[1], b);
     EXPECT_EQ(s[2], c);
