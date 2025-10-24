@@ -1,6 +1,6 @@
 # LibPressio
 
-Pressio is latin for compression.  LibPressio is a C++ library with C compatible bindings to abstract between different lossless and lossy compressors and their configurations.  It solves the problem of having to having to write separate application level code for each lossy compressor that is developed.  Instead, users write application level code using LibPressio, and the library will make the correct underlying calls to the compressors.  It provides interfaces to represent data, compressors settings, and compressors.
+Pressio is Latin for compression.  LibPressio is a C++ library with C compatible bindings to abstract between different lossless and lossy compressors and their configurations.  It solves the problem of having to having to write separate application level code for each lossy compressor that is developed.  Instead, users write application level code using LibPressio, and the library will make the correct underlying calls to the compressors.  It provides interfaces to represent data, compressors settings, and compressors.
 
 Documentation for the `master` branch can be [found here](https://robertu94.github.io/libpressio/)
 
@@ -16,12 +16,23 @@ pressio -i ~/git/datasets/hurricane/100x500x500/CLOUDf48.bin.f32 \
     -w /path/to/output.dec
 ```
 
-The reccomended way to learn LibPressio is with self-paced [LibPressio Tutorial](https://github.com/robertu94/libpressio_tutorial).
+Using the CLI from [`pressio-tools`](https://github.com/robertu94/pressio-tools) you can use
+the `pressio_new` command to generate scaffolding code for new projects.
+
+```bash
+#list available templates
+pressio_new 
+
+#generate a python sample code using SZ3
+pressio_new client:python sz3 ~/path/to/data
+```
+
+The recommended way to learn LibPressio is with self-paced [LibPressio Tutorial](https://github.com/robertu94/libpressio_tutorial).
 Here you will find examples of how to use LibPressio in a series of lessons for several common languages.
 
 You can also find a [recording of the tutorial on YouTube](https://youtu.be/hZ_dFCMxmGw).
 
-## Getting Started
+## Overview of the library
 
 After skimming the example, LibPressio has 6 major headers that you will need to use:
 
@@ -34,39 +45,43 @@ Type                  | Use
 `pressio_metrics.h`     | A set of metrics to run while compressors run
 `pressio_io.h`     | An extension header that provides methods to load or store data from/to persistent storage
 
-All of these are included by the convience header `libpressio.h`.
+
+All of these are included by the convenience header `libpressio.h`.
+
+There is also a C++ interface that can be bound in `libpressio_ext/cpp/libpressio.h` which provides access to unstable features
+and the ability to extend the library.
 
 You can pick up the more advanced features as you need them.
 
-You can also find more examples in `test/` or in the [LibPressio intresting scripts collection](https://github.com/robertu94/libpressio-interesting-scripts) which catalogs intresting higher-level use cases.
+You can also find more examples in `test/` or in the [LibPressio interesting scripts collection](https://github.com/robertu94/libpressio-interesting-scripts) which catalogs interesting higher-level use cases.
 
 ## Supported Compressors and Metrics
 
-Libpressio provides a number of builtin compressor and metrics modules.
+LibPressio provides a number of builtin compressor and metrics modules.
 All of these are **disabled by default**.
 They can be enabled by passing the corresponding `LIBPRESSIO_HAS_*` variable to CMake.
 
-Additionally, Libpressio is extensible.
+Additionally, LibPressio is extensible.
 For information on writing a compressor plugin see [Writing a Compressor Plugin](docs/WritingACompressorPlugin.md)
 For information on writing a metrics plugin see [Writing a Metrics Plugin](docs/WritingAMetricsPlugin.md)
 
 
 ### Compressor Plugins
 
-1st party compressors plugins can be found in [src/plugins/compressors](https://github.com/robertu94/libpressio/tree/master/src/plugins/compressors)
+First party compressors plugins can be found in [src/plugins/compressors](https://github.com/robertu94/libpressio/tree/master/src/plugins/compressors)
 
 See the [compressor settings page](build/Compressors.md) for information on how to configure them.
 
 
 ### Metrics Plugins
 
-1st party compressors plugins can be found in [src/plugins/metrics](https://github.com/robertu94/libpressio/tree/master/src/plugins/metrics)
+First party compressors plugins can be found in [src/plugins/metrics](https://github.com/robertu94/libpressio/tree/master/src/plugins/metrics)
 
 See the [metrics results page](build/Metrics.md) for information on what they produce
 
 ### IO Plugins
 
-1st party compressors plugins can be found in [src/plugins/io](https://github.com/robertu94/libpressio/tree/master/src/plugins/io)
+First party compressors plugins can be found in [src/plugins/io](https://github.com/robertu94/libpressio/tree/master/src/plugins/io)
 
 See the [io settings page](build/IO.md) for information on how to configure them
 
@@ -74,7 +89,7 @@ See the [io settings page](build/IO.md) for information on how to configure them
 
 ## Installing LibPressio using Spack
 
-LibPressio can be built using [spack](https://github.com/spack/spack/).  This example will install libpressio with only the SZ3 plugin.
+LibPressio can be built using [spack](https://github.com/spack/spack/).  This example will install LibPressio with only the SZ3 plugin.
 
 ```bash
 git clone https://github.com/spack/spack
@@ -82,7 +97,7 @@ source ./spack/share/spack/setup-env.sh
 spack install libpressio+sz3
 ```
 
-More information on spack can be found in the [spack documentation](https://spack.readthedocs.io/en/latest/) or [my quick start guides for systems that I use](https://robertu94.github.io/guides)
+More information on Spack can be found in the [Spack documentation](https://spack.readthedocs.io/en/latest/) or [my quick start guides for systems that I use](https://robertu94.github.io/guides)
 
 You can see the other available versions and compilation options by calling `spack info libpressio`
 
@@ -90,10 +105,10 @@ The following language bindings are in this repository.
 
 + `C` -- (default) if you need a stable interface
 + `C++` -- (default) if you want a more productive interface, or want to extend LibPressio
-+ `Python` -- (`+python`; BUILD_PYTHON_WRAPPER) if you know or want to intergate Python
++ `Python` -- (`+python`; BUILD_PYTHON_WRAPPER) if you know or want to integrate Python
 + `HDF5` -- (`+hdf5+json`; LIBPRESSIO_HAS_HDF AND LIBPRESSIO_HAS_JSON) you already use HDF5
 
-The following bindings must be installed seperately:
+The following bindings must be installed separately:
 
 + `R` -- [r-libpressio](https://github.com/robertu94/libpressio-r) if you know or want to integrate with R
 + `Bash/CLI` -- [libpressio-tools](https://github.com/robertu94/pressio-tools)  if you want to quickly prototype from the CLI
@@ -103,16 +118,19 @@ The following bindings are experimental and can be installed manually:
 + `Julia` -- [libpressio-jl](https://github.com/robertu94/LibPressio.jl) if you know or want to integrate with Julia
 + `Rust` -- [libpressio-rs](https://github.com/robertu94/libpressio-rs) if you know or want to integrate with Rust
 
-## Doing a development build with spack
+## Doing a development build with Spack
 
-The easiest way to do a development build of libpressio is to use Spack envionments.
+The easiest way to do a development build of LibPressio is to use Spack environments.
 
 ```bash
-# one time setup: create an envionment
+# one time setup: install the Spack repo for pre-release versions 
+spack repo add https://github.com/robertu94/spack_packages
+
+# one time setup: create an environment
 spack env create -d mydevenviroment
 spack env activate mydevenvionment
 
-# one time setup: tell spack to set LD_LIBRARY_PATH with the spack envionment's library paths
+# one time setup: tell Spack to set LD_LIBRARY_PATH with the Spack environment's library paths
 spack config add modules:prefix_inspections:lib64:[LD_LIBRARY_PATH]
 spack config add modules:prefix_inspections:lib:[LD_LIBRARY_PATH]
 
@@ -137,16 +155,16 @@ Libpressio unconditionally requires:
   + `gcc-4.8.5` or later
   + `clang-7.0.0` or later using either `libc++` or `libstdc++`.  Beware that system libraries may need to be recompiled with `libc++` if using `libc++`
 
-Dependency versions and optional dependencies are documented [in the spack package](https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/libpressio/package.py).
+Dependency versions and optional dependencies are documented [in the Spack package](https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/libpressio/package.py).
 
 
 ## Configuring LibPressio Manually
 
-LibPressio uses a fairly standard CMake buildsystem.
+LibPressio uses a fairly standard CMake build-system.
 For more information on [CMake refer to these docs](https://robertu94.github.io/learning/cmake)
 
 The set of configuration options for LibPressio can be found using `cmake -L $BUILD_DIR`.
-For information on what these settings do, see the [spack package](https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/libpressio/package.py)
+For information on what these settings do, see the [Spack package](https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/libpressio/package.py)
 
 # API Stability
 
@@ -158,13 +176,13 @@ Please refer to [CONTRIBUTORS.md](CONTRIBUTORS.md) for a list of contributors, s
 
 # Bug Reports
 
-Please files bugs to the Github Issues page on the CODARCode libpressio repository.
+Please files bugs to the GitHub Issues page on the CODARCode libpressio repository.
 
 Please read this post on [how to file a good bug report](https://codingnest.com/how-to-file-a-good-bug-report/).  After reading this post, please provide the following information specific to libpressio:
 
 + Your OS version and distribution information, usually this can be found in `/etc/os-release`
 + the output of `cmake -L $BUILD_DIR`
-+ the version of each of libpressio's dependencies listed in the README that you have installed. Where possible, please provide the commit hashes.
++ the version of each of LibPressio's dependencies listed in the README that you have installed. Where possible, please provide the commit hashes.
 
 
 # Citing LibPressio
