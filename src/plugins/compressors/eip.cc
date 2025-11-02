@@ -1,5 +1,6 @@
 
 #include <array>
+#include <sstream>
 #include <cuda_runtime.h>
 #include "std_compat/memory.h"
 #include "libpressio_ext/cpp/compressor.h"
@@ -12,23 +13,22 @@
 #include "cusz/kernel/spv.hh"
 #include "cusz/mem/cxx_backends.h"
 #include "cusz/hf_hl.hh"
-#include "cusz/mem/compbuf_pbk.hh"
+#include "cusz/hf_impl.hh"
+#include "cusz/mem/buf_eip.hh"
 
 namespace libpressio { namespace compressors { namespace eip_ns {
 
-
-    constexpr size_t Radius = 128;
-using T = float; using M = uint32_t;
-using E = uint16_t;
+constexpr size_t Radius = 128;
+using T = float; using M = uint32_t; using E = uint16_t;
 template <class T> using PC_ref = psz::PredConfig<T, psz::PredFunc<Toggle::ZigZagDisabled>>;
 template <class T> using GPU_xlrz_ref = psz::module::GPU_x_lorenzo_nd<T, PC_ref<T>>;
-using Buf = psz::CompressorBufferPbk2<float, 128>;
 using PC_eip = psz::PredConfig<
         T, psz::PredFunc<
            Toggle::ZigZagDisabled, Toggle::StatLocalEnabled, Toggle::StatGlobalDisabled,
            Toggle::QuantGroupingDisabled, Toggle::FutureEIPEnabled>>;
-using GPU_EIP_comp_r128 = psz::module::GPU_c_lorenzo_1d_eip<f4, EIP_PC_f4, 128, 4 /* 4 points per thread, best case for perf*/>;
-using BufToggle = psz::CompressorBufferPbkToggle;
+using GPU_EIP_comp_r128 = psz::module::GPU_c_lorenzo_1d_eip<float, EIP_PC_f4, 128, 4 /* 4 points per thread, best case for perf*/>;
+using BufToggle = psz::BufToggle_EIP;
+using Buf = psz::Buf_EIP<float, 128>;
 
 BufToggle toggle_eip{.pbk_all = true};
 
@@ -95,18 +95,17 @@ public:
     if(real_input->dtype() != pressio_float_dtype) return set_error(1, "unsupported type");
     auto input = domain_manager().make_readable(domain_plugins().build("cudamalloc"), *real_input);
 
-
     cudaStream_t stream;
     cudaStreamCreate(&stream);
 
     GPU_EIP_comp_r128::kernel(
-          (float*)input.data(), input.num_elements(), (void*)eip->outlier(), bound, eip->pbk_books(),
-          eip->pbk_book_IDs(), eip->pbk_bitstream(), eip->pbk_bits(),
-          eip->pbk_entries(), eip->pbk_loc(), eip->pbk_break(), stream);
+          (float*)input.data(), input.num_elements(), bound, eip->pbk_BOOKs_d(),
+          (void*)eip->outlier(), eip->pbk_bitstream_d(), eip->pbk_break(), eip->pbk_book_IDs_d(), eip->pbk_bits_d(), eip->pbk_entries_d(), eip->pbk_loc(), 
+          stream);
 
-    auto endloc = eip->pbk_encoding_endloc(); // contains a d2h copy of one size_t
+    auto endloc = eip->pbk_comp_len(); // contains a d2h copy of one size_t
     auto brlen = eip->host_get_pbk_break_num();
-    auto splen = eip->host_get_unpredictable_num();
+    auto splen = eip->host_get_outlier_num();
 
     // right now, the errno is arbirarily defined.
     std::stringstream ss;
@@ -115,7 +114,7 @@ public:
            << eip->pbk_break_num_max() << ") exceeded";
       return set_error(1, ss.str());
     }
-    if (splen >= eip->unpredictable_num_max() - 1) {
+    if (splen >= eip->outlier_num_max() - 1) {
       ss << "[psz::warning::pbk_run::EIP] max allowed unpredictable ("
            << eip->outlier_ratio() << " * input-len) exceeded";
       return set_error(1, ss.str());
@@ -123,16 +122,15 @@ public:
 
     *output = pressio_data::join({
             pressio_data(std::make_tuple(endloc, brlen, splen)),
-            pressio_data::nonowning(pressio_dtype_from_type<std::decay_t<decltype(*eip->pbk_book_IDs())>>(), eip->pbk_book_IDs(), {eip->num_chunk()}, "cudamalloc"),
-            pressio_data::nonowning(pressio_dtype_from_type<std::decay_t<decltype(*eip->pbk_entries())>>(), eip->pbk_entries(), {eip->num_chunk()}, "cudamalloc"),
-            pressio_data::nonowning(pressio_dtype_from_type<std::decay_t<decltype(*eip->pbk_bits())>>(), eip->pbk_bits(), {eip->num_chunk()}, "cudamalloc"),
-            pressio_data::nonowning(pressio_dtype_from_type<std::decay_t<decltype(*eip->pbk_bitstream())>>(), eip->pbk_bitstream(), {endloc}, "cudamalloc"),
-            pressio_data::nonowning(pressio_dtype_from_type<std::decay_t<decltype(*eip->pbk_break_val())>>(), eip->pbk_break_val(), {brlen}, "cudamalloc"),
-            pressio_data::nonowning(pressio_dtype_from_type<std::decay_t<decltype(*eip->pbk_break_idx())>>(), eip->pbk_break_idx(), {brlen}, "cudamalloc"),
-            pressio_data::nonowning(pressio_dtype_from_type<std::decay_t<decltype(*eip->unpredictable_val())>>(), eip->unpredictable_val(), {splen}, "cudamalloc"),
-            pressio_data::nonowning(pressio_dtype_from_type<std::decay_t<decltype(*eip->unpredictable_idx())>>(), eip->unpredictable_idx(), {splen}, "cudamalloc"),
+            pressio_data::nonowning(pressio_dtype_from_type<std::decay_t<decltype(*eip->pbk_book_IDs_d())>>(), eip->pbk_book_IDs_d(), {eip->num_chunk()}, "cudamalloc"),
+            pressio_data::nonowning(pressio_dtype_from_type<std::decay_t<decltype(*eip->pbk_entries_d())>>(), eip->pbk_entries_d(), {eip->num_chunk()}, "cudamalloc"),
+            pressio_data::nonowning(pressio_dtype_from_type<std::decay_t<decltype(*eip->pbk_bits_d())>>(), eip->pbk_bits_d(), {eip->num_chunk()}, "cudamalloc"),
+            pressio_data::nonowning(pressio_dtype_from_type<std::decay_t<decltype(*eip->pbk_bitstream_d())>>(), eip->pbk_bitstream_d(), {endloc}, "cudamalloc"),
+            pressio_data::nonowning(pressio_dtype_from_type<std::decay_t<decltype(*eip->pbk_break_val_d())>>(), eip->pbk_break_val_d(), {brlen}, "cudamalloc"),
+            pressio_data::nonowning(pressio_dtype_from_type<std::decay_t<decltype(*eip->pbk_break_idx_d())>>(), eip->pbk_break_idx_d(), {brlen}, "cudamalloc"),
+            pressio_data::nonowning(pressio_dtype_from_type<std::decay_t<decltype(*eip->outlier_val_d())>>(), eip->outlier_val_d(), {splen}, "cudamalloc"),
+            pressio_data::nonowning(pressio_dtype_from_type<std::decay_t<decltype(*eip->outlier_idx_d())>>(), eip->outlier_idx_d(), {splen}, "cudamalloc"),
             });
-
 
     return 0;
   }
@@ -171,7 +169,6 @@ public:
 
     size_t splen, brlen, endloc;
     std::tie(endloc, brlen, splen) = restore.at(0).to_tuple<std::tuple<size_t, size_t, size_t>>();
-    
 
     cudaStream_t stream;
     cudaStreamCreate(&stream);
@@ -184,8 +181,8 @@ public:
     size_t len = output->num_elements();
     pressio_data ectrl_eip(pressio_data::owning(pressio_dtype_from_type<E>(), {len}));
     phf::cuhip::modules<E, Hf>::CPU_pbk_coarse_decode(                                            
-      (uint32_t*)bitstream.data(), endloc, eip->pbk_revbooks_h(), eip->PBK_RVBK_BYTES(), 
-      (uint8_t*)book_ids.data(), (uint16_t*)bits.data(), (uint32_t*)entries.data(),               
+      (uint32_t*)restore.at(4).data(), endloc, eip->pbk_RVBKs_h(), eip->PBK_RVBK_BYTES(), 
+      (uint8_t*)restore.at(1).data(), (uint16_t*)restore.at(3).data(), (uint32_t*)restore.at(2).data(),               
       (E*)ectrl_eip.data(), len);
 
     // request an h2d copy: use host buffer for Huffman decoding
@@ -201,10 +198,8 @@ public:
     auto d_space = (T*)output->data(), d_xdata = (T*)output->data();  // aliases
 
     std::array<size_t, 3> len3_std;
-    GPU_xlrz_ref<T>::kernel(eip->ectrl(), d_space, d_xdata, len3_std, bound, Radius, stream);
+    GPU_xlrz_ref<T>::kernel(eip->equant_d(), d_space, d_xdata, len3_std, bound, Radius, stream);
     cudaStreamSynchronize(stream);
-
-
 
     return 0;
   }
