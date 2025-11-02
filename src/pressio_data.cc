@@ -284,7 +284,7 @@ void pressio_data::split(pressio_data input, pressio_data_header header, std::ve
                         ndims_ptr,
                         ndims_ptr+n_dims[i],
                         dims[i].begin());
-                ndims_ptr[i] += n_dims[i];
+                ndims_ptr += n_dims[i];
             }
             std::vector<size_t> offsets(bufs.size());
             std::vector<size_t> sizes(bufs.size());
@@ -395,6 +395,9 @@ void pressio_data::split(pressio_data input, std::vector<pressio_data>& bufs) {
     return pressio_data::split(input, pressio_data_header_dimstype, bufs);
 }
 
+pressio_data pressio_data::type_domain(const pressio_dtype dtype, std::shared_ptr<libpressio::domains::pressio_domain> && domain) {
+    return pressio_data(dtype, {}, pressio_memory(std::move(domain)));
+  }
 pressio_data pressio_data::empty(const pressio_dtype dtype, std::vector<size_t> const& dimensions, std::shared_ptr<libpressio::domains::pressio_domain> && domain) {
     return pressio_data(dtype, dimensions, pressio_memory(std::move(domain)));
   }

@@ -125,6 +125,15 @@ struct pressio_data {
    */
   static void split(pressio_data input, std::vector<pressio_data>& bufs);
   /**  
+   * allocates a new empty data buffer with a given type in a domain
+   *
+   * \param[in] dtype the type the buffer will contain
+   * \param[in] domain where the data will be allocated if it were provided
+   * \returns an empty data object (i.e. has no data)
+   * \see pressio_data_new_empty
+   * */
+  static pressio_data type_domain(const pressio_dtype dtype, std::shared_ptr<libpressio::domains::pressio_domain>&& domain);
+  /**  
    * allocates a new empty data buffer
    *
    * \param[in] dtype the type the buffer will contain

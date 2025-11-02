@@ -139,8 +139,27 @@ public:
                       struct pressio_data* output) override
   {
     auto input = domain_manager().make_readable(domain_plugins().build("cudamalloc"), *real_input);
-    std::vector<pressio_data> restore;
+    std::vector<pressio_data> restore{
+            pressio_data(),
+            pressio_data::type_domain(pressio_dtype_from_type<std::decay_t<decltype(*eip->pbk_book_IDs())>>(),  domain_plugins().build("cudamalloc")),
+            pressio_data::type_domain(pressio_dtype_from_type<std::decay_t<decltype(*eip->pbk_entries())>>(), domain_plugins().build( "cudamalloc")),
+            pressio_data::type_domain(pressio_dtype_from_type<std::decay_t<decltype(*eip->pbk_bits())>>(), domain_plugins().build( "cudamalloc")),
+            pressio_data::type_domain(pressio_dtype_from_type<std::decay_t<decltype(*eip->pbk_bitstream())>>(),  domain_plugins().build( "cudamalloc")),
+            pressio_data::type_domain(pressio_dtype_from_type<std::decay_t<decltype(*eip->pbk_break_val())>>(),  domain_plugins().build( "cudamalloc")),
+            pressio_data::type_domain(pressio_dtype_from_type<std::decay_t<decltype(*eip->pbk_break_idx())>>(),  domain_plugins().build( "cudamalloc")),
+            pressio_data::type_domain(pressio_dtype_from_type<std::decay_t<decltype(*eip->unpredictable_val())>>(), domain_plugins().build( "cudamalloc")),
+            pressio_data::type_domain(pressio_dtype_from_type<std::decay_t<decltype(*eip->unpredictable_idx())>>(), domain_plugins().build( "cudamalloc")),
+    };
     pressio_data::split(input, restore);
+    auto metadata = std::move(restore.at(0));
+    auto book_ids = std::move(restore.at(1));
+    auto entries = std::move(restore.at(2));
+    auto bits = std::move(restore.at(3));
+    auto bitstream = std::move(restore.at(4));
+    auto break_val = std::move(restore.at(5));
+    auto break_idx = std::move(restore.at(6));
+    auto unpred_val = std::move(restore.at(7));
+    auto unpred_idx = std::move(restore.at(8));
     *output = domain_manager().make_writeable(domain_plugins().build("cudamalloc"), std::move(*output));
 
     // The following variables are from the compression archive:
@@ -155,11 +174,11 @@ public:
     cudaStreamCreate(&stream);
     if (splen)
       psz::spv_scatter_naive<CUDA, T, M>(
-          (T*)restore.at(7).data(), (uint32_t*)restore.at(8).data(), splen, (float*)output->data(),
+          (T*)unpred_val.data(), (uint32_t*)unpred_idx.data(), splen, (float*)output->data(),
           nullptr, stream);
     cudaStreamSynchronize(stream);
 
-    size_t len;
+    size_t len = output->num_elements();
     pressio_data ectrl_eip(pressio_data::owning(pressio_dtype_from_type<E>(), {len}));
     phf::cuhip::modules<E, Hf>::CPU_pbk_coarse_decode(                                            
       (uint32_t*)restore.at(4).data(), endloc, eip->pbk_RVBKs_h(), eip->PBK_RVBK_BYTES(), 
@@ -172,7 +191,7 @@ public:
     // Then fix the breakings during parallel encoding
     if (brlen)
       psz::spv_scatter_naive<CUDA, E, M>(
-          (uint16_t*)restore.at(5).data(), (uint32_t*)restore.at(6).data(), brlen, (uint16_t*)ectrl_eip.data(), nullptr,
+          (uint16_t*)break_val.data(), (uint32_t*)break_idx.data(), brlen, (uint16_t*)ectrl_eip.data(), nullptr,
           stream);
     cudaStreamSynchronize(stream);
 
