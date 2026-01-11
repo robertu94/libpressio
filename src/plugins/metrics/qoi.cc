@@ -122,22 +122,51 @@ class qoi_plugin : public libpressio_metrics_plugin {
 
   }
 
-  pressio_options get_metrics_results(pressio_options const & parent)  override {
+  // pressio_options get_metrics_results(pressio_options const & parent)  override {
 
-    pressio_options opt;
-    opt.copy_from(child->get_metrics_results(opt));
-    pressio_data qoi_data;
+  //   pressio_options opt;
+  //   opt.copy_from(child->get_metrics_results(opt));
+  //   pressio_data qoi_data;
 
-    // if(get(opt, qoi, &qoi_data) == pressio_options_key_set) {
-    //   printf("success------------------------------------");
+  //   // if(get(opt, qoi, &qoi_data) == pressio_options_key_set) {
+  //   //   printf("success------------------------------------");
 
+  //   // }
+
+
+
+  //   return opt;
+
+  // }
+  pressio_options get_metrics_results(pressio_options const & parent) override {
+  pressio_options opt = child->get_metrics_results(parent);
+  pressio_data qoi_data;
+
+  if(get(opt, "external:results:data", &qoi_data) == pressio_options_key_set) {
+    // std::string json_str(static_cast<const char*>(qoi_data.data()), qoi_data.size());
+    printf("success-----------------------");
+    // try {
+    //   nlohmann::json meta = nlohmann::json::parse(json_str);
+
+    //   if(meta.contains("mean")) {
+    //     double mean = meta["mean"].get<double>();
+
+    //     // 将 mean 存入新的 pressio_data（float64 类型）
+    //     pressio_data mean_data = pressio_data::owning(pressio_double_dtype, {1});
+    //     static_cast<double*>(mean_data.data())[0] = mean;
+
+    //     // 放入当前 metrics 的输出
+    //     set(opt, "qoi:results:data", mean_data);
+    //   }
+
+    // } catch(const std::exception& e) {
+    //   std::cerr << "[QOI] Failed to parse JSON: " << e.what() << std::endl;
     // }
-
-
-
-    return opt;
-  
   }
+
+  return opt;
+}
+
 
   std::unique_ptr<libpressio_metrics_plugin> clone() override {
     return compat::make_unique<qoi_plugin>(*this);
