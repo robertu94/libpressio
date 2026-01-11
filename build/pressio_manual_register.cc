@@ -62,9 +62,6 @@
 		namespace noop_ns {
 			extern pressio_register registration;
 		}
-		namespace qoi_ns {
-			extern pressio_register registration;
-		}
 	} /*namespace metrics*/
 } /*namespace libpressio*/
 extern "C" void pressio_register_all() {
@@ -83,7 +80,6 @@ libpressio::metrics::composite_ns::registration.ensure_registered();
 libpressio::metrics::error_stat_ns::registration.ensure_registered();
 libpressio::metrics::external_ns::registration.ensure_registered();
 libpressio::metrics::noop_ns::registration.ensure_registered();
-libpressio::metrics::qoi_ns::registration.ensure_registered();
 
     }
     
