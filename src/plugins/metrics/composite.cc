@@ -157,7 +157,7 @@ class composite_plugin : public libpressio_metrics_plugin {
   pressio_options get_metrics_results(pressio_options const &)  override {
     struct pressio_options metrics_result;
     for (auto const& plugin : plugins) {
-      pressio_options plugin_options = plugin->get_metrics_results({});
+      pressio_options plugin_options = plugin->get_metrics_results(metrics_result);
       auto tmp = pressio_options_merge(&metrics_result, &plugin_options);
       metrics_result = std::move(*tmp);
       pressio_options_free(tmp);

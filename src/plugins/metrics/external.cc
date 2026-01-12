@@ -86,15 +86,10 @@ class external_metric_plugin : public libpressio_metrics_plugin {
       return 0;
     }
 
-    int end_decompress_many_impl(compat::span<const pressio_data* const> const& ,
+    int end_decompress_many_impl(compat::span<const pressio_data* const> const& inputs,
                                    compat::span<const pressio_data* const> const& outputs, int ) override {
-      if(use_many or outputs.size() > 1) {
-        std::vector<const pressio_data*> input_ptrs(input_data.size());
-        for (size_t i = 0; i < input_data.size(); ++i) {
-          input_ptrs[i] = &input_data[i];
-        }
-        compat::span<const pressio_data* const> input_datasets{input_ptrs.data(), input_ptrs.size()};
-        run_external(input_datasets, outputs);
+      if(use_many or outputs.size() > 1 or ((not use_many) and outputs.size() == 1 and field_names.size() == 1)) {
+        run_external(inputs, outputs);
       }
       return 0;
     }

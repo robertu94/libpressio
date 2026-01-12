@@ -11,9 +11,12 @@
 
 // #include <nlohmann/json.hpp>
 #include <cstring>
+#include <cstdio>
 #include <vector>
 #include <string>
 #include <iostream>
+#include <algorithm>
+#include <numeric>
 
 
 
@@ -25,6 +28,8 @@ namespace qoi_ns {
 class qoi_plugin : public libpressio_metrics_plugin {
   public:
   int set_options(pressio_options const& options) override {
+    fprintf(stderr, "[QOI] set_options called\n");
+    fflush(stderr);
     get_meta(options, "qoi:metric", metrics_plugins(), child_id, child);
     // options.get("qoi:metric_name", &metric_name);
     return 0;
@@ -74,6 +79,7 @@ class qoi_plugin : public libpressio_metrics_plugin {
 
   int end_compress_impl(struct pressio_data const* input, pressio_data const * output, int rc) override {
     // Logic to calculate min_v, max_v, p99_v, p999_v, wasserstein_v would go here
+    printf("--------------");
     return child->end_compress(input, output, rc);
   }
 
@@ -122,50 +128,55 @@ class qoi_plugin : public libpressio_metrics_plugin {
 
   }
 
-  // pressio_options get_metrics_results(pressio_options const & parent)  override {
-
-  //   pressio_options opt;
-  //   opt.copy_from(child->get_metrics_results(opt));
-  //   pressio_data qoi_data;
-
-  //   // if(get(opt, qoi, &qoi_data) == pressio_options_key_set) {
-  //   //   printf("success------------------------------------");
-
-  //   // }
-
-
-
-  //   return opt;
-
-  // }
   pressio_options get_metrics_results(pressio_options const & parent) override {
-  pressio_options opt = child->get_metrics_results(parent);
-  pressio_data qoi_data;
+    pressio_options opt = child->get_metrics_results(parent);
+    pressio_data qoi_data;
+    double qoi_value;
 
-  if(get(opt, "external:results:data", &qoi_data) == pressio_options_key_set) {
-    // std::string json_str(static_cast<const char*>(qoi_data.data()), qoi_data.size());
-    printf("success-----------------------");
-    // try {
-    //   nlohmann::json meta = nlohmann::json::parse(json_str);
+    // Step 5: Get pressio_data from parent (when used with composite, parent contains accumulated results)
+    // First try to get as pressio_data
+    if(get(parent, qoi, &qoi_data) == pressio_options_key_set) {
+      fprintf(stderr, "[QOI] Got pressio_data from parent, key=%s\n", qoi.c_str());
+      // Step 5: Access values inside pressio_data
+      // Use templated accessors to safely iterate over the data
+      auto* ptr = static_cast<const double*>(qoi_data.data());
+      size_t n = qoi_data.num_elements();
+      fprintf(stderr, "[QOI] pressio_data: n=%zu, dtype=%d\n", n, qoi_data.dtype());
+      
+      // Calculate mean from pressio_data
+      if (n > 0 && qoi_data.dtype() == pressio_double_dtype) {
+        double mean = std::accumulate(ptr, ptr + n, 0.0) / static_cast<double>(n);
+        fprintf(stderr, "[QOI] Calculated mean=%f from pressio_data\n", mean);
+        set(opt, "qoi:mean", mean);
+        
+        // Verify it was set
+        double verify_mean;
+        if(get(opt, "qoi:mean", &verify_mean) == pressio_options_key_set) {
+          fprintf(stderr, "[QOI] Verified qoi:mean=%f is set in opt\n", verify_mean);
+        } else {
+          fprintf(stderr, "[QOI] ERROR: qoi:mean was NOT set in opt!\n");
+        }
+      }
+    }
+    // Fallback: if pressio_data not found, try to get as double
+    else if(get(parent, qoi, &qoi_value) == pressio_options_key_set) {
+      fprintf(stderr, "[QOI] Got double from parent, key=%s, value=%f\n", qoi.c_str(), qoi_value);
+      // For single double value, mean is the value itself
+      set(opt, "qoi:mean", qoi_value);
+      
+      // Verify it was set
+      double verify_mean;
+      if(get(opt, "qoi:mean", &verify_mean) == pressio_options_key_set) {
+        fprintf(stderr, "[QOI] Verified qoi:mean=%f is set in opt\n", verify_mean);
+      } else {
+        fprintf(stderr, "[QOI] ERROR: qoi:mean was NOT set in opt!\n");
+      }
+    } else {
+      fprintf(stderr, "[QOI] WARNING: Could not get %s from parent\n", qoi.c_str());
+    }
 
-    //   if(meta.contains("mean")) {
-    //     double mean = meta["mean"].get<double>();
-
-    //     // 将 mean 存入新的 pressio_data（float64 类型）
-    //     pressio_data mean_data = pressio_data::owning(pressio_double_dtype, {1});
-    //     static_cast<double*>(mean_data.data())[0] = mean;
-
-    //     // 放入当前 metrics 的输出
-    //     set(opt, "qoi:results:data", mean_data);
-    //   }
-
-    // } catch(const std::exception& e) {
-    //   std::cerr << "[QOI] Failed to parse JSON: " << e.what() << std::endl;
-    // }
+    return opt;
   }
-
-  return opt;
-}
 
 
   std::unique_ptr<libpressio_metrics_plugin> clone() override {
