@@ -157,7 +157,7 @@ class composite_plugin : public libpressio_metrics_plugin {
   pressio_options get_metrics_results(pressio_options const &)  override {
     struct pressio_options metrics_result;
     for (auto const& plugin : plugins) {
-      pressio_options plugin_options = plugin->get_metrics_results({});
+      pressio_options plugin_options = plugin->get_metrics_results(metrics_result);
       auto tmp = pressio_options_merge(&metrics_result, &plugin_options);
       metrics_result = std::move(*tmp);
       pressio_options_free(tmp);
@@ -217,7 +217,20 @@ class composite_plugin : public libpressio_metrics_plugin {
     set(options, "composite:decompression_rate", "decompression rate for the compress method, activated by size and time (kB/s)");
     set(options, "composite:decompression_rate_many", "decompression rate for the compress_many method, activated by size and time (kB/s)");
     set(options, "composite:names", "the names to use for the constructed metrics plugins");
-    set(options, "composite:scripts", "a lua script used to compute metrics from other metrics that have been previously computed");
+    set(options, "composite:scripts", R"(a vector of lua scripts used to compute metrics from other metrics that have been previously computed
+
+    inputs:
+    
+    + table called `metrics` with the metrics computed by a child of the composite metric.
+    + any of the functions from lua's [base and math](https://www.lua.org/manual/5.4/manual.html#6) libraries can be used.
+
+    outputs:
+
+    + the script is expected to return a pair of string, optional<double> (i.e. nil in lua), the output is translated
+      to a result variable with a name like `composite:$name`.  For example, `return "objective", 1.2` would create a
+      variable `composite:objective` with a value of `1.2`.
+
+    )");
     set(options, "pressio:description", "meta-metric that runs a set of metrics in sequence");
 
     return options;
