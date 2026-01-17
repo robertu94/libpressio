@@ -22,6 +22,8 @@
 
 
 
+
+
 namespace libpressio { namespace metrics {
 
 namespace qoi_ns {
@@ -29,10 +31,7 @@ namespace qoi_ns {
 class qoi_plugin : public libpressio_metrics_plugin {
   public:
   int set_options(pressio_options const& options) override {
-    fprintf(stderr, "[QOI] set_options called\n");
-    fflush(stderr);
     get_meta(options, "qoi:metric", metrics_plugins(), child_id, child);
-    // options.get("qoi:metric_name", &metric_name);
     return 0;
   }
   pressio_options get_options() const override {
@@ -75,12 +74,14 @@ class qoi_plugin : public libpressio_metrics_plugin {
   }
 
   int begin_compress_impl(const struct pressio_data * input, struct pressio_data const * output) override {
+    // std::cout << "[QOI] begin_compress_impl: called" << std::endl;
     return child->begin_compress(input, output);
   }
 
   int end_compress_impl(struct pressio_data const* input, pressio_data const * output, int rc) override {
     // Logic to calculate min_v, max_v, p99_v, p999_v, wasserstein_v would go here
-    printf("--------------");
+    
+    
     return child->end_compress(input, output, rc);
   }
 
@@ -89,6 +90,7 @@ class qoi_plugin : public libpressio_metrics_plugin {
   }
 
   int end_decompress_impl(struct pressio_data const* input, pressio_data const* output, int rc) override {
+    
     return child->end_decompress(input, output, rc);
   }
 
@@ -131,63 +133,43 @@ class qoi_plugin : public libpressio_metrics_plugin {
 
   pressio_options get_metrics_results(pressio_options const & parent) override {
     pressio_options opt = child->get_metrics_results(parent);
-    pressio_data qoi_data;
-    double qoi_value;
-    // Iterate over all keys in child's results to find JSON-parsed keys
-    // JSON format: {"mean": 158.7, "std": 2.5} -> "external:results:mean", "external:results:std"
-    // Key-value format: "data=158.7\ndata=159.2..." -> "external:results:data" (pressio_data array)
-    const std::string prefix = "external:results:";
-    std::vector<double> values;  // Collect all values from JSON keys
-    bool found_any_json_key = false;
-    // Step 1: Iterate through all keys in child's results to find JSON keys
-    fprintf(stderr, "[QOI] DEBUG: Searching for JSON keys with prefix '%s':\n", prefix.c_str());
+
+    values.clear();  // Clear previous values
+
     for (auto const& item : opt) {
       const std::string& key = item.first;
+      const pressio_option& option = item.second;
       
-      // Check if key starts with "external:results:" (JSON-parsed keys)
-      if (key.find(prefix) == 0) {
-        std::string json_key = key.substr(prefix.length());  // Extract JSON key (e.g., "mean")
-        fprintf(stderr, "[QOI] Found JSON key: '%s' -> full key: '%s'\n", json_key.c_str(), key.c_str());
-        found_any_json_key = true;
-        
-        // Try to get as pressio_data (for arrays)
-        if (get(opt, key, &qoi_data) == pressio_options_key_set) {
-          fprintf(stderr, "[QOI]   - Key '%s' is pressio_data array\n", json_key.c_str());
-          auto* ptr = static_cast<const double*>(qoi_data.data());
-          size_t n = qoi_data.num_elements();
+      // Check if key starts with qoi ("external:results:")
+      if (key.find(qoi) == 0) {
+        // Try to get as pressio_data (for arrays) - directly from item.second
+        if (option.holds_alternative<pressio_data>() && option.has_value()) {
+          pressio_data temp_data = option.get_value<pressio_data>();
+          const double* ptr = static_cast<const double*>(temp_data.data());
+          size_t n = temp_data.num_elements();
           
-
+          // Put all values from pressio_data into values vector using pointer
+          if (ptr != nullptr && n > 0 && temp_data.dtype() == pressio_double_dtype) {
+            for (size_t i = 0; i < n; ++i) {
+              values.push_back(ptr[i]);
+            }
+          }
         }
-        // Try to get as double (for single values)
-        else if (get(opt, key, &qoi_value) == pressio_options_key_set) {
-          fprintf(stderr, "[QOI]   - Key '%s' is double: %f\n", json_key.c_str(), qoi_value);
-          values.push_back(qoi_value);
+        // Try to get as double (for single values) - directly from item.second
+        else if (option.holds_alternative<double>() && option.has_value()) {
+          double temp_value = option.get_value<double>();
+          values.push_back(temp_value);
         }
       }
     }
+    std::cout << "[QOI] Total values in vector: " << values.size() << std::endl;
+    for (size_t i = 0; i < values.size(); ++i) {
+      std::cout << "[QOI] values[" << i << "] = " << values[i] << std::endl;
+    }
 
-    
-    // Step 3: Convert collected values to pressio_data and iterate with pointer
-    if (found_any_json_key && !values.empty()) {
-      // Create pressio_data from collected values using copy (which copies the data)
-      pressio_data qoi_result = pressio_data::copy(pressio_double_dtype, values.data(), {values.size()});
-      
-      // Iterate through the data using pointer
-      const double* ptr = static_cast<const double*>(qoi_result.data());
-      size_t n = qoi_result.num_elements();
-      
-      fprintf(stderr, "[QOI] Created pressio_data with %zu elements, iterating with pointer:\n", n);
-
-      
-      // Store the entire pressio_data as qoi:data
-      set(opt, "qoi:data", qoi_result);
-    } else {
-      // Step 4: If still not found, report warning
-      fprintf(stderr, "[QOI] WARNING: No JSON keys found with prefix '%s' in child results or parent\n", prefix.c_str());
-      fprintf(stderr, "[QOI] Available keys in child results:\n");
-      for (auto const& item : opt) {
-        fprintf(stderr, "[QOI]   - %s\n", item.first.c_str());
-      }
+    if (!values.empty()) {
+      qoi_data = pressio_data::copy(pressio_double_dtype, values.data(), {values.size()});
+      set(opt, "qoi:data", qoi_data);
     }
 
     return opt;
@@ -206,9 +188,12 @@ class qoi_plugin : public libpressio_metrics_plugin {
 
   private:
 
-  std::string qoi = "external:results";  // Base prefix for JSON results: {"mean": value} -> external:results:mean
+  std::string qoi = "external:results:";  // Base prefix for JSON results: {"mean": value} -> external:results:mean
   pressio_metrics child = metrics_plugins().build("noop");
   std::string child_id = "noop";
+  pressio_data qoi_data = pressio_data::empty(pressio_byte_dtype, {}); 
+  std::vector<double> values;
+   // Store qoi:data as member (like kth_error.cc)
   // double mean = 0.0;
 };
 
