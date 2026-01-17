@@ -6,6 +6,7 @@
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/options.h"
 #include "libpressio_ext/cpp/pressio.h"
+#include "libpressio_ext/cpp/data.h"
 #include "std_compat/memory.h"
 
 
@@ -132,47 +133,70 @@ class qoi_plugin : public libpressio_metrics_plugin {
     pressio_options opt = child->get_metrics_results(parent);
     pressio_data qoi_data;
     double qoi_value;
-
-    // Step 5: Get pressio_data from parent (when used with composite, parent contains accumulated results)
-    // First try to get as pressio_data
-    if(get(parent, qoi, &qoi_data) == pressio_options_key_set) {
-      fprintf(stderr, "[QOI] Got pressio_data from parent, key=%s\n", qoi.c_str());
-      // Step 5: Access values inside pressio_data
-      // Use templated accessors to safely iterate over the data
-      auto* ptr = static_cast<const double*>(qoi_data.data());
-      size_t n = qoi_data.num_elements();
-      fprintf(stderr, "[QOI] pressio_data: n=%zu, dtype=%d\n", n, qoi_data.dtype());
+    // Iterate over all keys in child's results to find JSON-parsed keys
+    // JSON format: {"mean": 158.7, "std": 2.5} -> "external:results:mean", "external:results:std"
+    // Key-value format: "data=158.7\ndata=159.2..." -> "external:results:data" (pressio_data array)
+    const std::string prefix = "external:results:";
+    std::vector<double> values;  // Collect all values from JSON keys
+    bool found_any_json_key = false;
+    // Step 1: Iterate through all keys in child's results to find JSON keys
+    fprintf(stderr, "[QOI] DEBUG: Searching for JSON keys with prefix '%s':\n", prefix.c_str());
+    for (auto const& item : opt) {
+      const std::string& key = item.first;
       
-      // Calculate mean from pressio_data
-      if (n > 0 && qoi_data.dtype() == pressio_double_dtype) {
-        double mean = std::accumulate(ptr, ptr + n, 0.0) / static_cast<double>(n);
-        fprintf(stderr, "[QOI] Calculated mean=%f from pressio_data\n", mean);
-        set(opt, "qoi:mean", mean);
+      // Check if key starts with "external:results:" (JSON-parsed keys)
+      if (key.find(prefix) == 0) {
+        std::string json_key = key.substr(prefix.length());  // Extract JSON key (e.g., "mean")
+        fprintf(stderr, "[QOI] Found JSON key: '%s' -> full key: '%s'\n", json_key.c_str(), key.c_str());
+        found_any_json_key = true;
         
-        // Verify it was set
-        double verify_mean;
-        if(get(opt, "qoi:mean", &verify_mean) == pressio_options_key_set) {
-          fprintf(stderr, "[QOI] Verified qoi:mean=%f is set in opt\n", verify_mean);
-        } else {
-          fprintf(stderr, "[QOI] ERROR: qoi:mean was NOT set in opt!\n");
+        // Try to get as pressio_data (for arrays)
+        if (get(opt, key, &qoi_data) == pressio_options_key_set) {
+          fprintf(stderr, "[QOI]   - Key '%s' is pressio_data array\n", json_key.c_str());
+          auto* ptr = static_cast<const double*>(qoi_data.data());
+          size_t n = qoi_data.num_elements();
+          
+
+        }
+        // Try to get as double (for single values)
+        else if (get(opt, key, &qoi_value) == pressio_options_key_set) {
+          fprintf(stderr, "[QOI]   - Key '%s' is double: %f\n", json_key.c_str(), qoi_value);
+          values.push_back(qoi_value);
         }
       }
     }
-    // Fallback: if pressio_data not found, try to get as double
-    else if(get(parent, qoi, &qoi_value) == pressio_options_key_set) {
-      fprintf(stderr, "[QOI] Got double from parent, key=%s, value=%f\n", qoi.c_str(), qoi_value);
-      // For single double value, mean is the value itself
-      set(opt, "qoi:mean", qoi_value);
+
+    
+    // Step 3: Convert collected values to pressio_data and iterate with pointer
+    if (found_any_json_key && !values.empty()) {
+      // Create pressio_data from collected values using copy (which copies the data)
+      pressio_data qoi_result = pressio_data::copy(pressio_double_dtype, values.data(), {values.size()});
       
-      // Verify it was set
-      double verify_mean;
-      if(get(opt, "qoi:mean", &verify_mean) == pressio_options_key_set) {
-        fprintf(stderr, "[QOI] Verified qoi:mean=%f is set in opt\n", verify_mean);
-      } else {
-        fprintf(stderr, "[QOI] ERROR: qoi:mean was NOT set in opt!\n");
-      }
+      // Iterate through the data using pointer
+      const double* ptr = static_cast<const double*>(qoi_result.data());
+      size_t n = qoi_result.num_elements();
+      
+      fprintf(stderr, "[QOI] Created pressio_data with %zu elements, iterating with pointer:\n", n);
+      // for (size_t i = 0; i < n; ++i) {
+        // fprintf(stderr, "[QOI]   [%zu] = %f\n", i, ptr[i]);
+        
+        // Example: if this is the first value and it's "mean", set qoi:mean
+        // if (i == 0) {
+        //   // Assuming first value is mean (can be customized based on your needs)
+        //   set(opt, "qoi:mean", ptr[i]);
+        //   fprintf(stderr, "[QOI] Set qoi:mean=%f from pressio_data pointer[0]\n", ptr[i]);
+        // }
+      // }
+      
+      // Store the entire pressio_data as qoi:data
+      set(opt, "qoi:data", qoi_result);
     } else {
-      fprintf(stderr, "[QOI] WARNING: Could not get %s from parent\n", qoi.c_str());
+      // Step 4: If still not found, report warning
+      fprintf(stderr, "[QOI] WARNING: No JSON keys found with prefix '%s' in child results or parent\n", prefix.c_str());
+      fprintf(stderr, "[QOI] Available keys in child results:\n");
+      for (auto const& item : opt) {
+        fprintf(stderr, "[QOI]   - %s\n", item.first.c_str());
+      }
     }
 
     return opt;
@@ -191,7 +215,7 @@ class qoi_plugin : public libpressio_metrics_plugin {
 
   private:
 
-  std::string qoi = "external:results:data";
+  std::string qoi = "external:results";  // Base prefix for JSON results: {"mean": value} -> external:results:mean
   pressio_metrics child = metrics_plugins().build("noop");
   std::string child_id = "noop";
   // double mean = 0.0;
