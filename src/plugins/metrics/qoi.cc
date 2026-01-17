@@ -177,16 +177,7 @@ class qoi_plugin : public libpressio_metrics_plugin {
       size_t n = qoi_result.num_elements();
       
       fprintf(stderr, "[QOI] Created pressio_data with %zu elements, iterating with pointer:\n", n);
-      // for (size_t i = 0; i < n; ++i) {
-        // fprintf(stderr, "[QOI]   [%zu] = %f\n", i, ptr[i]);
-        
-        // Example: if this is the first value and it's "mean", set qoi:mean
-        // if (i == 0) {
-        //   // Assuming first value is mean (can be customized based on your needs)
-        //   set(opt, "qoi:mean", ptr[i]);
-        //   fprintf(stderr, "[QOI] Set qoi:mean=%f from pressio_data pointer[0]\n", ptr[i]);
-        // }
-      // }
+
       
       // Store the entire pressio_data as qoi:data
       set(opt, "qoi:data", qoi_result);
