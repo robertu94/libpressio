@@ -151,7 +151,6 @@ libpressio_plugin_file(io/by_extension.cc)
 libpressio_plugin_file(io/posix.cc)
 libpressio_plugin_file(domains/malloc.cc)
 libpressio_plugin_file(domains/nonowning.cc)
-# libpressio_plugin_file(metrics/qoi.cc)
 
 #optional components created with libpressio_optional_component don't require dependencies
 #they can be enabled in two (non-exclusive) ways:
