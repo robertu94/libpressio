@@ -95,6 +95,10 @@ public:
     if(real_input->dtype() != pressio_float_dtype) return set_error(1, "unsupported type");
     auto input = domain_manager().make_readable(domain_plugins().build("cudamalloc"), *real_input);
 
+    auto i_dims = input.normalized_dims(3,1);
+    if(!std::equal(i_dims.begin(), i_dims.end(), dims.begin())) {
+        eip = std::make_unique<Buf>(i_dims[0], i_dims[1], i_dims[2], false /* will revise in the future*/, &toggle_eip);
+    }
 
     cudaStream_t stream;
     cudaStreamCreate(&stream);
@@ -141,6 +145,13 @@ public:
                       struct pressio_data* output) override
   {
     auto input = domain_manager().make_readable(domain_plugins().build("cudamalloc"), *real_input);
+
+    auto i_dims = output->normalized_dims(3,1);
+    if(!std::equal(i_dims.begin(), i_dims.end(), dims.begin())) {
+        eip = std::make_unique<Buf>(i_dims[0], i_dims[1], i_dims[2], false /* will revise in the future*/, &toggle_eip);
+    }
+
+
     std::vector<pressio_data> restore{
             pressio_data(),
             pressio_data::type_domain(pressio_dtype_from_type<std::decay_t<decltype(*eip->pbk_book_IDs())>>(),  domain_plugins().build("cudamalloc")),

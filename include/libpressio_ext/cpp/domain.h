@@ -1,6 +1,7 @@
 #ifndef PRESSIO_DOMAIN_H_Z2ALCUZG
 #define PRESSIO_DOMAIN_H_Z2ALCUZG
 #include <cstddef>
+#include <cstdint>
 #include <string>
 #include <memory>
 #include <cstring>

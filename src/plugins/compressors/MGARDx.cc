@@ -52,6 +52,7 @@ public:
     struct pressio_options options;
     set(options, "pressio:thread_safe", pressio_thread_safety_multiple);
     set(options, "pressio:stability", "experimental");
+    set(options, "pressio:highlevel", std::vector<std::string>{"pressio:abs"});
     return options;
   }
 

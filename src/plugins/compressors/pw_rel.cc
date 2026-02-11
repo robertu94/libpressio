@@ -196,7 +196,7 @@ public:
         set(options, "predictors:runtime", get_accumulate_configuration("predictors:runtime", invalidation_children, {}));
 
     
-        set(options, "pressio:highlevel", get_accumulate_configuration("pressio:highlevel", invalidation_children, std::vector<std::string>{"pressio:pw_rel"}));
+        set(options, "pressio:highlevel", get_accumulate_configuration("pressio:highlevel", invalidation_children, std::vector<std::string>{"pressio:pw_rel", "pw_rel:abs_comp", "pw_rel:sign_comp"}));
 
     return options;
   }

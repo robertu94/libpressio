@@ -128,8 +128,6 @@ def python_to_new_pressio_data(x):
                 )
     elif is_pressio_data(x):
         return pressio.data_new_nonowning_from_data(x)
-    elif isinstance(x, np.ndarray):
-        return pressio.io_data_from_numpy(x)
     else:
         raise NotImplementedError()
 

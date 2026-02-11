@@ -104,7 +104,7 @@ public:
     set(options, "predictors:error_agnostic", get_accumulate_configuration("predictors:error_agnostic", {&*comp}, {}));
     set(options, "predictors:runtime", get_accumulate_configuration("predictors:runtime", {&*comp}, {"pressio:nthreads", "binning:nthreads"}));
     
-    set(options, "pressio:highlevel", get_accumulate_configuration("pressio:highlevel", {&*comp}, std::vector<std::string>{"pressio:nthreads"}));
+    set(options, "pressio:highlevel", get_accumulate_configuration("pressio:highlevel", {&*comp}, std::vector<std::string>{"pressio:nthreads", "binning:shape"}));
 
     return options;
   }

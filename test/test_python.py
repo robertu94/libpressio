@@ -26,7 +26,7 @@ pressio.compressor_set_metrics(compressor, metrics)
 
 data = np.random.rand(300, 300, 300)
 
-input_data = pressio.io_data_from_numpy(data)
+input_data = pressio._from_dlpack(data)
 
 compressed_data = pressio.data_new_empty(pressio.byte_dtype, pressio.vector_uint64_t())
 
@@ -42,7 +42,7 @@ compression_ratio = pressio.new_double()
 pressio.options_get_double(metric_results, b"size:compression_ratio", compression_ratio)
 print("compression ratio", pressio.double_value(compression_ratio))
 
-result = pressio.io_data_to_numpy(decompressed_data)
+result = pressio.io_data_to_python(decompressed_data)
 pressio.delete_double(compression_ratio)
 pressio.data_free(input_data)
 pressio.data_free(compressed_data)

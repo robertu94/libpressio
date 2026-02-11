@@ -66,6 +66,14 @@ struct pressio_domain_manager_metrics_plugin {
     /**
      * called before data is copied
      */
+    virtual void copy_to_begin(std::shared_ptr<domains::pressio_domain> const& dst, pressio_data const& src) {(void)src; (void)dst;};
+    /**
+     * called after data is copied
+     */
+    virtual void copy_to_end(std::shared_ptr<domains::pressio_domain> const& dst, pressio_data const& src) {(void)src; (void)dst;};
+    /**
+     * called before data is copied
+     */
     virtual void copy_to_begin(pressio_data const& dst, pressio_data const& src) {(void)src; (void)dst;};
     /**
      * called after data is copied
@@ -190,6 +198,16 @@ struct pressio_domain_manager {
         metrics->make_readable_domain_end(dst, src);
         return ret;
     }
+    /**
+     * make data readable using the provided domain
+     */
+    template <class T>
+    pressio_data make_readable(std::shared_ptr<pressio_domain> const& dst, T&& src) {
+        metrics->make_readable_domain_begin(dst, src);
+        auto ret = make_readable_impl(dst, std::forward<T>(src));
+        metrics->make_readable_domain_end(dst, src);
+        return ret;
+    }
 
     /**
      * copy data to the specified memory, or move if both pointers are in the same domain
@@ -197,7 +215,7 @@ struct pressio_domain_manager {
     template <class T>
     pressio_data copy_to(pressio_data&& dst, T&& src) {
         metrics->copy_to_begin(dst, src);
-        auto ret = copy_to_impl(dst, std::forward<T>(src));
+        auto ret = copy_to_impl(std::move(dst), std::forward<T>(src));
         metrics->copy_to_end(dst, src);
         return ret;
     }
@@ -207,7 +225,20 @@ struct pressio_domain_manager {
      */
     template <class T>
     pressio_data copy_to(std::shared_ptr<pressio_domain>&& dst, T&& src) {
+        metrics->copy_to_begin(dst, src);
         auto ret = copy_to_impl(std::move(dst), std::forward<T>(src));
+        metrics->copy_to_end(dst, src);
+        return ret;
+    }
+
+    /**
+     * copy data to the specified memory, or move if both pointers are in the same domain
+     */
+    template <class T>
+    pressio_data copy_to(std::shared_ptr<pressio_domain> const& dst, T&& src) {
+        metrics->copy_to_begin(dst, src);
+        auto ret = copy_to_impl(dst, std::forward<T>(src));
+        metrics->copy_to_end(dst, src);
         return ret;
     }
 
@@ -292,6 +323,24 @@ struct pressio_domain_manager {
     virtual pressio_data make_readable_impl(pressio_data&& dst, pressio_data&& src) {
         return make_readable_impl(std::move(dst), src);
     }
+    virtual pressio_data make_readable_impl(std::shared_ptr<pressio_domain> const& dst, pressio_data const& src) {
+        if(is_accessible(*dst, *src.domain())) {
+            metrics->view_begin(dst, src);
+            pressio_data out(pressio_data::nonowning(src));
+            metrics->view_end(dst, src);
+            return out;
+        } else {
+            if(src.has_data()) {
+                metrics->alloc_begin(dst, src.dtype(), src.dimensions());
+                pressio_data out(pressio_data::owning(src.dtype(), src.dimensions(), dst));
+                metrics->alloc_end(dst, src.dtype(), src.dimensions());
+                send(out, src);
+                return out;
+            } else {
+                return pressio_data::empty(src.dtype(), src.dimensions(), dst);
+            }
+        }
+    }
     virtual pressio_data make_readable_impl(std::shared_ptr<pressio_domain>&& dst, pressio_data const& src) {
         if(is_accessible(*dst, *src.domain())) {
             metrics->view_begin(dst, src);
@@ -373,7 +422,54 @@ struct pressio_domain_manager {
             return out;
         }
     }
+    virtual pressio_data copy_to_impl(std::shared_ptr<pressio_domain> const& dst, pressio_data &&src) {
+        if(!src.has_data()) throw std::runtime_error("cannot send from a source that is unallocated");
+        if(is_accessible(*dst, *src.domain())) {
+            return std::move(src);
+        } else {
+            metrics->alloc_begin(dst, src.dtype(), src.dimensions());
+            auto out = pressio_data::owning(src.dtype(), src.dimensions(), dst);
+            metrics->alloc_end(dst, src.dtype(), src.dimensions());
+            send(out, src);
+            return out;
+        }
+    }
+    virtual pressio_data copy_to_impl(std::shared_ptr<pressio_domain> const& dst, pressio_data const&src) {
+        if(!src.has_data()) throw std::runtime_error("cannot send from a source that is unallocated");
+        if(is_accessible(*dst, *src.domain())) {
+            metrics->alloc_begin(dst, src.dtype(), src.dimensions());
+            pressio_data out = pressio_data::owning(src.dtype(), src.dimensions(), dst);
+            metrics->alloc_end(dst, src.dtype(), src.dimensions());
+            out = src;
+            return out;
+        } else {
+            metrics->alloc_begin(dst, src.dtype(), src.dimensions());
+            auto out = pressio_data::owning(src.dtype(), src.dimensions(), dst);
+            metrics->alloc_end(dst, src.dtype(), src.dimensions());
+            send(out, src);
+            return out;
+        }
+    }
 
+    virtual pressio_data make_writeable_impl(std::shared_ptr<pressio_domain> const& dst, pressio_data const& src) {
+        metrics->alloc_begin(dst, src.dtype(), src.dimensions());
+        pressio_data out = pressio_data::owning(src.dtype(), src.dimensions(), dst);
+        metrics->alloc_end(dst, src.dtype(), src.dimensions());
+        return out;
+    }
+    virtual pressio_data make_writeable_impl(std::shared_ptr<pressio_domain> const& dst, pressio_data && src) {
+        if(is_accessible(*dst, *src.domain()) && src.has_data()) {
+            metrics->view_begin(dst, src);
+            pressio_data out(std::move(src));
+            metrics->view_end(dst, src);
+            return out;
+        } else {
+            metrics->alloc_begin(dst, src.dtype(), src.dimensions());
+            pressio_data out = pressio_data::owning(src.dtype(), src.dimensions(), dst);
+            metrics->alloc_end(dst, src.dtype(), src.dimensions());
+            return out;
+        }
+    }
     virtual pressio_data make_writeable_impl(std::shared_ptr<pressio_domain>&& dst, pressio_data const& src) {
         metrics->alloc_begin(dst, src.dtype(), src.dimensions());
         pressio_data out = pressio_data::owning(src.dtype(), src.dimensions(), std::move(dst));

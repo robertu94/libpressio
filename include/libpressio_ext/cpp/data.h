@@ -9,13 +9,13 @@
 #include <cstring>
 #include <utility>
 #include <algorithm>
-#include <numeric>
 #include "pressio_data.h"
 #include "memory.h"
 
 #include "libpressio_ext/cpp/dtype.h"
 #include "std_compat/optional.h"
 #include <std_compat/memory.h>
+#include <std_compat/numeric.h>
 
 namespace libpressio {
 
@@ -151,6 +151,15 @@ struct pressio_data {
    * \see pressio_data_new_empty
    * */
   static pressio_data empty(const pressio_dtype dtype, std::vector<size_t> const& dimensions, std::shared_ptr<libpressio::domains::pressio_domain>&& domain);
+  /**  
+   * allocates a new empty data buffer in the specified domain
+   *
+   * \param[in] dtype the type the buffer will contain
+   * \param[in] dimensions the dimensions of the expected buffer
+   * \returns an empty data object (i.e. has no data)
+   * \see pressio_data_new_empty
+   * */
+  static pressio_data empty(const pressio_dtype dtype, std::vector<size_t> const& dimensions, std::shared_ptr<libpressio::domains::pressio_domain> const& domain);
   /**  
    * creates a non-owning view of an existing data
    *
@@ -607,7 +616,7 @@ struct pressio_data {
   {
       auto sizes = ::libpressio::detail::sizes<T...>();
       auto offsets = sizes;
-      std::exclusive_scan(sizes.begin(), sizes.end(), offsets.begin(), 0);
+      compat::exclusive_scan(sizes.begin(), sizes.end(), offsets.begin(), 0);
       auto copy = [this, &offsets, &sizes](auto&& v, size_t i) {
         memcpy(static_cast<uint8_t*>(data()) + offsets[i], &v, sizes[i]);
       };
@@ -623,7 +632,7 @@ struct pressio_data {
       T t;
       auto sizes = ::libpressio::detail::tuple_sizes(t);
       auto offsets = sizes;
-      std::exclusive_scan(sizes.begin(), sizes.end(), offsets.begin(), 0);
+      compat::exclusive_scan(sizes.begin(), sizes.end(), offsets.begin(), 0);
       auto copy = [this, &offsets, &sizes](auto&& v, size_t i) {
         memcpy(&v, static_cast<uint8_t*>(data()) + offsets[i], sizes[i]);
       };

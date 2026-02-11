@@ -9,6 +9,7 @@
 #include "./plugins/domains/user.h"
 #include "libpressio_ext/cpp/domain.h"
 #include "libpressio_ext/cpp/domain_manager.h"
+#include "std_compat/numeric.h"
 
 #if LIBPRESSIO_HAS_CUDA
 #include <cuda_runtime.h>
@@ -199,7 +200,7 @@ pressio_data pressio_data::join(std::vector<pressio_data>&& bufs, pressio_data_h
     }
 
     std::vector<size_t> offsets (sizes.size());
-    std::exclusive_scan(sizes.begin(), sizes.end(), offsets.begin(), header_size);
+    compat::exclusive_scan(sizes.begin(), sizes.end(), offsets.begin(), header_size);
     size_t total_size = offsets.back() + sizes.back();
     pressio_data out = pressio_data::owning(pressio_byte_dtype, {total_size}, domain->clone());
 
@@ -291,23 +292,12 @@ void pressio_data::split(pressio_data input, pressio_data_header header, std::ve
             for(size_t i = 0; i < bufs.size(); ++i) {
                 sizes[i] = libpressio::data_size_in_bytes(types[i], dims[i].size(), dims[i].data());
             }
-            std::exclusive_scan(sizes.begin(), sizes.end(), offsets.begin(), header_size);
+            compat::exclusive_scan(sizes.begin(), sizes.end(), offsets.begin(), header_size);
             for(size_t i = 0; i< bufs.size(); ++i) {
                 if(bufs[i].has_data()) {
                     if(bufs[i].size_in_bytes() != sizes[i]) throw std::runtime_error("size of dst and src do not match");
-                    auto in_dom = domain_manager().make_readable(bufs[i].domain(), pressio_data::nonowning(bufs[i].dtype(), static_cast<uint8_t*>(input.data()) + offsets[i], bufs[i].dimensions(), input.domain()->domain_id()));
-                    bufs[i].domain()->memcpy(bufs[i].data(), in_dom.data(), sizes[i]);
-                } else {
-                    //determine buf size from type and sizes
-                    size_t n = sizes[i]/pressio_dtype_size(types[i]);
-                    if(sizes[i]%pressio_dtype_size(types[i]) != 0) throw std::runtime_error("invalid dtype for size");
-                    //allocate buf
-                    bufs[i] = pressio_data::owning(types[i], {n}, bufs[i].domain());
-
-                    //copy
-                    auto in_dom = domain_manager().make_readable(bufs[i].domain(), pressio_data::nonowning(types[i], static_cast<uint8_t*>(input.data()) + offsets[i], bufs[i].dimensions(), input.domain()->domain_id()));
-                    bufs[i].domain()->memcpy(bufs[i].data(), in_dom.data(), sizes[i]);
                 }
+                bufs[i] = domain_manager().copy_to(std::move(bufs[i]), pressio_data::nonowning(types[i], static_cast<uint8_t*>(input.data()) + offsets[i], dims[i], input.domain()->domain_id()));
             }
         }
         break;
@@ -326,23 +316,13 @@ void pressio_data::split(pressio_data input, pressio_data_header header, std::ve
                     [](uint8_t i) { return static_cast<pressio_dtype>(i); }
                     );
             std::vector<size_t> offsets(bufs.size());
-            std::exclusive_scan(sizes.begin(), sizes.end(), offsets.begin(), header_size);
+            compat::exclusive_scan(sizes.begin(), sizes.end(), offsets.begin(), header_size);
             for(size_t i = 0; i< bufs.size(); ++i) {
+                size_t n = sizes[i]/pressio_dtype_size(types[i]);
                 if(bufs[i].has_data()) {
                     if(bufs[i].size_in_bytes() != sizes[i]) throw std::runtime_error("size of dst and src do not match");
-                    auto in_dom = domain_manager().make_readable(bufs[i].domain(), pressio_data::nonowning(bufs[i].dtype(), static_cast<uint8_t*>(input.data()) + offsets[i], bufs[i].dimensions(), input.domain()->domain_id()));
-                    bufs[i].domain()->memcpy(bufs[i].data(), in_dom.data(), sizes[i]);
-                } else {
-                    //determine buf size from type and sizes
-                    size_t n = sizes[i]/pressio_dtype_size(types[i]);
-                    if(sizes[i]%pressio_dtype_size(types[i]) != 0) throw std::runtime_error("invalid dtype for size");
-                    //allocate buf
-                    bufs[i] = pressio_data::owning(types[i], {n}, bufs[i].domain());
-
-                    //copy
-                    auto in_dom = domain_manager().make_readable(bufs[i].domain(), pressio_data::nonowning(types[i], static_cast<uint8_t*>(input.data()) + offsets[i], bufs[i].dimensions(), input.domain()->domain_id()));
-                    bufs[i].domain()->memcpy(bufs[i].data(), in_dom.data(), sizes[i]);
                 }
+                bufs[i] = domain_manager().copy_to(std::move(bufs[i]), pressio_data::nonowning(types[i], static_cast<uint8_t*>(input.data()) + offsets[i], {n}, input.domain()->domain_id()));
             }
         }
         break;
@@ -353,23 +333,13 @@ void pressio_data::split(pressio_data input, pressio_data_header header, std::ve
         const size_t header_size = bufs.size()*sizeof(uint64_t);
         std::vector<size_t> sizes(header_ptr, header_ptr+bufs.size());
         std::vector<size_t> offsets(bufs.size());
-        std::exclusive_scan(sizes.begin(), sizes.end(), offsets.begin(), header_size);
+        compat::exclusive_scan(sizes.begin(), sizes.end(), offsets.begin(), header_size);
         for(size_t i = 0; i< bufs.size(); ++i) {
+            size_t n = sizes[i]/pressio_dtype_size(bufs[i].dtype());
             if(bufs[i].has_data()) {
                 if(bufs[i].size_in_bytes() != sizes[i]) throw std::runtime_error("size of dst and src do not match");
-                auto in_dom = domain_manager().make_readable(bufs[i].domain(), pressio_data::nonowning(bufs[i].dtype(), static_cast<uint8_t*>(input.data()) + offsets[i], bufs[i].dimensions(), input.domain()->domain_id()));
-                bufs[i].domain()->memcpy(bufs[i].data(), in_dom.data(), sizes[i]);
-            } else {
-                //determine buf size from type and sizes
-                size_t n = sizes[i]/pressio_dtype_size(bufs[i].dtype());
-                if(sizes[i]%pressio_dtype_size(bufs[i].dtype()) != 0) throw std::runtime_error("invalid dtype for size");
-                //allocate buf
-                bufs[i] = pressio_data::owning(bufs[i].dtype(), {n}, bufs[i].domain());
-
-                //copy
-                auto in_dom = domain_manager().make_readable(bufs[i].domain(), pressio_data::nonowning(bufs[i].dtype(), static_cast<uint8_t*>(input.data()) + offsets[i], bufs[i].dimensions(), input.domain()->domain_id()));
-                bufs[i].domain()->memcpy(bufs[i].data(), in_dom.data(), sizes[i]);
             }
+            bufs[i] = domain_manager().copy_to(std::move(bufs[i]), pressio_data::nonowning(bufs[i].dtype(), static_cast<uint8_t*>(input.data()) + offsets[i], {n}, input.domain()->domain_id()));
         }
     } 
     break;
@@ -379,13 +349,9 @@ void pressio_data::split(pressio_data input, pressio_data_header header, std::ve
         std::vector<size_t> sizes(bufs.size());
         std::vector<size_t> offsets(bufs.size());
         std::transform(bufs.begin(), bufs.end(), sizes.begin(), [](pressio_data& d) { return d.size_in_bytes(); });
-        std::exclusive_scan(sizes.begin(), sizes.end(), offsets.begin(), 0);
+        compat::exclusive_scan(sizes.begin(), sizes.end(), offsets.begin(), 0);
         for(size_t i = 0; i< bufs.size(); ++i) {
-            if(!bufs[i].has_data()) {
-                bufs[i] = pressio_data::owning(bufs[i].dtype(), bufs[i].dimensions(), bufs[i].domain());
-            }
-            auto in_dom = domain_manager().make_readable(bufs[i].domain(), pressio_data::nonowning(bufs[i].dtype(), static_cast<uint8_t*>(input.data()) + offsets[i], bufs[i].dimensions(), input.domain()->domain_id()));
-            bufs[i].domain()->memcpy(bufs[i].data(), in_dom.data(), sizes[i]);
+            bufs[i] = domain_manager().copy_to(std::move(bufs[i]).domain(), pressio_data::nonowning(bufs[i].dtype(), static_cast<uint8_t*>(input.data()) + offsets[i], bufs[i].dimensions(), input.domain()->domain_id()));
         }
     }
     break;
@@ -397,6 +363,9 @@ void pressio_data::split(pressio_data input, std::vector<pressio_data>& bufs) {
 
 pressio_data pressio_data::type_domain(const pressio_dtype dtype, std::shared_ptr<libpressio::domains::pressio_domain> && domain) {
     return pressio_data(dtype, {}, pressio_memory(std::move(domain)));
+  }
+pressio_data pressio_data::empty(const pressio_dtype dtype, std::vector<size_t> const& dimensions, std::shared_ptr<libpressio::domains::pressio_domain> const& domain) {
+    return pressio_data(dtype, dimensions, pressio_memory(domain));
   }
 pressio_data pressio_data::empty(const pressio_dtype dtype, std::vector<size_t> const& dimensions, std::shared_ptr<libpressio::domains::pressio_domain> && domain) {
     return pressio_data(dtype, dimensions, pressio_memory(std::move(domain)));

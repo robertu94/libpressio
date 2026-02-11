@@ -19,7 +19,14 @@ option(BUILD_SHARED_LIBS "build libpressio as a shared library" ON)
 option(CMAKE_POSITION_INDEPENDENT_CODE "build libpressio with position indpendent code" ON)
 
 
-include(GNUInstallDirs)
+if(NOT DEFINED SKBUILD)
+    include(GNUInstallDirs)
+else()
+    set(CMAKE_INSTALL_INCLUDEDIR ${SKBUILD_HEADERS_DIR})
+    set(CMAKE_INSTALL_LIBDIR ${SKBUILD_PLATLIB_DIR})
+    set(CMAKE_INSTALL_PREFIX ${SKBUILD_DATA_DIR})
+endif()
+
 include(CheckCXXCompilerFlag)
 include(CMakeDependentOption)
 

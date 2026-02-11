@@ -203,7 +203,7 @@ size_t pressio_options_num_set(struct pressio_options const* options);
    \see pressio_options_key_status status codes returned
    */ \
   enum pressio_options_key_status pressio_options_get_##name(struct pressio_options \
-      const* options, const char* key, type * value);
+      const* options, const char* key, type * outvalue);
 
 /** internal macro used to define casting functions */
 #define pressio_options_define_type_cast(name, type) \
@@ -217,7 +217,7 @@ size_t pressio_options_num_set(struct pressio_options const* options);
    */ \
   enum pressio_options_key_status pressio_options_cast_##name(struct pressio_options \
       const* options, const char* key, const enum pressio_conversion_safety safety, \
-      type * value);
+      type * outvalue);
 
 /** internal macro used to define implicit casting functions */
 #define pressio_options_define_type_as(name, type) \
@@ -229,7 +229,7 @@ size_t pressio_options_num_set(struct pressio_options const* options);
    \see pressio_options_key_status status codes returned
    */ \
   enum pressio_options_key_status pressio_options_as_##name(struct pressio_options \
-      const* options, const char* key, type * value);
+      const* options, const char* key, type * outvalue);
 
 /**
  * Generate get/set/as/cast functions for the pressio_options class
@@ -297,28 +297,28 @@ void pressio_options_set_strings(struct pressio_options* options, const char* ke
    \param[in] options the options structure to modify
    \param[in] key  the key to change
    \param[out] size the number of strings returned, 0 on error
-   \param[out] values the value retrieved, both the values and the pointer must be freed with free()
+   \param[out] outvalues the value retrieved, both the values and the pointer must be freed with free()
    \returns a status code
    \see pressio_options_key_status status codes returned
    */
-enum pressio_options_key_status pressio_options_get_strings(struct pressio_options const* options, const char* key, size_t* size, const char***  values);
+enum pressio_options_key_status pressio_options_get_strings(struct pressio_options const* options, const char* key, size_t* size, const char***  outvalues);
   /** Gets an particular key in an options structure, casting it if necessary
    \param[in] options the options structure to modify
    \param[in] key  the key to change
    \param[in] safety  what kind of conversions to allow
    \param[out] size the number of strings returned.  0 on error
-   \param[out] values the value retrieved, only if it is convertible. both the values and the pointer must be freed with free()
+   \param[out] outvalues the value retrieved, only if it is convertible. both the values and the pointer must be freed with free()
    \returns a status code 
    \see pressio_options_key_status status codes returned 
    */ \
 enum pressio_options_key_status pressio_options_cast_strings(struct pressio_options \
       const* options, const char* key, const enum pressio_conversion_safety safety, \
-      size_t* size, char*** values);
+      size_t* size, char*** outvalues);
   /** Gets an particular key in an options structure, casting it if necessary
    \param[in] options the options structure to modify
    \param[in] key  the key to change
    \param[out] size the number of strings returned.  0 on error
-   \param[out] values the value retrieved, only if it is convertible. both the values and the pointer must be freed with free()
+   \param[out] outvalues the value retrieved, only if it is convertible. both the values and the pointer must be freed with free()
    \returns a status code
    \see pressio_options_key_status status codes returned
    */ \

@@ -46,7 +46,7 @@ public:
         set(options, "predictors:runtime", get_accumulate_configuration("predictors:runtime", invalidation_children, runtime_invalidations));
 
     
-        set(options, "pressio:highlevel", get_accumulate_configuration("pressio:highlevel", invalidation_children, std::vector<std::string>{"pressio:nthreads"}));
+        set(options, "pressio:highlevel", get_accumulate_configuration("pressio:highlevel", invalidation_children, std::vector<std::string>{"pressio:nthreads", "roibin:background", "roibin:roi", "roibin:roi_statagy", "roibin:centers", "roibin:roi_size"}));
 
     return options;
   }

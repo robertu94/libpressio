@@ -1,0 +1,63 @@
+[build-system]
+requires = [
+    "setuptools>=42",
+    "scikit-build-core>=0.10",
+    "cmake>=3.18",
+    "ninja",
+    "swig",
+]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "libpressio"
+version = "1.0.7"
+requires-python = ">= 3.8"
+authors = [
+    {name ="Robert Underwood", email ="runderwood@anl.gov" },
+]
+maintainers = [
+    {name ="Robert Underwood", email ="runderwood@anl.gov" },
+]
+description= "LibPressio a Generic Abstraction for Compressors"
+readme = "README.md"
+license = "BSD-4-Clause"
+license-files = ["COPYRIGHT.txt"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Topic :: System :: Archiving :: Compression",
+    "Topic :: Software Development :: Libraries",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: C",
+    "Programming Language :: C++",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+keywords = ["libpressio", "compression", "interface"]
+dependencies = [
+    "numpy",
+    "numcodecs"
+]
+
+[project.urls]
+Homepage = "https://github.com/robertu94/libpressio"
+Documentation = "https://robertu94.github.io/libpressio"
+Respository = "https://github.com/robertu94/libpressio"
+
+[tool.scikit-build]
+cmake.version = ">=3.18"
+cmake.build-type = "Debug"
+wheel.packages = []
+minimum-version = "build-system.requires"
+
+[tool.scikit-build.cmake.define]
+BUILD_PYTHON_WRAPPER = true
+BUILD_TESTING = false
+LIBPRESSIO_BUILD_MODE = "FULL"
+
