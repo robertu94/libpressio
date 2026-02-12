@@ -224,7 +224,7 @@ class chunking_plugin: public libpressio_compressor_plugin {
       outputs_ptr.reserve(n_buffers);
       size_t accum_size = header_size;
       for (size_t i = 0; i < n_buffers; ++i) {
-        inputs.emplace_back(pressio_data::nonowning(pressio_byte_dtype, inptr+accum_size, {sizes[i]}));
+        inputs.emplace_back(pressio_data::nonowning(pressio_byte_dtype, inptr+accum_size, {static_cast<size_t>(sizes[i])}));
         outputs.emplace_back(pressio_data::owning(output->dtype(), (chunk_size.empty() ? output->dimensions(): chunk_size )));
         inputs_ptr.emplace_back(&inputs.back());
         outputs_ptr.emplace_back(&outputs.back());

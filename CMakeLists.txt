@@ -140,9 +140,9 @@ libpressio_plugin_file(domains_metrics/print.cc)
 libpressio_plugin_file(compressors/noop.cc)
 libpressio_plugin_file(compressors/pressio.cc)
 libpressio_plugin_file(metrics/composite.cc)
-libpressio_plugin_file(metrics/external.cc)
+#libpressio_plugin_file(metrics/external.cc)
 libpressio_plugin_file(metrics/error_stat.cc)
-libpressio_plugin_file(launch/external_forkexec.cc)
+#libpressio_plugin_file(launch/external_forkexec.cc)
 libpressio_plugin_file(launch_metrics/noop.cc)
 libpressio_plugin_file(launch_metrics/print.cc)
 libpressio_plugin_file(metrics/noop.cc)
@@ -696,16 +696,16 @@ endif()
 
 # static libraries and some system linkers will strip the registration classes 
 # causing nothing to be registered
-add_executable(pressio_register_generator src/pressio_register_generator.cc)
-target_compile_features(pressio_register_generator PRIVATE cxx_std_11)
-add_custom_command(
-    OUTPUT pressio_manual_register.cc
-    COMMAND "${CMAKE_CURRENT_BINARY_DIR}/pressio_register_generator" -c "${LIBPRESSIO_BUILT_PLUGINS}" -o "${CMAKE_CURRENT_BINARY_DIR}/pressio_manual_register.cc"
-    COMMENT "generating registration source file"
-    DEPENDS pressio_register_generator ${LIBPRESSIO_BUILT_PLUGINS} src/pressio_register_generator.cc
-    VERBATIM
-)
-target_sources(libpressio PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/pressio_manual_register.cc)
+#add_executable(pressio_register_generator src/pressio_register_generator.cc)
+#target_compile_features(pressio_register_generator PRIVATE cxx_std_11)
+#add_custom_command(
+#    OUTPUT pressio_manual_register.cc
+#    COMMAND "${CMAKE_CURRENT_BINARY_DIR}/pressio_register_generator" -c "${LIBPRESSIO_BUILT_PLUGINS}" -o "${CMAKE_CURRENT_BINARY_DIR}/pressio_manual_register.cc"
+#    COMMENT "generating registration source file"
+#    DEPENDS pressio_register_generator ${LIBPRESSIO_BUILT_PLUGINS} src/pressio_register_generator.cc
+#    VERBATIM
+#)
+#target_sources(libpressio PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/pressio_manual_register.cc)
 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/src/pressio_version.h.in

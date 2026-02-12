@@ -30,7 +30,7 @@ void copy_center(
     T * roi_mem) {
   auto s_roi = as<ssize_t>(roi);
   auto s_roi_size = as<ssize_t>(roi_size);
-  std::array<size_t,1> center{center_ptr[0]};
+  std::array<size_t,1> center{static_cast<size_t>(center_ptr[0])};
   auto s_center = as<ssize_t>(center);
   auto s_id = as<ssize_t>(id);
 
@@ -56,7 +56,7 @@ void copy_center(
     T * roi_mem) {
   auto s_roi = as<ssize_t>(roi);
   auto s_roi_size = as<ssize_t>(roi_size);
-  std::array<size_t,2> center{center_ptr[0], center_ptr[1]};
+  std::array<size_t,2> center{static_cast<size_t>(center_ptr[0]), static_cast<size_t>(center_ptr[1])};
   auto s_center = as<ssize_t>(center);
   auto s_id = as<ssize_t>(id);
 
@@ -91,7 +91,7 @@ void copy_center(
     T * roi_mem) {
   auto s_roi = as<ssize_t>(roi);
   auto s_roi_size = as<ssize_t>(roi_size);
-  std::array<size_t,3> center{center_ptr[0], center_ptr[1], center_ptr[2]};
+  std::array<size_t,3> center{static_cast<size_t>(center_ptr[0]), static_cast<size_t>(center_ptr[1]), static_cast<size_t>(center_ptr[2])};
   auto s_center = as<ssize_t>(center);
   auto s_id = as<ssize_t>(id);
 
@@ -137,7 +137,7 @@ void copy_center(
     T * roi_mem) {
   auto s_roi = as<ssize_t>(roi);
   auto s_roi_size = as<ssize_t>(roi_size);
-  std::array<size_t,4> center{center_ptr[0], center_ptr[1], center_ptr[2], center_ptr[3]};
+  std::array<size_t,4> center{static_cast<size_t>(center_ptr[0]), static_cast<size_t>(center_ptr[1]), static_cast<size_t>(center_ptr[2]), static_cast<size_t>(center_ptr[3])};
   auto s_center = as<ssize_t>(center);
   auto s_id = as<ssize_t>(id);
 
@@ -224,7 +224,7 @@ void restore_center(
     T const* roi_mem) {
   auto s_roi = as<ssize_t>(roi);
   auto s_roi_size = as<ssize_t>(roi_size);
-  std::array<size_t,1> center{center_ptr[0]};
+  std::array<size_t,1> center{static_cast<size_t>(center_ptr[0])};
   auto s_center = as<ssize_t>(center);
   auto s_id = as<ssize_t>(id);
 
@@ -247,7 +247,7 @@ void restore_center(
     T const* roi_mem) {
   auto s_roi = as<ssize_t>(roi);
   auto s_roi_size = as<ssize_t>(roi_size);
-  std::array<size_t,2> center{center_ptr[0], center_ptr[1]};
+  std::array<size_t,2> center{static_cast<size_t>(center_ptr[0]), static_cast<size_t>(center_ptr[1])};
   auto s_center = as<ssize_t>(center);
   auto s_id = as<ssize_t>(id);
 
@@ -274,7 +274,7 @@ void restore_center(
     T const* roi_mem) {
   auto s_roi = as<ssize_t>(roi);
   auto s_roi_size = as<ssize_t>(roi_size);
-  std::array<size_t,3> center{center_ptr[0], center_ptr[1], center_ptr[2]};
+  std::array<size_t,3> center{static_cast<size_t>(center_ptr[0]), static_cast<size_t>(center_ptr[1]), static_cast<size_t>(center_ptr[2])};
   auto s_center = as<ssize_t>(center);
   auto s_id = as<ssize_t>(id);
 
@@ -306,7 +306,7 @@ void restore_center(
     T const* roi_mem) {
   auto s_roi = as<ssize_t>(roi);
   auto s_roi_size = as<ssize_t>(roi_size);
-  std::array<size_t,4> center{center_ptr[0], center_ptr[1], center_ptr[2], center_ptr[3]};
+  std::array<size_t,4> center{static_cast<size_t>(center_ptr[0]), static_cast<size_t>(center_ptr[1]), static_cast<size_t>(center_ptr[2]), static_cast<size_t>(center_ptr[3])};
   auto s_center = as<ssize_t>(center);
   auto s_id = as<ssize_t>(id);
 
