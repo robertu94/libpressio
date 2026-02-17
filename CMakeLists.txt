@@ -6,7 +6,7 @@ project(libpressio VERSION "1.0.7" LANGUAGES CXX C)
 set(default_build_type "Release")
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "No build type was set. Setting build type to ${default_build_type}.")
-  set(CMAKE_BUILD_TYPE ${default_build_type} CACHE 
+  set(CMAKE_BUILD_TYPE ${default_build_type} CACHE
     STRING "Choose the type to build" FORCE)
 endif()
 set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
@@ -110,7 +110,7 @@ add_library(libpressio
   include/pressio_option.h
   include/pressio_options.h
   include/pressio_options_iter.h
-  
+
   #private headers
   src/external_parse.h
   src/multi_dimensional_iterator.h
@@ -228,16 +228,16 @@ if(LIBPRESSIO_INTERPROCEDURAL_OPTIMIZATION)
 endif()
 
 target_include_directories(libpressio
-  PRIVATE 
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src> 
+  PRIVATE
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
   )
 target_include_directories(libpressio
-  PUBLIC 
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> 
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/libpressio>
   )
-target_compile_options(libpressio PRIVATE 
+target_compile_options(libpressio PRIVATE
   $<$<COMPILE_LANGUAGE:CXX,C>:
       $<$<CONFIG:Debug>: -Wall -Wextra -Wpedantic>
       $<$<CONFIG:RelWithDebInfo>: ${NO_OMIT_FRAME_POINTER_FLAG}>
@@ -442,7 +442,7 @@ if(LIBPRESSIO_HAS_BLOSC)
           get_filename_component(BLOSC_INCLUDE_DIRS ${BLOSC_INCLUDE_FILE} DIRECTORY)
           target_link_libraries(libpressio PRIVATE ${BLOSC_LIBRARIES})
           target_include_directories(libpressio PRIVATE ${BLOSC_INCLUDE_DIRS})
-          
+
   endif()
 
 endif()
@@ -694,18 +694,34 @@ if(LIBPRESSIO_HAS_GRIB)
   libpressio_plugin_file(io/grib.cc)
 endif()
 
-# static libraries and some system linkers will strip the registration classes 
+# static libraries and some system linkers will strip the registration classes
 # causing nothing to be registered
-#add_executable(pressio_register_generator src/pressio_register_generator.cc)
-#target_compile_features(pressio_register_generator PRIVATE cxx_std_11)
-#add_custom_command(
-#    OUTPUT pressio_manual_register.cc
-#    COMMAND "${CMAKE_CURRENT_BINARY_DIR}/pressio_register_generator" -c "${LIBPRESSIO_BUILT_PLUGINS}" -o "${CMAKE_CURRENT_BINARY_DIR}/pressio_manual_register.cc"
-#    COMMENT "generating registration source file"
-#    DEPENDS pressio_register_generator ${LIBPRESSIO_BUILT_PLUGINS} src/pressio_register_generator.cc
-#    VERBATIM
-#)
-#target_sources(libpressio PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/pressio_manual_register.cc)
+if (CMAKE_CROSSCOMPILING)
+    set(_pressio_register_generator "bin/pressio_register_generator${CMAKE_HOST_EXECUTABLE_SUFFIX}")
+    add_custom_command(
+        OUTPUT ${_pressio_register_generator}
+        COMMAND ${CMAKE_COMMAND}
+            -DCMAKE_BUILD_TYPE:STRING="Release"
+            -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE:PATH="${CMAKE_BINARY_DIR}/bin"
+            -DCMAKE_CXX_FLAGS=""
+            -DCMAKE_EXE_LINKER_FLAGS=""
+            -DCMAKE_VERBOSE_MAKEFILE=ON
+            -B"bin"
+            -H"${CMAKE_SOURCE_DIR}/tools/build"
+        COMMAND ${CMAKE_COMMAND} --build bin --config Release
+    )
+else()
+    set(_pressio_register_generator pressio_register_generator)
+    add_subdirectory(tools/build)
+endif()
+add_custom_command(
+    OUTPUT pressio_manual_register.cc
+    COMMAND ${_pressio_register_generator} -c "${LIBPRESSIO_BUILT_PLUGINS}" -o "${CMAKE_CURRENT_BINARY_DIR}/pressio_manual_register.cc"
+    COMMENT "generating registration source file"
+    DEPENDS ${_pressio_register_generator} ${LIBPRESSIO_BUILT_PLUGINS} src/pressio_register_generator.cc
+    VERBATIM
+)
+target_sources(libpressio PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/pressio_manual_register.cc)
 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/src/pressio_version.h.in
@@ -859,7 +875,7 @@ endif()
 
 option(BUILD_DOCKER_CONTAINERS "build docker containers for testing" OFF)
 if(BUILD_DOCKER_CONTAINERS)
-  
+
   foreach(CONTAINER Fedora Ubuntu18.04 CentOS)
     set(BuildSentinel ${CMAKE_BINARY_DIR}/${CONTAINER}-built)
     set(Dockerfile docker/Dockerfile-${CONTAINER})
