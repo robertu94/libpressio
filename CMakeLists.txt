@@ -705,7 +705,6 @@ if (CMAKE_CROSSCOMPILING)
             -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE:PATH="${CMAKE_BINARY_DIR}/bin"
             -DCMAKE_CXX_FLAGS=""
             -DCMAKE_EXE_LINKER_FLAGS=""
-            -DCMAKE_VERBOSE_MAKEFILE=ON
             -B"bin"
             -H"${CMAKE_SOURCE_DIR}/tools/build"
         COMMAND ${CMAKE_COMMAND} --build bin --config Release
