@@ -152,6 +152,8 @@ libpressio_plugin_file(io/posix.cc)
 libpressio_plugin_file(domains/malloc.cc)
 libpressio_plugin_file(domains/nonowning.cc)
 
+message("STATUS" "LIBPRESSIO_BUILD_MODE = ${LIBPRESSIO_BUILD_MODE}")
+
 #optional components created with libpressio_optional_component don't require dependencies
 #they can be enabled in two (non-exclusive) ways:
 # 1 by 1 using -DLIBPRESSIO_HAS_${NAME}=ON
@@ -162,9 +164,12 @@ function(libpressio_optional_component name description file_names)
   string(TOUPPER "${name}" name_upper)
   cmake_dependent_option(LIBPRESSIO_HAS_${name_upper} ${description} OFF "LIBPRESSIO_BUILD_MODE STREQUAL CORE" OFF)
   if(LIBPRESSIO_HAS_${name_upper} OR LIBPRESSIO_BUILD_MODE STREQUAL FULL)
+    message("STATUS" "LIBPRESSIO_HAS_${name_upper} = ON")
     foreach(file_name IN LISTS file_names)
     libpressio_plugin_file(/${file_name})
     endforeach()
+  else()
+    message("STATUS" "LIBPRESSIO_HAS_${name_upper} = OFF")
   endif()
 endfunction()
 
