@@ -92,7 +92,9 @@ int main(int argc, char* argv[]) {
         fwd_decl << "\t\t\textern pressio_register registration;" << std::endl;
         fwd_decl << "\t\t}" << std::endl;
 
+        body << R"(std::cerr << "pre: " << ")" << p.type << R"(" << "," << ")" << p.name << R"(" << std::endl;)" << std::endl;
         body << "libpressio::" << p.type << "::" << p.name << "_ns::registration.ensure_registered();" << std::endl;;
+        body << R"(std::cerr << "post: " << ")" << p.type << R"(" << "," << ")" << p.name << R"(" << std::endl;)" << std::endl;
     }
     fwd_decl << "\t} /*namespace " << last_type << "*/" << std::endl;
     fwd_decl << "} /*namespace libpressio*/" << std::endl;
