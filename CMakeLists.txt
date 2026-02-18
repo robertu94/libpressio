@@ -134,6 +134,7 @@ macro(libpressio_plugin_file file_name)
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/${file_name}
       )
   list(APPEND LIBPRESSIO_BUILT_PLUGINS "${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/${file_name}")
+  set(LIBPRESSIO_BUILT_PLUGINS "${LIBPRESSIO_BUILT_PLUGINS}" PARENT_SCOPE)
 endmacro()
 #REQUIRED CORE plugins included in every build of libpressio
 libpressio_plugin_file(domains_metrics/print.cc)
@@ -698,6 +699,8 @@ if(LIBPRESSIO_HAS_GRIB)
   target_link_libraries(libpressio PRIVATE eccodes)
   libpressio_plugin_file(io/grib.cc)
 endif()
+
+message("STATUS" "LIBPRESSIO_BUILT_PLUGINS = ${LIBPRESSIO_BUILT_PLUGINS}")
 
 # static libraries and some system linkers will strip the registration classes
 # causing nothing to be registered
