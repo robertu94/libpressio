@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 project(libpressio-build-tools VERSION "1.0.7" LANGUAGES CXX)
 
 if(DEFINED ENV{CXXFLAGSHOST})
-    set(CMAKE_CXX_FLAGS ENV{CXXFLAGSHOST})
+    set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGSHOST}")
 endif()
 
 add_executable(pressio_register_generator ../../src/pressio_register_generator.cc)
