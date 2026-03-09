@@ -6,7 +6,7 @@
 #include "libpressio_ext/cpp/domain_manager.h"
 #include "roibin_impl.h"
 
-namespace libpressio { namespace compressors { namespace mask_binning_ns {
+namespace libpressio { namespace compressors { namespace masked_binning_ns {
 
     using namespace utilities;
 

@@ -218,7 +218,7 @@ libpressio_optional_component(sobolev "computes the sobolev norm" /metrics/sobol
 libpressio_optional_component(gradient "computes the gradient length" /metrics/gradlength.cc)
 libpressio_optional_component(out_of_bounds "computes the gradient length" /metrics/out_of_bounds.cc)
 libpressio_optional_component(write_debug_inputs "metric that writes output buffers for testing" /metrics/write_debug_inputs.cc)
-set(roibin_sources /compressors/roibin.cc /compressors/binning.cc) # /compressors/masked_binning.cc)
+set(roibin_sources /compressors/roibin.cc /compressors/binning.cc compressors/masked_binning.cc)
 libpressio_optional_component(roibin "build the roibin metacompressor" "${roibin_sources}")
 libpressio_optional_component(pipeline "build the pipeline metacompressor" /compressors/pipeline.cc)
 
