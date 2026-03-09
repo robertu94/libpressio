@@ -4,7 +4,7 @@
 #include <std_compat/memory.h>
 #include <sstream>
 
-namespace  libpressio { namespace compressors { namespace linear_quantizer {
+namespace  libpressio { namespace compressors { namespace linear_quantizer_ns {
 
 struct linear_quantizer_step_finder {
   template <class T>

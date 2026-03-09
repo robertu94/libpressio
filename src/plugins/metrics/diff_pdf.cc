@@ -9,7 +9,7 @@
 #include "std_compat/memory.h"
 
 namespace libpressio { namespace metrics {
-namespace diff_pdf {
+namespace diff_pdf_ns {
   static const uint64_t zero = 0;
   struct metrics {
     pressio_data histogram = pressio_data::copy(pressio_uint64_dtype, &zero, {1});
@@ -67,7 +67,7 @@ class diff_pdf_plugin : public libpressio_metrics_plugin {
     }
     int end_decompress_impl(struct pressio_data const*, struct pressio_data const* output, int ) override {
       if(!output || !output->has_data() || !input_data.has_data()) return 0;
-      err_metrics = pressio_data_for_each<diff_pdf::metrics>(input_data, domain_manager().make_readable(domain_plugins().build("malloc"), *output), diff_pdf::compute_metrics{pdf_intervals});
+      err_metrics = pressio_data_for_each<diff_pdf_ns::metrics>(input_data, domain_manager().make_readable(domain_plugins().build("malloc"), *output), diff_pdf_ns::compute_metrics{pdf_intervals});
       return 0;
     }
 
@@ -129,7 +129,7 @@ class diff_pdf_plugin : public libpressio_metrics_plugin {
   private:
   uint64_t pdf_intervals = 2000;
   pressio_data input_data = pressio_data::empty(pressio_byte_dtype, {});
-  compat::optional<diff_pdf::metrics> err_metrics;
+  compat::optional<diff_pdf_ns::metrics> err_metrics;
 };
 
 pressio_register registration(metrics_plugins(), "diff_pdf", [](){ return compat::make_unique<diff_pdf_plugin>(); });

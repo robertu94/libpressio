@@ -11,7 +11,7 @@
 #include "pressio_compressor.h"
 #include "std_compat/memory.h"
 
-namespace libpressio  { namespace compressors { namespace digit_rounding {
+namespace libpressio  { namespace compressors { namespace digit_rounding_ns {
 
 #define INVALID_TYPE -1
 

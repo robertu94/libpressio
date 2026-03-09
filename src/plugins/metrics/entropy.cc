@@ -13,7 +13,7 @@
 #include <cmath>
 
 namespace libpressio { namespace metrics {
-namespace entropy {
+namespace entropy_ns {
   struct compute_metrics{
     template <class ForwardIt1>
     double operator()(ForwardIt1 input_begin, ForwardIt1 input_end)
@@ -46,13 +46,13 @@ public:
   int begin_compress_impl(const struct pressio_data* input, struct pressio_data const*) override
   {
       if(!input || !input->has_data()) return 0;
-    input_entropy = pressio_data_for_each<double>(domain_manager().make_readable(domain_plugins().build("malloc"), *input), entropy::compute_metrics{});
+    input_entropy = pressio_data_for_each<double>(domain_manager().make_readable(domain_plugins().build("malloc"), *input), entropy_ns::compute_metrics{});
     return 0;
   }
   int end_decompress_impl(struct pressio_data const*, struct pressio_data const* output, int) override
   {
       if(!output || !output->has_data()) return 0;
-    dec_entropy = pressio_data_for_each<double>(domain_manager().make_readable(domain_plugins().build("malloc"), *output), entropy::compute_metrics{});
+    dec_entropy = pressio_data_for_each<double>(domain_manager().make_readable(domain_plugins().build("malloc"), *output), entropy_ns::compute_metrics{});
     return 0;
   }
 

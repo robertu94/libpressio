@@ -9,7 +9,7 @@
 #include "pressio_option.h"
 #include "sz_common.h"
 
-namespace libpressio { namespace compressors { namespace sz_common {
+namespace libpressio { namespace compressors { namespace sz_common_ns {
 
 int libpressio_type_to_sz_type(pressio_dtype type) {
     switch(type)

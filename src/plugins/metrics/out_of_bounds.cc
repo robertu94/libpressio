@@ -11,7 +11,7 @@
 #include "libpressio_ext/cpp/domain_manager.h"
 #include "std_compat/memory.h"
 
-namespace libpressio { namespace metrics { namespace out_of_bounds_metrics_ns {
+namespace libpressio { namespace metrics { namespace out_of_bounds_ns {
 
 class out_of_bounds_plugin : public libpressio_metrics_plugin {
   public:

@@ -76,7 +76,7 @@ public:
   std::string s = "";
 };
 
-pressio_register compressor_many_fields_plugin(compressor_plugins(), "highlevel_mock", []() {
+pressio_register registration(compressor_plugins(), "highlevel_mock", []() {
   return compat::make_unique<highlevel_mock_compressor_plugin>();
 });
 

@@ -6,7 +6,7 @@
 #include "std_compat/memory.h"
 #include <iostream>
 
-namespace libpressio { namespace metrics { namespace printer {
+namespace libpressio { namespace metrics { namespace printer_ns {
     class printer_plugin : public libpressio_metrics_plugin {
             std::string maybe_name() {
                 if(get_name().empty()) return "";

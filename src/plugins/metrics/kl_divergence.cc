@@ -13,7 +13,7 @@
 #include "libpressio_ext/cpp/domain_manager.h"
 
 namespace libpressio { namespace metrics {
-namespace kl_divergence{
+namespace kl_divergence_ns {
   struct kl_metrics {
     double p_q=0;
     double q_p=0;
@@ -45,7 +45,7 @@ namespace kl_divergence{
     }
   };
 
-class kl_divergance_plugin : public libpressio_metrics_plugin {
+class kl_divergence_plugin : public libpressio_metrics_plugin {
 
 public:
   int begin_compress_impl(const struct pressio_data* input,
@@ -59,8 +59,8 @@ public:
                       struct pressio_data const* output, int) override
   {
     if(!output || !output->has_data() || !input_data.has_data()) return 0;
-    err_metrics = pressio_data_for_each<kl_divergence::kl_metrics>(input_data, domain_manager().make_readable(domain_plugins().build("malloc"), *output),
-                                                       kl_divergence::compute_metrics{});
+    err_metrics = pressio_data_for_each<kl_divergence_ns::kl_metrics>(input_data, domain_manager().make_readable(domain_plugins().build("malloc"), *output),
+                                                       kl_divergence_ns::compute_metrics{});
     return 0;
   }
 
@@ -94,7 +94,7 @@ public:
   }
 
   std::unique_ptr<libpressio_metrics_plugin> clone() override {
-    return compat::make_unique<kl_divergance_plugin>(*this);
+    return compat::make_unique<kl_divergence_plugin>(*this);
   }
 
   const char* prefix() const override {
@@ -103,10 +103,10 @@ public:
 
 private:
   pressio_data input_data = pressio_data::empty(pressio_byte_dtype, {});
-  compat::optional<kl_divergence::kl_metrics> err_metrics;
+  compat::optional<kl_divergence_ns::kl_metrics> err_metrics;
 };
 
 pressio_register registration(metrics_plugins(), "kl_divergence",
-                          []() { return compat::make_unique<kl_divergance_plugin>(); });
+                          []() { return compat::make_unique<kl_divergence_plugin>(); });
 }
 }}
