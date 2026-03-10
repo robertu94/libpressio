@@ -701,34 +701,30 @@ if(LIBPRESSIO_HAS_GRIB)
   libpressio_plugin_file(io/grib.cc)
 endif()
 
-message("STATUS" "LIBPRESSIO_BUILT_PLUGINS = ${LIBPRESSIO_BUILT_PLUGINS}")
-
 # static libraries and some system linkers will strip the registration classes
 # causing nothing to be registered
-if (CMAKE_CROSSCOMPILING)
-    set(_pressio_register_generator "bin/pressio_register_generator${CMAKE_HOST_EXECUTABLE_SUFFIX}")
-    add_custom_command(
-        OUTPUT ${_pressio_register_generator}
-        COMMAND ${CMAKE_COMMAND}
-            -DCMAKE_BUILD_TYPE:STRING="Release"
-            -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE:PATH="${CMAKE_BINARY_DIR}/bin"
-            -DCMAKE_CXX_FLAGS=""
-            -DCMAKE_EXE_LINKER_FLAGS=""
-            -B"bin"
-            -H"${CMAKE_SOURCE_DIR}/tools/build"
-        COMMAND ${CMAKE_COMMAND} --build bin --config Release
-    )
-else()
-    set(_pressio_register_generator pressio_register_generator)
-    add_subdirectory(tools/build)
-endif()
-add_custom_command(
-    OUTPUT pressio_manual_register.cc
-    COMMAND ${_pressio_register_generator} -c "${LIBPRESSIO_BUILT_PLUGINS}" -o "${CMAKE_CURRENT_BINARY_DIR}/pressio_manual_register.cc"
-    COMMENT "generating registration source file"
-    DEPENDS ${_pressio_register_generator} ${LIBPRESSIO_BUILT_PLUGINS} src/pressio_register_generator.cc
-    VERBATIM
-)
+message("STATUS" "LIBPRESSIO_BUILT_PLUGINS = ${LIBPRESSIO_BUILT_PLUGINS}")
+list(TRANSFORM LIBPRESSIO_BUILT_PLUGINS REPLACE ".*\\/([a-zA-Z0-9_]*)\\/([a-zA-Z0-9_]*)\.[a-zA-Z0-9_]*\$" "\\1/\\2" OUTPUT_VARIABLE LIBPRESSIO_REGISTRATION_PLUGINS)
+list(SORT LIBPRESSIO_REGISTRATION_PLUGINS)
+list(TRANSFORM LIBPRESSIO_REGISTRATION_PLUGINS REPLACE "([a-zA-Z0-9_]*)\\/([a-zA-Z0-9_]*)\$" "  namespace \\1 { namespace \\2_ns { extern pressio_register registration! } }" OUTPUT_VARIABLE LIBPRESSIO_REGISTRATION_EXTERNS)
+string(REPLACE ";" "\n" LIBPRESSIO_REGISTRATION_EXTERNS "${LIBPRESSIO_REGISTRATION_EXTERNS}")
+string(REPLACE "!" ";" LIBPRESSIO_REGISTRATION_EXTERNS "${LIBPRESSIO_REGISTRATION_EXTERNS}")
+list(TRANSFORM LIBPRESSIO_REGISTRATION_PLUGINS REPLACE "([a-zA-Z0-9_]*)\\/([a-zA-Z0-9_]*)\$" "  libpressio::\\1::\\2_ns::registration.ensure_registered()!" OUTPUT_VARIABLE LIBPRESSIO_REGISTRATION_CALLS)
+string(REPLACE ";" "\n" LIBPRESSIO_REGISTRATION_CALLS "${LIBPRESSIO_REGISTRATION_CALLS}")
+string(REPLACE "!" ";" LIBPRESSIO_REGISTRATION_CALLS "${LIBPRESSIO_REGISTRATION_CALLS}")
+set(LIBPRESSIO_REGISTRATIONS "
+#include <iostream>
+#include \"libpressio_ext/cpp/registry.h\"
+
+namespace libpressio {
+${LIBPRESSIO_REGISTRATION_EXTERNS}
+} /*namespace libpressio*/
+
+extern \"C\" void pressio_register_all() {
+${LIBPRESSIO_REGISTRATION_CALLS}
+}
+")
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/pressio_manual_register.cc "${LIBPRESSIO_REGISTRATIONS}")
 target_sources(libpressio PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/pressio_manual_register.cc)
 
 configure_file(
