@@ -6,7 +6,7 @@ project(libpressio VERSION "1.0.7" LANGUAGES CXX C)
 set(default_build_type "Release")
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "No build type was set. Setting build type to ${default_build_type}.")
-  set(CMAKE_BUILD_TYPE ${default_build_type} CACHE
+  set(CMAKE_BUILD_TYPE ${default_build_type} CACHE 
     STRING "Choose the type to build" FORCE)
 endif()
 set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
@@ -110,7 +110,7 @@ add_library(libpressio
   include/pressio_option.h
   include/pressio_options.h
   include/pressio_options_iter.h
-
+  
   #private headers
   src/external_parse.h
   src/multi_dimensional_iterator.h
@@ -235,16 +235,16 @@ if(LIBPRESSIO_INTERPROCEDURAL_OPTIMIZATION)
 endif()
 
 target_include_directories(libpressio
-  PRIVATE
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+  PRIVATE 
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src> 
   )
 target_include_directories(libpressio
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  PUBLIC 
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> 
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/libpressio>
   )
-target_compile_options(libpressio PRIVATE
+target_compile_options(libpressio PRIVATE 
   $<$<COMPILE_LANGUAGE:CXX,C>:
       $<$<CONFIG:Debug>: -Wall -Wextra -Wpedantic>
       $<$<CONFIG:RelWithDebInfo>: ${NO_OMIT_FRAME_POINTER_FLAG}>
@@ -449,7 +449,7 @@ if(LIBPRESSIO_HAS_BLOSC)
           get_filename_component(BLOSC_INCLUDE_DIRS ${BLOSC_INCLUDE_FILE} DIRECTORY)
           target_link_libraries(libpressio PRIVATE ${BLOSC_LIBRARIES})
           target_include_directories(libpressio PRIVATE ${BLOSC_INCLUDE_DIRS})
-
+          
   endif()
 
 endif()
@@ -701,7 +701,7 @@ if(LIBPRESSIO_HAS_GRIB)
   libpressio_plugin_file(io/grib.cc)
 endif()
 
-# static libraries and some system linkers will strip the registration classes
+# static libraries and some system linkers will strip the registration classes 
 # causing nothing to be registered
 message("STATUS" "LIBPRESSIO_BUILT_PLUGINS = ${LIBPRESSIO_BUILT_PLUGINS}")
 list(TRANSFORM LIBPRESSIO_BUILT_PLUGINS REPLACE ".*\\/([a-zA-Z0-9_]*)\\/([a-zA-Z0-9_]*)\.[a-zA-Z0-9_]*\$" "\\1/\\2" OUTPUT_VARIABLE LIBPRESSIO_REGISTRATION_PLUGINS)
@@ -879,7 +879,7 @@ endif()
 
 option(BUILD_DOCKER_CONTAINERS "build docker containers for testing" OFF)
 if(BUILD_DOCKER_CONTAINERS)
-
+  
   foreach(CONTAINER Fedora Ubuntu18.04 CentOS)
     set(BuildSentinel ${CMAKE_BINARY_DIR}/${CONTAINER}-built)
     set(Dockerfile docker/Dockerfile-${CONTAINER})
