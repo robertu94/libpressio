@@ -327,7 +327,7 @@ public:
         &ptr_compressed, &compressed_len, &header, &timerecord, *stream.get());
 
     *output = pressio_data::move(pressio_byte_dtype, ptr_compressed, {compressed_len}, domain_plugins().build("cudamalloc"));
-    *output = domain_manager().make_readable(domain_plugins().build("malloc"), std::move(*output));
+    *output = domain_manager().make_writeable(domain_plugins().build("malloc"), std::move(*output));
     memcpy(output->data(), &header, sizeof(psz_header));
 
     //call when we are done

@@ -121,7 +121,7 @@ applies linear_quantizer encoding to prior to compression and reverses it post d
     } else if(ret < 0) {
       set_error(meta->error_code(), meta->error_msg());
     }
-    *output = domain_manager().make_readable(domain_plugins().build("malloc"), std::move(*output));
+    *output = domain_manager().make_writeable(domain_plugins().build("malloc"), std::move(*output));
     pressio_data_for_each<int>(quantized_output, *output, linear_quantizer_decoder{step});
     return ret;
   }

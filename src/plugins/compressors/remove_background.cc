@@ -103,7 +103,7 @@ public:
       if(rc) {
           return set_error(compressor->error_code(), compressor->error_msg());
       }
-      *output = domain_manager().make_readable(domain_plugins().build("malloc"), std::move(*output));
+      *output = domain_manager().make_writeable(domain_plugins().build("malloc"), std::move(*output));
       pressio_data_for_each<int>(*output, restore_background{*output, background});
       return 0;
   }
