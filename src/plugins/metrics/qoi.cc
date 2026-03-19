@@ -11,6 +11,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <iomanip>
 #include <algorithm>
 #include <numeric>
 #include <fstream>
@@ -32,6 +33,7 @@ namespace libpressio { namespace metrics {
 namespace qoi_ns {
 
 double compute_dssim_from_vectors(const std::vector<double>& orig, const std::vector<double>& dec, size_t height, size_t width);
+double compute_fidelity_from_vectors(const std::vector<double>& orig, const std::vector<double>& dec);
 
 struct qoi_statistics {
   double mean;
@@ -43,13 +45,14 @@ struct qoi_statistics {
   double p999;
   double wasserstein_distance;
   double dssim;
+  double fidelity;
 };
 
 qoi_statistics calculate_statistics(
     const std::vector<double>& dists,
     const std::vector<double>& mass_orig,
     const std::vector<double>& mass_dec) {
-  qoi_statistics stats = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, std::numeric_limits<double>::quiet_NaN()};
+  qoi_statistics stats = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN()};
   
   if (!dists.empty()) {
     double sum = 0.0;
@@ -203,6 +206,47 @@ double compute_dssim_from_vectors(const std::vector<double>& orig, const std::ve
   } catch (...) {
     return std::numeric_limits<double>::quiet_NaN();
   }
+}
+
+double compute_fidelity_from_vectors(const std::vector<double>& orig, const std::vector<double>& dec) {
+  if (orig.empty() || orig.size() != dec.size()) {
+    return std::numeric_limits<double>::quiet_NaN();
+  }
+  if (orig.size() % 2 != 0) {
+    return std::numeric_limits<double>::quiet_NaN();
+  }
+
+  // orig/dec are interleaved [r0, i0, r1, i1, ...] representing complex vectors.
+  // fidelity = |vdot(ref, rec)| / (||ref|| * ||rec||)
+  // where vdot(a, b) = sum(conj(a_k) * b_k)
+  const size_t n = orig.size() / 2;
+  double norm_ref_sq = 0.0;
+  double norm_rec_sq = 0.0;
+  double dot_real = 0.0;
+  double dot_imag = 0.0;
+
+  for (size_t k = 0; k < n; ++k) {
+    const double ar = orig[2 * k];
+    const double ai = orig[2 * k + 1];
+    const double br = dec[2 * k];
+    const double bi = dec[2 * k + 1];
+    // conj(a) * b = (ar*br + ai*bi) + j*(ar*bi - ai*br)
+    dot_real += ar * br + ai * bi;
+    dot_imag += ar * bi - ai * br;
+    norm_ref_sq += ar * ar + ai * ai;
+    norm_rec_sq += br * br + bi * bi;
+  }
+
+  const double norm_ref = std::sqrt(norm_ref_sq);
+  const double norm_rec = std::sqrt(norm_rec_sq);
+  if (norm_ref == 0.0 || norm_rec == 0.0) {
+    return std::numeric_limits<double>::quiet_NaN();
+  }
+
+  const double abs_dot = std::sqrt(dot_real * dot_real + dot_imag * dot_imag);
+  double fidelity = abs_dot / (norm_ref * norm_rec);
+  if (fidelity > 1.0) fidelity = 1.0;
+  return fidelity;
 }
 
 class qoi_plugin : public libpressio_metrics_plugin {
@@ -409,8 +453,11 @@ class qoi_plugin : public libpressio_metrics_plugin {
 
     if (!values.empty()) {
       qoi_statistics stats = calculate_statistics(values, mass_orig, mass_dec);
-      if (has_mass_orig && has_mass_dec && mass_orig.size() == mass_dec.size() && mass_height > 0 && mass_width > 0) {
-        stats.dssim = compute_dssim_from_vectors(mass_orig, mass_dec, mass_height, mass_width);
+      if (has_mass_orig && has_mass_dec && mass_orig.size() == mass_dec.size()) {
+        if (mass_height > 0 && mass_width > 0) {
+          stats.dssim = compute_dssim_from_vectors(mass_orig, mass_dec, mass_height, mass_width);
+        }
+        stats.fidelity = compute_fidelity_from_vectors(mass_orig, mass_dec);
       }
       
       std::cout << "[QOI] Statistics:" << std::endl;
@@ -427,6 +474,10 @@ class qoi_plugin : public libpressio_metrics_plugin {
         if (std::isfinite(stats.dssim)) {
           std::cout << "[QOI]   dssim:  " << stats.dssim << std::endl;
           set(opt, "qoi:dssim", stats.dssim);
+        }
+        if (std::isfinite(stats.fidelity)) {
+          std::cout << "[QOI]   fidelity: " << std::setprecision(15) << stats.fidelity << std::endl;
+          set(opt, "qoi:fidelity", stats.fidelity);
         }
       }
       
