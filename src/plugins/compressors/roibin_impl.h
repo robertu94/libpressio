@@ -24,13 +24,12 @@ void copy_center(
     indexer<1> const &id,
     indexer<1> const &roi_size,
     indexer<2> const &roi,
-    uint64_t const* center_ptr,
+    std::array<size_t,1> const center,
     std::size_t const center_idx,
     T const* origin,
     T * roi_mem) {
   auto s_roi = as<ssize_t>(roi);
   auto s_roi_size = as<ssize_t>(roi_size);
-  std::array<size_t,1> center{static_cast<size_t>(center_ptr[0])};
   auto s_center = as<ssize_t>(center);
   auto s_id = as<ssize_t>(id);
 
@@ -50,13 +49,12 @@ void copy_center(
     indexer<2> const &id,
     indexer<2> const &roi_size,
     indexer<3> const &roi,
-    uint64_t const* center_ptr,
+    std::array<size_t,2> const center,
     std::size_t const center_idx,
     T const* origin,
     T * roi_mem) {
   auto s_roi = as<ssize_t>(roi);
   auto s_roi_size = as<ssize_t>(roi_size);
-  std::array<size_t,2> center{static_cast<size_t>(center_ptr[0]), static_cast<size_t>(center_ptr[1])};
   auto s_center = as<ssize_t>(center);
   auto s_id = as<ssize_t>(id);
 
@@ -85,13 +83,12 @@ void copy_center(
     indexer<3> const &id,
     indexer<3> const &roi_size,
     indexer<4> const &roi,
-    uint64_t const* center_ptr,
+    std::array<size_t,3> const center,
     std::size_t const center_idx,
     T const* origin,
     T * roi_mem) {
   auto s_roi = as<ssize_t>(roi);
   auto s_roi_size = as<ssize_t>(roi_size);
-  std::array<size_t,3> center{static_cast<size_t>(center_ptr[0]), static_cast<size_t>(center_ptr[1]), static_cast<size_t>(center_ptr[2])};
   auto s_center = as<ssize_t>(center);
   auto s_id = as<ssize_t>(id);
 
@@ -131,13 +128,12 @@ void copy_center(
     indexer<4> const &id,
     indexer<4> const &roi_size,
     indexer<5> const &roi,
-    uint64_t const* center_ptr,
+    std::array<size_t,4> const center,
     std::size_t const center_idx,
     T const* origin,
     T * roi_mem) {
   auto s_roi = as<ssize_t>(roi);
   auto s_roi_size = as<ssize_t>(roi_size);
-  std::array<size_t,4> center{static_cast<size_t>(center_ptr[0]), static_cast<size_t>(center_ptr[1]), static_cast<size_t>(center_ptr[2]), static_cast<size_t>(center_ptr[3])};
   auto s_center = as<ssize_t>(center);
   auto s_id = as<ssize_t>(id);
 
@@ -198,7 +194,13 @@ void roi_save(indexer<N> const &id,
 
 #pragma omp parallel for num_threads(n_threads)
   for (size_t i = 0; i < centers_size; ++i) {
-    copy_center(id, roi_size, roi, static_cast<const uint64_t*>(centers_range.data()) + i*centers_width, i, origin, roi_mem);
+    std::array<uint64_t,N> center64;
+    std::copy_n(
+        static_cast<const uint64_t*>(centers_range.data()) + i*centers_width,
+        N,
+        std::begin(center64));
+    auto center = as<size_t>(center64);
+    copy_center(id, roi_size, roi, center, i, origin, roi_mem);
   }
 }
 
@@ -218,13 +220,12 @@ void restore_center(
     indexer<1> const &id,
     indexer<1> const &roi_size,
     indexer<2> const &roi,
-    size_t const* center_ptr,
+    std::array<size_t,1> const center,
     std::size_t const center_idx,
     T * origin,
     T const* roi_mem) {
   auto s_roi = as<ssize_t>(roi);
   auto s_roi_size = as<ssize_t>(roi_size);
-  std::array<size_t,1> center{static_cast<size_t>(center_ptr[0])};
   auto s_center = as<ssize_t>(center);
   auto s_id = as<ssize_t>(id);
 
@@ -241,13 +242,12 @@ void restore_center(
     indexer<2> const &id,
     indexer<2> const &roi_size,
     indexer<3> const &roi,
-    size_t const* center_ptr,
+    std::array<size_t,2> const center,
     std::size_t const center_idx,
     T * origin,
     T const* roi_mem) {
   auto s_roi = as<ssize_t>(roi);
   auto s_roi_size = as<ssize_t>(roi_size);
-  std::array<size_t,2> center{static_cast<size_t>(center_ptr[0]), static_cast<size_t>(center_ptr[1])};
   auto s_center = as<ssize_t>(center);
   auto s_id = as<ssize_t>(id);
 
@@ -268,13 +268,12 @@ void restore_center(
     indexer<3> const &id,
     indexer<3> const &roi_size,
     indexer<4> const &roi,
-    std::size_t const* center_ptr,
+    std::array<size_t,3> const center,
     std::size_t const center_idx,
     T * origin,
     T const* roi_mem) {
   auto s_roi = as<ssize_t>(roi);
   auto s_roi_size = as<ssize_t>(roi_size);
-  std::array<size_t,3> center{static_cast<size_t>(center_ptr[0]), static_cast<size_t>(center_ptr[1]), static_cast<size_t>(center_ptr[2])};
   auto s_center = as<ssize_t>(center);
   auto s_id = as<ssize_t>(id);
 
@@ -300,13 +299,12 @@ void restore_center(
     indexer<4> const &id,
     indexer<4> const &roi_size,
     indexer<5> const &roi,
-    std::size_t const* center_ptr,
+    std::array<size_t,4> const center,
     std::size_t const center_idx,
     T * origin,
     T const* roi_mem) {
   auto s_roi = as<ssize_t>(roi);
   auto s_roi_size = as<ssize_t>(roi_size);
-  std::array<size_t,4> center{static_cast<size_t>(center_ptr[0]), static_cast<size_t>(center_ptr[1]), static_cast<size_t>(center_ptr[2]), static_cast<size_t>(center_ptr[3])};
   auto s_center = as<ssize_t>(center);
   auto s_id = as<ssize_t>(id);
 
@@ -348,7 +346,13 @@ void roi_restore(indexer<N> const &id,
 
 #pragma omp parallel for num_threads(n_threads)
   for (size_t i = 0; i < centers_size; ++i) {
-    restore_center(id, roi_size, roi, static_cast<size_t*>(centers_range.data()) + centers_width*i, i, restored, roi_mem);
+    std::array<uint64_t,N> center64;
+    std::copy_n(
+        static_cast<const uint64_t*>(centers_range.data()) + i*centers_width,
+        N,
+        std::begin(center64));
+    auto center = as<size_t>(center64);
+    restore_center(id, roi_size, roi, center, i, restored, roi_mem);
   }
 }
 

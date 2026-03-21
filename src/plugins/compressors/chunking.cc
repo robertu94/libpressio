@@ -211,7 +211,15 @@ class chunking_plugin: public libpressio_compressor_plugin {
       uint64_t* inptr64 = reinterpret_cast<uint64_t*>(input->data());
       size_t n_buffers = *inptr64;
       const size_t header_size = sizeof(uint64_t) *(n_buffers+1);
-      std::vector<uint64_t> sizes(inptr64+1, inptr64+(1+n_buffers));
+      std::vector<uint64_t> sizes64(inptr64+1, inptr64+(1+n_buffers));
+      std::vector<size_t> sizes(sizes64.size());
+      std::transform(
+          std::begin(sizes64),
+          std::end(sizes64),
+          std::begin(sizes),
+          [](const uint64_t x) {
+            return static_cast<size_t>(x);
+          });
 
       //create the buffers to decompress
       std::vector<pressio_data> inputs;
@@ -224,7 +232,7 @@ class chunking_plugin: public libpressio_compressor_plugin {
       outputs_ptr.reserve(n_buffers);
       size_t accum_size = header_size;
       for (size_t i = 0; i < n_buffers; ++i) {
-        inputs.emplace_back(pressio_data::nonowning(pressio_byte_dtype, inptr+accum_size, {static_cast<size_t>(sizes[i])}));
+        inputs.emplace_back(pressio_data::nonowning(pressio_byte_dtype, inptr+accum_size, {sizes[i]}));
         outputs.emplace_back(pressio_data::owning(output->dtype(), (chunk_size.empty() ? output->dimensions(): chunk_size )));
         inputs_ptr.emplace_back(&inputs.back());
         outputs_ptr.emplace_back(&outputs.back());
