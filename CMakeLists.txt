@@ -653,6 +653,7 @@ option(LIBPRESSIO_HAS_LIBDISTRIBUTED "build plugins based on distributed work qu
 if(LIBPRESSIO_HAS_LIBDISTRIBUTED)
   set(LIBPRESSIO_FEATURES "${LIBPRESSIO_FEATURES} distributed")
   find_package(LibDistributed)
+  target_include_directories(libpressio PRIVATE "${LibDistributed_DIR}/../../../include") # FIXME
   target_link_libraries(libpressio PRIVATE LibDistributed::libdistributed)
   libpressio_plugin_file(/compressors/many_independent.cc
     )
