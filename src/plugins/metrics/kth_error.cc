@@ -12,7 +12,7 @@
 #include "libpressio_ext/cpp/domain_manager.h"
 
 namespace libpressio { namespace metrics {
-  namespace kth_error {
+  namespace kth_error_ns {
   struct kth_error{
     template <class ForwardIt1, class ForwardIt2>
     double operator()(ForwardIt1 input_begin, ForwardIt1 input_end,

@@ -5,7 +5,7 @@
 #include "std_compat/memory.h"
 #include "std_compat/string_view.h"
 
-namespace libpressio { namespace metrics { namespace historian {
+namespace libpressio { namespace metrics { namespace historian_ns {
 
 class pressio_historian_metric: public libpressio_metrics_plugin {
 

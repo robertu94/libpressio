@@ -3,7 +3,7 @@
 #include <std_compat/memory.h>
 #include <sstream>
 
-namespace libpressio { namespace compressors { namespace switch_plugin {
+namespace libpressio { namespace compressors { namespace switch_ns {
 
 class switch_compressor: public libpressio_compressor_plugin {
   pressio_options get_options_impl() const override {

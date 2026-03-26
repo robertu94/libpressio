@@ -9,7 +9,7 @@
 #include "libpressio_ext/cpp/domain_manager.h"
 #include <cmath>
 
-namespace libpressio { namespace metrics { namespace gradlength_metrics_ns {
+namespace libpressio { namespace metrics { namespace gradlength_ns {
 #define QCAT_FLOAT 0
 #define QCAT_DOUBLE 1
 #define QCAT_INT32 2

@@ -10,7 +10,7 @@
 #include "std_compat/memory.h"
 
 namespace libpressio { namespace metrics {
-namespace autocorr {
+namespace autocorr_ns {
   struct metrics {
     pressio_data autocorr;
   };
@@ -130,7 +130,7 @@ class autocorr_plugin : public libpressio_metrics_plugin {
     }
     int end_decompress_impl(struct pressio_data const*, struct pressio_data const* output, int ) override {
       if(!output || !output->has_data() || !input_data.has_data()) return 0;
-      err_metrics = pressio_data_for_each<autocorr::metrics>(input_data, domain_manager().make_readable(domain_plugins().build("malloc"), *output), autocorr::compute_metrics{autocorr_lags});
+      err_metrics = pressio_data_for_each<autocorr_ns::metrics>(input_data, domain_manager().make_readable(domain_plugins().build("malloc"), *output), autocorr_ns::compute_metrics{autocorr_lags});
       return 0;
     }
 
@@ -181,7 +181,7 @@ class autocorr_plugin : public libpressio_metrics_plugin {
   private:
   uint64_t autocorr_lags = 100;
   pressio_data input_data = pressio_data::empty(pressio_byte_dtype, {});
-  compat::optional<autocorr::metrics> err_metrics;
+  compat::optional<autocorr_ns::metrics> err_metrics;
 };
 
 pressio_register registration(metrics_plugins(), "autocorr", [](){ return compat::make_unique<autocorr_plugin>(); });

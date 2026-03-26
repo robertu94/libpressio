@@ -10,7 +10,7 @@
 #include "pressio_compressor.h"
 #include "std_compat/memory.h"
 
-namespace libpressio { namespace compressors { namespace transpose {
+namespace libpressio { namespace compressors { namespace transpose_ns {
 
 class transpose_meta_compressor_plugin : public libpressio_compressor_plugin
 {

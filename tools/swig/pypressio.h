@@ -187,7 +187,7 @@ std::string io_data_to_bytes(pressio_data* data) {
 }
 
 pressio_data* io_data_from_bytes(const char* buffer, size_t buffer_size) {
-  return pressio_data_new_copy(pressio_byte_dtype, (void*)buffer, 1, &buffer_size);
+  return pressio_data_new_copy(pressio_byte_dtype, (const void*)buffer, 1, &buffer_size);
 }
 
 std::vector<std::string> option_get_strings(pressio_option const* options) {

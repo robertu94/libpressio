@@ -4,7 +4,7 @@
 #include <std_compat/memory.h>
 #include <sstream>
 
-namespace libpressio { namespace compressors { namespace delta_encoder {
+namespace libpressio { namespace compressors { namespace delta_encoding_ns {
 
 struct delta_encoder {
   template <class T>

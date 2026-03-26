@@ -27,8 +27,8 @@ public:
     struct pressio_options options;
     set(options, "pressio:thread_safe", pressio_thread_safety_multiple);
     set(options, "pressio:stability", "experimental");
-    set(options, "pressio:lossless:min", 0);
-    set(options, "pressio:lossless:max", 250);
+    set(options, "pressio:lossless:min", 1);
+    set(options, "pressio:lossless:max", 9);
     set(options, "bzip2:block_size_100k:min", 1);
     set(options, "bzip2:block_size_100k:max", 9);
     set(options, "bzip2:work_factor:min", 0);
@@ -67,7 +67,7 @@ public:
     get(options, "bzip2:small", &small);
     int temp = 0;
     if(get(options, "pressio:lossless", &temp) == pressio_options_key_set) {
-      if(temp >= 0 && temp <= 250) {
+      if(temp >= 1 && temp <= 9) {
         blockSize100k = temp;
       } else {
         set_error(1, "lossless out of range");

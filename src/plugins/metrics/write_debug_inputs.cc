@@ -11,7 +11,7 @@
 #include <iomanip>
 #include <mutex>
 
-namespace libpressio { namespace metrics { namespace write_debug_inputs_metrics_ns {
+namespace libpressio { namespace metrics { namespace write_debug_inputs_ns {
 
   std::mutex idx_mutex;
   uint64_t input_write_idx = 0;
