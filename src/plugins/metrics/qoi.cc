@@ -652,6 +652,8 @@ qoi_statistics calculate_statistics(
   return stats;
 }
 
+
+
 template <typename T>
 void append_casted(const pressio_data& data, std::vector<double>& out) {
   const T* ptr = static_cast<const T*>(data.data());
