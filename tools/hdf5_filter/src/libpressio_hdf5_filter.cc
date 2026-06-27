@@ -6,7 +6,7 @@
 #include <nlohmann/json.hpp>
 #include <vector>
 #include <string>
-#include <endian.h>
+#include <std_compat/bit.h>
 
 compression_options get_options_from_cd_values(size_t cd_nelmts, const unsigned int* cd_values) {
   compression_options options;

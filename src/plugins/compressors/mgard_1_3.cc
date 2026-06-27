@@ -271,7 +271,8 @@ Reference [6] covers the design and implementation on GPU heterogeneous systems.
       void* output_data = output->data();
       size_t compressed_size;
       bool pre_allocated = output->has_data();
-      auto const& dims = input->normalized_dims();
+      auto input_dims = input->normalized_dims();
+      std::vector<mgard_x::SIZE> dims(input_dims.begin(), input_dims.end());
       // as of CODARCode/mgard@1.4, MGARD expects inputs to 
       // if cuda, use Cuda Unified Virtual Addressing infers the kind of the copy based on the pointer attributes
       // if sycl, use Sycl Unified Shared Memory allows memory shared between src and target automatically with the OS

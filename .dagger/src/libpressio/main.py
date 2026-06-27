@@ -13,10 +13,10 @@ from opentelemetry import trace
 tracer = trace.get_tracer("dagger.io/util/parallel")
 
 # SUPPORTED VERSIONS
-UBUNTU = ["ubuntu:22.04", "ubuntu:24.04"]
-FEDORA = ["fedora:41", "fedora:42"]
-CENTOS = ["almalinux:8", "almalinux:9"]
-PYTHON_VERSIONS = ["python3.14", "python3.13", "python3.12", "python3.11", "python3.10", "python3.9"]
+UBUNTU = ["ubuntu:24.04", "ubuntu:26.04"]
+FEDORA = ["fedora:43", "fedora:44"]
+CENTOS = ["almalinux:9", "almalinux:10"]
+PYTHON_VERSIONS = ["python3.14", "python3.13", "python3.12", "python3.11"]
 
 #DEFAULT VERSIONS
 DEFAULT_BUILD_TYPE = "Release"

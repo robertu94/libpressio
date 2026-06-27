@@ -7,6 +7,7 @@
 #include <cstring>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <algorithm>
 #include <regex>
 #include <std_compat/string_view.h>
@@ -67,9 +68,18 @@ void for_each_options(struct pressio_options* options, Func f) {
 }
 
 void document_compressor(std::ostream& out, std::string const& compressor_id, const pressio_compressor* c) {
+    if(c == nullptr) {
+      return;
+    }
     pressio_options* docs = pressio_compressor_get_documentation(c);
     pressio_options* options = pressio_compressor_get_options(c);
     pressio_options* configuration = pressio_compressor_get_configuration(c);
+    if(docs == nullptr || options == nullptr || configuration == nullptr) {
+      pressio_options_free(docs);
+      pressio_options_free(options);
+      pressio_options_free(configuration);
+      return;
+    }
 
 //    out << *configuration << std::endl;
 //    out << *options << std::endl;
@@ -633,6 +643,9 @@ int main(int argc, char* const argv[])
     auto compressors = metas_list([]{return pressio_supported_compressors();});
     for (auto const& compressor : compressors) {
       pressio_compressor* c = pressio_get_compressor(instance, compressor.c_str());
+      if(c == nullptr) {
+        continue;
+      }
       pressio_compressor_set_name(c, name);
       document_compressor(out, compressor, c);
       pressio_compressor_release(c);

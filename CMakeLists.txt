@@ -633,10 +633,15 @@ if(LIBPRESSIO_HAS_LUA)
     target_link_libraries(libpressio PRIVATE PkgConfig::Lua)
   else()
     message(INFO "lua from cmake")
-    find_package(Lua)
-    target_link_libraries(libpressio PRIVATE ${LUA_LIBRARIES})
-    target_include_directories(libpressio PRIVATE ${LUA_INCLUDE_DIR})
+    find_package(Lua REQUIRED)
+    if(TARGET Lua::Lua)
+      target_link_libraries(libpressio PRIVATE Lua::Lua)
+    else()
+      target_link_libraries(libpressio PRIVATE ${LUA_LIBRARIES})
+      target_include_directories(libpressio PRIVATE ${LUA_INCLUDE_DIRS})
+    endif()
   endif()
+
   libpressio_plugin_file( /compressors/lambda_fn.cc)
 endif()
 
@@ -848,7 +853,7 @@ if(BUILD_DOCS)
     )
   add_custom_command(
     OUTPUT "Compressors.md"
-    COMMAND generate_docs -m c -o "${CMAKE_BINARY_DIR}/Compressors.md"
+    COMMAND ${CMAKE_COMMAND} -E env LIBPRESSIO_GENERATE_DOCS_OUTPUT="${CMAKE_BINARY_DIR}/Compressors.md" ${CMAKE_COMMAND} -P "${CMAKE_CURRENT_SOURCE_DIR}/tools/docs/generate_compressors_docs.cmake"
     DEPENDS generate_docs libpressio
     COMMENT "Documenting Compressors"
     )

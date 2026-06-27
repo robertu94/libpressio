@@ -1,5 +1,3 @@
-#define SOL_ALL_SAFETIES_ON 1
-#define SOL_PRINT_ERRORS 1
 #include <chrono>
 #include <stdexcept>
 #include <sol/sol.hpp>
@@ -16,6 +14,22 @@ enum class lambda_fn_event {
 
 class lambda_fn_compressor_plugin : public libpressio_compressor_plugin {
 public:
+  static sol::table make_options_table(sol::state_view lua, pressio_options const& opts) {
+    auto table = lua.create_table();
+    for (auto const& option : opts) {
+      auto as_double = option.second.as(pressio_option_double_type, pressio_conversion_explicit);
+      if(as_double.has_value()) {
+        table[option.first] = as_double.get_value<double>();
+        continue;
+      }
+      auto as_string = option.second.as(pressio_option_charptr_type, pressio_conversion_explicit);
+      if(as_string.has_value()) {
+        table[option.first] = as_string.get_value<std::string>();
+      }
+    }
+    return table;
+  }
+
   struct pressio_options get_options_impl() const override
   {
     struct pressio_options options;
@@ -321,12 +335,6 @@ private:
         "dtype", &pressio_data::dtype,
         "to_vector", &pressio_data::to_vector<double>
         );
-    lua.new_usertype<pressio_options>(
-        "pressio_options",
-        "key_status", static_cast<pressio_options_key_status (pressio_options::*)(std::string const&) const>(&pressio_options::key_status),
-        "get", static_cast<pressio_option const& (pressio_options:: *)(std::string const&) const>(&pressio_options::get),
-        "set", static_cast<void (pressio_options::*)(std::string const&, pressio_option const&)>(&pressio_options::set)
-        );
     lua.new_usertype<pressio_option>(
         "pressio_option",
         "type", &pressio_option::type,
@@ -363,7 +371,7 @@ private:
 
   void run_options_script(pressio_options const& set_opts, lambda_fn_event event) {
     run_script_common(event, [&set_opts](sol::state& lua){
-        lua["set_options"] = std::ref(set_opts);
+        lua["set_options"] = make_options_table(lua, set_opts);
     });
   }
   void run_compress_script(compat::span<const pressio_data* const> const& inputs, compat::span<pressio_data*> & outputs, lambda_fn_event event) {
@@ -392,8 +400,8 @@ private:
     sol::state lua;
     lua.open_libraries(sol::lib::base, sol::lib::math);
     bind_pressio(lua);
-    lua["persist"] = std::ref(persist);
-    lua["options"] = std::ref(opts);
+    lua["persist"] = make_options_table(lua, persist);
+    lua["options"] = make_options_table(lua, opts);
     lua["name"] = get_name();
     lua["is_compress"] = event == lambda_fn_event::compress;
     lua["is_decompress"] = event == lambda_fn_event::decompress;

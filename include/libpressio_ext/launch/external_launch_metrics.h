@@ -85,6 +85,7 @@ struct libpressio_launch_metrics_plugin : public pressio_configurable {
   }
 };
 }
+/** Return the registry of available launch metrics plugins. */
 pressio_registry<std::unique_ptr<launch_metrics::libpressio_launch_metrics_plugin>>& launch_metrics_plugins();
 
 }

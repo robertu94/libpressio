@@ -7,6 +7,7 @@
 #include "iless.h"
 #include "cleanup.h"
 
+#include <set>
 #include <SZ3/api/sz.hpp>
 
 
@@ -80,34 +81,34 @@ public:
   {
     struct pressio_options options;
     if(config.errorBoundMode == SZ3::EB_ABS) {
-      set(options, "pressio:abs", config.absErrorBound);
+      this->set(options, "pressio:abs", config.absErrorBound);
     } else {
-      set_type(options, "pressio:abs", pressio_option_double_type);
+      this->set_type(options, "pressio:abs", pressio_option_double_type);
     }
     if(config.errorBoundMode == SZ3::EB_REL) {
-      set(options, "pressio:rel", config.relErrorBound);
+      this->set(options, "pressio:rel", config.relErrorBound);
     } else {
-      set_type(options, "pressio:rel", pressio_option_double_type);
+      this->set_type(options, "pressio:rel", pressio_option_double_type);
     }
-    set(options, "pressio:nthreads", nthreads);
-    set(options, "sz3:abs_error_bound", config.absErrorBound);
-    set(options, "sz3:rel_error_bound", config.relErrorBound);
-    set(options, "sz3:psnr_error_bound", config.psnrErrorBound);
-    set(options, "sz3:l2_norm_error_bound", config.l2normErrorBound);
-    set(options, "sz3:error_bound_mode", config.errorBoundMode);
-    set(options, "sz3:algorithm", config.cmprAlgo);
-    set(options, "sz3:lorenzo", config.lorenzo);
-    set(options, "sz3:lorenzo2", config.lorenzo2);
-    set(options, "sz3:regression", config.regression);
-    set(options, "sz3:regression2", config.regression2);
-    set(options, "sz3:openmp", config.openmp);
-    set(options, "sz3:interp_algo", config.interpAlgo);
-    set(options, "sz3:interp_direction", config.interpDirection);
-    set(options, "sz3:quant_bin_size", config.quantbinCnt);
-    set(options, "sz3:pred_dim", config.predDim);
-    set_type(options, "sz3:error_bound_mode_str", pressio_option_charptr_type);
-    set_type(options, "sz3:intrep_algo_str", pressio_option_charptr_type);
-    set_type(options, "sz3:algorithm_str", pressio_option_charptr_type);
+    this->set(options, "pressio:nthreads", nthreads);
+    this->set(options, "sz3:abs_error_bound", config.absErrorBound);
+    this->set(options, "sz3:rel_error_bound", config.relErrorBound);
+    this->set(options, "sz3:psnr_error_bound", config.psnrErrorBound);
+    this->set(options, "sz3:l2_norm_error_bound", config.l2normErrorBound);
+    this->set(options, "sz3:error_bound_mode", config.errorBoundMode);
+    this->set(options, "sz3:algorithm", config.cmprAlgo);
+    this->set(options, "sz3:lorenzo", config.lorenzo);
+    this->set(options, "sz3:lorenzo2", config.lorenzo2);
+    this->set(options, "sz3:regression", config.regression);
+    this->set(options, "sz3:regression2", config.regression2);
+    this->set(options, "sz3:openmp", config.openmp);
+    this->set(options, "sz3:interp_algo", config.interpAlgo);
+    this->set(options, "sz3:interp_direction", config.interpDirection);
+    this->set(options, "sz3:quant_bin_size", config.quantbinCnt);
+    this->set_type(options, "sz3:error_bound_mode_str", pressio_option_charptr_type);
+    this->set_type(options, "sz3:intrep_algo_str", pressio_option_charptr_type);
+    this->set_type(options, "sz3:algorithm_str", pressio_option_charptr_type);
+
     return options;
   }
 
@@ -120,8 +121,8 @@ public:
     set(options, "sz3:intrep_algo_str", keys(sz3_options().interp_algo));
     set(options, "sz3:algorithm_str", keys(sz3_options().algo));
     
-        std::vector<std::string> invalidations {"sz3:abs_error_bound", "sz3:rel_error_bound", "sz3:psnr_error_bound", "sz3:l2_norm_error_bound", "sz3:error_bound_mode", "sz3:algorithm", "sz3:lorenzo", "sz3:lorenzo2", "sz3:regression", "sz3:regression2", "sz3:openmp",   "sz3:interp_algo", "sz3:interp_direction",  "sz3:quant_bin_size",  "sz3:pred_dim", "pressio:abs", "pressio:rel",  "sz3:error_bound_mode_str", "sz3:intrep_algo_str", "sz3:algorithm_str"}; 
-        std::vector<std::string> runtime_invalidations {"sz3:abs_error_bound", "sz3:rel_error_bound", "sz3:psnr_error_bound", "sz3:l2_norm_error_bound", "sz3:error_bound_mode", "sz3:algorithm", "sz3:lorenzo", "sz3:lorenzo2", "sz3:regression", "sz3:regression2", "sz3:openmp",   "sz3:interp_algo", "sz3:interp_direction",  "sz3:quant_bin_size",  "sz3:pred_dim", "pressio:abs", "pressio:rel", "pressio:nthreads", "sz3:error_bound_mode_str", "sz3:intrep_algo_str", "sz3:algorithm_str"}; 
+        std::vector<std::string> invalidations {"sz3:abs_error_bound", "sz3:rel_error_bound", "sz3:psnr_error_bound", "sz3:l2_norm_error_bound", "sz3:error_bound_mode", "sz3:algorithm", "sz3:lorenzo", "sz3:lorenzo2", "sz3:regression", "sz3:regression2", "sz3:openmp",   "sz3:interp_algo", "sz3:interp_direction",  "sz3:quant_bin_size",   "pressio:abs", "pressio:rel",  "sz3:error_bound_mode_str", "sz3:intrep_algo_str", "sz3:algorithm_str"}; 
+        std::vector<std::string> runtime_invalidations {"sz3:abs_error_bound", "sz3:rel_error_bound", "sz3:psnr_error_bound", "sz3:l2_norm_error_bound", "sz3:error_bound_mode", "sz3:algorithm", "sz3:lorenzo", "sz3:lorenzo2", "sz3:regression", "sz3:regression2", "sz3:openmp",   "sz3:interp_algo", "sz3:interp_direction",  "sz3:quant_bin_size",   "pressio:abs", "pressio:rel", "pressio:nthreads", "sz3:error_bound_mode_str", "sz3:intrep_algo_str", "sz3:algorithm_str"}; 
         std::vector<pressio_configurable const*> invalidation_children {}; 
         
         set(options, "predictors:error_dependent", get_accumulate_configuration("predictors:error_dependent", invalidation_children, invalidations));
@@ -152,7 +153,6 @@ public:
     set(options, "sz3:interp_algo", "which intrepolation algorithm to use");
     set(options, "sz3:interp_direction", "which interpolation direction to use");
     set(options, "sz3:quant_bin_size", "number of quantization bins");
-    set(options, "sz3:pred_dim", "prediction dimension");
     set(options, "sz3:algorithm_str", "compression algorithm");
     set(options, "sz3:error_bound_mode_str", "error bound");
     set(options, "sz3:intrep_algo_str", "interpolation algorithm mode");
@@ -330,6 +330,10 @@ public:
 
   uint32_t nthreads = 1;
   SZ3::Config config{};
+  enum class comp_metrics {
+      prediction,
+  };
+  std::set<comp_metrics>collect_metrics = {};
 };
 
 pressio_register registration(compressor_plugins(), "sz3", []() {

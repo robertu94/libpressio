@@ -7,7 +7,6 @@
 #include <vector>
 #include <cstdint>
 #include <algorithm>
-#include <std_compat/bit.h>
 #include "pressio_version.h"
 #include "dlpack/dlpack.h"
 
@@ -80,12 +79,14 @@ std::vector<std::string> option_get_strings(pressio_option const* options) ;
 void option_set_strings(pressio_option* options, std::vector<std::string> const& strings) ;
 
 std::vector<uint64_t> data_dimensions(const pressio_data* data) ;
+intptr_t data_ptr(const pressio_data* data) ;
 
 struct pressio_option* option_new_strings(std::vector<std::string> const& strings) ;
 struct pressio_option* option_new_string(std::string const& string) ;
 
 struct pressio_data* data_new_empty(const pressio_dtype dtype, std::vector<uint64_t> dimensions) ;
 struct pressio_data* data_new_nonowning(const pressio_dtype dtype, void* data, std::vector<uint64_t> dimensions) ;
+struct pressio_data* data_new_nonowning_ptr(const pressio_dtype dtype, intptr_t data, std::vector<uint64_t> dimensions) ;
 struct pressio_data* data_new_copy(const enum pressio_dtype dtype, void* src, std::vector<uint64_t>  dimensions) ;
 struct pressio_data* data_new_owning(const pressio_dtype dtype, std::vector<uint64_t> dimensions) ;
 struct pressio_data* data_new_move(const pressio_dtype dtype,

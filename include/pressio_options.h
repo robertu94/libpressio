@@ -198,7 +198,7 @@ size_t pressio_options_num_set(struct pressio_options const* options);
    * pressio_options_get_string returns a newly allocated copy of the string
    \param[in] options the options structure to modify
    \param[in] key  the key to change
-   \param[out] value the value retrieved
+   \param[out] outvalue the value retrieved
    \returns a status code
    \see pressio_options_key_status status codes returned
    */ \
@@ -211,7 +211,7 @@ size_t pressio_options_num_set(struct pressio_options const* options);
    \param[in] options the options structure to modify
    \param[in] key  the key to change
    \param[in] safety  what kind of conversions to allow
-   \param[out] value the value retrieved, only if it is convertible. If returning a char*, the memory must be freed with free()
+   \param[out] outvalue the value retrieved, only if it is convertible. If returning a char*, the memory must be freed with free()
    \returns a status code 
    \see pressio_options_key_status status codes returned 
    */ \
@@ -224,7 +224,7 @@ size_t pressio_options_num_set(struct pressio_options const* options);
   /** Gets an particular key in an options structure, casting it if necessary
    \param[in] options the options structure to modify
    \param[in] key  the key to change
-   \param[out] value the value retrieved, only if it is convertible. If returning a char*, the memory must be freed with free()
+   \param[out] outvalue the value retrieved, only if it is convertible. If returning a char*, the memory must be freed with free()
    \returns a status code
    \see pressio_options_key_status status codes returned
    */ \
@@ -314,16 +314,17 @@ enum pressio_options_key_status pressio_options_get_strings(struct pressio_optio
 enum pressio_options_key_status pressio_options_cast_strings(struct pressio_options \
       const* options, const char* key, const enum pressio_conversion_safety safety, \
       size_t* size, char*** outvalues);
-  /** Gets an particular key in an options structure, casting it if necessary
-   \param[in] options the options structure to modify
-   \param[in] key  the key to change
-   \param[out] size the number of strings returned.  0 on error
-   \param[out] outvalues the value retrieved, only if it is convertible. both the values and the pointer must be freed with free()
-   \returns a status code
-   \see pressio_options_key_status status codes returned
-   */ \
+   /** Gets an particular key in an options structure, casting it if necessary
+    \param[in] options the options structure to modify
+    \param[in] key  the key to change
+    \param[out] size the number of strings returned.  0 on error
+    \param[out] values the value retrieved, only if it is convertible. both the values and the pointer must be freed with free()
+    \returns a status code
+    \see pressio_options_key_status status codes returned
+    */ \
 enum pressio_options_key_status pressio_options_as_strings(struct pressio_options \
       const* options, const char* key, size_t* size, char*** values);
+
 
 /**
  * Create a human readable string for the options passed.

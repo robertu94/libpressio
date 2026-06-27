@@ -196,6 +196,87 @@ namespace std {
 %include  "dlpack/dlpack.h"
 
 %pythoncode %{
+    import numpy as _np
+
+    _dtype_map = {
+        "f4": float_dtype,
+        "f8": double_dtype,
+        "i1": int8_dtype,
+        "i2": int16_dtype,
+        "i4": int32_dtype,
+        "i8": int64_dtype,
+        "u1": uint8_dtype,
+        "u2": uint16_dtype,
+        "u4": uint32_dtype,
+        "u8": uint64_dtype,
+        "b1": bool_dtype,
+    }
+    _reverse_dtype_map = {
+        float_dtype: _np.dtype("<f4"),
+        double_dtype: _np.dtype("<f8"),
+        int8_dtype: _np.dtype("|i1"),
+        int16_dtype: _np.dtype("<i2"),
+        int32_dtype: _np.dtype("<i4"),
+        int64_dtype: _np.dtype("<i8"),
+        uint8_dtype: _np.dtype("|u1"),
+        uint16_dtype: _np.dtype("<u2"),
+        uint32_dtype: _np.dtype("<u4"),
+        uint64_dtype: _np.dtype("<u8"),
+        bool_dtype: _np.dtype("|b1"),
+        byte_dtype: _np.dtype("|i1"),
+    }
+
+    def io_data_from_numpy(x):
+        info = x.__array_interface__
+        if info.get("strides", None) is not None:
+            raise NotImplementedError("stridded numpy arrays are not supported")
+        if info.get("mask", None) is not None:
+            raise NotImplementedError("masked numpy arrays are not supported")
+        if info['version'] != 3:
+            raise NotImplementedError("only version 3 is supported")
+        typestr = info['typestr']
+        if len(typestr) == 3:
+            typestr = typestr[1:]
+        return data_new_nonowning_ptr(
+            _dtype_map[typestr],
+            info['data'][0],
+            vector_uint64_t(info['shape'])
+        )
+
+    def io_data_to_numpy(x):
+        dims = tuple(data_dimensions(x))
+        dtype = _reverse_dtype_map[data_dtype(x)]
+        ptr = data_ptr(x)
+        count = int(_np.prod(dims, dtype=_np.int64)) if dims else 0
+        ctype = _np.ctypeslib.as_ctypes_type(dtype)
+        array_type = ctype * count
+        array_1d = _np.ctypeslib.as_array(array_type.from_address(ptr))
+        return _np.array(array_1d.reshape(dims), copy=True)
+
+    def io_data_to_python(x):
+        return io_data_to_numpy(x)
+
+    def _from_dlpack(x):
+        if hasattr(x, "__array_interface__"):
+            return io_data_from_numpy(x)
+        if hasattr(x, "__cuda_array_interface__"):
+            info = x.__cuda_array_interface__
+            if info.get("strides", None) is not None:
+                raise NotImplementedError("stridded cuda arrays are not supported")
+            if info.get("mask", None) is not None:
+                raise NotImplementedError("masked cuda arrays are not supported")
+            if info['version'] != 3:
+                raise NotImplementedError("only version 3 is supported")
+            typestr = info['typestr']
+            if len(typestr) == 3:
+                typestr = typestr[1:]
+            return data_new_nonowning_ptr(
+                _dtype_map[typestr],
+                info['data'][0],
+                vector_uint64_t(info['shape'])
+            )
+        raise NotImplementedError("dlpack import is only supported for array-interface objects")
+
     class PressioData:
         def __init__(self, ptr):
             self.ptr = ptr

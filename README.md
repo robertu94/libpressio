@@ -70,20 +70,20 @@ For information on writing a metrics plugin see [Writing a Metrics Plugin](docs/
 
 First party compressors plugins can be found in [src/plugins/compressors](https://github.com/robertu94/libpressio/tree/master/src/plugins/compressors)
 
-See the [compressor settings page](build/Compressors.md) for information on how to configure them.
+See the compressor settings page in the generated documentation for information on how to configure them.
 
 
 ### Metrics Plugins
 
 First party compressors plugins can be found in [src/plugins/metrics](https://github.com/robertu94/libpressio/tree/master/src/plugins/metrics)
 
-See the [metrics results page](build/Metrics.md) for information on what they produce
+See the metrics results page in the generated documentation for information on what they produce.
 
 ### IO Plugins
 
 First party compressors plugins can be found in [src/plugins/io](https://github.com/robertu94/libpressio/tree/master/src/plugins/io)
 
-See the [io settings page](build/IO.md) for information on how to configure them
+See the IO settings page in the generated documentation for information on how to configure them.
 
 # Installation
 

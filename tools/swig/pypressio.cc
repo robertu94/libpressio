@@ -1,6 +1,14 @@
 #include "pypressio.h"
 #include <std_compat/numeric.h>
 
+namespace {
+#if defined(_WIN32)
+constexpr bool native_little_endian = true;
+#else
+constexpr bool native_little_endian = __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__;
+#endif
+}
+
 void options_set_comm(struct pressio_options* options, const char* key, MPI_Comm comm) {
   MPI_Comm* c = new MPI_Comm(comm);
   return pressio_options_set_userptr_managed(options, key, c, nullptr, newdelete_deleter<MPI_Comm>(), newdelete_copy<MPI_Comm>());
@@ -28,7 +36,7 @@ static std::string dtype_to_typestr(pressio_dtype t) {
     };
     return ((t == pressio_byte_dtype)
                        ? "|"
-                       : (compat::endian::native == compat::endian::little ? "<" : ">")) +
+                       : (native_little_endian ? "<" : ">")) +
                   dtypes.at(t);
 }
 
@@ -50,7 +58,7 @@ static pressio_dtype dtype_from_typestr(std::string const& typestr) {
     pressio_dtype dtype = pressio_byte_dtype;
     if(typestr.size() == 3) {
         auto endian = typestr[0];
-        if (compat::endian::native == compat::endian::little) {
+        if (native_little_endian) {
             if(endian == '>') {
                 throw std::runtime_error("cross endian data not supported");
             }
@@ -175,6 +183,10 @@ std::vector<uint64_t> data_dimensions(const pressio_data* data) {
     return std::vector<uint64_t>(d.begin(), d.end());
 }
 
+intptr_t data_ptr(const pressio_data* data) {
+    return reinterpret_cast<intptr_t>(pressio_data_ptr(data, nullptr));
+}
+
 struct pressio_option* option_new_strings(std::vector<std::string> const& strings) {
   return new pressio_option(pressio_option(strings));
 }
@@ -183,23 +195,32 @@ struct pressio_option* option_new_string(std::string const& string) {
 }
 
 struct pressio_data* data_new_empty(const pressio_dtype dtype, std::vector<uint64_t> dimensions) {
-  return new pressio_data(pressio_data::empty(dtype, dimensions));
+  std::vector<size_t> dims(dimensions.begin(), dimensions.end());
+  return new pressio_data(pressio_data::empty(dtype, dims));
 }
 struct pressio_data* data_new_nonowning(const pressio_dtype dtype, void* data, std::vector<uint64_t> dimensions) {
-  return new pressio_data(pressio_data::nonowning(dtype, data, dimensions));
+  std::vector<size_t> dims(dimensions.begin(), dimensions.end());
+  return new pressio_data(pressio_data::nonowning(dtype, data, dims));
+}
+struct pressio_data* data_new_nonowning_ptr(const pressio_dtype dtype, intptr_t data, std::vector<uint64_t> dimensions) {
+  std::vector<size_t> dims(dimensions.begin(), dimensions.end());
+  return new pressio_data(pressio_data::nonowning(dtype, reinterpret_cast<void*>(data), dims));
 }
 struct pressio_data* data_new_copy(const enum pressio_dtype dtype, void* src, std::vector<uint64_t>  dimensions) {
-  return new pressio_data(pressio_data::copy(dtype, src, dimensions));
+  std::vector<size_t> dims(dimensions.begin(), dimensions.end());
+  return new pressio_data(pressio_data::copy(dtype, src, dims));
 }
 struct pressio_data* data_new_owning(const pressio_dtype dtype, std::vector<uint64_t> dimensions) {
-  return new pressio_data(pressio_data::owning(dtype, dimensions));
+  std::vector<size_t> dims(dimensions.begin(), dimensions.end());
+  return new pressio_data(pressio_data::owning(dtype, dims));
 }
 struct pressio_data* data_new_move(const pressio_dtype dtype,
     void* data,
     std::vector<uint64_t> dimensions,
     pressio_data_delete_fn deleter,
     void* metadata) {
-  return new pressio_data(pressio_data::move(dtype, data, dimensions, deleter, metadata));
+  std::vector<size_t> dims(dimensions.begin(), dimensions.end());
+  return new pressio_data(pressio_data::move(dtype, data, dims, deleter, metadata));
 }
 
 pressio_metrics* new_metrics(struct pressio* library, std::vector<std::string> metrics) {
