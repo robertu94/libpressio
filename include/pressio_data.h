@@ -270,6 +270,8 @@ size_t pressio_data_num_elements(struct pressio_data const* data);
  */
 const char* pressio_data_domain_id(struct pressio_data const* data);
 
+void pressio_data_move(struct pressio_data* from, struct pressio_data* into);
+
 #endif
 
 #ifdef __cplusplus

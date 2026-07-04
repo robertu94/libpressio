@@ -542,6 +542,11 @@ const char* pressio_data_domain_id(struct pressio_data const* data) {
   return data->domain()->domain_id().c_str();
 }
 
+void pressio_data_move(struct pressio_data* from, struct pressio_data* into) {
+    *into = *from;
+    delete from;
+}
+
 int pressio_data_reshape(struct pressio_data* data,
     size_t const num_dimensions,
     size_t const dimensions[]
