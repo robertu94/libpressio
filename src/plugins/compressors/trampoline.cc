@@ -1,4 +1,4 @@
-// #include <cstdlib>
+#include <cstdlib>
 
 #include "libpressio_ext/cpp/data.h"
 #include "libpressio_ext/cpp/compressor.h"
@@ -17,9 +17,12 @@ class trampoline_plugin: public libpressio_compressor_plugin {
           struct pressio_options* (*get_configuration_impl_trampoline)(void const *),
           struct pressio_options* (*get_documentation_impl_trampoline)(void const *),
           struct pressio_options* (*get_options_impl_trampoline)(void const *),
+          int (*check_options_impl_trampoline)(void*, struct pressio_options const *),
           int (*set_options_impl_trampoline)(void*, struct pressio_options const *),
           int (*compress_impl_trampoline)(void*, struct pressio_data const *, struct pressio_data*),
           int (*decompress_impl_trampoline)(void*, struct pressio_data const *, struct pressio_data*),
+          int (*compress_many_impl_trampoline)(void*, struct pressio_data const * const *, size_t, struct pressio_data * *, size_t),
+          int (*decompress_many_impl_trampoline)(void*, struct pressio_data const * const *, size_t, struct pressio_data * *, size_t),
           int major_version_trampoline,
           int minor_version_trampoline,
           int patch_version_trampoline,
@@ -36,9 +39,12 @@ class trampoline_plugin: public libpressio_compressor_plugin {
         get_configuration_impl_trampoline(get_documentation_impl_trampoline),
         get_documentation_impl_trampoline(get_documentation_impl_trampoline),
         get_options_impl_trampoline(get_options_impl_trampoline),
+        check_options_impl_trampoline(check_options_impl_trampoline),
         set_options_impl_trampoline(set_options_impl_trampoline),
         compress_impl_trampoline(compress_impl_trampoline),
         decompress_impl_trampoline(decompress_impl_trampoline),
+        compress_many_impl_trampoline(compress_many_impl_trampoline),
+        decompress_many_impl_trampoline(decompress_many_impl_trampoline),
         major_version_trampoline(major_version_trampoline),
         minor_version_trampoline(minor_version_trampoline),
         patch_version_trampoline(patch_version_trampoline),
@@ -64,6 +70,14 @@ class trampoline_plugin: public libpressio_compressor_plugin {
       return pressio_options(*get_options_impl_trampoline(auxiliary));
   }
 
+  int check_options_impl(struct pressio_options const & options) {
+      int result = check_options_impl_trampoline(auxiliary, &options);
+      if (result != 0) {
+          set_error(error_code_trampoline(auxiliary), error_msg_trampoline(auxiliary));
+      }
+      return result;
+  }
+
   int set_options_impl(struct pressio_options const& options) override {
       int result = set_options_impl_trampoline(auxiliary, &options);
       if (result != 0) {
@@ -87,6 +101,22 @@ class trampoline_plugin: public libpressio_compressor_plugin {
       }
       return result;
   }
+
+  int compress_many_impl(compat::span<const pressio_data* const> const& inputs, compat::span<pressio_data*> & outputs) {
+      int result = compress_many_impl_trampoline(auxiliary, inputs.data(), inputs.size(), outputs.data(), outputs.size());
+      if (result != 0) {
+          set_error(error_code_trampoline(auxiliary), error_msg_trampoline(auxiliary));
+      }
+      return result;
+    }
+
+  int decompress_many_impl(compat::span<const pressio_data* const> const& inputs, compat::span<pressio_data* >& outputs) {
+      int result = decompress_many_impl_trampoline(auxiliary, inputs.data(), inputs.size(), outputs.data(), outputs.size());
+      if (result != 0) {
+          set_error(error_code_trampoline(auxiliary), error_msg_trampoline(auxiliary));
+      }
+      return result;
+    }
 
   int major_version() const override {
       return major_version_trampoline;
@@ -119,9 +149,12 @@ class trampoline_plugin: public libpressio_compressor_plugin {
         get_configuration_impl_trampoline,
         get_documentation_impl_trampoline,
         get_options_impl_trampoline,
+        check_options_impl_trampoline,
         set_options_impl_trampoline,
         compress_impl_trampoline,
         decompress_impl_trampoline,
+        compress_many_impl_trampoline,
+        decompress_many_impl_trampoline,
         major_version_trampoline,
         minor_version_trampoline,
         patch_version_trampoline,
@@ -144,9 +177,12 @@ class trampoline_plugin: public libpressio_compressor_plugin {
   struct pressio_options* (*get_configuration_impl_trampoline)(void const *);
   struct pressio_options* (*get_documentation_impl_trampoline)(void const *);
   struct pressio_options* (*get_options_impl_trampoline)(void const *);
+  int (*check_options_impl_trampoline)(void*, struct pressio_options const *);
   int (*set_options_impl_trampoline)(void*, struct pressio_options const *);
   int (*compress_impl_trampoline)(void*, struct pressio_data const *, struct pressio_data*);
   int (*decompress_impl_trampoline)(void*, struct pressio_data const *, struct pressio_data*);
+  int (*compress_many_impl_trampoline)(void*, struct pressio_data const * const *, size_t, struct pressio_data * *, size_t);
+  int (*decompress_many_impl_trampoline)(void*, struct pressio_data const * const *, size_t, struct pressio_data * *, size_t);
   int major_version_trampoline;
   int minor_version_trampoline;
   int patch_version_trampoline;
@@ -169,9 +205,12 @@ extern "C" {
         struct pressio_options* (*get_configuration_impl_trampoline)(void const *),
         struct pressio_options* (*get_documentation_impl_trampoline)(void const *),
         struct pressio_options* (*get_options_impl_trampoline)(void const *),
+        int (*check_options_impl_trampoline)(void*, struct pressio_options const *),
         int (*set_options_impl_trampoline)(void*, struct pressio_options const *),
         int (*compress_impl_trampoline)(void*, struct pressio_data const *, struct pressio_data*),
         int (*decompress_impl_trampoline)(void*, struct pressio_data const *, struct pressio_data*),
+        int (*compress_many_impl_trampoline)(void*, struct pressio_data const * const *, size_t, struct pressio_data * *, size_t),
+        int (*decompress_many_impl_trampoline)(void*, struct pressio_data const * const *, size_t, struct pressio_data * *, size_t),
         int major_version_trampoline,
         int minor_version_trampoline,
         int patch_version_trampoline,
@@ -190,9 +229,12 @@ extern "C" {
                 get_configuration_impl_trampoline,
                 get_documentation_impl_trampoline,
                 get_options_impl_trampoline,
+                check_options_impl_trampoline,
                 set_options_impl_trampoline,
                 compress_impl_trampoline,
                 decompress_impl_trampoline,
+                compress_many_impl_trampoline,
+                decompress_many_impl_trampoline,
                 major_version_trampoline,
                 minor_version_trampoline,
                 patch_version_trampoline,

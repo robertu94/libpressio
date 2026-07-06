@@ -2,6 +2,8 @@
  * \brief Metrics facilities to introspect compressor functions, input, and output
  */
 
+#include <cstdlib>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -121,6 +123,40 @@ int pressio_metrics_error_code(struct pressio_metrics const* metrics);
  * \returns last error message for the metrics
  */
 const char* pressio_metrics_error_msg(struct pressio_metrics const* metrics);
+
+bool pressio_register_metric(
+    struct pressio* library,
+    void* auxiliary,
+    struct pressio_options* (*get_configuration_impl_trampoline)(void const *),
+    struct pressio_options* (*get_documentation_impl_trampoline)(void const *),
+    struct pressio_options* (*get_options_trampoline)(void const *),
+    int (*set_options_trampoline)(void*, struct pressio_options const *),
+    int (*begin_check_options_impl_trampoline)(void*, struct pressio_options const *),
+    int (*end_check_options_impl_trampoline)(void*, struct pressio_options const *, int),
+    int (*begin_get_documentation_impl_trampoline)(void*),
+    int (*end_get_documentation_impl_trampoline)(void*, struct pressio_options const *),
+    int (*begin_get_configuration_impl_trampoline)(void*),
+    int (*end_get_configuration_impl_trampoline)(void*, struct pressio_options const *),
+    int (*begin_get_options_impl_trampoline)(void*),
+    int (*end_get_options_impl_trampoline)(void*, struct pressio_options const *),
+    int (*begin_set_options_impl_trampoline)(void*, struct pressio_options const *),
+    int (*end_set_options_impl_trampoline)(void*, struct pressio_options const *, int),
+    int (*begin_compress_impl_trampoline)(void*, struct pressio_data const *, struct pressio_data const *),
+    int (*end_compress_impl_trampoline)(void*, struct pressio_data const *, struct pressio_data const *, int),
+    int (*begin_decompress_impl_trampoline)(void*, struct pressio_data const *, struct pressio_data const *),
+    int (*end_decompress_impl_trampoline)(void*, struct pressio_data const *, struct pressio_data const *, int),
+    int (*begin_compress_many_impl_trampoline)(void*, struct pressio_data const * const *, size_t, struct pressio_data const * const *, size_t),
+    int (*end_compress_many_impl_trampoline)(void*, struct pressio_data const * const *, size_t, struct pressio_data const * const *, size_t, int),
+    int (*begin_decompress_many_impl_trampoline)(void*, struct pressio_data const * const *, size_t, struct pressio_data const * const *, size_t),
+    int (*end_decompress_many_impl_trampoline)(void*, struct pressio_data const * const *, size_t, struct pressio_data const * const *, size_t, int),
+    int (*view_segment_impl_trampoline)(void*, struct pressio_data const *, const char *),
+    const char* prefix_trampoline,
+    struct pressio_options* (*get_metrics_results_trampoline)(void const *),
+    int (*error_code_trampoline)(void const *),
+    const char* (*error_msg_trampoline)(void const *),
+    void* (*clone_trampoline)(void const *),
+    void (*release_trampoline)(void*)
+);
 
 #endif
 

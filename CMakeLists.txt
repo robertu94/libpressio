@@ -83,6 +83,7 @@ add_library(libpressio
   ./src/plugins/compressors/compressor_base.cc
   ./src/plugins/compressors/trampoline.cc
   ./src/plugins/metrics/metrics_base.cc
+  ./src/plugins/metrics/trampoline.cc
   ./src/plugins/io/io.cc
 
   ./src/plugins/domains/user.cc
