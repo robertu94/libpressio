@@ -75,7 +75,7 @@ class counting_metric: public libpressio_metrics_plugin {
 Finally, we will register the plugin in the under the names "counts" in the metrics plugging registry
 
 ```cpp
-static pressio_register X(metrics_plugins(), "counts", [](){ return std::make_unique<counting_metric>(); });
+static pressio_register registration(metrics_plugins(), "counts", [](){ return std::make_unique<counting_metric>(); });
 ```
 
 Then a user of the library can then ask libpressio to construct their new plugin as normal.

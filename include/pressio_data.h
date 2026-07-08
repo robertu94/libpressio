@@ -98,7 +98,7 @@ struct pressio_data* pressio_data_new_clone(const struct pressio_data* src);
  *  \param[in] num_dimensions the number of dimensions; must match the length of dimensions
  *  \param[in] dimensions an array corresponding to the dimensions of the data, a copy is made of this on construction
  */
-struct pressio_data* pressio_data_new_copy(const enum pressio_dtype dtype, void* src, size_t const num_dimensions, size_t const dimensions[]);
+struct pressio_data* pressio_data_new_copy(const enum pressio_dtype dtype, const void* src, size_t const num_dimensions, size_t const dimensions[]);
 /** 
  *  allocates a new pressio_data structure and corresponding data. The corresponding data is uninitialized
  *
@@ -269,6 +269,8 @@ size_t pressio_data_num_elements(struct pressio_data const* data);
  * returns the domain_id of the data
  */
 const char* pressio_data_domain_id(struct pressio_data const* data);
+
+void pressio_data_move(struct pressio_data* from, struct pressio_data* into);
 
 #endif
 

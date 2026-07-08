@@ -9,7 +9,7 @@
 #include "std_compat/optional.h"
 #include <cmath>
 
-namespace libpressio { namespace metrics { namespace max_error_metrics_ns {
+namespace libpressio { namespace metrics { namespace max_error_ns {
 
 class max_error_plugin : public libpressio_metrics_plugin {
     struct max_error_info {

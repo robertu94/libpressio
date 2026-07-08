@@ -12,7 +12,7 @@
 
 namespace libpressio {
     namespace metrics {
-namespace region_of_interest {
+namespace region_of_interest_ns {
   struct region_of_interest_metrics {
     compat::optional<double> input_avg;
     compat::optional<double> input_sum;

@@ -11,7 +11,7 @@
 
 namespace libpressio {
 namespace compressors {
-namespace chunking {
+namespace chunking_ns {
 namespace detail {
 
 struct copy_from_blocks {

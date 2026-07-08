@@ -136,7 +136,7 @@ We finally register the library with libpressio:
 
 
 ```cpp
-static pressio_register X(compressor_plugins(), "log", [](){ return std::make_unique<log_transform>();});
+static pressio_register registration(compressor_plugins(), "log", [](){ return std::make_unique<log_transform>();});
 ```
 
 High quality compressor modules may be accepted into libpressio.  Contributed modules should be placed in to

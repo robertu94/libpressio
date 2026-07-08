@@ -13,7 +13,7 @@
 #include "std_compat/numeric.h"
 #include "std_compat/functional.h"
 
-namespace libpressio { namespace compressors { namespace chunking {
+namespace libpressio { namespace compressors { namespace chunking_ns {
 
 class chunking_plugin: public libpressio_compressor_plugin {
   public:
@@ -133,7 +133,7 @@ class chunking_plugin: public libpressio_compressor_plugin {
       } else {
         //non-contigious, need to copy
         pressio_data input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
-        tmp = libpressio::compressors::chunking::chunk_data(input, chunk_size, {{"nthreads", nthreads}});
+        tmp = libpressio::compressors::chunking_ns::chunk_data(input, chunk_size, {{"nthreads", nthreads}});
         auto ptr = static_cast<uint8_t*>(tmp.data());
         for (size_t i = 0; i < num_chunks; ++i) {
           inputs.emplace_back(pressio_data::nonowning(real_input->dtype(), ptr+(i*stride), chunk_size, "malloc"));
@@ -211,7 +211,15 @@ class chunking_plugin: public libpressio_compressor_plugin {
       uint64_t* inptr64 = reinterpret_cast<uint64_t*>(input->data());
       size_t n_buffers = *inptr64;
       const size_t header_size = sizeof(uint64_t) *(n_buffers+1);
-      std::vector<uint64_t> sizes(inptr64+1, inptr64+(1+n_buffers));
+      std::vector<uint64_t> sizes64(inptr64+1, inptr64+(1+n_buffers));
+      std::vector<size_t> sizes(sizes64.size());
+      std::transform(
+          std::begin(sizes64),
+          std::end(sizes64),
+          std::begin(sizes),
+          [](const uint64_t x) {
+            return static_cast<size_t>(x);
+          });
 
       //create the buffers to decompress
       std::vector<pressio_data> inputs;
@@ -265,7 +273,7 @@ class chunking_plugin: public libpressio_compressor_plugin {
           memcpy(outptr+accum_size_out, outputs[i].data(), stride_in_bytes);
           accum_size_out += stride_in_bytes;
         }
-        libpressio::compressors::chunking::restore_data(*output, combined, chunk_size, {{"nthreads", nthreads}});
+        libpressio::compressors::chunking_ns::restore_data(*output, combined, chunk_size, {{"nthreads", nthreads}});
       }
       auto dechunk_end = std::chrono::steady_clock::now();
       dechunk_time = std::chrono::duration_cast<std::chrono::milliseconds>(dechunk_end-dechunk_begin).count();

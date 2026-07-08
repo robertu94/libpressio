@@ -320,6 +320,31 @@ int pressio_compressor_decompress_many(struct pressio_compressor* compressor,
     struct pressio_data * out[], size_t num_outputs
     );
 
+bool pressio_register_compressor(
+    struct pressio* library,
+    void* auxiliary,
+    struct pressio_options* (*get_configuration_impl_trampoline)(void const *),
+    struct pressio_options* (*get_documentation_impl_trampoline)(void const *),
+    struct pressio_options* (*get_options_impl_trampoline)(void const *),
+    int (*check_options_impl_trampoline)(void*, struct pressio_options const *),
+    int (*set_options_impl_trampoline)(void*, struct pressio_options const *),
+    int (*compress_impl_trampoline)(void*, struct pressio_data const *, struct pressio_data*),
+    int (*decompress_impl_trampoline)(void*, struct pressio_data const *, struct pressio_data*),
+    int (*compress_many_impl_trampoline)(void*, struct pressio_data const * const *, size_t, struct pressio_data * *, size_t),
+    int (*decompress_many_impl_trampoline)(void*, struct pressio_data const * const *, size_t, struct pressio_data * *, size_t),
+    int major_version_trampoline,
+    int minor_version_trampoline,
+    int patch_version_trampoline,
+    int revision_version_trampoline,
+    const char* version_trampoline,
+    const char* prefix_trampoline,
+    struct pressio_options* (*get_metrics_results_impl_trampoline)(void const *),
+    int (*error_code_trampoline)(void const *),
+    const char* (*error_msg_trampoline)(void const *),
+    void* (*clone_trampoline)(void const *),
+    void (*release_trampoline)(void*)
+);
+
 #endif
 
 #ifdef __cplusplus

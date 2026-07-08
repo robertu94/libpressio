@@ -132,7 +132,7 @@ public:
   double eb = 1e-5;
 };
 
-pressio_register plugin(compressor_plugins(), "mgardx", []() {
+pressio_register registration(compressor_plugins(), "mgardx", []() {
   return compat::make_unique<mgardx_compressor_plugin>();
 });
 

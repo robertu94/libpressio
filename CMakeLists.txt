@@ -81,7 +81,9 @@ add_library(libpressio
 
   ./src/plugins/domains/base.cc
   ./src/plugins/compressors/compressor_base.cc
+  ./src/plugins/compressors/trampoline.cc
   ./src/plugins/metrics/metrics_base.cc
+  ./src/plugins/metrics/trampoline.cc
   ./src/plugins/io/io.cc
 
   ./src/plugins/domains/user.cc
@@ -128,21 +130,23 @@ endif()
 #instead of using target_sources libpressio_plugin_source to gather the list of plugin files
 #in order to generate a source file for static linking of libpressio
 set(LIBPRESSIO_BUILT_PLUGINS "")
-macro(libpressio_plugin_file file_name)
+macro(libpressio_plugin_file_aux file_name)
     target_sources(libpressio
       PRIVATE
       ${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/${file_name}
       )
+endmacro()
+macro(libpressio_plugin_file file_name)
+  libpressio_plugin_file_aux("${file_name}")
   list(APPEND LIBPRESSIO_BUILT_PLUGINS "${CMAKE_CURRENT_SOURCE_DIR}/src/plugins/${file_name}")
+  set(LIBPRESSIO_BUILT_PLUGINS "${LIBPRESSIO_BUILT_PLUGINS}" PARENT_SCOPE)
 endmacro()
 #REQUIRED CORE plugins included in every build of libpressio
 libpressio_plugin_file(domains_metrics/print.cc)
 libpressio_plugin_file(compressors/noop.cc)
 libpressio_plugin_file(compressors/pressio.cc)
 libpressio_plugin_file(metrics/composite.cc)
-libpressio_plugin_file(metrics/external.cc)
 libpressio_plugin_file(metrics/error_stat.cc)
-libpressio_plugin_file(launch/external_forkexec.cc)
 libpressio_plugin_file(launch_metrics/noop.cc)
 libpressio_plugin_file(launch_metrics/print.cc)
 libpressio_plugin_file(metrics/noop.cc)
@@ -151,6 +155,15 @@ libpressio_plugin_file(io/by_extension.cc)
 libpressio_plugin_file(io/posix.cc)
 libpressio_plugin_file(domains/malloc.cc)
 libpressio_plugin_file(domains/nonowning.cc)
+
+#RECOMMENDED plugins that should be included when building libpressio
+option(LIBPRESSIO_WITH_EXTERNAL "Support external plugins" ON)
+if(LIBPRESSIO_WITH_EXTERNAL)
+  libpressio_plugin_file(metrics/external.cc)
+  libpressio_plugin_file(launch/external_forkexec.cc)
+endif()
+
+message("STATUS" "LIBPRESSIO_BUILD_MODE = ${LIBPRESSIO_BUILD_MODE}")
 
 #optional components created with libpressio_optional_component don't require dependencies
 #they can be enabled in two (non-exclusive) ways:
@@ -162,9 +175,20 @@ function(libpressio_optional_component name description file_names)
   string(TOUPPER "${name}" name_upper)
   cmake_dependent_option(LIBPRESSIO_HAS_${name_upper} ${description} OFF "LIBPRESSIO_BUILD_MODE STREQUAL CORE" OFF)
   if(LIBPRESSIO_HAS_${name_upper} OR LIBPRESSIO_BUILD_MODE STREQUAL FULL)
-    foreach(file_name IN LISTS file_names)
-    libpressio_plugin_file(/${file_name})
-    endforeach()
+    message("STATUS" "LIBPRESSIO_HAS_${name_upper} = ON")
+    list(LENGTH file_names LIBPRESSIO_OPTIONAL_COMPONENT_NFILES)
+    if("${LIBPRESSIO_OPTIONAL_COMPONENT_NFILES}" GREATER 0)
+      list(GET file_names 0 LIBPRESSIO_OPTIONAL_COMPONENT_FILE)
+      libpressio_plugin_file(/${LIBPRESSIO_OPTIONAL_COMPONENT_FILE})
+      if("${LIBPRESSIO_OPTIONAL_COMPONENT_NFILES}" GREATER 1)
+        list(SUBLIST file_names 1 -1 LIBPRESSIO_OPTIONAL_COMPONENT_FILES_AUX)
+        foreach(file_name IN LISTS LIBPRESSIO_OPTIONAL_COMPONENT_FILES_AUX)
+          libpressio_plugin_file_aux(/${file_name})
+        endforeach()
+      endif()
+    endif()
+  else()
+    message("STATUS" "LIBPRESSIO_HAS_${name_upper} = OFF")
   endif()
 endfunction()
 
@@ -189,7 +213,7 @@ libpressio_optional_component(entropy "build the entropy metrics plugin" /metric
 libpressio_optional_component(historian "build the historian metrics plugin" /metrics/historian.cc)
 libpressio_optional_component(input_stats "build the input_stats metrics plugin" /metrics/input_stats.cc)
 libpressio_optional_component(iota "build the iota io plugin" /io/iota.cc)
-libpressio_optional_component(kl_divergance "build the kl_divergance plugin" /metrics/kl_divergance.cc)
+libpressio_optional_component(kl_divergence "build the kl_divergence plugin" /metrics/kl_divergence.cc)
 libpressio_optional_component(ks_test "build the KS test metrics plugin" /metrics/ks_test.cc)
 libpressio_optional_component(kth_error "build the kth error metrics plugin" /metrics/kth_error.cc)
 libpressio_optional_component(linear_quantizer "build the linear quantizer compressor plugin" /compressors/linear_quantizer.cc)
@@ -211,8 +235,9 @@ libpressio_optional_component(sobolev "computes the sobolev norm" /metrics/sobol
 libpressio_optional_component(gradient "computes the gradient length" /metrics/gradlength.cc)
 libpressio_optional_component(out_of_bounds "computes the gradient length" /metrics/out_of_bounds.cc)
 libpressio_optional_component(write_debug_inputs "metric that writes output buffers for testing" /metrics/write_debug_inputs.cc)
-set(roibin_sources /compressors/roibin.cc /compressors/binning.cc /compressors/masked_binning.cc)
-libpressio_optional_component(roibin "build the roibin metacompressor" "${roibin_sources}")
+libpressio_optional_component(roibin "build the roibin metacompressor" /compressors/roibin.cc)
+libpressio_optional_component(binning "build the binning metacompressor" /compressors/binning.cc)
+libpressio_optional_component(masked_binning "build the masked binning metacompressor" /compressors/masked_binning.cc)
 libpressio_optional_component(pipeline "build the pipeline metacompressor" /compressors/pipeline.cc)
 
 option(LIBPRESSIO_INTERPROCEDURAL_OPTIMIZATION "Use interprocedural optimization (LTO)" OFF)
@@ -607,6 +632,7 @@ option(LIBPRESSIO_HAS_LUA "build multi-objective code" OFF)
 if(LIBPRESSIO_HAS_LUA)
   set(LIBPRESSIO_FEATURES "${LIBPRESSIO_FEATURES} lua")
   find_package(sol2 REQUIRED)
+  target_include_directories(libpressio PRIVATE ${SOL2_INCLUDE_DIRS})
   if(LIBPRESSIO_LUA_PKGCONFIG)
       find_package(PkgConfig REQUIRED)
       pkg_search_module(Lua IMPORTED_TARGET lua luajit)
@@ -629,6 +655,7 @@ option(LIBPRESSIO_HAS_LIBDISTRIBUTED "build plugins based on distributed work qu
 if(LIBPRESSIO_HAS_LIBDISTRIBUTED)
   set(LIBPRESSIO_FEATURES "${LIBPRESSIO_FEATURES} distributed")
   find_package(LibDistributed)
+  target_include_directories(libpressio PRIVATE "${LibDistributed_DIR}/../../../include") # FIXME
   target_link_libraries(libpressio PRIVATE LibDistributed::libdistributed)
   libpressio_plugin_file(/compressors/many_independent.cc
     )
@@ -696,15 +723,7 @@ endif()
 
 # static libraries and some system linkers will strip the registration classes 
 # causing nothing to be registered
-add_executable(pressio_register_generator src/pressio_register_generator.cc)
-target_compile_features(pressio_register_generator PRIVATE cxx_std_11)
-add_custom_command(
-    OUTPUT pressio_manual_register.cc
-    COMMAND "${CMAKE_CURRENT_BINARY_DIR}/pressio_register_generator" -c "${LIBPRESSIO_BUILT_PLUGINS}" -o "${CMAKE_CURRENT_BINARY_DIR}/pressio_manual_register.cc"
-    COMMENT "generating registration source file"
-    DEPENDS pressio_register_generator ${LIBPRESSIO_BUILT_PLUGINS} src/pressio_register_generator.cc
-    VERBATIM
-)
+include(${CMAKE_CURRENT_SOURCE_DIR}/tools/pressio_manual_register.cmake)
 target_sources(libpressio PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/pressio_manual_register.cc)
 
 configure_file(

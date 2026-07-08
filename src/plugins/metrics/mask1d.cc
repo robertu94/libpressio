@@ -2,7 +2,7 @@
 #include <std_compat/memory.h>
 #include "libpressio_ext/cpp/domain_manager.h"
 
-namespace libpressio { namespace metrics { namespace mask1d {
+namespace libpressio { namespace metrics { namespace mask1d_ns {
 struct apply_mask{
 
   template <class T, class V>

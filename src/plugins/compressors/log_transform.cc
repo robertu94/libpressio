@@ -5,7 +5,7 @@
 #include <sstream>
 #include <cmath>
 
-namespace libpressio { namespace compressors { namespace log_transform {
+namespace libpressio { namespace compressors { namespace log_transform_ns {
 
 struct log_encoder {
   template <class T>

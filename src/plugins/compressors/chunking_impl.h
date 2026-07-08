@@ -9,7 +9,7 @@ struct pressio_options;
 
 namespace libpressio {
 namespace compressors {
-namespace chunking {
+namespace chunking_ns {
 
 /**
  * preform the chunking as optimal-ally we know how to

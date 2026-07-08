@@ -12,7 +12,7 @@
 #include "pressio_compressor.h"
 #include "std_compat/memory.h"
 
-namespace libpressio { namespace compressor { namespace sz_auto {
+namespace libpressio { namespace compressor { namespace sz_auto_ns {
 
 class sz_auto_plugin: public libpressio_compressor_plugin {
   public:

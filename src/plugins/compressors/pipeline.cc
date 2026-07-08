@@ -92,7 +92,7 @@ public:
     //output needs to be on the host to add the header
     *output = pressio_data::owning(
             pressio_byte_dtype,
-            {tmp_in.size_in_bytes() + header_size}
+            {tmp_in.size_in_bytes() + static_cast<size_t>(header_size)}
             );
     uint64_t* metadata_ptr = static_cast<uint64_t*>(output->data());
     metadata_ptr[0] = 1; /*version*/

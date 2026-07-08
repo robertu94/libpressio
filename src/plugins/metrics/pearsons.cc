@@ -11,7 +11,7 @@
 
 namespace libpressio {
     namespace metrics {
-namespace pearson {
+namespace pearsons_ns {
   struct pearson_metrics {
     double r = 0.0;
     double r2 = 0.0;
@@ -83,8 +83,8 @@ public:
                       struct pressio_data const* output, int) override
   {
     if(!output || !output->has_data() || !input_data.has_data()) return 0;
-    err_metrics = pressio_data_for_each<pearson::pearson_metrics>(input_data, domain_manager().make_readable(domain_plugins().build("malloc"), *output),
-                                                       pearson::compute_metrics{});
+    err_metrics = pressio_data_for_each<pearsons_ns::pearson_metrics>(input_data, domain_manager().make_readable(domain_plugins().build("malloc"), *output),
+                                                       pearsons_ns::compute_metrics{});
     return 0;
   }
 
@@ -129,7 +129,7 @@ public:
 
 private:
   pressio_data input_data = pressio_data::empty(pressio_byte_dtype, {});
-  compat::optional<pearson::pearson_metrics> err_metrics;
+  compat::optional<pearsons_ns::pearson_metrics> err_metrics;
 };
 
 pressio_register registration(metrics_plugins(), "pearson", []() {

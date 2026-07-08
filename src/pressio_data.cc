@@ -459,7 +459,7 @@ struct pressio_data* pressio_data_new_move(const enum pressio_dtype dtype, void*
   return new pressio_data(pressio_data::move(dtype, data, num_dimensions, dimensions, deleter, metadata));
 }
 
-struct pressio_data* pressio_data_new_copy(const enum pressio_dtype dtype, void* src, size_t const num_dimensions, size_t const dimensions[]) {
+struct pressio_data* pressio_data_new_copy(const enum pressio_dtype dtype, const void* src, size_t const num_dimensions, size_t const dimensions[]) {
   return new pressio_data(pressio_data::copy(dtype, src, num_dimensions, dimensions));
 }
 
@@ -540,6 +540,11 @@ size_t pressio_data_get_capacity_in_bytes(struct pressio_data const* data) {
 
 const char* pressio_data_domain_id(struct pressio_data const* data) {
   return data->domain()->domain_id().c_str();
+}
+
+void pressio_data_move(struct pressio_data* from, struct pressio_data* into) {
+    *into = *from;
+    delete from;
 }
 
 int pressio_data_reshape(struct pressio_data* data,

@@ -11,7 +11,7 @@
 #include "pressio_compressor.h"
 #include "std_compat/memory.h"
 
-namespace libpressio { namespace compressors { namespace resize {
+namespace libpressio { namespace compressors { namespace resize_ns {
 
 class resize_meta_compressor_plugin : public libpressio_compressor_plugin
 {
