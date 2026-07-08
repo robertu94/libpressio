@@ -36,16 +36,16 @@ struct pressio_registry {
    *
    * \param[in] name the name to register
    * \param[in] factory the constructor function which takes 0 arguments
-   * \return true if the module has already not been registered
+   * \return true if the module has not already been registered
    */
   template <class Name, class Factory>
   bool regsiter_factory(Name&& name, Factory&& factory) {
     std::string name_copy(name);
     if (factories.find(name) == factories.end()) {
         factories.emplace(std::move(name_copy), std::forward<Factory>(factory));
-        return false;
-    } else {
         return true;
+    } else {
+        return false;
     }
   }
 

@@ -59,15 +59,24 @@ class trampoline_plugin: public libpressio_compressor_plugin {
       {}
 
   struct pressio_options get_configuration_impl() const override {
-      return pressio_options(*get_configuration_impl_trampoline(auxiliary));
+      struct pressio_options * options_ptr = get_configuration_impl_trampoline(auxiliary);
+      struct pressio_options options = pressio_options(*options_ptr);
+      delete options_ptr;
+      return options;
   }
 
   struct pressio_options get_documentation_impl() const override {
-      return pressio_options(*get_documentation_impl_trampoline(auxiliary));
+      struct pressio_options * options_ptr = get_documentation_impl_trampoline(auxiliary);
+      struct pressio_options options = pressio_options(*options_ptr);
+      delete options_ptr;
+      return options;
   }
 
   struct pressio_options get_options_impl() const override {
-      return pressio_options(*get_options_impl_trampoline(auxiliary));
+      struct pressio_options * options_ptr = get_options_impl_trampoline(auxiliary);
+      struct pressio_options options = pressio_options(*options_ptr);
+      delete options_ptr;
+      return options;
   }
 
   int check_options_impl(struct pressio_options const & options) {
@@ -140,7 +149,10 @@ class trampoline_plugin: public libpressio_compressor_plugin {
   }
 
   pressio_options get_metrics_results_impl() const override {
-      return pressio_options(*get_metrics_results_impl_trampoline(auxiliary));
+      struct pressio_options * options_ptr = get_metrics_results_impl_trampoline(auxiliary);
+      struct pressio_options options = pressio_options(*options_ptr);
+      delete options_ptr;
+      return options;
   }
 
   std::shared_ptr<libpressio_compressor_plugin> clone() override {

@@ -75,15 +75,24 @@ public:
     {}
 
     struct pressio_options get_configuration_impl() const override {
-        return pressio_options(*get_configuration_impl_trampoline(auxiliary));
+        struct pressio_options * options_ptr = get_configuration_impl_trampoline(auxiliary);
+        struct pressio_options options = pressio_options(*options_ptr);
+        delete options_ptr;
+        return options;
     }
 
     struct pressio_options get_documentation_impl() const override {
-        return pressio_options(*get_documentation_impl_trampoline(auxiliary));
+        struct pressio_options * options_ptr = get_documentation_impl_trampoline(auxiliary);
+        struct pressio_options options = pressio_options(*options_ptr);
+        delete options_ptr;
+        return options;
     }
 
     struct pressio_options get_options() const override {
-        return pressio_options(*get_options_trampoline(auxiliary));
+        struct pressio_options * options_ptr = get_options_trampoline(auxiliary);
+        struct pressio_options options = pressio_options(*options_ptr);
+        delete options_ptr;
+        return options;
     }
 
     int set_options(struct pressio_options const& options) override {
@@ -255,7 +264,10 @@ public:
   }
 
   pressio_options get_metrics_results(pressio_options const &) override {
-      return pressio_options(*get_metrics_results_trampoline(auxiliary));
+      struct pressio_options * options_ptr = get_metrics_results_trampoline(auxiliary);
+      struct pressio_options options = pressio_options(*options_ptr);
+      delete options_ptr;
+      return options;
   }
 
   std::unique_ptr<libpressio_metrics_plugin> clone() override {
