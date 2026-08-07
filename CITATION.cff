@@ -1,0 +1,57 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: LibPressio
+message: >-
+  A library to abstract between different lossless and lossy
+  compressors
+type: software
+authors:
+  - given-names: Robert
+    family-names: Underwood
+    email: runderwood@anl.gov
+    orcid: 'https://orcid.org/0000-0002-1464-729X'
+    affiliation: Argonne National Laboratory
+  - name: Argonne National Laboratory
+    address: 9700 S. Cass Avenue
+    city: Lemont
+    country: US
+    post-code: '60439'
+    region: Illinois
+    tel: 1-630-252-2000
+    website: 'https://anl.gov'
+identifiers:
+  - type: doi
+    value: 10.1109/DRBSD754563.2021.00005
+    description: Paper introducing the library
+repository-code: 'https://github.com/robertu94/libpressio'
+url: 'https://robertu94.github.io/libpressio/'
+abstract: >-
+  In recent years, lossless and lossy compressors have been
+  developed to cope with the ever increasing volume of
+  scientific floating point data. However not all
+  compression techniques are appropriate for all data-sets,
+  and determining which one to use can be time consuming
+  requiring code modifications and trial and error. We
+  present LibPressio - a generic library for the compression
+  of dense tensors that minimizes the code changes
+  scientists need to make to take advantage of new and
+  improved compression techniques. We compare LibPressio to
+  9 different competing libraries and measure the overhead
+  of their design decisions as well as overall run time
+  overhead showing insignificant overhead. We further show
+  an improvement in usability as measured by a reduction in
+  lines of code compared to native code by 50–90 %. The
+  value of this tool can be seen by integration into
+  Z-Checker and ADIOS2.
+keywords:
+  - Lossy compresion
+  - Lossless compression
+  - C
+  - C++
+  - Python
+  - Library
+  - High Performance Computing (HPC)
+  - Scientific Computing
+license: BSD-4-Clause

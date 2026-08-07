@@ -24,12 +24,12 @@ struct basic_indexer {
       }(args)) {}
 
   template <class It>
-  basic_indexer(It first, It second) noexcept:
-    max_dims([](It first, It second){
+  basic_indexer(It first, It ) noexcept:
+    max_dims([](It first){
         std::array<SizeType,N> dims;
-        std::copy(first, second, dims.begin());
+        std::copy_n(first, N, dims.begin());
         return dims;
-      }(first, second)) {
+      }(first)) {
     }
 
   template <class... T>

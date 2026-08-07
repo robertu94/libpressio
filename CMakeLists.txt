@@ -19,7 +19,14 @@ option(BUILD_SHARED_LIBS "build libpressio as a shared library" ON)
 option(CMAKE_POSITION_INDEPENDENT_CODE "build libpressio with position indpendent code" ON)
 
 
-include(GNUInstallDirs)
+if(NOT DEFINED SKBUILD)
+    include(GNUInstallDirs)
+else()
+    set(CMAKE_INSTALL_INCLUDEDIR ${SKBUILD_HEADERS_DIR})
+    set(CMAKE_INSTALL_LIBDIR ${SKBUILD_PLATLIB_DIR})
+    set(CMAKE_INSTALL_PREFIX ${SKBUILD_DATA_DIR})
+endif()
+
 include(CheckCXXCompilerFlag)
 include(CMakeDependentOption)
 
@@ -375,6 +382,7 @@ if(LIBPRESSIO_HAS_CUSZ)
   set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} cusz")
   find_package(CUSZ REQUIRED)
   libpressio_plugin_file(/compressors/cusz.cc)
+  libpressio_plugin_file(/compressors/eip.cc)
   target_link_libraries(libpressio PRIVATE CUSZ::cusz CUDA::cuda_driver CUDA::cudart)
 endif()
 
@@ -565,6 +573,13 @@ if(LIBPRESSIO_HAS_CUSZP)
   libpressio_plugin_file(/compressors/cuszp.cc)
   target_link_libraries(libpressio PRIVATE cuSZp::cuSZp_shared)
 endif()
+option(LIBPRESSIO_HAS_LSCOMP "build the LSCOMP plugin" OFF)
+if(LIBPRESSIO_HAS_LSCOMP)
+  set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} LSCOMP")
+  find_package(cuLSZ REQUIRED)
+  libpressio_plugin_file(/compressors/lscomp.cc)
+  target_link_libraries(libpressio PRIVATE cuLSZ::cuLSZ)
+endif()
 
 option(LIBPRESSIO_HAS_FPZIP "build the fpzip plugin" OFF)
 if(LIBPRESSIO_HAS_FPZIP)
@@ -618,10 +633,15 @@ if(LIBPRESSIO_HAS_LUA)
     target_link_libraries(libpressio PRIVATE PkgConfig::Lua)
   else()
     message(INFO "lua from cmake")
-    find_package(Lua)
-    target_link_libraries(libpressio PRIVATE ${LUA_LIBRARIES})
-    target_include_directories(libpressio PRIVATE ${LUA_INCLUDE_DIR})
+    find_package(Lua REQUIRED)
+    if(TARGET Lua::Lua)
+      target_link_libraries(libpressio PRIVATE Lua::Lua)
+    else()
+      target_link_libraries(libpressio PRIVATE ${LUA_LIBRARIES})
+      target_include_directories(libpressio PRIVATE ${LUA_INCLUDE_DIRS})
+    endif()
   endif()
+
   libpressio_plugin_file( /compressors/lambda_fn.cc)
 endif()
 
@@ -833,7 +853,7 @@ if(BUILD_DOCS)
     )
   add_custom_command(
     OUTPUT "Compressors.md"
-    COMMAND generate_docs -m c -o "${CMAKE_BINARY_DIR}/Compressors.md"
+    COMMAND ${CMAKE_COMMAND} -E env LIBPRESSIO_GENERATE_DOCS_OUTPUT="${CMAKE_BINARY_DIR}/Compressors.md" ${CMAKE_COMMAND} -P "${CMAKE_CURRENT_SOURCE_DIR}/tools/docs/generate_compressors_docs.cmake"
     DEPENDS generate_docs libpressio
     COMMENT "Documenting Compressors"
     )

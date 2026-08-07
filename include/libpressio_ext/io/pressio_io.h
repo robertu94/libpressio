@@ -137,18 +137,17 @@ int pressio_io_patch_version(struct pressio_io const* io);
 struct pressio_io* pressio_io_clone(struct pressio_io* io);
 
 /**
- * Assign a new name to a io.  Names are used to prefix options in meta-ios.
+ * Assign a new name to an io. Names are used to prefix options in meta-ios.
  *
- * sub-ios will be renamed either by the of the sub-ios prefix
- * or by the $prefix:name configuration option
+ * Sub-ios are renamed either by their sub-io prefix or by the `$prefix:name`
+ * configuration option.
  *
- * i.e. for some new_name and a io with prefix foo and subios
- * with prefixs "abc", "def", "ghi" respectively
+ * For example, if `foo:names = ['one', 'two', 'three']`, the resulting names
+ * become `$new_name/one`, `$new_name/two`, and `$new_name/three`. Otherwise,
+ * the sub-ios keep their prefixes and become `$new_name/abc`,
+ * `$new_name/def`, and `$new_name/ghi`.
  *
- * - if foo:names = ['one', 'two', 'three'], then the names will be `$new_name/one, $new_name/two $new_name/three
- * - otherwise the names will be $new_name/abc, $new_name/def, $new_name/ghi
- *
- * \param[in] io the io to get the name of
+ * \param[in] io the io whose name will be updated
  * \param[in] new_name the name to set
  */
 void pressio_io_set_name(struct pressio_io* io, const char* new_name);

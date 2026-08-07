@@ -15,8 +15,45 @@
 #include "libpressio_ext/cpp/dtype.h"
 #include "std_compat/optional.h"
 #include <std_compat/memory.h>
+#include <std_compat/numeric.h>
 
 namespace libpressio {
+
+    namespace detail {
+        /** Compute the total size of the types stored in a tuple. */
+        template <class... T>
+        size_t tuple_bytes(std::tuple<T...> const&) {
+            return (0 + ... + sizeof(T));
+        }
+
+        /** Return the size of each type stored in a tuple. */
+        template<class... T>
+      std::array<size_t, std::tuple_size<std::tuple<T...>>::value> tuple_sizes(std::tuple<T...> const&){
+          std::array<size_t, std::tuple_size<std::tuple<T...>>::value> s {sizeof(T)...};
+          return s;
+      };
+        /** Return the size of each type in a type pack. */
+        template<class... T>
+      std::array<size_t, std::tuple_size<std::tuple<T...>>::value> sizes(){
+          std::array<size_t, std::tuple_size<std::tuple<T...>>::value> s {sizeof(T)...};
+          return s;
+      };
+
+
+        /** Invoke a callback for each tuple element together with its index. */
+        template <class Tuple, class F, size_t... I>
+        void tuple_for_each_with_index_impl(Tuple&& t, F&& f, std::index_sequence<I...>) {
+            (f(std::get<I>(t), I),...);
+        }
+
+        /** Invoke a callback for each tuple element together with its index. */
+        template <class Tuple, class F>
+        void tuple_for_each_with_index(Tuple&& t, F&& f) {
+            return tuple_for_each_with_index_impl(std::forward<Tuple>(t), std::forward<F>(f),
+                    std::make_index_sequence<
+                        std::tuple_size<std::remove_reference_t<Tuple>>::value>{});
+        }
+    }
 
 /**
  * \file
@@ -57,11 +94,58 @@ size_t data_size_in_bytes(pressio_dtype type, size_t const dimensions, size_t co
 }
 
 
+/** Header formats supported by `pressio_data::join()` and `pressio_data::split()`. */
+enum pressio_data_header {
+    pressio_data_header_none = 0, /*no header, all type info must be stored separately*/
+    pressio_data_header_len = 1, /*just the length of each buffer must be stored*/
+    pressio_data_header_lentype = 2, /*just the length and type of each buffer must be stored*/
+    pressio_data_header_dimstype = 3, /*just the dimension and type of each buffer must be stored*/
+};
+
 /**
  * represents a data buffer that may or may not be owned by the class
  */
 struct pressio_data {
 
+  /**
+   * allocates a new buffer with the contents of all of the bufs concatenated together
+   * \param[in] bufs the data to concatonate
+   * \param[in] header include a header to aid in restoring
+   * \param[in] domain which domain to create the buffer in
+   */
+  static pressio_data join(std::vector<pressio_data>&& bufs, pressio_data_header header, std::shared_ptr<libpressio::domains::pressio_domain>&& domain);
+  /**
+   * Concatenate buffers into a single buffer, storing the requested header.
+   */
+  static pressio_data join(std::vector<pressio_data>&& bufs, pressio_data_header header);
+  /**
+   * Concatenate buffers without storing header metadata.
+   */
+  static pressio_data join(std::vector<pressio_data>&& bufs);
+
+   /**
+    * Splits the buffer created with ::join
+    * \param[in] input the buffer to be split
+    * \param[in] header the header format stored in the joined buffer
+    * \param[out] bufs the split buffers
+    */
+  static void split(pressio_data input, pressio_data_header header, std::vector<pressio_data>& bufs);
+
+  /**
+   * Splits the buffer created with ::join
+   * \param[in] input the buffer to be split
+   * \param[out] bufs the split buffers
+   */
+  static void split(pressio_data input, std::vector<pressio_data>& bufs);
+  /**  
+   * allocates a new empty data buffer with a given type in a domain
+   *
+   * \param[in] dtype the type the buffer will contain
+   * \param[in] domain where the data will be allocated if it were provided
+   * \returns an empty data object (i.e. has no data)
+   * \see pressio_data_new_empty
+   * */
+  static pressio_data type_domain(const pressio_dtype dtype, std::shared_ptr<libpressio::domains::pressio_domain>&& domain);
   /**  
    * allocates a new empty data buffer
    *
@@ -76,10 +160,23 @@ struct pressio_data {
    *
    * \param[in] dtype the type the buffer will contain
    * \param[in] dimensions the dimensions of the expected buffer
+   * \param[in] domain the domain that will own the allocation
    * \returns an empty data object (i.e. has no data)
    * \see pressio_data_new_empty
    * */
   static pressio_data empty(const pressio_dtype dtype, std::vector<size_t> const& dimensions, std::shared_ptr<libpressio::domains::pressio_domain>&& domain);
+
+  /**  
+   * allocates a new empty data buffer in the specified domain
+   *
+   * \param[in] dtype the type the buffer will contain
+   * \param[in] dimensions the dimensions of the expected buffer
+   * \param[in] domain the domain that will own the allocation
+   * \returns an empty data object (i.e. has no data)
+   * \see pressio_data_new_empty
+   * */
+  static pressio_data empty(const pressio_dtype dtype, std::vector<size_t> const& dimensions, std::shared_ptr<libpressio::domains::pressio_domain> const& domain);
+
   /**  
    * creates a non-owning view of an existing data
    *
@@ -109,17 +206,26 @@ struct pressio_data {
    * \see pressio_data_new_nonowning
    * */
   static pressio_data nonowning(const pressio_dtype dtype, void* data, std::vector<size_t> const& dimensions, std::string const& domain_id);
-  /**  
+  /**
    * creates a copy of a data buffer; assumes the source is the malloc domain
    *
    * \param[in] dtype the type of the buffer
-   * \param[in] src the buffer to copy \param[in] dimensions the dimensions of the buffer \returns an owning copy of the data object \see pressio_data_new_copy */
+   * \param[in] src the buffer to copy
+   * \param[in] dimensions the dimensions of the buffer
+   * \returns an owning copy of the data object
+   * \see pressio_data_new_copy
+   */
   static pressio_data copy(const enum pressio_dtype dtype, const void* src, std::vector<size_t> const& dimensions);
-  /**  
+  /**
    * creates a copy of a data buffer
    *
    * \param[in] dtype the type of the buffer
-   * \param[in] src the buffer to copy \param[in] dimensions the dimensions of the buffer \returns an owning copy of the data object \see pressio_data_new_copy */
+   * \param[in] src the buffer to copy
+   * \param[in] dimensions the dimensions of the buffer
+   * \param[in] domain_id the destination domain identifier
+   * \returns an owning copy of the data object
+   * \see pressio_data_new_copy
+   */
   static pressio_data copy(const enum pressio_dtype dtype, const void* src, std::vector<size_t> const& dimensions, std::string const& domain_id);
   /**  
    * creates a new owning data buffer
@@ -130,25 +236,25 @@ struct pressio_data {
    * \see pressio_data_new_owning
    * */
   static pressio_data owning(const pressio_dtype dtype, std::vector<size_t> const& dimensions);
-  /**  
-   * creates a copy of a data buffer in the specified domain
-   *
-   * \param[in] dtype the type of the buffer
-   * \param[in] dimensions the dimensions of the buffer
-   * \param[in] domain the dimensions of the buffer
-   * \returns an owning data object with uninitialized memory
-   * \see pressio_data_new_owning
-   * */
-  static pressio_data owning(const pressio_dtype dtype, std::vector<size_t> const& dimensions, std::shared_ptr<libpressio::domains::pressio_domain> && domain);
-  /**  
+  /**
    * creates an owning data buffer in the specified domain
    *
    * \param[in] dtype the type of the buffer
    * \param[in] dimensions the dimensions of the buffer
-   * \param[in] domain the dimensions of the buffer
+   * \param[in] domain the destination allocation domain
    * \returns an owning data object with uninitialized memory
    * \see pressio_data_new_owning
-   * */
+   */
+  static pressio_data owning(const pressio_dtype dtype, std::vector<size_t> const& dimensions, std::shared_ptr<libpressio::domains::pressio_domain> && domain);
+  /**
+   * creates an owning data buffer in the specified domain
+   *
+   * \param[in] dtype the type of the buffer
+   * \param[in] dimensions the dimensions of the buffer
+   * \param[in] domain the destination allocation domain
+   * \returns an owning data object with uninitialized memory
+   * \see pressio_data_new_owning
+   */
   static pressio_data owning(const pressio_dtype dtype, std::vector<size_t> const& dimensions, std::shared_ptr<libpressio::domains::pressio_domain> const& domain);
   /**  
    * creates an owning data buffer in the same domain of the same size and type
@@ -195,6 +301,7 @@ struct pressio_data {
    * \param[in] dimensions the dimensions of the buffer
    * \param[in] deleter the method to call to free the buffer or null to not free the data
    * \param[in] metadata the metadata passed to the deleter function
+   * \param[in] accessible domains that can directly access the buffer
    * \returns an owning data object with uninitialized memory
    * \see pressio_data_new_move
    * */
@@ -232,15 +339,17 @@ struct pressio_data {
    * */
   static pressio_data empty(const pressio_dtype dtype, size_t const num_dimensions, size_t const dimensions[]);
   /**  
-   * allocates a new empty data buffer
+   * allocates a new empty data buffer in the specified domain
    *
    * \param[in] dtype the type the buffer will contain
    * \param[in] num_dimensions the length of dimensions
    * \param[in] dimensions the dimensions of the expected buffer
+   * \param[in] domain the domain that will own the allocation
    * \returns an empty data object (i.e. has no data)
    * \see pressio_data_new_empty
    * */
   static pressio_data empty(const pressio_dtype dtype, size_t const num_dimensions, size_t const dimensions[], std::shared_ptr<libpressio::domains::pressio_domain> && domain);
+
 
   /**  
    * creates a non-owning reference to data
@@ -279,16 +388,18 @@ struct pressio_data {
   static pressio_data copy(const enum pressio_dtype dtype, const void* src, size_t const num_dimensions, size_t const dimensions[]);
 
   /**  
-   * creates a copy of a data buffer
+   * creates a copy of a data buffer in the specified domain
    *
    * \param[in] dtype the type of the buffer
    * \param[in] src the buffer to copy
    * \param[in] num_dimensions the number of entries in dimensions
    * \param[in] dimensions the dimensions of the data
-   * \returns an owning copy of the data object
-   * \see pressio_data_new_copy
-   * */
+    * \param[in] domain_id the destination domain identifier
+    * \returns an owning copy of the data object
+    * \see pressio_data_new_copy
+    * */
   static pressio_data copy(const enum pressio_dtype dtype, const void* src, size_t const num_dimensions, size_t const dimensions[], std::string const& domain_id);
+
 
 
   /**  
@@ -310,9 +421,11 @@ struct pressio_data {
    * \param[in] data the buffer
    * \param[in] num_dimensions the number of entries in dimensions
    * \param[in] dimensions the dimensions of the data
-   * \param[in] deleter the method to call to free the buffer or null to not free the data
-   * \param[in] metadata the metadata passed to the deleter function
-   * \returns an owning data object with uninitialized memory
+    * \param[in] deleter the method to call to free the buffer or null to not free the data
+    * \param[in] metadata the metadata passed to the deleter function
+    * \param[in] accessible domains that can directly access the buffer
+    * \returns an owning data object with uninitialized memory
+
    * \see pressio_data_new_move
    * */
   static pressio_data move(const pressio_dtype dtype,
@@ -404,6 +517,9 @@ struct pressio_data {
     return data_dtype;
   }
 
+  /**
+   * \returns the domain that owns or describes the underlying buffer
+   */
   std::shared_ptr<libpressio::domains::pressio_domain> domain() const {
       return memory.domain();
   }
@@ -531,6 +647,36 @@ struct pressio_data {
     }
   }
 
+  /** Pack a tuple into a byte buffer-backed `pressio_data` object. */
+  template <class... T>
+  pressio_data(std::tuple<T...>const& t): pressio_data(pressio_data::owning(pressio_byte_dtype, {::libpressio::detail::tuple_bytes(t)}))
+  {
+      auto sizes = ::libpressio::detail::sizes<T...>();
+      auto offsets = sizes;
+      compat::exclusive_scan(sizes.begin(), sizes.end(), offsets.begin(), 0);
+      auto copy = [this, &offsets, &sizes](auto&& v, size_t i) {
+        memcpy(static_cast<uint8_t*>(data()) + offsets[i], &v, sizes[i]);
+      };
+      ::libpressio::detail::tuple_for_each_with_index(t, copy);
+
+  }
+  /**
+   * convert a packed binary pressio_data structure into std::tuple
+   * \returns the tuple containing the data
+   */
+  template <class T>
+  T to_tuple() const {
+      T t;
+      auto sizes = ::libpressio::detail::tuple_sizes(t);
+      auto offsets = sizes;
+      compat::exclusive_scan(sizes.begin(), sizes.end(), offsets.begin(), 0);
+      auto copy = [this, &offsets, &sizes](auto&& v, size_t i) {
+        memcpy(&v, static_cast<uint8_t*>(data()) + offsets[i], sizes[i]);
+      };
+      ::libpressio::detail::tuple_for_each_with_index(t, copy);
+
+      return t;
+  }
   /**
    * convert a pressio_data structure into a 1d c++ standard vector.  If the type doesn't match, it will be casted first
    * \returns the vector containing the data

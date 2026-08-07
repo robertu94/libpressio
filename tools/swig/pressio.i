@@ -29,12 +29,6 @@ python bindings for pressio
 %}
 
 %include <stdint.i>
-#if SWIGPYTHON
-%include "numpy.i"
-%init %{
-import_array();
-%}
-#endif
 
 
 %include "pressio_version.h"
@@ -66,75 +60,17 @@ import_array();
 #if LIBPRESSIO_HAS_MPI4PY
 %include "mpi4py/mpi4py.i"
 %mpi4py_typemap(Comm, MPI_Comm)
+%newobject options_new_comm;
 #endif
 #endif
 
 
 %include "pypressio.h"
 
-#if SWIGPYTHON
-%numpy_typemaps(bool       , NPY_BOOL     , size_t)
-%numpy_typemaps(signed char       , NPY_BYTE     , size_t)
-%numpy_typemaps(unsigned char     , NPY_UBYTE    , size_t)
-%numpy_typemaps(short             , NPY_SHORT    , size_t)
-%numpy_typemaps(unsigned short    , NPY_USHORT   , size_t)
-%numpy_typemaps(int               , NPY_INT      , size_t)
-%numpy_typemaps(unsigned int      , NPY_UINT     , size_t)
-%numpy_typemaps(long              , NPY_LONG     , size_t)
-%numpy_typemaps(unsigned long     , NPY_ULONG    , size_t)
-%numpy_typemaps(long long         , NPY_LONGLONG , size_t)
-%numpy_typemaps(unsigned long long, NPY_ULONGLONG, size_t)
-%numpy_typemaps(float             , NPY_FLOAT    , size_t)
-%numpy_typemaps(double            , NPY_DOUBLE   , size_t)
-%numpy_typemaps(std::int8_t            , NPY_INT8     , size_t)
-%numpy_typemaps(std::int16_t           , NPY_INT16    , size_t)
-%numpy_typemaps(std::int32_t           , NPY_INT32    , size_t)
-%numpy_typemaps(std::int64_t           , NPY_INT64    , size_t)
-%numpy_typemaps(std::uint8_t           , NPY_UINT8    , size_t)
-%numpy_typemaps(std::uint16_t          , NPY_UINT16   , size_t)
-%numpy_typemaps(std::uint32_t          , NPY_UINT32   , size_t)
-%numpy_typemaps(std::uint64_t          , NPY_UINT64   , size_t)
-%numpy_typemaps(bool       , NPY_BOOL     , long int)
-%numpy_typemaps(float             , NPY_FLOAT    , long int)
-%numpy_typemaps(double            , NPY_DOUBLE   , long int)
-%numpy_typemaps(int8_t            , NPY_INT8     , long int)
-%numpy_typemaps(int16_t           , NPY_INT16    , long int)
-%numpy_typemaps(int32_t           , NPY_INT32    , long int)
-%numpy_typemaps(int64_t           , NPY_INT64    , long int)
-%numpy_typemaps(uint8_t           , NPY_UINT8    , long int)
-%numpy_typemaps(uint16_t          , NPY_UINT16   , long int)
-%numpy_typemaps(uint32_t          , NPY_UINT32   , long int)
-%numpy_typemaps(uint64_t          , NPY_UINT64   , long int)
-%numpy_typemaps(signed char       , NPY_BYTE     , long int)
-%numpy_typemaps(unsigned char     , NPY_UBYTE    , long int)
-%numpy_typemaps(short             , NPY_SHORT    , long int)
-%numpy_typemaps(unsigned short    , NPY_USHORT   , long int)
-%numpy_typemaps(int               , NPY_INT      , long int)
-%numpy_typemaps(unsigned int      , NPY_UINT     , long int)
-%numpy_typemaps(long              , NPY_LONG     , long int)
-%numpy_typemaps(unsigned long     , NPY_ULONG    , long int)
-%numpy_typemaps(long long         , NPY_LONGLONG , long int)
-%numpy_typemaps(unsigned long long, NPY_ULONGLONG, long int)
 %define pressio_numpy_type(type, name)
-  %apply (type* INPLACE_ARRAY1, size_t DIM1 ) {( type * data, size_t r1)};
-  %apply (type* INPLACE_ARRAY2, size_t DIM1, size_t DIM2 ) { ( type * data, size_t r1, size_t r2)};
-  %apply (type* INPLACE_ARRAY3, size_t DIM1, size_t DIM2, size_t DIM3 ) {( type* data, size_t r1, size_t r2, size_t r3)};
-  %apply (type* INPLACE_ARRAY4, size_t DIM1, size_t DIM2, size_t DIM3, size_t DIM4 ) {( type* data, size_t r1, size_t r2, size_t r3, size_t r4)};
-  %apply (type** ARGOUTVIEWM_ARRAY1, long int* DIM1) {( type** ptr_argout, long int* r1)};
-  %apply (type** ARGOUTVIEWM_ARRAY2, long int* DIM1, long int* DIM2) {( type** ptr_argout, long int* r1, long int* r2)};
-  %apply (type** ARGOUTVIEWM_ARRAY3, long int* DIM1, long int* DIM2, long int* DIM3) {( type** ptr_argout, long int* r1, long int* r2, long int* r3)};
-  %apply (type** ARGOUTVIEWM_ARRAY4, long int* DIM1, long int* DIM2, long int* DIM3, long int* DIM4) {( type** ptr_argout, long int* r1, long int* r2, long int* r3, long int* r4)};
 namespace std {
   %template( vector_ ## name ) vector< type >;
 }
-  %template( _pressio_io_data_to_numpy_1d_ ## name ) _pressio_io_data_to_numpy_1d< type >;
-  %template( _pressio_io_data_to_numpy_2d_ ## name ) _pressio_io_data_to_numpy_2d< type >;
-  %template( _pressio_io_data_to_numpy_3d_ ## name ) _pressio_io_data_to_numpy_3d< type >;
-  %template( _pressio_io_data_to_numpy_4d_ ## name ) _pressio_io_data_to_numpy_4d< type >;
-  %template( _pressio_io_data_from_numpy_1d_ ## name ) _pressio_io_data_from_numpy_1d< type >;
-  %template( _pressio_io_data_from_numpy_2d_ ## name ) _pressio_io_data_from_numpy_2d< type >;
-  %template( _pressio_io_data_from_numpy_3d_ ## name ) _pressio_io_data_from_numpy_3d< type >;
-  %template( _pressio_io_data_from_numpy_4d_ ## name ) _pressio_io_data_from_numpy_4d< type >;
 %enddef
 pressio_numpy_type(bool, bool);
 pressio_numpy_type(float, float);
@@ -147,7 +83,6 @@ pressio_numpy_type(signed char, int8_t);
 pressio_numpy_type(short, int16_t);
 pressio_numpy_type(int, int32_t);
 pressio_numpy_type(long int, int64_t);
-#endif
 
 namespace std { 
   %template() vector<size_t>;
@@ -157,199 +92,221 @@ namespace std {
 
 %rename("%(strip:[pressio_])s") "";
 
-%pythoncode %{
-import numpy
 
-__pressio_to_np_dtype = {
-  _pressio.float_dtype : numpy.float32,
-  _pressio.double_dtype : numpy.double,
-  _pressio.uint8_dtype : numpy.uint8,
-  _pressio.int8_dtype : numpy.int8,
-  _pressio.uint16_dtype : numpy.uint16,
-  _pressio.int16_dtype : numpy.int16,
-  _pressio.uint32_dtype : numpy.uint32,
-  _pressio.int32_dtype : numpy.int32,
-  _pressio.uint64_dtype : numpy.uint64,
-  _pressio.int64_dtype : numpy.int64,
-  _pressio.bool_dtype : bool,
-}
-
-__pressio_to_lp_dtype = {
-   numpy.float32: _pressio.float_dtype,
-   numpy.double: _pressio.double_dtype,
-   numpy.uint8: _pressio.uint8_dtype,
-   numpy.int8: _pressio.int8_dtype,
-   numpy.uint16: _pressio.uint16_dtype,
-   numpy.int16: _pressio.int16_dtype,
-   numpy.uint32: _pressio.uint32_dtype,
-   numpy.int32: _pressio.int32_dtype,
-   numpy.uint64: _pressio.uint64_dtype,
-   numpy.int64: _pressio.int64_dtype,
-   bool: _pressio.bool_dtype,
-}
-
-def _pressio_io_data_from_numpy_0d(array):
-  dat = data_new_empty(__pressio_to_lp_dtype[array.dtype], vector_uint64_t([]))
-  return dat
-def _pressio_io_data_to_numpy_0d(array):
-  dat = numpy.ndarray([], __pressio_to_np_dtype[data_dtype(array)])
-  return dat
-
-__pressio_from_numpy = {
-  (0, numpy.dtype('bool')): _pressio_io_data_from_numpy_0d,
-  (1, numpy.dtype('bool')): _pressio_io_data_from_numpy_1d_bool,
-  (2, numpy.dtype('bool')): _pressio_io_data_from_numpy_2d_bool,
-  (3, numpy.dtype('bool')): _pressio_io_data_from_numpy_3d_bool,
-  (4, numpy.dtype('bool')): _pressio_io_data_from_numpy_4d_bool,
-  (0, numpy.dtype('float32')): _pressio_io_data_from_numpy_0d,
-  (1, numpy.dtype('float32')): _pressio_io_data_from_numpy_1d_float,
-  (2, numpy.dtype('float32')): _pressio_io_data_from_numpy_2d_float,
-  (3, numpy.dtype('float32')): _pressio_io_data_from_numpy_3d_float,
-  (4, numpy.dtype('float32')): _pressio_io_data_from_numpy_4d_float,
-  (0, numpy.dtype('float64')): _pressio_io_data_from_numpy_0d,
-  (1, numpy.dtype('float64')): _pressio_io_data_from_numpy_1d_double,
-  (2, numpy.dtype('float64')): _pressio_io_data_from_numpy_2d_double,
-  (3, numpy.dtype('float64')): _pressio_io_data_from_numpy_3d_double,
-  (4, numpy.dtype('float64')): _pressio_io_data_from_numpy_4d_double,
-  (0, numpy.dtype('uint8')): _pressio_io_data_from_numpy_0d,
-  (1, numpy.dtype('uint8')): _pressio_io_data_from_numpy_1d_uint8_t,
-  (2, numpy.dtype('uint8')): _pressio_io_data_from_numpy_2d_uint8_t,
-  (3, numpy.dtype('uint8')): _pressio_io_data_from_numpy_3d_uint8_t,
-  (4, numpy.dtype('uint8')): _pressio_io_data_from_numpy_4d_uint8_t,
-  (0, numpy.dtype('int8')): _pressio_io_data_from_numpy_0d,
-  (1, numpy.dtype('int8')): _pressio_io_data_from_numpy_1d_int8_t,
-  (2, numpy.dtype('int8')): _pressio_io_data_from_numpy_2d_int8_t,
-  (3, numpy.dtype('int8')): _pressio_io_data_from_numpy_3d_int8_t,
-  (4, numpy.dtype('int8')): _pressio_io_data_from_numpy_4d_int8_t,
-  (0, numpy.dtype('uint16')): _pressio_io_data_from_numpy_0d,
-  (1, numpy.dtype('uint16')): _pressio_io_data_from_numpy_1d_uint16_t,
-  (2, numpy.dtype('uint16')): _pressio_io_data_from_numpy_2d_uint16_t,
-  (3, numpy.dtype('uint16')): _pressio_io_data_from_numpy_3d_uint16_t,
-  (4, numpy.dtype('uint16')): _pressio_io_data_from_numpy_4d_uint16_t,
-  (0, numpy.dtype('int16')): _pressio_io_data_from_numpy_0d,
-  (1, numpy.dtype('int16')): _pressio_io_data_from_numpy_1d_int16_t,
-  (2, numpy.dtype('int16')): _pressio_io_data_from_numpy_2d_int16_t,
-  (3, numpy.dtype('int16')): _pressio_io_data_from_numpy_3d_int16_t,
-  (4, numpy.dtype('int16')): _pressio_io_data_from_numpy_4d_int16_t,
-  (0, numpy.dtype('uint32')): _pressio_io_data_from_numpy_0d,
-  (1, numpy.dtype('uint32')): _pressio_io_data_from_numpy_1d_uint32_t,
-  (2, numpy.dtype('uint32')): _pressio_io_data_from_numpy_2d_uint32_t,
-  (3, numpy.dtype('uint32')): _pressio_io_data_from_numpy_3d_uint32_t,
-  (4, numpy.dtype('uint32')): _pressio_io_data_from_numpy_4d_uint32_t,
-  (0, numpy.dtype('int32')): _pressio_io_data_from_numpy_0d,
-  (1, numpy.dtype('int32')): _pressio_io_data_from_numpy_1d_int32_t,
-  (2, numpy.dtype('int32')): _pressio_io_data_from_numpy_2d_int32_t,
-  (3, numpy.dtype('int32')): _pressio_io_data_from_numpy_3d_int32_t,
-  (4, numpy.dtype('int32')): _pressio_io_data_from_numpy_4d_int32_t,
-  (0, numpy.dtype('uint64')): _pressio_io_data_from_numpy_0d,
-  (1, numpy.dtype('uint64')): _pressio_io_data_from_numpy_1d_uint64_t,
-  (2, numpy.dtype('uint64')): _pressio_io_data_from_numpy_2d_uint64_t,
-  (3, numpy.dtype('uint64')): _pressio_io_data_from_numpy_3d_uint64_t,
-  (4, numpy.dtype('uint64')): _pressio_io_data_from_numpy_4d_uint64_t,
-  (0, numpy.dtype('int64')): _pressio_io_data_from_numpy_0d,
-  (1, numpy.dtype('int64')): _pressio_io_data_from_numpy_1d_int64_t,
-  (2, numpy.dtype('int64')): _pressio_io_data_from_numpy_2d_int64_t,
-  (3, numpy.dtype('int64')): _pressio_io_data_from_numpy_3d_int64_t,
-  (4, numpy.dtype('int64')): _pressio_io_data_from_numpy_4d_int64_t,
-}
-__pressio_to_numpy = {
-  (0, _pressio.float_dtype) : _pressio_io_data_to_numpy_0d,
-  (1, _pressio.float_dtype) : _pressio_io_data_to_numpy_1d_float,
-  (2, _pressio.float_dtype) : _pressio_io_data_to_numpy_2d_float,
-  (3, _pressio.float_dtype) : _pressio_io_data_to_numpy_3d_float,
-  (4, _pressio.float_dtype) : _pressio_io_data_to_numpy_4d_float,
-  (0, _pressio.double_dtype) : _pressio_io_data_to_numpy_0d,
-  (1, _pressio.double_dtype) : _pressio_io_data_to_numpy_1d_double,
-  (2, _pressio.double_dtype) : _pressio_io_data_to_numpy_2d_double,
-  (3, _pressio.double_dtype) : _pressio_io_data_to_numpy_3d_double,
-  (4, _pressio.double_dtype) : _pressio_io_data_to_numpy_4d_double,
-  (0, _pressio.int8_dtype) : _pressio_io_data_to_numpy_0d,
-  (1, _pressio.int8_dtype) : _pressio_io_data_to_numpy_1d_int8_t,
-  (2, _pressio.int8_dtype) : _pressio_io_data_to_numpy_2d_int8_t,
-  (3, _pressio.int8_dtype) : _pressio_io_data_to_numpy_3d_int8_t,
-  (4, _pressio.int8_dtype) : _pressio_io_data_to_numpy_4d_int8_t,
-  (0, _pressio.int16_dtype) : _pressio_io_data_to_numpy_0d,
-  (1, _pressio.int16_dtype) : _pressio_io_data_to_numpy_1d_int16_t,
-  (2, _pressio.int16_dtype) : _pressio_io_data_to_numpy_2d_int16_t,
-  (3, _pressio.int16_dtype) : _pressio_io_data_to_numpy_3d_int16_t,
-  (4, _pressio.int16_dtype) : _pressio_io_data_to_numpy_4d_int16_t,
-  (0, _pressio.int32_dtype) : _pressio_io_data_to_numpy_0d,
-  (1, _pressio.int32_dtype) : _pressio_io_data_to_numpy_1d_int32_t,
-  (2, _pressio.int32_dtype) : _pressio_io_data_to_numpy_2d_int32_t,
-  (3, _pressio.int32_dtype) : _pressio_io_data_to_numpy_3d_int32_t,
-  (4, _pressio.int32_dtype) : _pressio_io_data_to_numpy_4d_int32_t,
-  (0, _pressio.int64_dtype) : _pressio_io_data_to_numpy_0d,
-  (1, _pressio.int64_dtype) : _pressio_io_data_to_numpy_1d_int64_t,
-  (2, _pressio.int64_dtype) : _pressio_io_data_to_numpy_2d_int64_t,
-  (3, _pressio.int64_dtype) : _pressio_io_data_to_numpy_3d_int64_t,
-  (4, _pressio.int64_dtype) : _pressio_io_data_to_numpy_4d_int64_t,
-  (0, _pressio.byte_dtype) : _pressio_io_data_to_numpy_0d,
-  (1, _pressio.byte_dtype) : _pressio_io_data_to_numpy_1d_uint8_t,
-  (2, _pressio.byte_dtype) : _pressio_io_data_to_numpy_2d_uint8_t,
-  (3, _pressio.byte_dtype) : _pressio_io_data_to_numpy_3d_uint8_t,
-  (4, _pressio.byte_dtype) : _pressio_io_data_to_numpy_4d_uint8_t,
-  (0, _pressio.uint8_dtype) : _pressio_io_data_to_numpy_0d,
-  (1, _pressio.uint8_dtype) : _pressio_io_data_to_numpy_1d_uint8_t,
-  (2, _pressio.uint8_dtype) : _pressio_io_data_to_numpy_2d_uint8_t,
-  (3, _pressio.uint8_dtype) : _pressio_io_data_to_numpy_3d_uint8_t,
-  (4, _pressio.uint8_dtype) : _pressio_io_data_to_numpy_4d_uint8_t,
-  (0, _pressio.uint16_dtype) : _pressio_io_data_to_numpy_0d,
-  (1, _pressio.uint16_dtype) : _pressio_io_data_to_numpy_1d_uint16_t,
-  (2, _pressio.uint16_dtype) : _pressio_io_data_to_numpy_2d_uint16_t,
-  (3, _pressio.uint16_dtype) : _pressio_io_data_to_numpy_3d_uint16_t,
-  (4, _pressio.uint16_dtype) : _pressio_io_data_to_numpy_4d_uint16_t,
-  (0, _pressio.uint32_dtype) : _pressio_io_data_to_numpy_0d,
-  (1, _pressio.uint32_dtype) : _pressio_io_data_to_numpy_1d_uint32_t,
-  (2, _pressio.uint32_dtype) : _pressio_io_data_to_numpy_2d_uint32_t,
-  (3, _pressio.uint32_dtype) : _pressio_io_data_to_numpy_3d_uint32_t,
-  (4, _pressio.uint32_dtype) : _pressio_io_data_to_numpy_4d_uint32_t,
-  (0, _pressio.uint64_dtype) : _pressio_io_data_to_numpy_0d,
-  (1, _pressio.uint64_dtype) : _pressio_io_data_to_numpy_1d_uint64_t,
-  (2, _pressio.uint64_dtype) : _pressio_io_data_to_numpy_2d_uint64_t,
-  (3, _pressio.uint64_dtype) : _pressio_io_data_to_numpy_3d_uint64_t,
-  (4, _pressio.uint64_dtype) : _pressio_io_data_to_numpy_4d_uint64_t,
-  (0, _pressio.bool_dtype) : _pressio_io_data_to_numpy_0d,
-  (1, _pressio.bool_dtype) : _pressio_io_data_to_numpy_1d_bool,
-  (2, _pressio.bool_dtype) : _pressio_io_data_to_numpy_2d_bool,
-  (3, _pressio.bool_dtype) : _pressio_io_data_to_numpy_3d_bool,
-  (4, _pressio.bool_dtype) : _pressio_io_data_to_numpy_4d_bool,
-}
-
-
-def io_data_from_numpy(array):
-  length = len(array.shape)
-  dtype = array.dtype
-  return __pressio_from_numpy[length, dtype](array)
-
-def io_data_to_numpy(ptr):
-  num_dims = data_num_dimensions(ptr)
-  dtype = data_dtype(ptr)
-  return __pressio_to_numpy[num_dims, dtype](ptr)
-
-%}
-
+%ignore pressio_new_metrics;
+%newobject pressio_get_compressor;
+%newobject pressio_new_metric;
+%delobject pressio_release;
+//defined in pypressio.h instead
+%newobject new_metrics;
 %include "pressio.h"
+%newobject pressio_compressor_get_documentation;
+%newobject pressio_compressor_get_configuration;
+%newobject pressio_compressor_get_options;
+%newobject pressio_compressor_get_metrics_results;
+%newobject pressio_compressor_get_metrics;
+%newobject pressio_compressor_clone;
+%delobject pressio_compressor_release;
 %include "pressio_compressor.h"
+//prefer the versions using std::vector from pypressio.h
 %ignore pressio_data_new_nonowning;
 %ignore pressio_data_new_owning;
 %ignore pressio_data_new_move;
 %ignore pressio_data_new_copy;
 %ignore pressio_data_new_empty;
+//these are defined in pypressio.h
+%newobject data_new_copy;
+%newobject data_new_nowning;
+%newobject data_new_empty;
+%newobject data_new_move;
+
+
+%delobject pressio_data_free;
 %include "pressio_data.h"
 %include "pressio_dtype.h"
+%newobject pressio_metrics_get_results;
+%newobject pressio_metrics_get_options;
+%newobject pressio_metrics_get_documentation;
+%newobject pressio_metrics_get_configuration;
+%newobject pressio_metrics_clone;
+%newobject pressio_metrics_evaluate;
+%delobject pressio_metrics_free;
 %include "pressio_metrics.h"
 %ignore pressio_option_new_strings;
+%ignore pressio_option_get_strings;
+%newobject pressio_option_new_integer8;
+%newobject pressio_option_new_integer16;
+%newobject pressio_option_new_integer;
+%newobject pressio_option_new_integer64;
+%newobject pressio_option_new_uinteger8;
+%newobject pressio_option_new_uinteger16;
+%newobject pressio_option_new_uinteger;
+%newobject pressio_option_new_uinteger64;
+%newobject pressio_option_new_float;
+%newobject pressio_option_new_double;
+%newobject pressio_option_new_bool;
+%newobject pressio_option_new_dtype;
+%newobject pressio_option_new_threadsafety;
+%newobject pressio_option_new_data;
+%newobject pressio_option_new_userptr;
+%newobject pressio_option_new_userptr_managed;
+%newobject pressio_option_new;
+%newobject pressio_option_get_data;
+// these are defined in pypressio.h
+%newobject option_new_string;
+%newobject option_new_strings;
+%delobject pressio_option_free;
 %include "pressio_option.h"
+%newobject pressio_options_get_iter;
+%newobject pressio_options_new;
+%delobject pressio_options_free;
+
 %include "pressio_options.h"
+%newobject pressio_options_iter_get_value;
+%delobject pressio_options_iter_free;
 %include "pressio_options_iter.h"
+%newobject pressio_get_io;
+%newobject pressio_io_get_configuration;
+%newobject pressio_io_get_documentation;
+%newobject pressio_io_get_options;
+%newobject pressio_io_read;
+%newobject pressio_io_clone;
+%delobject pressio_io_free;
 %include "libpressio_ext/io/pressio_io.h"
+%newobject pressio_io_data_fread;
+%newobject pressio_io_data_read;
+%newobject pressio_io_data_path_read;
 %include "libpressio_ext/io/posix.h"
 
+
 #if LIBPRESSIO_HAS_JSON
+%newobject pressio_options_new_json;
 %newobject pressio_options_to_json;
 %include "libpressio_ext/json/pressio_options_json.h"
 #endif
 #if LIBPRESSIO_HAS_OPENSSL
+%newobject pressio_options_hashkeys;
+%newobject pressio_options_hashentries;
 %include "libpressio_ext/hash/libpressio_hash.h"
 #endif
+%newobject pressio_highlevel_get_compressor;
+%newobject pressio_highlevel_get_io;
 %include "libpressio_ext/highlevel/libpressio_highlevel.h"
+
+%include  "dlpack/dlpack.h"
+
+%pythoncode %{
+    import numpy as _np
+
+    _dtype_map = {
+        "f4": float_dtype,
+        "f8": double_dtype,
+        "i1": int8_dtype,
+        "i2": int16_dtype,
+        "i4": int32_dtype,
+        "i8": int64_dtype,
+        "u1": uint8_dtype,
+        "u2": uint16_dtype,
+        "u4": uint32_dtype,
+        "u8": uint64_dtype,
+        "b1": bool_dtype,
+    }
+    _reverse_dtype_map = {
+        float_dtype: _np.dtype("<f4"),
+        double_dtype: _np.dtype("<f8"),
+        int8_dtype: _np.dtype("|i1"),
+        int16_dtype: _np.dtype("<i2"),
+        int32_dtype: _np.dtype("<i4"),
+        int64_dtype: _np.dtype("<i8"),
+        uint8_dtype: _np.dtype("|u1"),
+        uint16_dtype: _np.dtype("<u2"),
+        uint32_dtype: _np.dtype("<u4"),
+        uint64_dtype: _np.dtype("<u8"),
+        bool_dtype: _np.dtype("|b1"),
+        byte_dtype: _np.dtype("|i1"),
+    }
+
+    def io_data_from_numpy(x):
+        info = x.__array_interface__
+        if info.get("strides", None) is not None:
+            raise NotImplementedError("stridded numpy arrays are not supported")
+        if info.get("mask", None) is not None:
+            raise NotImplementedError("masked numpy arrays are not supported")
+        if info['version'] != 3:
+            raise NotImplementedError("only version 3 is supported")
+        typestr = info['typestr']
+        if len(typestr) == 3:
+            typestr = typestr[1:]
+        return data_new_nonowning_ptr(
+            _dtype_map[typestr],
+            info['data'][0],
+            vector_uint64_t(info['shape'])
+        )
+
+    def io_data_to_numpy(x):
+        dims = tuple(data_dimensions(x))
+        dtype = _reverse_dtype_map[data_dtype(x)]
+        ptr = data_ptr(x)
+        count = int(_np.prod(dims, dtype=_np.int64)) if dims else 0
+        ctype = _np.ctypeslib.as_ctypes_type(dtype)
+        array_type = ctype * count
+        array_1d = _np.ctypeslib.as_array(array_type.from_address(ptr))
+        return _np.array(array_1d.reshape(dims), copy=True)
+
+    def io_data_to_python(x):
+        return io_data_to_numpy(x)
+
+    def _from_dlpack(x):
+        if hasattr(x, "__array_interface__"):
+            return io_data_from_numpy(x)
+        if hasattr(x, "__cuda_array_interface__"):
+            info = x.__cuda_array_interface__
+            if info.get("strides", None) is not None:
+                raise NotImplementedError("stridded cuda arrays are not supported")
+            if info.get("mask", None) is not None:
+                raise NotImplementedError("masked cuda arrays are not supported")
+            if info['version'] != 3:
+                raise NotImplementedError("only version 3 is supported")
+            typestr = info['typestr']
+            if len(typestr) == 3:
+                typestr = typestr[1:]
+            return data_new_nonowning_ptr(
+                _dtype_map[typestr],
+                info['data'][0],
+                vector_uint64_t(info['shape'])
+            )
+        raise NotImplementedError("dlpack import is only supported for array-interface objects")
+
+    class PressioData:
+        def __init__(self, ptr):
+            self.ptr = ptr
+        def __del__(self):
+            data_free(self.ptr)
+        def __dlpack__(self, stream = None, max_version = None, dl_device = None, copy = None):
+            if max_version is None:
+                # Keep and use the DLPack 0.X implementation
+                return 
+            else:
+                max_version_swig = optional_max_version() if max_version is None else optional_max_version(max_version[0], max_version[1])
+                dl_device_swig = optional_dl_device() if dl_device is None else optional_dl_device(dl_device[0], dl_device[1])
+                copy_swig = optional_copy() if copy is None else optional_copy(copy)
+
+                # We get to produce `DLManagedTensorVersioned` now.
+                if max_version >= (DLPACK_MAJOR_VERSION, DLPACK_MINOR_VERSION):
+                    # Consumer understands us, just return a Capsule with our max version
+                    return data_to_dlpack_versioned(self.ptr, max_version_swig, dl_device_swig, copy_swig)
+                elif max_version[0] == DLPACK_MAJOR_VERSION:
+                    # major versions match, we should still be fine here -
+                    # return our own max version
+                    return data_to_dlpack_versioned(self.ptr, max_version_swig, dl_device_swig, copy_swig)
+                else:
+                    # if we're at a higher major version internally, did we
+                    # keep an implementation of the older major version around?
+                    # For example, if the producer is on DLPack 1.x and the consumer
+                    # is 0.y, can the producer still export a capsule containing
+                    # DLManagedTensor and not DLManagedTensorVersioned?
+                    # If so, use that. Else, the producer should raise a BufferError
+                    # here to tell users that the consumer's max_version is too
+                    # old to allow the data exchange to happen.
+                    return data_to_dlpack_managed(self.ptr)
+%}

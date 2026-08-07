@@ -198,18 +198,18 @@ struct pressio_compressor* pressio_compressor_clone(struct pressio_compressor* c
 const char* pressio_compressor_get_prefix(const struct pressio_compressor* compressor);
 
 /**
- * Assign a new name to a compressor.  Names are used to prefix options in meta-compressors.
+ * Assign a new name to a compressor. Names are used to prefix options in
+ * meta-compressors.
  *
- * sub-compressors will be renamed either by the of the sub-compressors prefix
- * or by the $prefix:name configuration option
+ * Sub-compressors are renamed either by their sub-compressor prefix or by the
+ * `$prefix:name` configuration option.
  *
- * i.e. for some new_name and a compressor with prefix foo and subcompressors
- * with prefixs "abc", "def", "ghi" respectively
+ * For example, if `foo:names = ['one', 'two', 'three']`, the resulting names
+ * become `$new_name/one`, `$new_name/two`, and `$new_name/three`. Otherwise,
+ * the sub-compressors keep their prefixes and become `$new_name/abc`,
+ * `$new_name/def`, and `$new_name/ghi`.
  *
- * - if foo:names = ['one', 'two', 'three'], then the names will be `$new_name/one, $new_name/two $new_name/three
- * - otherwise the names will be $new_name/abc, $new_name/def, $new_name/ghi
- *
- * \param[in] compressor the compressor to get the name of
+ * \param[in] compressor the compressor whose name will be updated
  * \param[in] new_name the name to set
  */
 void pressio_compressor_set_name(struct pressio_compressor* compressor, const char* new_name);

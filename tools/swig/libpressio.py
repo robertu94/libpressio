@@ -99,6 +99,12 @@ class PressioException(Exception):
         error_code = pressio.metrics_error_code(metrics)
         return cls(msg, error_code)
 
+def io_data_from_numpy(x):
+    return python_to_new_pressio_data(x)
+
+def _from_dlpack(x):
+    return python_to_new_pressio_data(x)
+
 def python_to_new_pressio_data(x):
     if hasattr(x, "__cuda_array_interface__"):
         info = x.__cuda_array_interface__
@@ -128,8 +134,6 @@ def python_to_new_pressio_data(x):
                 )
     elif is_pressio_data(x):
         return pressio.data_new_nonowning_from_data(x)
-    elif isinstance(x, np.ndarray):
-        return pressio.io_data_from_numpy(x)
     else:
         raise NotImplementedError()
 
@@ -145,7 +149,10 @@ def pressio_data_to_python(x, out=None):
     return ret, True
 
 def pressio_dtype_to_python(dtype) -> np.dtype:
-    return np.dtype(pressio.dtype_to_typestr(dtype))
+    typestr = pressio.dtype_to_typestr(dtype)
+    if isinstance(typestr, bytes):
+        typestr = typestr.decode()
+    return np.dtype(typestr)
 
 def pressio_dtype_from_python(d : np.dtype) -> int:
     return pressio.dtype_from_typestr(np.dtype(d).str.encode())

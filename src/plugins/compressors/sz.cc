@@ -429,7 +429,7 @@ class sz_plugin: public libpressio_compressor_plugin {
     set(sz_metrics, "sz:quantization_intervals", sz_stat.quantization_intervals);
 #endif
 #if PRESSIO_SZ_VERSION_GREATEREQ(2,1,12,4)
-    set(sz_metrics, "sz:pre_encoding_size", sz_stat.pre_encoding_size);
+    set(sz_metrics, "sz:pre_encoding_size", static_cast<uint64_t>(sz_stat.pre_encoding_size));
 #endif
 #endif
     return sz_metrics;

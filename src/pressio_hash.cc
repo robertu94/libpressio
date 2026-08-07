@@ -91,13 +91,13 @@ static uint8_t* libpressio_options_hashimpl(struct pressio* library, struct pres
 }
 
 extern "C" {
-    uint8_t* libpressio_options_hashkeys(struct pressio* library, struct pressio_options const* options, size_t* output_size) {
+    uint8_t* pressio_options_hashkeys(struct pressio* library, struct pressio_options const* options, size_t* output_size) {
         return libpressio_options_hashimpl(library, options, output_size, [](hasher& h, pressio_options::value_type const& i){
                 h(i.first);
         });
     }
 
-    uint8_t* libpressio_options_hashentries(struct pressio* library, struct pressio_options const* options, size_t* output_size) {
+    uint8_t* pressio_options_hashentries(struct pressio* library, struct pressio_options const* options, size_t* output_size) {
         return libpressio_options_hashimpl(library, options, output_size, [](hasher& h, pressio_options::value_type const& i){
                 h(i.first);
                 h(i.second.type());

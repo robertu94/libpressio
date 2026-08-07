@@ -1,5 +1,6 @@
 find_package(GTest)
 if(NOT GTEST_FOUND)
+    message(INFO "Google Test Not Found, installing from source")
 configure_file(GTestCMakeLists.txt.in googletest-download/CMakeLists.txt)
 
 execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
@@ -27,13 +28,15 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googletest-src
   ${CMAKE_CURRENT_BINARY_DIR}/googletest-build
   EXCLUDE_FROM_ALL)
+else()
+    message(INFO "Google Test Found!")
 endif()
 include(GoogleTest)
 
 function(add_gtest)
   get_filename_component(test_name ${ARGV0} NAME_WE)
   add_executable(${test_name} ${ARGV})
-  target_link_libraries(${test_name} PRIVATE libpressio gtest_main gtest gmock)
+  target_link_libraries(${test_name} PRIVATE libpressio GTest::gtest_main GTest::gtest GTest::gmock)
   gtest_discover_tests(${test_name})
 endfunction()
 
@@ -50,7 +53,7 @@ if(LIBPRESSIO_HAS_CUDA)
 endif()
 
 add_executable(test_compressor_integration ./test_compressor_integration.cc mpi_test_main.cc)
-target_link_libraries(test_compressor_integration PRIVATE libpressio gtest gmock ${CMAKE_DL_LIBS})
+target_link_libraries(test_compressor_integration PRIVATE libpressio GTest::gtest GTest::gmock ${CMAKE_DL_LIBS})
 if(LIBPRESSIO_HAS_MPI)
   target_link_libraries(test_compressor_integration PRIVATE MPI::MPI_CXX)
 endif()

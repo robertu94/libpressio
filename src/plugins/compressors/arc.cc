@@ -59,6 +59,7 @@ public:
     set(options, "predictors:error_dependent", get_accumulate_configuration("predictors:error_dependent", {&*impl}, {}));
     set(options, "predictors:error_agnostic", get_accumulate_configuration("predictors:error_agnostic", {&*impl}, configs));
     set(options, "predictors:runtime", get_accumulate_configuration("predictors:runtime", {&*impl}, configs));
+    set(options, "pressio:highlevel", get_accumulate_configuration("pressio:highlevel", {&*impl}, configs));
 
     return options;
   }
