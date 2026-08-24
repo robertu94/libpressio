@@ -152,3 +152,16 @@ if(LIBPRESSIO_HAS_SZ AND LIBPRESSIO_HAS_FPZIP AND LIBPRESSIO_BUILD_MODE STREQUAL
   add_executable(test_roibin test_roibin.cc)
   target_link_libraries(test_roibin libpressio)
 endif()
+
+if(LIBPRESSIO_HAS_FZGPUMODULES)
+  add_gtest(test_fzgm.cc)
+
+  if(BUILD_PYTHON_WRAPPER)
+    find_package(Python3)
+    add_test(test_fzgm_python_wrapper
+      ${Python3_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/test_fzgm_python.py
+      ${CMAKE_BINARY_DIR}/tools/swig
+    )
+  endif()
+endif()

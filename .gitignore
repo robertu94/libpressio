@@ -4,3 +4,4 @@ build-*
 spack-*
 .clangd
 .cache/
+build/
