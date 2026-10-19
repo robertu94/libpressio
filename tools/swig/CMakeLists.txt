@@ -3,7 +3,13 @@ find_package(Python3 COMPONENTS Interpreter Development NumPy)
 find_package(SWIG)
 if(SWIG_FOUND AND PYTHON3_FOUND)
   include(UseSWIG)
+  configure_file(libpressio.py libpressio.py COPYONLY)
 
+
+  if(LIBPRESSIO_HAS_FZGPUMODULES)
+    set(fzgm_python_module "${PROJECT_SOURCE_DIR}/src/plugins/compressors/fzgpumodules/libpressio_fzgpumodules.py")
+    configure_file("${fzgm_python_module}" libpressio_fzgpumodules.py COPYONLY)
+  endif()
 
   set(CMAKE_SWIG_FLAGS "-doxygen")
   if(NOT LIBPRESSIO_PYTHON_SITELIB)
@@ -45,5 +51,8 @@ if(SWIG_FOUND AND PYTHON3_FOUND)
 
   build_pressio_swig_module(pressio.i pypressio.h)
   install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/libpressio.py" DESTINATION ${LIBPRESSIO_PYTHON_SITELIB})
+  if(LIBPRESSIO_HAS_FZGPUMODULES)
+    install(FILES "${fzgm_python_module}" DESTINATION ${LIBPRESSIO_PYTHON_SITELIB})
+  endif()
 endif()
 
