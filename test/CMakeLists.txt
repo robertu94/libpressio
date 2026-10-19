@@ -114,6 +114,21 @@ if(LIBPRESSIO_HAS_LIBDISTRIBUTED AND LIBPRESSIO_HAS_MPI)
   target_link_libraries(test_distributed PRIVATE MPI::MPI_CXX LibDistributed::libdistributed)
 endif()
 
+if(BUILD_PYTHON_WRAPPER)
+  find_package(Python3 COMPONENTS Interpreter)
+  add_test(test_python_numpy_conversions
+    ${Python3_EXECUTABLE}
+    ${CMAKE_CURRENT_SOURCE_DIR}/from_numpy.py
+    ${CMAKE_BINARY_DIR}/tools/swig
+  )
+  add_test(test_python_compat
+    ${Python3_EXECUTABLE}
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_python_compat.py
+    ${CMAKE_BINARY_DIR}/tools/swig
+    ${PROJECT_SOURCE_DIR}/tools/swig
+  )
+endif()
+
 if(BUILD_PYTHON_WRAPPER AND LIBPRESSIO_HAS_SZ AND ${LIBPRESSIO_BUILD_MODE} STREQUAL FULL)
   find_package(Python3)
   add_test(test_python_wrapper 
@@ -124,11 +139,6 @@ if(BUILD_PYTHON_WRAPPER AND LIBPRESSIO_HAS_SZ AND ${LIBPRESSIO_BUILD_MODE} STREQ
   add_test(test_python_io_wrapper 
     ${Python3_EXECUTABLE}
     ${CMAKE_CURRENT_SOURCE_DIR}/test_pythonio.py
-    ${CMAKE_BINARY_DIR}/tools/swig
-  )
-  add_test(test_python_numpy_conversions
-    ${Python3_EXECUTABLE}
-    ${CMAKE_CURRENT_SOURCE_DIR}/from_numpy.py
     ${CMAKE_BINARY_DIR}/tools/swig
   )
   if(LIBPRESSIO_HAS_ZFP AND LIPBRESSIO_HAS_CUDA)
