@@ -54,6 +54,7 @@ The following people have contributed code to LibPressio in alphabetical order:
 + Jiannan Tian
 + Robert Underwood
 + Sheng Di
++ Skyler Ruiter
 + Victoriana Malvoso
 
 # Acknowledgments
