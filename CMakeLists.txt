@@ -187,6 +187,7 @@ libpressio_optional_component(numpy "build the numpy io plugin" /io/numpy.cc)
 libpressio_optional_component(copy_template "build the numpy io plugin" /io/copy_template.cc)
 libpressio_optional_component(size "build the size metrics plugin" /metrics/size.cc)
 libpressio_optional_component(time "build the time metrics plugin" /metrics/time.cc)
+libpressio_optional_component(qoi "build the qoi metrics plugin" /metrics/qoi.cc)
 libpressio_optional_component(autocorr "build the autocorr metrics plugin" /metrics/autocorr.cc)
 libpressio_optional_component(chunking "build the chunking compressor plugin" "/compressors/chunking.cc;/compressors/chunking_impl.cc")
 libpressio_optional_component(delta_encoding "build the delta_encoding compressor plugin" /compressors/delta_encoding.cc)
@@ -221,6 +222,7 @@ libpressio_optional_component(write_debug_inputs "metric that writes output buff
 set(roibin_sources /compressors/roibin.cc /compressors/binning.cc /compressors/masked_binning.cc)
 libpressio_optional_component(roibin "build the roibin metacompressor" "${roibin_sources}")
 libpressio_optional_component(pipeline "build the pipeline metacompressor" /compressors/pipeline.cc)
+
 
 option(LIBPRESSIO_INTERPROCEDURAL_OPTIMIZATION "Use interprocedural optimization (LTO)" OFF)
 if(LIBPRESSIO_INTERPROCEDURAL_OPTIMIZATION)
