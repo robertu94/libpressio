@@ -11,10 +11,10 @@
  * \brief interface for configurable types
  */
 
+namespace libpressio {
 /**
  * Base interface for configurable objects in libpressio
  */
-namespace libpressio {
 class pressio_configurable : public pressio_errorable {
   public:
   virtual ~pressio_configurable()=default;

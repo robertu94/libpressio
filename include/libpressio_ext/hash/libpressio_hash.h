@@ -21,7 +21,7 @@ struct pressio_options;
  * \param[out] output_size the size of the returned hash
  * \returns memory containing the hash as bytes, should be freed with free
  */
-uint8_t* libpressio_options_hashkeys(struct pressio* library, struct pressio_options const* options, size_t* output_size);
+uint8_t* pressio_options_hashkeys(struct pressio* library, struct pressio_options const* options, size_t* output_size);
 
 /**
  * hash the entries of a pressio_options value
@@ -43,7 +43,7 @@ uint8_t* libpressio_options_hashkeys(struct pressio* library, struct pressio_opt
  * \param[out] output_size the size of the returned hash
  * \returns memory containing the hash as bytes, should be freed with free
  */
-uint8_t* libpressio_options_hashentries(struct pressio* library, struct pressio_options const* options, size_t* output_size);
+uint8_t* pressio_options_hashentries(struct pressio* library, struct pressio_options const* options, size_t* output_size);
 
 #ifdef __cplusplus
 }

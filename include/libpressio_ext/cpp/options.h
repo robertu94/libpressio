@@ -462,19 +462,19 @@ struct pressio_options final {
   /**
    * gets a key if it is set and stores it into the pointer value
    * \param[in] key the option to retrieve
-   * \param[out] value the value that is in the option
+   * \param[out] outvalue the value that is in the option
    * \returns pressio_options_key_does_not_exist if the key does not exist
    *          pressio_options_key_exists if the key exists but has no value
    *          pressio_options_key_set if the key exists and is set
    */
   template <class PointerType, class StringType>
-  enum pressio_options_key_status get(StringType const& key, compat::optional<PointerType>* value) const {
+  enum pressio_options_key_status get(StringType const& key, compat::optional<PointerType>* outvalue) const {
     switch(key_status(key)){
       case pressio_options_key_set:
         {
           auto variant = get(key);
           if (variant.template holds_alternative<PointerType>()) { 
-            *value = variant.template get<PointerType>();
+            *outvalue = variant.template get<PointerType>();
             return pressio_options_key_set;
           } else {
             return pressio_options_key_exists;
@@ -490,20 +490,20 @@ struct pressio_options final {
   /**
    * gets a key if it is set and stores it into the pointer value
    * \param[in] key the option to retrieve
-   * \param[out] value the value that is in the option
+   * \param[out] outvalue the value that is in the option
    * \returns pressio_options_key_does_not_exist if the key does not exist
    *          pressio_options_key_exists if the key exists but has no value
    *          pressio_options_key_set if the key exists and is set
    */
   template <class PointerType, class StringType>
-  enum pressio_options_key_status get(StringType const& key, PointerType value) const {
+  enum pressio_options_key_status get(StringType const& key, PointerType outvalue) const {
     using ValueType = typename std::remove_pointer<PointerType>::type;
     switch(key_status(key)){
       case pressio_options_key_set:
         {
           auto variant = get(key);
           if (variant.template holds_alternative<ValueType>()) { 
-            *value = variant.template get_value<ValueType>();
+            *outvalue = variant.template get_value<ValueType>();
             return pressio_options_key_set;
           } else {
             return pressio_options_key_exists;
@@ -520,34 +520,34 @@ struct pressio_options final {
    * gets a key if it is set and stores it into the pointer value
    * \param[in] name the name to use.  Checks for the named version first, then the unnamed
    * \param[in] key the option to retrieve
-   * \param[out] value the value that is in the option
+   * \param[out] outvalue the value that is in the option
    * \returns pressio_options_key_does_not_exist if the key does not exist
    *          pressio_options_key_exists if the key exists but has no value
    *          pressio_options_key_set if the key exists and is set
    */
   template <class PointerType, class StringType, class StringType2>
-  enum pressio_options_key_status get(StringType const& name, StringType2 const& key, PointerType value) const {
+  enum pressio_options_key_status get(StringType const& name, StringType2 const& key, PointerType outvalue) const {
     std::string prefix_key;
     for (auto path : libpressio::names::search(name)) {
       prefix_key = libpressio::names::format_name(std::string(path), key);
       if(options.find(prefix_key) != options.end()) {
-        return get(prefix_key, value);
+        return get(prefix_key, outvalue);
       }
     }
-    return get(key, value);
+    return get(key, outvalue);
   }
 
   /**
    * gets a key if it is set, attepts to cast it the specified type and stores it into the pointer value
    * \param[in] key the option to retrieve
-   * \param[out] value the value that is in the option
+   * \param[out] outvalue the value that is in the option
    * \param[in] safety the level of conversions to allow \see pressio_conversion_safety
    * \returns pressio_options_key_does_not_exist if the key does not exist
    *          pressio_options_key_exists if the key exists but has no value
    *          pressio_options_key_set if the key exists and is set
    */
   template <class PointerType, class StringType>
-  enum pressio_options_key_status cast(StringType const& key, PointerType value, enum pressio_conversion_safety safety) const {
+  enum pressio_options_key_status cast(StringType const& key, PointerType outvalue, enum pressio_conversion_safety safety) const {
     using ValueType = typename std::remove_pointer<PointerType>::type;
     switch(key_status(key)){
       case pressio_options_key_set:
@@ -555,7 +555,7 @@ struct pressio_options final {
           auto variant = get(key);
           auto converted = pressio_option(variant).as(pressio_type_to_enum<ValueType>(), safety);
           if(converted.has_value()) {
-            *value = converted.template get_value<ValueType>();
+            *outvalue = converted.template get_value<ValueType>();
             return pressio_options_key_set;
           } else {
             return pressio_options_key_exists;
@@ -572,22 +572,22 @@ struct pressio_options final {
    * gets a key if it is set, attepts to cast it the specified type and stores it into the pointer value
    * \param[in] name the name to use.  Checks for the named version first, then the unnamed
    * \param[in] key the option to retrieve
-   * \param[out] value the value that is in the option
+   * \param[out] outvalue the value that is in the option
    * \param[in] safety the level of conversions to allow \see pressio_conversion_safety
    * \returns pressio_options_key_does_not_exist if the key does not exist
    *          pressio_options_key_exists if the key exists but has no value
    *          pressio_options_key_set if the key exists and is set
    */
   template <class PointerType, class StringType, class StringType2>
-  enum pressio_options_key_status cast(StringType const& name, StringType2 const& key, PointerType value, enum pressio_conversion_safety safety) const {
+  enum pressio_options_key_status cast(StringType const& name, StringType2 const& key, PointerType outvalue, enum pressio_conversion_safety safety) const {
     std::string prefix_key;
     for (auto path : libpressio::names::search(name)) {
       prefix_key = libpressio::names::format_name(std::string(path), std::string(key));
       if(options.find(prefix_key) != options.end()) {
-        return cast(prefix_key, value, safety);
+        return cast(prefix_key, outvalue, safety);
       }
     }
-    return cast(key, value, safety);
+    return cast(key, outvalue, safety);
   }
 
   /**

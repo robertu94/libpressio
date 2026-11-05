@@ -1,0 +1,12 @@
+[modules.python-sdk]
+source = "github.com/dagger/python-sdk"
+
+[sdks.python]
+module = "python-sdk"
+
+[modules.libpressio]
+source = ".dagger/modules/libpressio"
+
+[sdks.python.scopes.".dagger/modules/libpressio"]
+is-module = true
+name = "libpressio"

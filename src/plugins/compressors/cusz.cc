@@ -9,7 +9,7 @@
 #include "libpressio_ext/cpp/domain_manager.h"
 #include <cusz/cusz.h>
 #include <cusz/context.h>
-#include <cusz/tehm.hh>
+#include <cusz/type.h>
 #include <cuda_runtime.h>
 #include <cuda.h>
 #include <cusz/cusz_version.h>
@@ -232,27 +232,6 @@ public:
     return set_error(12, cudaGetErrorString(ec));
   }
 
-  int cusz_error(pszerror ec) {
-    switch(ec) {
-      case CUSZ_FAIL_ONDISK_FILE_ERROR:
-        return set_error(3, "ondisk file error");
-      case CUSZ_FAIL_DATA_NOT_READY:
-        return set_error(4, "data not ready");
-      case CUSZ_FAIL_GPU_MALLOC:
-        return set_error(5, "gpu malloc");
-      case CUSZ_FAIL_GPU_MEMCPY:
-        return set_error(6, "gpu memcpy");
-      case CUSZ_FAIL_GPU_ILLEGAL_ACCESS:
-        return set_error(7, "gpu illegal access");
-      case CUSZ_FAIL_GPU_OUT_OF_MEMORY:
-        return set_error(8, "gpu out of memory");
-      case CUSZ_FAIL_INCOMPRESSIABLE:
-        return set_error(9, "incompressible");
-      default:
-        return set_error(10, "unknown error");
-    }
-  }
-
 #define lp_check_cuda_error(call) { \
     cudaError ec = (call); \
     if(ec != cudaSuccess) \
@@ -316,15 +295,15 @@ public:
     T* d_uncomp = (T*)input.data();
 
     psz_header header;
-    psz::TimeRecord timerecord;
     psz_len3 uncomp_len = psz_len3{dims[0], dims[1], dims[2]};
     psz_compressor* comp = psz_create(to_cuszdtype(input.dtype()), uncomp_len, to_cusz_predictor_type(predictor),
         radius, Huffman); // codectype Huffman is hardcoded. (v0.10rc)
     uint8_t* ptr_compressed;
     size_t compressed_len;
+    void* ignored = nullptr;
     psz_compress(
         comp, d_uncomp, uncomp_len, err_bnd, to_cuszmode(eb_mode), 
-        &ptr_compressed, &compressed_len, &header, &timerecord, *stream.get());
+        &ptr_compressed, &compressed_len, &header, ignored, *stream.get());
 
     *output = pressio_data::move(pressio_byte_dtype, ptr_compressed, {compressed_len}, domain_plugins().build("cudamalloc"));
     *output = domain_manager().make_readable(domain_plugins().build("malloc"), std::move(*output));
@@ -345,14 +324,15 @@ public:
     pressio_data cpu_input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
     psz_header* header = (psz_header*)cpu_input.data();
     auto comp_len = pszheader_filesize(header);
+
     psz_len3 decomp_len = psz_len3{dims[0], dims[1], dims[2]};  // x, y, z
                                                                 //
     pressio_data gpu_input = domain_manager().make_readable(domain_plugins().build("cudamalloc"), *real_input);
     uint8_t* ptr_compressed = (uint8_t*)gpu_input.data();
 
-    psz::TimeRecord timerecord;
+    void* ignored = nullptr;
     psz_compressor* comp = psz_create_from_header(header);
-    psz_decompress(comp, ptr_compressed, comp_len, d_decomp, decomp_len, (void*)&timerecord, *stream.get());
+    psz_decompress(comp, ptr_compressed, comp_len, d_decomp, decomp_len, ignored, *stream.get());
 
     psz_release(comp);
     return 0;

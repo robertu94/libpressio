@@ -32,6 +32,7 @@ public:
     set(options, "predictors:error_dependent", get_accumulate_configuration("predictors:error_dependent", {&*compressor}, {"transpose:axis"}));
     set(options, "predictors:error_agnostic", get_accumulate_configuration("predictors:error_agnostic", {&*compressor}, {}));
     set(options, "predictors:runtime", get_accumulate_configuration("predictors:runtime", {&*compressor}, {}));
+    set(options, "pressio:highlevel", get_accumulate_configuration("pressio:highlevel", {&*compressor}, std::vector<std::string>{"transpose:axis"}));
     return options;
   }
 

@@ -8,12 +8,16 @@
  */
 
 extern "C" {
+/** No-op deleter for non-owning userdata. */
 void static_deleter(void*, void*);
+/** No-op copy helper for non-owning userdata. */
 void static_copy(void**, void**, const void*, const void*);
 }
 
+/** Function pointer type used to destroy userdata. */
 using userdata_deleter_t = void(*)(void*, void*);
 template <class T>
+/** Construct a deleter that destroys userdata with `delete`. */
 userdata_deleter_t newdelete_deleter() {
   return [](void* ptr, void*) {
   T* ptr_typed = static_cast<T*>(ptr);
@@ -21,8 +25,10 @@ userdata_deleter_t newdelete_deleter() {
   };
 }
 
+/** Function pointer type used to deep-copy userdata. */
 using userdata_copy_t = void(*)(void** dst, void**, const void* src, const void*);
 template <class T>
+/** Construct a copier that clones userdata with copy construction. */
 userdata_copy_t newdelete_copy() {
   return [](void** dst, void**, const void* src, const void*) {
   T const* src_typed = static_cast<T const*>(src);
@@ -115,6 +121,7 @@ class userdata {
       return ptr == data.ptr;
     }
 
+    /** Release the owned userdata, if any. */
     ~userdata() {
       if(deleter != nullptr) {
         deleter(ptr, metadata);

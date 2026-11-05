@@ -83,7 +83,7 @@ public:
     set(options, "predictors:error_dependent", get_accumulate_configuration("predictors:error_dependent", invalidation_children, invalidations));
     set(options, "predictors:error_agnostic", get_accumulate_configuration("predictors:error_agnostic", invalidation_children, invalidations));
     set(options, "predictors:runtime", get_accumulate_configuration("predictors:runtime", invalidation_children, invalidations));
-    set(options, "pressio:highlevel", get_accumulate_configuration("pressio:highlevel", invalidation_children, std::vector<std::string>{}));
+    set(options, "pressio:highlevel", get_accumulate_configuration("pressio:highlevel", invalidation_children, std::vector<std::string>{"pressio:abs", "pressio:rel"}));
     return options;
   }
 
@@ -133,8 +133,12 @@ public:
     }
     auto input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
     size_t outSize = 0;
-    unsigned char *bytes = szp_compress(fastMode, to_dtype(input.dtype()), input.data(), &outSize, errBoundMode, absBound, relBound, input.num_elements(), block_size);  
-    *output = pressio_data::move(pressio_byte_dtype, bytes, {outSize}, domain_plugins().build("malloc"));
+    try {
+        unsigned char *bytes = szp_compress(fastMode, to_dtype(input.dtype()), input.data(), &outSize, errBoundMode, absBound, relBound, input.num_elements(), block_size);  
+        *output = pressio_data::move(pressio_byte_dtype, bytes, {outSize}, domain_plugins().build("malloc"));
+    } catch (std::runtime_error const& ex) {
+        return set_error(1, ex.what());
+    }
     return 0;
   }
 
@@ -148,8 +152,12 @@ public:
         num_threads = [old_threads]{omp_set_num_threads(old_threads);};
     }
     auto input = domain_manager().make_readable(domain_plugins().build("malloc"), *real_input);
-    void* data = (void*)szp_decompress(fastMode, to_dtype(output->dtype()), reinterpret_cast<unsigned char*>(input.data()), input.num_elements(), output->num_elements(), block_size);
-    *output = pressio_data::move(output->dtype(), data, output->dimensions(), domain_plugins().build("malloc"));
+    try {
+        void* data = (void*)szp_decompress(fastMode, to_dtype(output->dtype()), reinterpret_cast<unsigned char*>(input.data()), input.num_elements(), output->num_elements(), block_size);
+        *output = pressio_data::move(output->dtype(), data, output->dimensions(), domain_plugins().build("malloc"));
+    } catch(std::runtime_error const& ex) {
+        return set_error(1, ex.what());
+    }
     return 0;
   }
 

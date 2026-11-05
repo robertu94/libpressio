@@ -99,6 +99,7 @@ public:
     set(options, "pressio:stability", "experimental");
     set(options, "bit_grooming:mode", bg_keys(bitgroom_mode_str_to_code));
     set(options, "bit_grooming:error_control_mode", bg_keys(bitgroom_ec_mode_str_to_code));
+    set(options, "pressio:highlevel", std::vector<std::string>{"bit_grooming:mode_str", "bit_grooming:error_control_mode_str", "bit_grooming:n_sig_digits", "bit_grooming:n_sig_decimals"});
     set(options, "predictors:error_agnostic", std::vector<std::string>{"bit_grooming:mode", "bit_grooming:mode_str", "bit_grooming:error_control_mode", "bit_grooming:n_sig_digits", "bit_grooming:n_sig_decimals"});
     set(options, "predictors:error_dependent", std::vector<std::string>{"bit_grooming:mode", "bit_grooming:mode_str", "bit_grooming:error_control_mode", "bit_grooming:n_sig_digits", "bit_grooming:n_sig_decimals"});
     set(options, "predictors:runtime", std::vector<std::string>{"bit_grooming:mode", "bit_grooming:mode_str", "bit_grooming:error_control_mode", "bit_grooming:n_sig_digits", "bit_grooming:n_sig_decimals"});

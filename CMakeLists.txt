@@ -19,7 +19,14 @@ option(BUILD_SHARED_LIBS "build libpressio as a shared library" ON)
 option(CMAKE_POSITION_INDEPENDENT_CODE "build libpressio with position indpendent code" ON)
 
 
-include(GNUInstallDirs)
+if(NOT DEFINED SKBUILD)
+    include(GNUInstallDirs)
+else()
+    set(CMAKE_INSTALL_INCLUDEDIR ${SKBUILD_HEADERS_DIR})
+    set(CMAKE_INSTALL_LIBDIR ${SKBUILD_PLATLIB_DIR})
+    set(CMAKE_INSTALL_PREFIX ${SKBUILD_DATA_DIR})
+endif()
+
 include(CheckCXXCompilerFlag)
 include(CMakeDependentOption)
 
@@ -180,6 +187,7 @@ libpressio_optional_component(numpy "build the numpy io plugin" /io/numpy.cc)
 libpressio_optional_component(copy_template "build the numpy io plugin" /io/copy_template.cc)
 libpressio_optional_component(size "build the size metrics plugin" /metrics/size.cc)
 libpressio_optional_component(time "build the time metrics plugin" /metrics/time.cc)
+libpressio_optional_component(dist_qoi "build the dist_qoi metrics plugin" /metrics/dist_qoi.cc)
 libpressio_optional_component(autocorr "build the autocorr metrics plugin" /metrics/autocorr.cc)
 libpressio_optional_component(chunking "build the chunking compressor plugin" "/compressors/chunking.cc;/compressors/chunking_impl.cc")
 libpressio_optional_component(delta_encoding "build the delta_encoding compressor plugin" /compressors/delta_encoding.cc)
@@ -215,6 +223,7 @@ set(roibin_sources /compressors/roibin.cc /compressors/binning.cc /compressors/m
 libpressio_optional_component(roibin "build the roibin metacompressor" "${roibin_sources}")
 libpressio_optional_component(pipeline "build the pipeline metacompressor" /compressors/pipeline.cc)
 
+
 option(LIBPRESSIO_INTERPROCEDURAL_OPTIMIZATION "Use interprocedural optimization (LTO)" OFF)
 if(LIBPRESSIO_INTERPROCEDURAL_OPTIMIZATION)
   cmake_policy(CMP0069 NEW)
@@ -249,7 +258,34 @@ if(LIBPRESSIO_TREAT_WARNINGS_AS_ERRORS)
   target_compile_options(libpressio PRIVATE -Werror)
 endif()
 
-find_package(std_compat REQUIRED)
+find_package(std_compat CONFIG QUIET)
+if(NOT TARGET std_compat::std_compat)
+  include(FetchContent)
+  FetchContent_Declare(
+    std_compat
+    GIT_REPOSITORY https://github.com/robertu94/std_compat.git
+    GIT_TAG master
+  )
+
+  # std_compat honors the global BUILD_TESTING option.  Do not recursively
+  # configure its test suite; libpressio configures its own tests below.
+  set(_libpressio_build_testing ${BUILD_TESTING})
+  set(BUILD_TESTING OFF)
+  FetchContent_MakeAvailable(std_compat)
+  set(BUILD_TESTING ${_libpressio_build_testing})
+
+  # The upstream build target exposes its source include directory directly,
+  # whereas its installed package places those headers in std_compat/.  Stage
+  # the installed-layout equivalent for consumers of the fetched target.
+  set(_std_compat_include_dir "${CMAKE_BINARY_DIR}/_deps/std_compat-include")
+  file(MAKE_DIRECTORY "${_std_compat_include_dir}")
+  file(COPY "${std_compat_SOURCE_DIR}/include/"
+       DESTINATION "${_std_compat_include_dir}/std_compat")
+  target_include_directories(std_compat INTERFACE
+    "$<BUILD_INTERFACE:${_std_compat_include_dir}>")
+
+  add_library(std_compat::std_compat ALIAS std_compat)
+endif()
 target_link_libraries(libpressio PUBLIC std_compat::std_compat)
 
 option(LIBPRESSIO_HAS_OPENMP "accerate some plugins with OpenMP" OFF)
@@ -375,6 +411,7 @@ if(LIBPRESSIO_HAS_CUSZ)
   set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} cusz")
   find_package(CUSZ REQUIRED)
   libpressio_plugin_file(/compressors/cusz.cc)
+  libpressio_plugin_file(/compressors/eip.cc)
   target_link_libraries(libpressio PRIVATE CUSZ::cusz CUDA::cuda_driver CUDA::cudart)
 endif()
 
@@ -565,6 +602,13 @@ if(LIBPRESSIO_HAS_CUSZP)
   libpressio_plugin_file(/compressors/cuszp.cc)
   target_link_libraries(libpressio PRIVATE cuSZp::cuSZp_shared)
 endif()
+option(LIBPRESSIO_HAS_LSCOMP "build the LSCOMP plugin" OFF)
+if(LIBPRESSIO_HAS_LSCOMP)
+  set(LIBPRESSIO_COMPRESSORS "${LIBPRESSIO_COMPRESSORS} LSCOMP")
+  find_package(cuLSZ REQUIRED)
+  libpressio_plugin_file(/compressors/lscomp.cc)
+  target_link_libraries(libpressio PRIVATE cuLSZ::cuLSZ)
+endif()
 
 option(LIBPRESSIO_HAS_FPZIP "build the fpzip plugin" OFF)
 if(LIBPRESSIO_HAS_FPZIP)
@@ -618,10 +662,15 @@ if(LIBPRESSIO_HAS_LUA)
     target_link_libraries(libpressio PRIVATE PkgConfig::Lua)
   else()
     message(INFO "lua from cmake")
-    find_package(Lua)
-    target_link_libraries(libpressio PRIVATE ${LUA_LIBRARIES})
-    target_include_directories(libpressio PRIVATE ${LUA_INCLUDE_DIR})
+    find_package(Lua REQUIRED)
+    if(TARGET Lua::Lua)
+      target_link_libraries(libpressio PRIVATE Lua::Lua)
+    else()
+      target_link_libraries(libpressio PRIVATE ${LUA_LIBRARIES})
+      target_include_directories(libpressio PRIVATE ${LUA_INCLUDE_DIRS})
+    endif()
   endif()
+
   libpressio_plugin_file( /compressors/lambda_fn.cc)
 endif()
 
@@ -833,7 +882,7 @@ if(BUILD_DOCS)
     )
   add_custom_command(
     OUTPUT "Compressors.md"
-    COMMAND generate_docs -m c -o "${CMAKE_BINARY_DIR}/Compressors.md"
+    COMMAND ${CMAKE_COMMAND} -E env LIBPRESSIO_GENERATE_DOCS_OUTPUT="${CMAKE_BINARY_DIR}/Compressors.md" ${CMAKE_COMMAND} -P "${CMAKE_CURRENT_SOURCE_DIR}/tools/docs/generate_compressors_docs.cmake"
     DEPENDS generate_docs libpressio
     COMMENT "Documenting Compressors"
     )

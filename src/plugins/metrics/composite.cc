@@ -10,8 +10,6 @@
 #include "std_compat/string_view.h"
 #include "pressio_version.h"
 #if LIBPRESSIO_HAS_LUA
-#define SOL_ALL_SAFETIES_ON 1
-#define SOL_PRINT_ERRORS 1
 #include <sol/sol.hpp>
 #endif
 
@@ -318,33 +316,40 @@ class composite_plugin : public libpressio_metrics_plugin {
       }
     }
     for (auto const& script : scripts) {
-      try {
-        //create a new state for each object to ensure it is clean
-        sol::state lua;
-        lua.open_libraries(sol::lib::base);
-        lua.open_libraries(sol::lib::math);
-        lua["metrics"] = metrics;
+      sol::state lua;
+      lua.open_libraries(sol::lib::base, sol::lib::math);
 
-        sol::optional<std::tuple<std::string, sol::optional<double>>> lua_result = lua.safe_script(script, 
-            [this](lua_State*, sol::protected_function_result pfr) {
-                sol::error err = pfr;
-                set_error(1, std::string("lua error: ") + err.what());
-                return pfr;
-        });
-        if(lua_result) {
-          auto const& lua_result_v = *lua_result;
-          std::string name = std::string("composite:") + std::get<0>(lua_result_v);
-          if(std::get<1>(lua_result_v)) {
-            set(opt, name, *std::get<1>(lua_result_v));
-            metrics[name] = *std::get<1>(lua_result_v);
-          } else {
-            set_type(opt, name, pressio_option_double_type);
-          }
-        } else {
-          return error_code();
-        }
-      } catch (sol::error& err) {
-        return set_error(1, std::string("lua error; ") + err.what());
+      auto metrics_table = lua.create_table();
+      for (auto const& metric : metrics) {
+        metrics_table[metric.first] = metric.second;
+      }
+      lua["metrics"] = metrics_table;
+
+      auto result = lua.safe_script(script, sol::script_pass_on_error);
+      if(!result.valid()) {
+        sol::error err = result;
+        return set_error(1, std::string("lua error: ") + err.what());
+      }
+
+      if(result.return_count() < 2) {
+        return set_error(1, "lua error: script must return name and value");
+      }
+
+      sol::object name_obj = result.get<sol::object>(0);
+      sol::object value_obj = result.get<sol::object>(1);
+      if(name_obj.get_type() != sol::type::string) {
+        return set_error(1, "lua error: first return value must be a string");
+      }
+
+      std::string name = std::string("composite:") + name_obj.as<std::string>();
+      if(value_obj == sol::lua_nil) {
+        set_type(opt, name, pressio_option_double_type);
+      } else if(value_obj.is<double>()) {
+        double value = value_obj.as<double>();
+        set(opt, name, value);
+        metrics[name] = value;
+      } else {
+        return set_error(1, "lua error: second return value must be a number or nil");
       }
     }
 #endif

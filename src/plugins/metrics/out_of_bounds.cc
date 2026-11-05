@@ -111,23 +111,38 @@ class out_of_bounds_plugin : public libpressio_metrics_plugin {
   }
 
   struct pressio_options get_configuration_impl() const override {
-    pressio_options opts;
-    set(opts, "pressio:stability", "experimental");
-    set(opts, "pressio:thread_safe", pressio_thread_safety_multiple);
-    set(opts, "predictors:requires_decompress", true);
-    set(opts, "predictors:invalidate", std::vector<std::string>{"predictors:error_dependent"});
-    return opts;
+      pressio_options opts;
+      set(opts, "pressio:stability", "experimental");
+      set(opts, "pressio:thread_safe", pressio_thread_safety_multiple);
+      set(opts, "predictors:requires_decompress", true);
+      set(opts, "predictors:invalidate", std::vector<std::string>{"predictors:error_dependent"});
+      return opts;
   }
 
   struct pressio_options get_documentation_impl() const override {
-    pressio_options opt;
-    set(opt, "pressio:description", R"(produces a report of the values that are out of bounds)");
-    set(opt, "out_of_bounds:oob", "a 3xN array where [i*3]= input, [i*3+1]=output, [i*3+2]=error");
-    set(opt, "out_of_bounds:index", "a length N array containing the indexes of the out of range values");
-    set(opt, "out_of_bounds:print_first_k",
-        "print the first k entries that are out of range in a human-focused unstable format for "
-        "debugging");
-    return opt;
+      pressio_options opt;
+      set(opt, "pressio:description", R"(produces a report of the values that are out of bounds)");
+      set(opt, "out_of_bounds:oob", "a 3xN array where [i*3]= input, [i*3+1]=output, [i*3+2]=error");
+      set(opt, "out_of_bounds:index", "a length N array containing the indexes of the out of range values");
+      set(opt, "out_of_bounds:print_first_k",
+              "print the first k entries that are out of range in a human-focused unstable format for "
+              "debugging");
+      set(opt, "pressio:abs", R"(a pointwise absolute error bound
+
+  compressors may provide this value without supporting abs=0.
+  compressors that support abs=0, additionally should also define pressio:lossless
+  )");
+      set(opt, "pressio:rel", R"(a pointwise value-range relative error bound
+
+  compressors may provide this value without supporting rel=0.
+  compressors that support rel=0, additionally should also define pressio:lossless
+  )");
+      set(opt, "pressio:pw_rel", R"(a pointwise relative error bound
+
+  compressors may provide this value without supporting pw_rel=0.
+  compressors that support pw_rel=0, additionally should also define pressio:lossless
+  )");
+      return opt;
   }
 
   pressio_options get_metrics_results(pressio_options const &) override {
