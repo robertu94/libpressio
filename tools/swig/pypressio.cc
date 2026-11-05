@@ -9,6 +9,7 @@ constexpr bool native_little_endian = __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__;
 #endif
 }
 
+#if LIBPRESSIO_HAS_MPI4PY
 void options_set_comm(struct pressio_options* options, const char* key, MPI_Comm comm) {
   MPI_Comm* c = new MPI_Comm(comm);
   return pressio_options_set_userptr_managed(options, key, c, nullptr, newdelete_deleter<MPI_Comm>(), newdelete_copy<MPI_Comm>());
@@ -18,6 +19,7 @@ pressio_option* option_new_comm(MPI_Comm comm) {
   MPI_Comm* c = new MPI_Comm(comm);
   return pressio_option_new_userptr_managed(c, nullptr, newdelete_deleter<MPI_Comm>(), newdelete_copy<MPI_Comm>());
 }
+#endif
 
 static std::string dtype_to_typestr(pressio_dtype t) {
     static std::map<pressio_dtype, std::string> const dtypes {

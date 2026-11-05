@@ -120,18 +120,7 @@ def python_to_new_pressio_data(x):
                 info['data'][0]
                 )
     elif hasattr(x, "__array_interface__"):
-        info = x.__array_interface__
-        if info.get("strides",None) is not None:
-            raise NotImplementedError("stridded numpy arrays are not supported")
-        if info.get("mask", None) is not None:
-            raise NotImplementedError("masked numpy arrays are not supported")
-        if info['version'] != 3:
-            raise NotImplementedError("only version 3 is supported")
-        return pressio.io_data_from_numpy_array(
-                pressio.vector_uint64_t(info['shape']),
-                info['typestr'].encode(),
-                info['data'][0]
-                )
+        return pressio.io_data_from_numpy(x)
     elif is_pressio_data(x):
         return pressio.data_new_nonowning_from_data(x)
     else:

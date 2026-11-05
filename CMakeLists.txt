@@ -256,7 +256,34 @@ if(LIBPRESSIO_TREAT_WARNINGS_AS_ERRORS)
   target_compile_options(libpressio PRIVATE -Werror)
 endif()
 
-find_package(std_compat REQUIRED)
+find_package(std_compat CONFIG QUIET)
+if(NOT TARGET std_compat::std_compat)
+  include(FetchContent)
+  FetchContent_Declare(
+    std_compat
+    GIT_REPOSITORY https://github.com/robertu94/std_compat.git
+    GIT_TAG master
+  )
+
+  # std_compat honors the global BUILD_TESTING option.  Do not recursively
+  # configure its test suite; libpressio configures its own tests below.
+  set(_libpressio_build_testing ${BUILD_TESTING})
+  set(BUILD_TESTING OFF)
+  FetchContent_MakeAvailable(std_compat)
+  set(BUILD_TESTING ${_libpressio_build_testing})
+
+  # The upstream build target exposes its source include directory directly,
+  # whereas its installed package places those headers in std_compat/.  Stage
+  # the installed-layout equivalent for consumers of the fetched target.
+  set(_std_compat_include_dir "${CMAKE_BINARY_DIR}/_deps/std_compat-include")
+  file(MAKE_DIRECTORY "${_std_compat_include_dir}")
+  file(COPY "${std_compat_SOURCE_DIR}/include/"
+       DESTINATION "${_std_compat_include_dir}/std_compat")
+  target_include_directories(std_compat INTERFACE
+    "$<BUILD_INTERFACE:${_std_compat_include_dir}>")
+
+  add_library(std_compat::std_compat ALIAS std_compat)
+endif()
 target_link_libraries(libpressio PUBLIC std_compat::std_compat)
 
 option(LIBPRESSIO_HAS_OPENMP "accerate some plugins with OpenMP" OFF)

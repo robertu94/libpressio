@@ -31,9 +31,6 @@ classifiers = [
     "Operating System :: POSIX :: Linux",
     "Programming Language :: C",
     "Programming Language :: C++",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -42,7 +39,7 @@ classifiers = [
 keywords = ["libpressio", "compression", "interface"]
 dependencies = [
     "numpy",
-    "numcodecs"
+    "numcodecs",
 ]
 
 [project.urls]
@@ -60,4 +57,3 @@ minimum-version = "build-system.requires"
 BUILD_PYTHON_WRAPPER = true
 BUILD_TESTING = false
 LIBPRESSIO_BUILD_MODE = "FULL"
-

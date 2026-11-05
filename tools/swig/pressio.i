@@ -65,6 +65,10 @@ python bindings for pressio
 #endif
 
 
+// Output vector references need their typemap before helper declarations.
+namespace std {
+  %template(vector_data) vector<struct pressio_data*, allocator<struct pressio_data*> >;
+}
 %include "pypressio.h"
 
 %define pressio_numpy_type(type, name)
@@ -86,7 +90,6 @@ pressio_numpy_type(long int, int64_t);
 
 namespace std { 
   %template() vector<size_t>;
-  %template(vector_data) vector<struct pressio_data*>;
   %template(vector_string) vector<std::string>;
 }
 
