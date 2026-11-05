@@ -45,6 +45,7 @@ target_include_directories(test_pressio_data PRIVATE ${CMAKE_SOURCE_DIR}/src)
 add_gtest(test_pressio_options.cc)
 add_gtest(test_io.cc)
 add_gtest(test_highlevel.cc)
+add_gtest(test_dist_qoi.cc)
 
 if(LIBPRESSIO_HAS_CUDA)
   find_package(CUDAToolkit REQUIRED)
