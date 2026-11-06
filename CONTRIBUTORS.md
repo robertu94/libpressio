@@ -51,6 +51,7 @@ The following people have contributed code to LibPressio in alphabetical order:
 + Arham Khan
 + Emily E. Lattanzio
 + Hengzhi Chen
++ Jiajun Huang
 + Jiannan Tian
 + Robert Underwood
 + Sheng Di

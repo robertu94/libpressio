@@ -53,6 +53,11 @@ if(LIBPRESSIO_HAS_CUDA)
     target_link_libraries(test_domain PRIVATE CUDA::cudart)
 endif()
 
+if(LIBPRESSIO_HAS_SZGPU)
+  add_gtest(test_szgpu_plugin.cc)
+  target_link_libraries(test_szgpu_plugin PRIVATE szgpu::szgpu)
+endif()
+
 add_executable(test_compressor_integration ./test_compressor_integration.cc mpi_test_main.cc)
 target_link_libraries(test_compressor_integration PRIVATE libpressio GTest::gtest GTest::gmock ${CMAKE_DL_LIBS})
 if(LIBPRESSIO_HAS_MPI)

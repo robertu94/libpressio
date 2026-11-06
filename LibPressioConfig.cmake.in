@@ -137,6 +137,10 @@ if(@LIBPRESSIO_HAS_CUSZP@)
   find_package(cuSZp REQUIRED)
 endif()
 
+if(@LIBPRESSIO_HAS_SZGPU@)
+  find_package(szgpu REQUIRED)
+endif()
+
 if(@LIBPRESSIO_HAS_FPZIP@)
   find_package(fpzip)
 endif()
