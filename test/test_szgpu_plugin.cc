@@ -4,7 +4,7 @@
 #include <limits>
 #include <thread>
 #include <vector>
-#include <fsz/fsz.h>
+#include <szgpu/szgpu.h>
 #include "gtest/gtest.h"
 #include "libpressio_ext/cpp/libpressio.h"
 #include "libpressio_ext/cpp/domain_manager.h"
@@ -44,7 +44,7 @@ double max_abs_error(pressio_data const& original, pressio_data const& decompres
 }
 }
 
-class FSZPlugin : public ::testing::Test {
+class SZGPUPlugin : public ::testing::Test {
   protected:
     void SetUp() override {
       ASSERT_NE(compressor.plugin, nullptr) << library.err_msg();
@@ -68,25 +68,25 @@ class FSZPlugin : public ::testing::Test {
 
     double const abs_bound = 1e-3;
     pressio library;
-    pressio_compressor compressor = library.get_compressor("fsz");
+    pressio_compressor compressor = library.get_compressor("szgpu");
 };
 
-TEST_F(FSZPlugin, ReportsFSZVersion) {
-  EXPECT_EQ(compressor->major_version(), FSZ_VERSION_MAJOR);
-  EXPECT_EQ(compressor->minor_version(), FSZ_VERSION_MINOR);
-  EXPECT_EQ(compressor->patch_version(), FSZ_VERSION_PATCH);
-  EXPECT_STREQ(compressor->version(), FSZ_VERSION_STRING);
+TEST_F(SZGPUPlugin, ReportsSZGPUVersion) {
+  EXPECT_EQ(compressor->major_version(), SZGPU_VERSION_MAJOR);
+  EXPECT_EQ(compressor->minor_version(), SZGPU_VERSION_MINOR);
+  EXPECT_EQ(compressor->patch_version(), SZGPU_VERSION_PATCH);
+  EXPECT_STREQ(compressor->version(), SZGPU_VERSION_STRING);
 }
 
-TEST_F(FSZPlugin, HostRoundTripFloat) { host_round_trip<float>(); }
-TEST_F(FSZPlugin, HostRoundTripDouble) { host_round_trip<double>(); }
+TEST_F(SZGPUPlugin, HostRoundTripFloat) { host_round_trip<float>(); }
+TEST_F(SZGPUPlugin, HostRoundTripDouble) { host_round_trip<double>(); }
 
-TEST_F(FSZPlugin, DeviceBuffersAreUsedInPlace) {
+TEST_F(SZGPUPlugin, DeviceBuffersAreUsedInPlace) {
   pressio_data host_input = make_field<float>();
   pressio_data no_data = pressio_data::empty(pressio_float_dtype, dims);
   pressio_data estimate = pressio_data::empty(pressio_byte_dtype, {});
   ASSERT_EQ(compressor->compress(&no_data, &estimate), 0) << compressor->error_msg();
-  EXPECT_EQ(estimate.size_in_bytes(), fsz_max_compressed_bytes(host_input.num_elements()));
+  EXPECT_EQ(estimate.size_in_bytes(), szgpu_max_compressed_bytes(host_input.num_elements()));
 
   auto cuda = domain_plugins().build("cudamalloc");
   pressio_data input = domain_manager().make_readable(cuda, host_input);
@@ -103,25 +103,25 @@ TEST_F(FSZPlugin, DeviceBuffersAreUsedInPlace) {
   EXPECT_LE(max_abs_error<float>(host_input, decompressed), abs_bound * 1.01);
 }
 
-TEST_F(FSZPlugin, StreamMatchesNativeFSZ) {
+TEST_F(SZGPUPlugin, StreamMatchesNativeSZGPU) {
   pressio_data input = make_field<double>();
   pressio_data compressed = pressio_data::empty(pressio_byte_dtype, {});
   ASSERT_EQ(compressor->compress(&input, &compressed), 0) << compressor->error_msg();
   pressio_data host_compressed = to_host(compressed);
 
   size_t const n = input.num_elements();
-  std::vector<unsigned char> native(fsz_max_compressed_bytes(n));
+  std::vector<unsigned char> native(szgpu_max_compressed_bytes(n));
   size_t native_size = 0;
-  ASSERT_EQ(fsz_compress_hostptr_f64(static_cast<const double*>(input.data()), native.data(), n, abs_bound, &native_size), FSZ_STATUS_OK);
+  ASSERT_EQ(szgpu_compress_hostptr_f64(static_cast<const double*>(input.data()), native.data(), n, abs_bound, &native_size), SZGPU_STATUS_OK);
   ASSERT_EQ(host_compressed.size_in_bytes(), native_size);
   EXPECT_EQ(std::memcmp(host_compressed.data(), native.data(), native_size), 0);
 }
 
-TEST_F(FSZPlugin, RelativeBoundThroughPressioMetaCompressor) {
+TEST_F(SZGPUPlugin, RelativeBoundThroughPressioMetaCompressor) {
   double const rel_bound = 1e-4;
   pressio_compressor rel = library.get_compressor("pressio");
   ASSERT_NE(rel.plugin, nullptr) << library.err_msg();
-  ASSERT_EQ(rel->set_options({{"pressio:compressor", std::string("fsz")}}), 0) << rel->error_msg();
+  ASSERT_EQ(rel->set_options({{"pressio:compressor", std::string("szgpu")}}), 0) << rel->error_msg();
   ASSERT_EQ(rel->set_options({{"pressio:rel", rel_bound}}), 0) << rel->error_msg();
 
   pressio_data input = make_field<float>();
@@ -136,7 +136,7 @@ TEST_F(FSZPlugin, RelativeBoundThroughPressioMetaCompressor) {
   EXPECT_LE(max_abs_error<float>(input, decompressed), rel_bound * value_range * 1.01);
 }
 
-TEST_F(FSZPlugin, ConcurrentCallsOnOneInstance) {
+TEST_F(SZGPUPlugin, ConcurrentCallsOnOneInstance) {
   pressio_data input = make_field<float>();
   std::vector<double> errors(4, 0.0);
   std::vector<std::thread> threads;
@@ -157,7 +157,7 @@ TEST_F(FSZPlugin, ConcurrentCallsOnOneInstance) {
   for (double error : errors) EXPECT_LE(error, abs_bound * 1.01);
 }
 
-TEST_F(FSZPlugin, ReportsErrors) {
+TEST_F(SZGPUPlugin, ReportsErrors) {
   pressio_data integers = pressio_data::owning(pressio_int32_dtype, dims);
   pressio_data compressed = pressio_data::empty(pressio_byte_dtype, {});
   EXPECT_NE(compressor->compress(&integers, &compressed), 0);

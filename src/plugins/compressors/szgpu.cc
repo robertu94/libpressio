@@ -1,5 +1,5 @@
 #include <mutex>
-#include <fsz/fsz.h>
+#include <szgpu/szgpu.h>
 #include <cuda_runtime.h>
 #include "std_compat/memory.h"
 #include "libpressio_ext/cpp/compressor.h"
@@ -8,43 +8,43 @@
 #include "libpressio_ext/cpp/pressio.h"
 #include "libpressio_ext/cpp/domain_manager.h"
 
-namespace libpressio { namespace compressors { namespace fsz_ns {
+namespace libpressio { namespace compressors { namespace szgpu_ns {
 
-// FSZ reuses a small device workspace across calls; calls that share it are
+// SZ-GPU reuses a small device workspace across calls; calls that share it are
 // serialized, and copies of the plugin start without one
-struct fsz_workspace_holder {
-    fsz_workspace_holder() = default;
-    fsz_workspace_holder(fsz_workspace_holder const&) {}
-    fsz_workspace_holder& operator=(fsz_workspace_holder const& rhs) {
+struct szgpu_workspace_holder {
+    szgpu_workspace_holder() = default;
+    szgpu_workspace_holder(szgpu_workspace_holder const&) {}
+    szgpu_workspace_holder& operator=(szgpu_workspace_holder const& rhs) {
         if(this != &rhs) reset();
         return *this;
     }
-    ~fsz_workspace_holder() { reset(); }
+    ~szgpu_workspace_holder() { reset(); }
 
-    fsz_status_t acquire(size_t n_elements, fsz_workspace_t** out) {
+    szgpu_status_t acquire(size_t n_elements, szgpu_workspace_t** out) {
         int current_device = 0;
-        if(cudaGetDevice(&current_device) != cudaSuccess) return FSZ_STATUS_CUDA_ERROR;
-        if(ws == nullptr || device != current_device || fsz_workspace_capacity(ws) < n_elements) {
+        if(cudaGetDevice(&current_device) != cudaSuccess) return SZGPU_STATUS_CUDA_ERROR;
+        if(ws == nullptr || device != current_device || szgpu_workspace_capacity(ws) < n_elements) {
             reset();
-            fsz_status_t status = fsz_workspace_create(&ws, n_elements);
-            if(status != FSZ_STATUS_OK) return status;
+            szgpu_status_t status = szgpu_workspace_create(&ws, n_elements);
+            if(status != SZGPU_STATUS_OK) return status;
             device = current_device;
         }
         *out = ws;
-        return FSZ_STATUS_OK;
+        return SZGPU_STATUS_OK;
     }
     void reset() {
-        if(ws) fsz_workspace_destroy(ws);
+        if(ws) szgpu_workspace_destroy(ws);
         ws = nullptr;
         device = -1;
     }
 
     std::mutex mutex;
-    fsz_workspace_t* ws = nullptr;
+    szgpu_workspace_t* ws = nullptr;
     int device = -1;
 };
 
-class fsz_compressor_plugin : public libpressio_compressor_plugin {
+class szgpu_compressor_plugin : public libpressio_compressor_plugin {
 public:
   struct pressio_options get_options_impl() const override
   {
@@ -71,11 +71,11 @@ public:
   struct pressio_options get_documentation_impl() const override
   {
     struct pressio_options options;
-    set(options, "pressio:description", R"(FSZ is an extremely fast GPU error-bounded lossy compressor in the SZ family.
+    set(options, "pressio:description", R"(SZ-GPU (FSZ) is an extremely fast GPU error-bounded lossy compressor in the SZ family.
     It stands at the family's Pareto frontier: achieving both extreme throughput and a high compression ratio simultaneously.
-    See https://github.com/JiajunHuang1999/FSZ
+    See https://github.com/szcompressor/SZ-GPU
 
-    FSZ compresses float and double data under the absolute error bound pressio:abs.
+    SZ-GPU compresses float and double data under the absolute error bound pressio:abs.
     Inputs may live in host or device memory. Outputs are returned in device memory,
     reusing a caller-provided device buffer when it is large enough.
     Compressing an input without data reports the maximum compressed size.
@@ -97,7 +97,7 @@ public:
   {
     if(!is_supported(real_input->dtype())) return unsupported_dtype();
     size_t const n = real_input->num_elements();
-    size_t const max_bytes = fsz_max_compressed_bytes(n);
+    size_t const max_bytes = szgpu_max_compressed_bytes(n);
     if(!real_input->has_data()) {
       *output = pressio_data::empty(pressio_byte_dtype, {max_bytes});
       return 0;
@@ -112,20 +112,20 @@ public:
       }
 
       std::lock_guard<std::mutex> guard(workspace.mutex);
-      fsz_workspace_t* ws = nullptr;
-      fsz_compress_result_t result{};
-      fsz_status_t status = workspace.acquire(n, &ws);
-      if(status == FSZ_STATUS_OK) {
+      szgpu_workspace_t* ws = nullptr;
+      szgpu_compress_result_t result{};
+      szgpu_status_t status = workspace.acquire(n, &ws);
+      if(status == SZGPU_STATUS_OK) {
         unsigned char* d_cmp = static_cast<unsigned char*>(output->data());
         if(input.dtype() == pressio_float_dtype) {
-          status = fsz_compress(static_cast<const float*>(input.data()), d_cmp, n,
+          status = szgpu_compress(static_cast<const float*>(input.data()), d_cmp, n,
                                 static_cast<float>(abs_error_bound), ws, 0, &result);
         } else {
-          status = fsz_compress_f64(static_cast<const double*>(input.data()), d_cmp, n,
+          status = szgpu_compress_f64(static_cast<const double*>(input.data()), d_cmp, n,
                                     abs_error_bound, ws, 0, &result);
         }
       }
-      if(status != FSZ_STATUS_OK) return fsz_error(status);
+      if(status != SZGPU_STATUS_OK) return szgpu_error(status);
 
       output->set_dtype(pressio_byte_dtype);
       output->reshape({result.cmp_size});
@@ -145,41 +145,41 @@ public:
 
     try {
       auto input = domain_manager().make_readable(domain_plugins().build("cudamalloc"), *real_input);
-      fsz_compress_result_t const result = fsz_make_result(n, input.size_in_bytes());
+      szgpu_compress_result_t const result = szgpu_make_result(n, input.size_in_bytes());
       if(input.size_in_bytes() < result.data_offset) {
         return set_error(1, "the compressed data is too small for the output dimensions");
       }
       auto output = domain_manager().make_writeable(domain_plugins().build("cudamalloc"), std::move(*real_output));
 
       std::lock_guard<std::mutex> guard(workspace.mutex);
-      fsz_workspace_t* ws = nullptr;
-      fsz_status_t status = workspace.acquire(n, &ws);
-      if(status == FSZ_STATUS_OK) {
+      szgpu_workspace_t* ws = nullptr;
+      szgpu_status_t status = workspace.acquire(n, &ws);
+      if(status == SZGPU_STATUS_OK) {
         const unsigned char* d_cmp = static_cast<const unsigned char*>(input.data());
         if(output.dtype() == pressio_float_dtype) {
-          status = fsz_decompress(static_cast<float*>(output.data()), d_cmp, n,
+          status = szgpu_decompress(static_cast<float*>(output.data()), d_cmp, n,
                                   static_cast<float>(abs_error_bound), &result, ws, 0);
         } else {
-          status = fsz_decompress_f64(static_cast<double*>(output.data()), d_cmp, n,
+          status = szgpu_decompress_f64(static_cast<double*>(output.data()), d_cmp, n,
                                       abs_error_bound, &result, ws, 0);
         }
       }
       cudaError_t err = cudaSuccess;
-      if(status == FSZ_STATUS_OK) err = cudaStreamSynchronize(0);
+      if(status == SZGPU_STATUS_OK) err = cudaStreamSynchronize(0);
       *real_output = std::move(output);
-      if(status != FSZ_STATUS_OK) return fsz_error(status);
-      if(err != cudaSuccess) return set_error(FSZ_STATUS_CUDA_ERROR, cudaGetErrorString(err));
+      if(status != SZGPU_STATUS_OK) return szgpu_error(status);
+      if(err != cudaSuccess) return set_error(SZGPU_STATUS_CUDA_ERROR, cudaGetErrorString(err));
     } catch(std::exception const& ex) {
       return set_error(2, ex.what());
     }
     return 0;
   }
 
-  int major_version() const override { return FSZ_VERSION_MAJOR; }
-  int minor_version() const override { return FSZ_VERSION_MINOR; }
-  int patch_version() const override { return FSZ_VERSION_PATCH; }
-  const char* version() const override { return FSZ_VERSION_STRING; }
-  const char* prefix() const override { return "fsz"; }
+  int major_version() const override { return SZGPU_VERSION_MAJOR; }
+  int minor_version() const override { return SZGPU_VERSION_MINOR; }
+  int patch_version() const override { return SZGPU_VERSION_PATCH; }
+  const char* version() const override { return SZGPU_VERSION_STRING; }
+  const char* prefix() const override { return "szgpu"; }
 
   pressio_options get_metrics_results_impl() const override {
     return {};
@@ -187,7 +187,7 @@ public:
 
   std::shared_ptr<libpressio_compressor_plugin> clone() override
   {
-    return compat::make_unique<fsz_compressor_plugin>(*this);
+    return compat::make_unique<szgpu_compressor_plugin>(*this);
   }
 
 private:
@@ -195,18 +195,18 @@ private:
     return dtype == pressio_float_dtype || dtype == pressio_double_dtype;
   }
   int unsupported_dtype() {
-    return set_error(1, "fsz supports only float and double data");
+    return set_error(1, "szgpu supports only float and double data");
   }
-  int fsz_error(fsz_status_t status) {
-    return set_error(static_cast<int>(status), std::string("fsz: ") + fsz_status_string(status));
+  int szgpu_error(szgpu_status_t status) {
+    return set_error(static_cast<int>(status), std::string("szgpu: ") + szgpu_status_string(status));
   }
 
   double abs_error_bound = 1e-4;
-  fsz_workspace_holder workspace;
+  szgpu_workspace_holder workspace;
 };
 
-pressio_register registration(compressor_plugins(), "fsz", []() {
-  return compat::make_unique<fsz_compressor_plugin>();
+pressio_register registration(compressor_plugins(), "szgpu", []() {
+  return compat::make_unique<szgpu_compressor_plugin>();
 });
 
 } } }
