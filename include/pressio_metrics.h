@@ -66,18 +66,18 @@ struct pressio_metrics* pressio_metrics_clone(struct pressio_metrics* metrics);
 
 
 /**
- * Assign a new name to a metrics.  Names are used to prefix options in meta-metrics.
+ * Assign a new name to a metrics object. Names are used to prefix options in
+ * meta-metrics.
  *
- * sub-metrics will be renamed either by the of the sub-metricss prefix
- * or by the $prefix:name configuration option
+ * Sub-metrics are renamed either by their sub-metric prefix or by the
+ * `$prefix:name` configuration option.
  *
- * i.e. for some new_name and a metrics with prefix foo and submetricss
- * with prefixs "abc", "def", "ghi" respectively
+ * For example, if `foo:names = ['one', 'two', 'three']`, the resulting names
+ * become `$new_name/one`, `$new_name/two`, and `$new_name/three`. Otherwise,
+ * the sub-metrics keep their prefixes and become `$new_name/abc`,
+ * `$new_name/def`, and `$new_name/ghi`.
  *
- * - if foo:names = ['one', 'two', 'three'], then the names will be `$new_name/one, $new_name/two $new_name/three
- * - otherwise the names will be $new_name/abc, $new_name/def, $new_name/ghi
- *
- * \param[in] metrics the metrics to get the name of
+ * \param[in] metrics the metrics object whose name will be updated
  * \param[in] new_name the name to set
  */
 void pressio_metrics_set_name(struct pressio_metrics* metrics, const char* new_name);

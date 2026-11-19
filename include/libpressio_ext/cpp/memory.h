@@ -9,6 +9,10 @@
  * \brief C++ interface to managed memory objects from domaines
  */
 
+/**
+ * an interface to manage linear memories on various domains
+ * This just tracks the pointer and the capacity, higher level functions can be found in pressio_data
+ */
 class pressio_memory {
 private:
   std::shared_ptr<libpressio::domains::pressio_domain> data_domain;

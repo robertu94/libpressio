@@ -23,6 +23,25 @@ pressio_memory &pressio_memory::operator=(pressio_memory &&rhs) noexcept {
   if (&rhs == this){
     return *this;
   }
+
+  // A nonowning view may be move-assigned back to the object that owns the
+  // viewed allocation.  Keep this object's ownership in that case; freeing it
+  // before adopting the view would leave this object pointing at freed memory.
+  if(data_ptr && data_ptr == rhs.data_ptr &&
+      data_domain && data_domain->prefix() != "nonowning" &&
+      rhs.data_domain && rhs.data_domain->prefix() == "nonowning") {
+    rhs.data_ptr = nullptr;
+    rhs.data_capacity = 0;
+    rhs.data_domain = nullptr;
+    return *this;
+  }
+
+  // Release the allocation currently owned by this object before taking rhs's
+  // ownership.
+  if(data_ptr && data_domain) {
+    data_domain->free(data_ptr, data_capacity);
+  }
+
   data_ptr = compat::exchange(rhs.data_ptr, nullptr);
   data_capacity = compat::exchange(rhs.data_capacity, 0);
   data_domain = compat::exchange(rhs.data_domain, nullptr);

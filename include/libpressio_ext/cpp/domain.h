@@ -1,6 +1,7 @@
 #ifndef PRESSIO_DOMAIN_H_Z2ALCUZG
 #define PRESSIO_DOMAIN_H_Z2ALCUZG
 #include <cstddef>
+#include <cstdint>
 #include <string>
 #include <memory>
 #include <cstring>
@@ -23,24 +24,30 @@ namespace libpressio { namespace domains {
 /**
  * domains accept a subset of options that pressio_options do to break the circular dependency
  */
+/** Value type used by domain option maps. */
 using domain_option  = std::variant<std::monostate,double,uint64_t,int64_t,std::string,std::vector<std::string>,bool,std::any>;
+/** Map type used to configure domains. */
 using domain_options  = std::map<std::string, domain_option>;
+/** Status codes returned by domain option accessors. */
 enum class domain_option_key_status {
     key_set = 0,
     key_exists = 1,
     key_does_not_exist = 2,
 };
+/** Set a domain option by key. */
 template <class T>
 domain_option_key_status set(domain_options& opts, std::string const& key, T&& value) {
     opts[key] = std::forward<T>(value);
     return domain_option_key_status::key_set;
 }
+/** Set a domain option using a component name and option key. */
 template <class T>
 domain_option_key_status set(domain_options& opts, std::string const& name, std::string const& key, T&& value) {
     std::string full_name = libpressio::names::format_name(name, key);
     return set(opts, full_name, std::forward<T>(value));
 }
 
+/** Retrieve a domain option by key when the stored type matches `T`. */
 template <class T>
 domain_option_key_status get(domain_options const& opts, std::string const& key, T& value) {
     auto it = opts.find(key);
@@ -56,6 +63,7 @@ domain_option_key_status get(domain_options const& opts, std::string const& key,
         return domain_option_key_status::key_does_not_exist;
     }
 }
+/** Retrieve a named domain option by searching the component hierarchy. */
 template <class T>
 domain_option_key_status get(domain_options const& opts, std::string const& name, std::string const& key, T& value) {
     std::string prefix_key;
@@ -68,6 +76,7 @@ domain_option_key_status get(domain_options const& opts, std::string const& name
     return get(opts, key, value);
 }
 
+/** Store a nested configurable domain object and its options into a map. */
 template <class Wrapper>
 domain_option_key_status set_meta(domain_options& opts, std::string const& name, std::string const& key, Wrapper&& current_value) {
     auto ret = set(opts, name, key, current_value->prefix());
@@ -77,6 +86,7 @@ domain_option_key_status set_meta(domain_options& opts, std::string const& name,
     }
     return ret;
 }
+/** Rebuild and configure a nested domain object from an option map. */
 template <class Wrapper, class Registry>
 domain_option_key_status get_meta(domain_options& opts, std::string const& name, std::string const& key, Registry const& registry, Wrapper&& current_value) {
     std::string new_plugin;
@@ -103,7 +113,9 @@ domain_option_key_status get_meta(domain_options& opts, std::string const& name,
 }
 
 
+/** Format a domain option map as a human-readable string. */
 std::string to_string(domain_options const& op);
+/** Format a single domain option as a human-readable string. */
 std::string to_string(domain_option const& op);
 
 
@@ -118,6 +130,7 @@ namespace detail {
      */
     template <class T>
     struct maybe_assign {
+        /** Assign the visited value when the types match. */
         template <class V>
         typename std::enable_if<
             std::is_same<
@@ -130,6 +143,7 @@ namespace detail {
             lhs = rhs;
             return domain_option_key_status::key_set;
         }
+        /** Report that the key exists but holds a different type. */
         template <class V>
         typename std::enable_if<
             !std::is_same<
@@ -142,10 +156,12 @@ namespace detail {
             (void) rhs;
             return domain_option_key_status::key_exists;
         }
+        /** Destination reference used for assignment. */
         T&& lhs;
     };
 }
 
+/** Retrieve a domain option by key, assigning into a compatible destination. */
 template <class T>
 domain_option_key_status get(domain_options const& opts, std::string const& key, T&& value) {
     auto it = opts.find(key);
@@ -155,6 +171,7 @@ domain_option_key_status get(domain_options const& opts, std::string const& key,
         return domain_option_key_status::key_does_not_exist;
     }
 }
+/** Retrieve a named domain option, assigning into a compatible destination. */
 template <class T>
 domain_option_key_status get(domain_options const& opts, std::string const& name, std::string const& key, T&& value) {
     std::string prefix_key;
@@ -243,9 +260,6 @@ struct pressio_domain {
     /**
      * name for this particular domain
      */
-    /**
-     * name for this particular domain
-     */
     std::string const& get_name() const {
         return name;
     }
@@ -318,6 +332,7 @@ struct pressio_domain {
     virtual domain_options get_configuration_impl() const {
         return {};
     }
+    /** Callback invoked after the domain name is updated. */
     virtual void set_name_impl(std::string const&) {
     }
     /**
@@ -341,6 +356,7 @@ struct pressio_domain {
  */
 bool is_accessible(pressio_domain const& lhs, pressio_domain const& rhs);
 }
+/** Return the registry of available domain plugins. */
 pressio_registry<std::shared_ptr<libpressio::domains::pressio_domain>>& domain_plugins();
 
 /**

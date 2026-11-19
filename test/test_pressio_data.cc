@@ -2,8 +2,13 @@
 #include <numeric>
 #include <memory>
 #include <array>
+#include <cstdlib>
+#include <string>
 #include "pressio_data.h"
 #include "libpressio_ext/cpp/data.h"
+#include "libpressio_ext/cpp/domain.h"
+#include "libpressio_ext/cpp/domain_manager.h"
+#include "libpressio_ext/cpp/domain_send.h"
 #include "libpressio_ext/cpp/printers.h"
 #include "multi_dimensional_iterator.h"
 #include "gtest/gtest.h"
@@ -31,6 +36,343 @@ class PressioDataTests: public ::testing::Test {
     const size_t dims[2]  = {2,3};
     std::vector<int> data;
 };
+
+namespace {
+class tracking_domain : public libpressio::domains::pressio_domain {
+public:
+  void* alloc(size_t n) override {
+    ++outstanding_allocations;
+    return std::malloc(n);
+  }
+
+  void free(void* ptr, size_t) override {
+    if (ptr) {
+      --outstanding_allocations;
+      std::free(ptr);
+    }
+  }
+
+  void memcpy(void* dst, void* src, size_t n) override {
+    std::memcpy(dst, src, n);
+  }
+
+  std::string const& prefix() const override {
+    static const std::string value = "test_tracking_domain";
+    return value;
+  }
+
+  std::shared_ptr<libpressio::domains::pressio_domain> clone() override {
+    return std::make_shared<tracking_domain>();
+  }
+
+  static int outstanding_allocations;
+
+protected:
+  bool equal(libpressio::domains::pressio_domain const& rhs) const noexcept override {
+    return dynamic_cast<tracking_domain const*>(&rhs) != nullptr;
+  }
+};
+
+int tracking_domain::outstanding_allocations = 0;
+
+libpressio::pressio_register tracking_domain_registration(
+    libpressio::domain_plugins(), "test_tracking_domain", [] {
+      return std::make_shared<tracking_domain>();
+    });
+
+std::shared_ptr<libpressio::domains::pressio_domain> tracking_domain_instance() {
+  return libpressio::domain_plugins().build("test_tracking_domain");
+}
+
+class alternate_tracking_domain final : public tracking_domain {
+public:
+  std::string const& prefix() const override {
+    static const std::string value = "test_alternate_tracking_domain";
+    return value;
+  }
+
+  std::shared_ptr<libpressio::domains::pressio_domain> clone() override {
+    return std::make_shared<alternate_tracking_domain>();
+  }
+
+protected:
+  bool equal(libpressio::domains::pressio_domain const& rhs) const noexcept override {
+    return dynamic_cast<alternate_tracking_domain const*>(&rhs) != nullptr;
+  }
+};
+
+libpressio::pressio_register alternate_tracking_domain_registration(
+    libpressio::domain_plugins(), "test_alternate_tracking_domain", [] {
+      return std::make_shared<alternate_tracking_domain>();
+    });
+
+std::shared_ptr<libpressio::domains::pressio_domain> alternate_tracking_domain_instance() {
+  return libpressio::domain_plugins().build("test_alternate_tracking_domain");
+}
+
+class tracking_domain_send final : public libpressio::domains::pressio_domain_send {
+public:
+  void send(pressio_data& destination, pressio_data const& source) const override {
+    destination.domain()->memcpy(destination.data(), source.data(), source.size_in_bytes());
+  }
+};
+
+libpressio::pressio_register tracking_to_alternate_send_registration(
+    libpressio::domain_send_plugins(),
+    "test_tracking_domain>test_alternate_tracking_domain", [] {
+      return std::make_unique<tracking_domain_send>();
+    });
+libpressio::pressio_register alternate_to_tracking_send_registration(
+    libpressio::domain_send_plugins(),
+    "test_alternate_tracking_domain>test_tracking_domain", [] {
+      return std::make_unique<tracking_domain_send>();
+    });
+} // namespace
+
+TEST(PressioDataDomainLifetime, MoveAssigningAliasedViewPreservesOwner) {
+  ASSERT_EQ(tracking_domain::outstanding_allocations, 0);
+  {
+    auto data = pressio_data::owning(
+        pressio_int32_dtype, {16}, tracking_domain_instance());
+    auto* original = static_cast<int32_t*>(data.data());
+
+    data = domain_manager().make_readable(data.domain(), std::move(data));
+
+    ASSERT_EQ(data.data(), original);
+    ASSERT_EQ(tracking_domain::outstanding_allocations, 1);
+    static_cast<int32_t*>(data.data())[0] = 42;
+    EXPECT_EQ(static_cast<int32_t*>(data.data())[0], 42);
+  }
+  EXPECT_EQ(tracking_domain::outstanding_allocations, 0);
+}
+
+TEST(PressioDataDomainLifetime, RepeatedCopiesMovesViewsAndConversionsReleaseEveryAllocation) {
+  ASSERT_EQ(tracking_domain::outstanding_allocations, 0);
+
+  constexpr size_t iterations = 1024;
+  {
+    // Keep one live owning object between iterations.  Each iteration replaces
+    // it after creating a complete graph of copy, move, non-owning, readable,
+    // and writable representations.  A missing release in any replacement
+    // accumulates and is detected both immediately and at scope exit.
+    auto current = pressio_data::owning(
+        pressio_int32_dtype, {16}, tracking_domain_instance());
+    ASSERT_EQ(tracking_domain::outstanding_allocations, 1);
+
+    for (size_t i = 0; i < iterations; ++i) {
+      // Copy allocates on a cloned tracking domain.  Moving that copy must not
+      // allocate or free its storage.
+      auto copied = current;
+      ASSERT_EQ(tracking_domain::outstanding_allocations, 2) << "iteration " << i;
+      auto moved = std::move(copied);
+      ASSERT_EQ(tracking_domain::outstanding_allocations, 2) << "iteration " << i;
+
+      // Create views from both an owning object and an existing view.  Neither
+      // may affect the allocation count or take ownership of moved.data().
+      auto view = pressio_data::nonowning(moved);
+      auto view_of_view = pressio_data::nonowning(view);
+      ASSERT_EQ(tracking_domain::outstanding_allocations, 2) << "iteration " << i;
+
+      // Every representation created above is independently made readable and
+      // writable.  make_readable starts with allocated reusable storage, then
+      // replaces it with a view; make_writeable(const&) must instead allocate.
+      auto verify_const_conversions = [&](pressio_data const& source) {
+        const int allocations_before = tracking_domain::outstanding_allocations;
+        {
+          auto reusable_readable = pressio_data::owning(
+              pressio_int32_dtype, {16}, tracking_domain_instance());
+          ASSERT_EQ(tracking_domain::outstanding_allocations, allocations_before + 1)
+              << "iteration " << i;
+          auto readable = domain_manager().make_readable(
+              std::move(reusable_readable), source);
+          ASSERT_EQ(readable.data(), source.data()) << "iteration " << i;
+          ASSERT_EQ(tracking_domain::outstanding_allocations, allocations_before)
+              << "iteration " << i;
+          auto writable = domain_manager().make_writeable(
+              tracking_domain_instance(), readable);
+          ASSERT_EQ(tracking_domain::outstanding_allocations, allocations_before + 1)
+              << "iteration " << i;
+        }
+        ASSERT_EQ(tracking_domain::outstanding_allocations, allocations_before)
+            << "iteration " << i;
+
+        // Exercise both domain-destination make_readable overloads.  Since
+        // these domains are accessible, each result is a nonowning view.
+        auto destination_domain = tracking_domain_instance();
+        auto readable_on_lvalue_domain = domain_manager().make_readable(
+            destination_domain, source);
+        auto readable_on_rvalue_domain = domain_manager().make_readable(
+            tracking_domain_instance(), source);
+        ASSERT_EQ(readable_on_lvalue_domain.data(), source.data()) << "iteration " << i;
+        ASSERT_EQ(readable_on_rvalue_domain.data(), source.data()) << "iteration " << i;
+        ASSERT_EQ(tracking_domain::outstanding_allocations, allocations_before)
+            << "iteration " << i;
+
+        // make_writeable accepts an rvalue destination domain.  Exercise its
+        // const-source allocation path and movable-view reuse path.
+        {
+          auto writable_on_domain = domain_manager().make_writeable(
+              tracking_domain_instance(), readable_on_rvalue_domain);
+          ASSERT_EQ(tracking_domain::outstanding_allocations, allocations_before + 1)
+              << "iteration " << i;
+        }
+        ASSERT_EQ(tracking_domain::outstanding_allocations, allocations_before)
+            << "iteration " << i;
+        auto movable_view = pressio_data::nonowning(readable_on_lvalue_domain);
+        auto reused_writable = domain_manager().make_writeable(
+            tracking_domain_instance(), std::move(movable_view));
+        ASSERT_EQ(reused_writable.data(), source.data()) << "iteration " << i;
+        ASSERT_EQ(tracking_domain::outstanding_allocations, allocations_before)
+            << "iteration " << i;
+      };
+      verify_const_conversions(current);
+      verify_const_conversions(moved);
+      verify_const_conversions(view);
+      verify_const_conversions(view_of_view);
+
+      // Make an allocated destination readable from a view once more, then
+      // retain its writable copy across the iteration boundary.
+      auto reusable_readable = pressio_data::owning(
+          pressio_int32_dtype, {16}, tracking_domain_instance());
+      auto readable = domain_manager().make_readable(
+          std::move(reusable_readable), view_of_view);
+      ASSERT_EQ(readable.data(), moved.data()) << "iteration " << i;
+      auto writable_from_const = domain_manager().make_writeable(
+          tracking_domain_instance(), readable);
+      ASSERT_EQ(tracking_domain::outstanding_allocations, 3) << "iteration " << i;
+
+      // The owning moved representation takes the movable/reuse writable
+      // branch.  Its allocation must remain owned exactly once.
+      auto writable_from_move = domain_manager().make_writeable(
+          tracking_domain_instance(), std::move(moved));
+      ASSERT_EQ(tracking_domain::outstanding_allocations, 3) << "iteration " << i;
+
+      // An inaccessible nonowning input cannot be reused and therefore takes
+      // the allocation branch of make_writeable.
+      int external[16] = {};
+      auto foreign_view = pressio_data::nonowning(
+          pressio_int32_dtype, external, {16}, "malloc");
+      auto writable_from_foreign_view = domain_manager().make_writeable(
+          tracking_domain_instance(), std::move(foreign_view));
+      ASSERT_EQ(tracking_domain::outstanding_allocations, 4) << "iteration " << i;
+
+      // Replacing the previous persistent allocation is another move-assignment
+      // path.  The temporary objects leave one allocation for current.
+      current = std::move(writable_from_const);
+    }
+
+    ASSERT_EQ(tracking_domain::outstanding_allocations, 1);
+  }
+  EXPECT_EQ(tracking_domain::outstanding_allocations, 0);
+}
+
+TEST(PressioDataDomainLifetime, ExhaustiveDomainManagerBranchMatrixDoesNotLeak) {
+  ASSERT_EQ(tracking_domain::outstanding_allocations, 0);
+
+  // The two test domains use host malloc/free but compare unequal.  Together
+  // with the registered send plugins this exercises every generic
+  // pressio_domain_manager branch: accessible view/reuse, inaccessible send,
+  // destination allocation, existing-destination reuse, and empty metadata.
+  for (size_t iteration = 0; iteration < 64; ++iteration) {
+    for (bool source_is_alternate : {false, true}) {
+      for (bool destination_is_alternate : {false, true}) {
+        auto source_domain = source_is_alternate
+            ? alternate_tracking_domain_instance() : tracking_domain_instance();
+        auto destination_domain = destination_is_alternate
+            ? alternate_tracking_domain_instance() : tracking_domain_instance();
+        const bool accessible = source_is_alternate == destination_is_alternate;
+
+        for (bool source_is_view : {false, true}) {
+          for (bool source_is_empty : {false, true}) {
+            auto source_owner = source_is_empty
+                ? pressio_data::empty(pressio_int32_dtype, {16}, source_domain)
+                : pressio_data::owning(pressio_int32_dtype, {16}, source_domain);
+            auto source = source_is_view
+                ? pressio_data::nonowning(source_owner) : std::move(source_owner);
+            const int source_allocations = source_is_empty ? 0 : 1;
+            ASSERT_EQ(tracking_domain::outstanding_allocations, source_allocations)
+                << "iteration " << iteration;
+
+            // make_readable(data&&, const data&) with an allocated and empty
+            // destination covers all reusable-buffer branches.
+            for (bool destination_is_empty : {false, true}) {
+              {
+                auto destination = destination_is_empty
+                    ? pressio_data::empty(pressio_int32_dtype, {16}, destination_domain)
+                    : pressio_data::owning(pressio_int32_dtype, {16}, destination_domain);
+                const int before = tracking_domain::outstanding_allocations;
+                auto readable = domain_manager().make_readable(std::move(destination), source);
+                EXPECT_EQ(readable.has_data(), source.has_data());
+                const int allocation_delta =
+                    (accessible || !source.has_data())
+                        ? (destination_is_empty ? 0 : -1)
+                        : (destination_is_empty ? 1 : 0);
+                EXPECT_EQ(tracking_domain::outstanding_allocations,
+                    before + allocation_delta)
+                    << "iteration " << iteration;
+              }
+              ASSERT_EQ(tracking_domain::outstanding_allocations, source_allocations)
+                  << "iteration " << iteration;
+            }
+
+            // Both domain-destination make_readable overloads must view when
+            // accessible and allocate/send when inaccessible.
+            {
+              auto destination = destination_domain;
+              auto readable = domain_manager().make_readable(destination, source);
+              EXPECT_EQ(readable.has_data(), source.has_data());
+              EXPECT_EQ(tracking_domain::outstanding_allocations,
+                  source_allocations + ((!accessible && source.has_data()) ? 1 : 0));
+            }
+            ASSERT_EQ(tracking_domain::outstanding_allocations, source_allocations);
+            {
+              auto readable = domain_manager().make_readable(destination_domain, source);
+              EXPECT_EQ(readable.has_data(), source.has_data());
+              EXPECT_EQ(tracking_domain::outstanding_allocations,
+                  source_allocations + ((!accessible && source.has_data()) ? 1 : 0));
+            }
+            ASSERT_EQ(tracking_domain::outstanding_allocations, source_allocations);
+          }
+        }
+
+        // make_writeable only accepts an rvalue destination domain.  Cover
+        // const and movable owning/view/empty sources for both accessibility
+        // outcomes.  Recreate each rvalue source so every value category is
+        // independently tested.
+        for (bool source_is_view : {false, true}) {
+          for (bool source_is_empty : {false, true}) {
+            {
+              auto owner = source_is_empty
+                  ? pressio_data::empty(pressio_int32_dtype, {16}, source_domain)
+                  : pressio_data::owning(pressio_int32_dtype, {16}, source_domain);
+              auto source = source_is_view
+                  ? pressio_data::nonowning(owner) : std::move(owner);
+              const int before = tracking_domain::outstanding_allocations;
+              auto writable = domain_manager().make_writeable(destination_domain->clone(), source);
+              EXPECT_TRUE(writable.has_data());
+              EXPECT_EQ(tracking_domain::outstanding_allocations, before + 1);
+            }
+            ASSERT_EQ(tracking_domain::outstanding_allocations, 0);
+            {
+              auto owner = source_is_empty
+                  ? pressio_data::empty(pressio_int32_dtype, {16}, source_domain)
+                  : pressio_data::owning(pressio_int32_dtype, {16}, source_domain);
+              auto source = source_is_view
+                  ? pressio_data::nonowning(owner) : std::move(owner);
+              const int before = tracking_domain::outstanding_allocations;
+              auto writable = domain_manager().make_writeable(destination_domain->clone(), std::move(source));
+              EXPECT_TRUE(writable.has_data());
+              EXPECT_EQ(tracking_domain::outstanding_allocations,
+                  before + ((accessible && !source_is_empty) ? 0 : 1));
+            }
+            ASSERT_EQ(tracking_domain::outstanding_allocations, 0);
+          }
+        }
+      }
+    }
+  }
+  EXPECT_EQ(tracking_domain::outstanding_allocations, 0);
+}
 
 TEST_F(PressioDataTests, NormalizeDims) {
   {
@@ -316,3 +658,39 @@ TEST(test_mulit_dimensional_array, test_mulit_dimensional_array_operator) {
   pressio_data_free(data);
 }
 
+
+TEST(test_to_from_tuple, test_to_from_tuple) {
+    std::tuple<int32_t, float, double, uint8_t> t{
+        3, 4.2f, 3.7, 'x'
+    };
+    auto tuple_data = pressio_data(t);
+    EXPECT_EQ(tuple_data.size_in_bytes(), 4+4+8+1);
+    auto result = tuple_data.to_tuple<decltype(t)>();
+    EXPECT_EQ(t, result);
+}
+TEST(test_join_split, test_join_split_headerlen) {
+    pressio_data a{1,2,3};
+    pressio_data b{1.2,2.3,3.4};
+    pressio_data c{1.2f,2.3f};
+    pressio_data joined = pressio_data::join({a,b,c}, pressio_data_header_len);
+    std::vector<pressio_data> s{
+        pressio_data::empty(pressio_int32_dtype, {}),
+        pressio_data::empty(pressio_double_dtype, {}),
+        pressio_data::empty(pressio_float_dtype, {}),
+    };
+    pressio_data::split(joined, pressio_data_header_len, s);
+    EXPECT_EQ(s[0], a);
+    EXPECT_EQ(s[1], b);
+    EXPECT_EQ(s[2], c);
+}
+TEST(test_join_split, test_join_split_dimstype) {
+    pressio_data a{1,2,3};
+    pressio_data b{1.2,2.3,3.4};
+    pressio_data c{1.2f,2.3f};
+    pressio_data joined = pressio_data::join({a,b,c}, pressio_data_header_dimstype);
+    std::vector<pressio_data> s(3);
+    pressio_data::split(joined, pressio_data_header_dimstype, s);
+    EXPECT_EQ(s[0], a);
+    EXPECT_EQ(s[1], b);
+    EXPECT_EQ(s[2], c);
+}

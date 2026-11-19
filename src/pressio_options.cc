@@ -55,16 +55,16 @@ size_t pressio_options_num_set(struct pressio_options const* options) {
     options->set(key, value); \
   }
 #define pressio_options_define_type_impl_set(name, type) \
-  enum pressio_options_key_status pressio_options_get_##name(struct pressio_options const* options, const char* key, type* value) { \
-    return options->get(key, value); \
+  enum pressio_options_key_status pressio_options_get_##name(struct pressio_options const* options, const char* key, type* outvalue) { \
+    return options->get(key, outvalue); \
   }
 #define pressio_options_define_type_impl_cast(name, type) \
   enum pressio_options_key_status pressio_options_cast_##name(struct pressio_options const* options, const char* key, const enum pressio_conversion_safety safety, type* value) { \
     return options->cast(key, value, safety); \
   }
 #define pressio_options_define_type_impl_as(name, type) \
-  enum pressio_options_key_status pressio_options_as_##name(struct pressio_options const* options, const char* key, type* value) { \
-    return options->cast(key, value, pressio_conversion_implicit); \
+  enum pressio_options_key_status pressio_options_as_##name(struct pressio_options const* options, const char* key, type* outvalue) { \
+    return options->cast(key, outvalue, pressio_conversion_implicit); \
   } 
 
 #define pressio_options_define_type_impl(name, type) \
@@ -100,15 +100,15 @@ void pressio_options_set_userptr_managed(struct pressio_options* options,
 }
 
 //special case: string -- for memory management
-void pressio_options_set_string(struct pressio_options* options, const char* key, const char* value) { \
-  std::string value_tmp = value;
+void pressio_options_set_string(struct pressio_options* options, const char* key, const char* outvalue) { \
+  std::string value_tmp = outvalue;
   options->set(key, value_tmp);
 }
-enum pressio_options_key_status pressio_options_get_string(struct pressio_options const* options, const char* key, const char** value) { \
+enum pressio_options_key_status pressio_options_get_string(struct pressio_options const* options, const char* key, const char** outvalue) { \
   std::string value_tmp;
   auto status = options->get(key, &value_tmp);
   if(status == pressio_options_key_set) {
-    *value = strndup(value_tmp.c_str(), value_tmp.size());
+    *outvalue = strndup(value_tmp.c_str(), value_tmp.size());
   }
   return status;
 }
@@ -128,8 +128,8 @@ enum pressio_options_key_status pressio_options_as_string(struct pressio_options
 void pressio_options_set_data(struct pressio_options* options, const char* key, struct pressio_data* value) {
   options->set(key, *value);
 }
-enum pressio_options_key_status pressio_options_get_data(struct pressio_options const* options, const char* key, struct pressio_data** value) { \
-  return options->get(key, *value);
+enum pressio_options_key_status pressio_options_get_data(struct pressio_options const* options, const char* key, struct pressio_data** outvalue) { \
+  return options->get(key, *outvalue);
 }
 
 enum pressio_options_key_status pressio_options_cast_data(struct pressio_options const* options, const char* key, const enum pressio_conversion_safety safety, struct pressio_data** value) {
@@ -144,17 +144,17 @@ void pressio_options_set_strings(struct pressio_options* options, const char* ke
   std::vector<std::string> strings(values, values+size);
   return options->set(key, strings);
 }
-enum pressio_options_key_status pressio_options_get_strings(struct pressio_options const* options, const char* key, size_t* size, const char***  values) {
+enum pressio_options_key_status pressio_options_get_strings(struct pressio_options const* options, const char* key, size_t* outsize, const char***  outvalues) {
   std::vector<std::string> strings;
   auto status = options->get(key, &strings);
     if(status == pressio_options_key_set) {
-    *size = strings.size();
-    *values = static_cast<const char**>(malloc(sizeof(const char*)**size));
-    for (size_t i = 0; i < *size; ++i) {
-      (*values)[i] = strndup(strings[i].c_str(), strings[i].size());
+    *outsize = strings.size();
+    *outvalues = static_cast<const char**>(malloc(sizeof(const char*)**outsize));
+    for (size_t i = 0; i < *outsize; ++i) {
+      (*outvalues)[i] = strndup(strings[i].c_str(), strings[i].size());
     }
   } else {
-    *size = 0;
+    *outsize = 0;
   }
   return status;
 }

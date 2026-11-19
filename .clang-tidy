@@ -2,7 +2,6 @@
 Checks:          'clang-diagnostic-*,clang-analyzer-*,clang-diagnostic-*,clang-analyzer-*,bugprone-*,-bugprone-macro-parentheses,bugprone-narrowing-conversions,-bugprone-easily-swappable-parameters,performance-*,portability-*,security-*,moderize*,-clang-analyzer-optin.portability.UnixAPI,-clang-analyzer-optin.mpi.MPI-Checker'
 WarningsAsErrors: ''
 HeaderFilterRegex: '(\./include.*)|(.*pressio.*)'
-AnalyzeTemporaryDtors: false
 FormatStyle:     none
 User:            runderwood
 CheckOptions:

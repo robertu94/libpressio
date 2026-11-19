@@ -190,22 +190,4 @@ if(@LIBPRESSIO_HAS_GRIB@)
   find_package(eccodes REQUIRED)
 endif()
 
-if(@BUILD_PYTHON_WRAPPER@)
-    find_package(Python3 COMPONENTS Interpreter Development NumPy)
-    find_package(SWIG)
-endif()
-
-if(@BUILD_MIGRATION_TOOLS@)
-    find_package(Clang REQUIRED)
-    find_package(fmt REQUIRED)
-    list(APPEND CMAKE_MODULE_PATH "${CLANG_CMAKE_DIR}")
-    list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_DIR}")
-    include(AddLLVM)
-    include(AddClang)
-endif()
-
-if(@BUILD_DOCS@)
-  find_package(Doxygen REQUIRED dot)
-endif()
-
 check_required_components(LibPressio)

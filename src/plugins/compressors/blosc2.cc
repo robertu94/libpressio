@@ -78,7 +78,7 @@ class blosc2_plugin: public libpressio_compressor_plugin {
 "blosc2:numinternalthreads",
 });
       
-        set(options, "pressio:highlevel", get_accumulate_configuration("pressio:highlevel", {}, std::vector<std::string>{"pressio:lossless", "pressio:nthreads"}));
+        set(options, "pressio:highlevel", get_accumulate_configuration("pressio:highlevel", {}, std::vector<std::string>{"pressio:lossless", "pressio:nthreads", "blosc2:compressor"}));
 
     return options;
     }

@@ -328,7 +328,7 @@ the the stdout, stderr, and return code are returned via variables `stdout`, `st
 
 **limitation** this metric implements thread-safety with a global mutex grabbed at invocation time.
 
-example script (assumes python 3.6 or later)`
+example script (assumes python 3.6 or later)
 
 ```python
 import argparse

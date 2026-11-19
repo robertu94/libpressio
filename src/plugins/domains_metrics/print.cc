@@ -112,6 +112,14 @@ struct print_plugin: public pressio_domain_manager_metrics_plugin {
         copy.stop();
         std::cout << "copy_to_end(" << prefix_or_name(*dst.domain()) << "<-" << prefix_or_name(src.domain()) << ") " << copy << std::endl;
     }
+    void copy_to_begin(std::shared_ptr<domains::pressio_domain> const& dst, pressio_data const& src) override {
+        copy = timer();
+        std::cout << "copy_to_begin(" << prefix_or_name(dst) << "<-" << prefix_or_name(src.domain()) << ") " << src << std::endl;
+    }
+    void copy_to_end(std::shared_ptr<domains::pressio_domain> const& dst, pressio_data const& src) override {
+        copy.stop();
+        std::cout << "copy_to_end(" << prefix_or_name(dst) << "<-" << prefix_or_name(src.domain()) << ") " << copy << std::endl;
+    }
     void make_writeable_begin(std::shared_ptr<pressio_domain> const& dst, pressio_data const& src) override {
         std::cout << "writeable_begin(" << prefix_or_name(dst) << "<-" << prefix_or_name(src.domain()) << ") " << src << std::endl;
         writeable = timer();

@@ -40,6 +40,10 @@ struct libpressio_launch_plugin: public pressio_configurable {
       return ret;
   }
 
+  /**
+   * expose the command that would be launched to metrics plugins
+   * \param[in] args the command arguments
+   */
   void view_command(std::vector<std::string> const& args) const {
       metrics_plugin->view_command(args);
   }
@@ -176,6 +180,7 @@ struct libpressio_launch_plugin: public pressio_configurable {
 /**
  * the registry for launch plugins
  */
+/** Return the registry of available launch plugins. */
 pressio_registry<std::unique_ptr<launch::libpressio_launch_plugin>>& launch_plugins();
 }
 

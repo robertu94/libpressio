@@ -137,10 +137,12 @@ class pressio_register{
     do_register();
   }
 
+  /** Unregister the plugin when this helper is destroyed. */
   ~pressio_register(){
       unregister();
   }
 
+  /** Ensure the plugin factory has been registered. */
   bool ensure_registered() {
       return do_register();
   }
@@ -149,6 +151,7 @@ class pressio_register{
   std::string name;
   /** call to unregister the plugin */
   std::function<void()> unregister;
+  /** call to register the plugin */
   std::function<bool()> do_register;
 };
 
